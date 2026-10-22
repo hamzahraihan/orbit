@@ -443,7 +443,9 @@ Append this `it()` inside `describe("Orbit's removed features", …)` in `script
     ]);
     fail(present, "Orbit removed the app update checks: the updater and its supervisor must not come back.");
     expect(present).toEqual([]);
-    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /github\.com\/devswha\/herdr-web-ui\/releases/).map((match) => match.at);
+    // the remote-PC bundle URL is Task 6's business: it names the upstream releases until
+    // Task 6 repoints it, and Task 6's own guard covers that file
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts") && file !== "server/remote-bundle.ts"), /github\.com\/devswha\/herdr-web-ui\/releases/).map((match) => match.at);
     fail(offenders, "Orbit removed the app update checks: no source file may poll the upstream releases.");
     expect(offenders).toEqual([]);
   });
