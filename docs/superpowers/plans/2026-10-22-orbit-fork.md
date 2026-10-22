@@ -175,7 +175,11 @@ Verify only the intended files changed:
 git grep -n "devswha/herdr-web-ui" -- . ':!CHANGELOG.md' ':!docs/superpowers' ':!server/remote-bundle.ts' ':!server/remote-bundle.test.ts' ':!telemetry/'
 ```
 
-Expected: no output.
+Expected: five hits, all of them links to upstream's own history, which the sweep must not move:
+`docs/guide.md` (the `[#451]` issue) and `docs/ios-home-screen-testing.md` (the `[PR #199]`, the
+`[#164]` and its two issue-comment anchors). The fork's tracker starts empty, so those links
+would 404 there. A link to an upstream issue or pull request is history, like `CHANGELOG.md`'s
+release links, and stays with the project it happened in.
 
 - [ ] **Step 6: Fix the tests that asserted the old URL**
 
