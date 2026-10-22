@@ -62,7 +62,7 @@ import type {
 } from "../../shared/protocol.ts";
 import { SUPPORTED_AGENT_KINDS } from "../../shared/supported-agents.ts";
 import type { PaneScrollInfo } from "../../shared/herdr-api.generated.ts";
-import { readInstalledNotes, readUpdateNotes, type HerdrUpdateStatus, type InstalledNotes, type UpdateCommand, type UpdateNotes, type UpdateStatus } from "../../shared/update.ts";
+import type { HerdrUpdateStatus } from "../../shared/update.ts";
 import type { AlertPrefs } from "../../shared/notify-policy.ts";
 import type { VoiceConfigUpdate, VoiceStatus } from "../../shared/voice.ts";
 import { MAX_ATTACHMENT_BYTES } from "../../shared/attachments.ts";
@@ -97,26 +97,6 @@ export function fetchUsage(refresh = false): Promise<UsageReport> {
 /** Local server's CLIProxyAPI controls; secrets are only ever sent, never read back. */
 export function cliProxyRequest<T>(path = "", init: RequestInit = {}): Promise<T> {
   return getJson<T>(`/api/cliproxy${path}`, { ...init, cache: "no-store", signal: init.signal ?? AbortSignal.timeout(60_000) });
-}
-
-export function fetchUpdateStatus(): Promise<UpdateStatus> {
-  return getJson<UpdateStatus>("/api/updates");
-}
-
-/** What the available update brings. A server older than the notes answers with an error. */
-export async function fetchUpdateNotes(): Promise<UpdateNotes> {
-  return readUpdateNotes(await getJson<unknown>("/api/updates/notes"));
-}
-
-/** What the last update brought. A server older than the question answers with an error. */
-export async function fetchInstalledNotes(): Promise<InstalledNotes> {
-  return readInstalledNotes(await getJson<unknown>("/api/updates/installed"));
-}
-
-export async function requestUpdate(command: UpdateCommand): Promise<void> {
-  const url = `/api/updates/${command}`;
-  const response = await fetch(url, { method: "POST", headers: { "x-herdr-update": "1" } });
-  if (!response.ok) throw await errorFrom(url, response);
 }
 
 /** Settings → Updates: herdr itself, on the PC the server runs on. */

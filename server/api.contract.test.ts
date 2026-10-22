@@ -8,7 +8,7 @@ import { createServer } from "./index.ts";
 import type { AgentKind, AgentStatus, ApiError, HealthAuth, IntegrationsResponse, LanExposure, PortalStatus, PushKey, RemoteAccess, SessionSnapshot, TabMoved, PaneFindResponse, PaneReadResult, UsageReport, WorkspaceCreated, WorktreeListing, WorktreeOpened, WorktreeRemoved } from "../shared/protocol.ts";
 import { HerdrUpdater } from "./herdr-update.ts";
 import { PortalService } from "./portal.ts";
-import { noInstalledNotes, unmanagedUpdateStatus, type HerdrUpdateStatus, type InstalledNotes, type UpdateNotes } from "../shared/update.ts";
+import type { HerdrUpdateStatus } from "../shared/update.ts";
 import { USAGE_PROVIDERS, UsageService } from "./usage.ts";
 import { VoiceService } from "./voice.ts";
 import { HerdrSocket } from "../src/lib/ws.ts";
@@ -356,75 +356,6 @@ describe("voice API", () => {
 });
 
 describe("update API", () => {
-  it("reports unmanaged servers without performing network discovery", async () => {
-    const response = await fetch(`${base()}/api/updates`);
-    expect(response.headers.get("cache-control")).toBe("no-store");
-    expect((await response.json() as { managed: boolean }).managed).toBe(false);
-  });
-
-  it("answers what the available update brings, and nothing where no supervisor told it", async () => {
-    const none = await fetch(`${base()}/api/updates/notes`);
-    expect(none.status).toBe(200);
-    expect(none.headers.get("cache-control")).toBe("no-store");
-    expect(await none.json()).toEqual({ revision: null, releases: [], omitted: 0 });
-    expect((await fetch(`${base()}/api/updates/notes`, { method: "POST", headers: { "x-herdr-update": "1" } })).status).toBe(405);
-
-    const notes: UpdateNotes = { revision: "b".repeat(40), releases: [{ version: "9.9.9", date: "2026-10-07", notes: "### Added\n- A thing." }], omitted: 2 };
-    const managedState = mkdtempSync(join(tmpdir(), "herdr-update-notes-"));
-    const managed = createServer({ port: 0, stateDir: managedState,
-      updates: { status: () => ({ ...unmanagedUpdateStatus(), managed: true, available: true }), notes: () => notes, installed: noInstalledNotes, request() {} } });
-    try {
-      expect(await (await fetch(`http://localhost:${managed.port}/api/updates/notes`)).json()).toEqual(notes);
-    } finally { managed.stop(); rmSync(managedState, { recursive: true, force: true }); }
-  });
-
-  it("tells the served build's commit once it differs from the running revision", async () => {
-    const running = "a".repeat(40), moved = "d".repeat(40);
-    let head: string | null = running;
-    const managedState = mkdtempSync(join(tmpdir(), "herdr-update-checkout-"));
-    const managed = createServer({ port: 0, stateDir: managedState,
-      updates: { status: () => ({ ...unmanagedUpdateStatus(), managed: true, current_revision: running }), notes: () => ({ revision: null, releases: [], omitted: 0 }),
-        installed: noInstalledNotes, request() {}, servedRevision: async () => head } });
-    const read = async () => (await (await fetch(`http://localhost:${managed.port}/api/updates`)).json()) as { served_revision?: string | null };
-    try {
-      expect((await read()).served_revision).toBeNull();
-      head = moved;
-      expect((await read()).served_revision).toBe(moved);
-      head = null;
-      expect((await read()).served_revision).toBeNull();
-    } finally { managed.stop(); rmSync(managedState, { recursive: true, force: true }); }
-    // an unmanaged server names no checkout
-    expect((await (await fetch(`${base()}/api/updates`)).json() as { served_revision?: string | null }).served_revision).toBeUndefined();
-  });
-
-  it("answers what the last update brought, and nothing where no update was installed", async () => {
-    const none = await fetch(`${base()}/api/updates/installed`);
-    expect(none.status).toBe(200);
-    expect(none.headers.get("cache-control")).toBe("no-store");
-    expect(await none.json()).toEqual({ revision: null, version: null, previous_version: null, installed_at: null, releases: [], omitted: 0 });
-    expect((await fetch(`${base()}/api/updates/installed`, { method: "POST", headers: { "x-herdr-update": "1" } })).status).toBe(405);
-
-    const installed: InstalledNotes = { revision: "c".repeat(40), version: "9.9.9", previous_version: "9.9.8", installed_at: "2026-10-07T00:00:00.000Z",
-      releases: [{ version: "9.9.9", date: "2026-10-07", notes: "### Added\n- A thing.", summary: { en: { new: ["A thing."] }, ko: { new: ["기능 하나."] } } }], omitted: 0 };
-    const managedState = mkdtempSync(join(tmpdir(), "herdr-update-installed-"));
-    const managed = createServer({ port: 0, stateDir: managedState,
-      updates: { status: () => ({ ...unmanagedUpdateStatus(), managed: true }), notes: () => ({ revision: null, releases: [], omitted: 0 }), installed: () => installed, request() {} } });
-    try {
-      expect(await (await fetch(`http://localhost:${managed.port}/api/updates/installed`)).json()).toEqual(installed);
-    } finally { managed.stop(); rmSync(managedState, { recursive: true, force: true }); }
-  });
-
-  it("refuses cross-site/form update requests and unmanaged installs", async () => {
-    for (const headers of [{}, { "x-herdr-update": "1", origin: "https://untrusted.invalid" },
-      { "x-herdr-update": "1", "sec-fetch-site": "cross-site" }] as Record<string, string>[]) {
-      const response = await fetch(`${base()}/api/updates/install`, { method: "POST", headers });
-      expect(response.status).toBe(403);
-    }
-    const response = await fetch(`${base()}/api/updates/install`, { method: "POST", headers: { "x-herdr-update": "1" } });
-    expect(response.status).toBe(409);
-    expect((await response.json() as ApiError).error.code).toBe("updates_unmanaged");
-  });
-
   it("keeps status and update actions behind the token gate", async () => {
     const protectedState = mkdtempSync(join(tmpdir(), "herdr-update-auth-"));
     const protectedServer = createServer({ port: 0, stateDir: protectedState, token: "test-update-token" });

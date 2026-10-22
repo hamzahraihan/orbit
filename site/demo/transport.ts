@@ -524,9 +524,6 @@ async function route(url: URL, method: string, init: RequestInit | undefined, in
   if (path === "/api/session") return json({ snapshot: snapshot() });
   if (path === "/api/agents") return json(agentsFixture);
   if (path === "/api/integrations") return json({ integrations: integrationsFixture } satisfies IntegrationsResponse);
-  if (path === "/api/updates") return json({ managed: false, auto_update: false, phase: "idle", current_revision: null, latest_revision: null, current_version: __APP_VERSION__, latest_version: null, available: false, checked_at: null, blocked_reason: null, error: null }, 200, { "cache-control": "no-store" });
-  if (path === "/api/updates/notes") return json({ revision: null, releases: [], omitted: 0 }, 200, { "cache-control": "no-store" });
-  if (path === "/api/updates/installed") return json({ revision: null, version: null, previous_version: null, installed_at: null, releases: [], omitted: 0 }, 200, { "cache-control": "no-store" });
   // the demo has no herdr to update: the controls stay hidden
   if (path === "/api/herdr/update") return json({ supported: false, phase: "idle", server_version: null, binary_version: null, stale: false, output: null, finished_at: null }, 200, { "cache-control": "no-store" });
   // the demo opens no public address: the Portal section stays hidden
@@ -1623,5 +1620,3 @@ if ("serviceWorker" in navigator) {
 }
 // no push: the bell then says alerts are unsupported here instead of failing to subscribe
 Object.defineProperty(globalThis, "PushManager", { value: undefined, configurable: true });
-
-declare const __APP_VERSION__: string;

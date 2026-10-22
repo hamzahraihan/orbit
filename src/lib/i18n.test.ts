@@ -70,7 +70,6 @@ function labelMapKeys(): string[] {
     ...grab("components/KeyBar.tsx", "KEY_SPOKEN_NAMES", /label: "([^"]+)"/g),
     ...grab("lib/shortcuts.ts", "SHORTCUTS", /label: "([^"]+)"/g),
     ...grab("lib/bridgeProgress.ts", "STAGES", /label: "([^"]+)"/g),
-    ...grab("lib/updateProgress.ts", "STEPS", /label: "([^"]+)"/g),
     ...grab("lib/workBlocks.ts", "CATEGORY_LABEL", /\["([^"]+)", "([^"]+)"\]/g),
     ...grab("lib/usage.ts", "WINDOW_LABEL", value),
     ...grab("lib/toolVerbs.ts", "VERB_LABEL", value),

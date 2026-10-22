@@ -13,8 +13,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { releaseNotes } from "./release-notes.ts";
-import { SUMMARIES_FILE } from "../server/release-notes.ts";
+import { releaseNotes, SUMMARIES_FILE } from "./release-notes.ts";
 
 const root = resolve(import.meta.dir, "..");
 const MACHINES = "shared/machines.ts";

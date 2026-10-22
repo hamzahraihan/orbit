@@ -172,9 +172,9 @@ install_node() {
   installed_here="$installed_here node"
 }
 
-# herdr's checkout stays at the version first installed: Settings → Updates builds each newer release
-# in the app's state dir and runs it from there (server/updater.ts, current.json). The directory of the
-# code that runs now, so the phone step is the running version's, not the first install's.
+# The checkout stays at the version first installed: Orbit has no release channel, so a newer
+# version is a git pull here and a restart. The directory of the code that runs now, so the phone
+# step is the running version's, not the first install's.
 running_code() {
   state="${HERDR_WEB_STATE_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/herdr-web-ui}"
   head=$(git -C "$1" rev-parse HEAD 2>/dev/null || true)

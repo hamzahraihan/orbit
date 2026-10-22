@@ -233,8 +233,8 @@ try {
         await waitQuery(page, "settings", "appearance");
         await waitQuery(page, "section", null);
       });
-      await withPage(browser, `?settings=about&section=updates`, async (page) => {
-        await page.waitForFunction(() => (document.activeElement as HTMLElement | null)?.dataset["section"] === "updates");
+      await withPage(browser, `?settings=about&section=about`, async (page) => {
+        await page.waitForFunction(() => (document.activeElement as HTMLElement | null)?.dataset["section"] === "about");
       });
       console.log("PASS a link to a Settings group scrolls to and focuses it, and another page drops it from the address");
 

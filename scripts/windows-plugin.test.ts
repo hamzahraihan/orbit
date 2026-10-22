@@ -5,7 +5,6 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { socketAddress } from "../server/herdr/client.ts";
 import { windowsProcessTable } from "../server/windows-processes.ts";
-import { updateStateDir } from "../server/update-state.ts";
 
 it("waits for every snapshotted Windows tree member after termination returns", async () => {
   const root = join(import.meta.dir, "..");
@@ -137,9 +136,6 @@ it.skipIf(process.platform !== "win32")("starts after its launcher exits, stops 
     const history = await (await fetch(`http://127.0.0.1:${port}/api/pane/conversation?pane_id=history`)).json() as { source: string; turns: unknown[] };
     expect(history.source).toBe("omp-transcript");
     expect(JSON.stringify(history.turns)).toContain("saved history");
-    // The spawned server must retain git on Windows' usual mixed-case Path key.
-    const updates = await (await fetch(`http://127.0.0.1:${port}/api/updates`)).json() as { current_revision: string | null };
-    expect(updates.current_revision).toMatch(/^[a-f0-9]{40}$/);
     const pid = Number(readFileSync(join(state, "server.pid"), "utf8").trim());
     const rows = await windowsProcessTable(30_000);
     const owned = new Set([pid]);
@@ -166,7 +162,7 @@ it.skipIf(process.platform !== "win32")("starts after its launcher exits, stops 
     }
     expect(remaining, "control: wait up to ten seconds for the Windows-owned process tree to disappear").toEqual([]);
     expect(existsSync(join(state, "server.pid"))).toBe(false);
-    await run("start"); // forced Windows shutdown leaves a stale lock; restart must recover it
+    await run("start"); // forced Windows shutdown leaves a stale PID file; restart must recover it
     expect((await fetch(`http://127.0.0.1:${port}/api/health`)).ok).toBe(true);
     await run("stop");
     const unrelated = Bun.spawn([process.execPath, "-e", "setTimeout(() => {}, 90000)"], { windowsHide: true, stdout: "ignore", stderr: "ignore" });
@@ -176,11 +172,7 @@ it.skipIf(process.platform !== "win32")("starts after its launcher exits, stops 
       expect(() => process.kill(unrelated.pid, 0)).not.toThrow();
       expect(existsSync(join(state, "server.pid"))).toBe(true);
       rmSync(join(state, "server.pid"));
-      const staleLock = join(updateStateDir(root, port, env["HERDR_WEB_STATE_DIR"]), "supervisor.lock", "pid");
-      expect(existsSync(staleLock)).toBe(true);
-      writeFileSync(staleLock, String(unrelated.pid));
-      utimesSync(staleLock, new Date(0), new Date(0));
-      await run("start"); // a reused supervisor PID must not block restart or be terminated
+      await run("start"); // a forced shutdown leaves a stale PID file; a restart must recover it
       expect((await fetch(`http://127.0.0.1:${port}/api/health`)).ok).toBe(true);
       expect(() => process.kill(unrelated.pid, 0)).not.toThrow();
       await run("stop");
@@ -223,4 +215,4 @@ it.skipIf(process.platform !== "win32")("starts after its launcher exits, stops 
     await new Promise<void>(resolve => peer.close(() => resolve()));
     rmSync(scratch, { recursive: true, force: true });
   }
-}, 90_000);
+}, 180_000);

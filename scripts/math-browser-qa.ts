@@ -113,7 +113,7 @@ try {
   // fetch, so the recovery is the reload line (lib/lazyChunk.ts), not a retry
   assert.equal(aborted, 1, "later expressions reuse the failed load without retrying");
   assert.equal(await offline.locator(".katex").count(), 0);
-  // the recovery: the app's update line (useUpdates) offers the reload, and only a tap reloads
+  // the recovery: the app's reload line offers the reload, and only a tap reloads
   const notice = offline.locator(".update-notice.is-warning");
   await notice.getByText("Part of the app could not load.").waitFor({ timeout: 5_000 });
   assert.equal(reloads, 0, "the page is not reloaded until it is asked to be");

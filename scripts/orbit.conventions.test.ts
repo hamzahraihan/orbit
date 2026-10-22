@@ -24,4 +24,23 @@ describe("Orbit's removed features", () => {
     fail(offenders, "Orbit removed the anonymous usage counts: no source file may name the telemetry worker.");
     expect(offenders).toEqual([]);
   });
+
+  it("does not poll for app updates", () => {
+    const present = absent([
+      "server/updater.ts",
+      "server/supervisor.ts",
+      "src/lib/updates.ts",
+      "src/lib/updateNotes.ts",
+      "src/lib/updateProgress.ts",
+    ]);
+    fail(present, "Orbit removed the app update checks: the updater and its supervisor must not come back.");
+    expect(present).toEqual([]);
+    // the remote-PC bundle URL is Task 6's business: it names the upstream releases until
+    // Task 6 repoints it, and Task 6's own guard covers that file
+    // (a path is written the way the platform writes it, so the name is compared without it)
+    const portable = (file: string): string => file.replaceAll("\\", "/");
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts") && portable(file) !== "server/remote-bundle.ts"), /github\.com\/devswha\/herdr-web-ui\/releases/).map((match) => match.at);
+    fail(offenders, "Orbit removed the app update checks: no source file may poll the upstream releases.");
+    expect(offenders).toEqual([]);
+  });
 });

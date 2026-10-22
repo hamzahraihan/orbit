@@ -71,11 +71,6 @@ export type { Machine, MachineEvent, PaneTarget, SetupJob, SetupRequest, SetupAc
  *         Unsupported methods/actions get 405 method_not_allowed; a watch-only device gets
  *         403 read_only. Startup holds HTTP/WS requests until leftover Portal cleanup completes;
  *         unreadable saved state or unverifiable cleanup fails closed with 500 internal_error.
- *  GET    /api/updates                   -> UpdateStatus (shared/update.ts), no-store
- *  POST   /api/updates/check             -> 202 { accepted: true }
- *  POST   /api/updates/install           -> 202 { accepted: true }
- *         Update POSTs require X-Herdr-Update: 1, same-origin browser requests,
- *         and the usual token gate. Managed starts only; status is polled during restart.
  *  GET    /api/agents                    -> { agents: AgentKind[] } (herdr's agent manifests: the
  *         kinds `agent.start` accepts, plus omo and gjc when they are on this server's PATH,
  *         each with `installed`: whether its command is on this server's PATH; for the

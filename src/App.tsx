@@ -59,8 +59,6 @@ import {
 } from "./lib/notifications.ts";
 import { ensurePushSubscription, pushSupported, removePushSubscription } from "./lib/push.ts";
 import { machineGone, notificationLanding, notificationTargetFromSearch, sameLink, notificationViewForPane, onNotificationTarget, type NotificationTarget } from "./lib/notificationTarget.ts";
-import { useUpdates } from "./lib/updates.ts";
-import { UpdateNotice } from "./components/UpdateControls.tsx";
 import { LanExposureNotice } from "./components/LanExposureNotice.tsx";
 import { FilesDialog } from "./components/FilesDialog.tsx";
 import { folderQueryFor } from "./lib/paletteFolders.ts";
@@ -283,7 +281,6 @@ export function App() {
     pairedFromAddress.current = true;
     pairDevice(pairCode, deviceLabel(navigator.userAgent, navigator.maxTouchPoints ?? 0)).then(() => loadHealth()).catch(() => { /* the gate, if any, reports it */ });
   }, [locked, pairCode, auth]); // eslint-disable-line react-hooks/exhaustive-deps
-  const updates = useUpdates(locked === false);
   const [selectedPaneId, setSelectedPaneId] = useState<string | null>(() => {
     if (initialLink?.pane) return initialLink.pane;
     // a link to a workspace opens the pane its row opens, once the roster is in (below)
@@ -490,9 +487,7 @@ export function App() {
   const [settingsLinkSection, setSettingsLinkSection] = useState<string | null>(() => initialLink?.section ?? null);
   // the page Settings shows, for the address
   const [settingsPage, setSettingsPage] = useState<string | null>(null);
-  // set by a button that points at one section of Settings, for that opening alone
-  const [settingsSection, setSettingsSection] = useState<"updates" | null>(null);
-  const closeSettings = useCallback(() => { setSettingsOpen(false); setSettingsSection(null); setSettingsLinkPage(null); setSettingsLinkSection(null); setSettingsPage(null); }, []);
+  const closeSettings = useCallback(() => { setSettingsOpen(false); setSettingsLinkPage(null); setSettingsLinkSection(null); setSettingsPage(null); }, []);
   const settingsLinkPageRef = useRef(settingsLinkPage); settingsLinkPageRef.current = settingsLinkPage;
   const onSettingsPage = useCallback((page: string | null) => {
     setSettingsPage(page);
@@ -1371,7 +1366,6 @@ export function App() {
       },
       openSettings: () => {
         setDrawerOpen(false);
-        setSettingsSection(null);
         setSettingsOpen(true);
       },
       openAddPc: () => {
@@ -1640,7 +1634,6 @@ export function App() {
         <WebPanelContext.Provider value={filePanelAvailable ? openWebPage : null}>
         <div className={`pane-column${chatShown ? " is-chat" : ""}`}>
         {/* over the pane only: a bar across the window would cut the sidebar off from its top row in the header */}
-        <UpdateNotice updates={updates} onOpen={() => { setSettingsSection("updates"); setSettingsOpen(true); }} />
         <MachineActionBanner machines={machines} onSetup={(machine, update = false) => { setDrawerOpen(false); setUpdateRemote(update); setMachineDialog(machine); }} />
         {layoutNotice && <p className="pane-notice" role="alert">{layoutNotice}</p>}
         {health?.lan_exposure && <LanExposureNotice host={health.lan_exposure.host} onOpen={() => { setSettingsLinkPage("devices"); setSettingsOpen(true); }} />}
@@ -1808,7 +1801,7 @@ export function App() {
         setFilesOpen(false);
         selectTargetRef.current(machineId, paneId);
       }} />
-      <SettingsDialog auth={auth} herdrVersion={health?.herdr?.version ?? null} open={settingsOpen} section={settingsSection} linkPage={settingsLinkPage} linkSection={settingsLinkSection} onPage={onSettingsPage} onClose={closeSettings} onUsageLogin={(paneId) => { closeSettings(); selectTarget("local", paneId, "terminal"); void load(); }} actions={actions} updates={updates} onEnableNotifications={enableNotifications} saveError={settingsSaveError} overPreview={(viewing !== null && !fileDocked) || diffViewing !== null} />
+      <SettingsDialog auth={auth} herdrVersion={health?.herdr?.version ?? null} open={settingsOpen} linkPage={settingsLinkPage} linkSection={settingsLinkSection} onPage={onSettingsPage} onClose={closeSettings} onUsageLogin={(paneId) => { closeSettings(); selectTarget("local", paneId, "terminal"); void load(); }} actions={actions} onEnableNotifications={enableNotifications} saveError={settingsSaveError} overPreview={(viewing !== null && !fileDocked) || diffViewing !== null} />
       {filesOpen && selectedPane && (
         <FilesDialog start={selectedPane.foreground_cwd ?? selectedPane.cwd ?? ""} paneId={selectedPane.pane_id} viewing={(viewing !== null && !fileDocked) || diffViewing !== null} onOpenFile={viewFile}
           onOpenDiff={(comparison, file) => openDiff({ machineId: selectedMachineId, paneId: selectedPane.pane_id, directory: selectedPane.foreground_cwd ?? selectedPane.cwd ?? null, ...comparison, path: file.path, oldPath: file.old_path })}

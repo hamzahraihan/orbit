@@ -136,8 +136,6 @@ describe("demo transport", () => {
     "/api/pane/read": "the scrollback read behind a chat with no transcript: the demo answers /api/pane/conversation instead (listed when this guard was added)",
     "/api/pane/selection": "copying a selection across screens: not part of the demo (listed when this guard was added)",
     "/api/preferences": "a 404 turns shared-settings sync off, as on an older server (fetchPreferences, src/lib/api.ts)",
-    "/api/updates/check": "the demo's /api/updates says managed: false, so Settings offers no check",
-    "/api/updates/install": "the demo's /api/updates says managed: false, so Settings offers no install",
   };
   /** Client frames the demo needs no case for, each with its reason; any other frame gets a case in site/demo/transport.ts. */
   const DEMO_IGNORES: Record<string, string> = {

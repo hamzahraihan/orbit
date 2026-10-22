@@ -21,7 +21,6 @@ import { Segmented, SettingsGroup, SettingsRow, Stepper, Toggle } from "./Settin
 import { FONT_FAMILY_MAX_CHARS, sanitizeFontFamily } from "../lib/fontFamily.ts";
 import { UI_FONT_MAX, UI_FONT_MIN } from "../lib/typography.ts";
 import { canListInstalledFonts, filterFamilies, isMonospaceFamily, queryInstalledFonts } from "../lib/installedFonts.ts";
-import type { UpdatesModel } from "../lib/updates.ts";
 import type { UserError } from "../lib/userError.ts";
 import type { MachineSettings } from "../../shared/machines.ts";
 import { fetchRemoteAccess, fetchVoiceStatus, machineRequest, saveVoiceConfig } from "../lib/api.ts";
@@ -38,7 +37,7 @@ import { PortalPanel } from "./PortalPanel.tsx";
 import { copyText } from "../lib/clipboard.ts";
 import { PushTestControls } from "./PushTestControls.tsx";
 import { previewAlertSound, unlockAlertSound } from "../lib/alertSound.ts";
-import { HerdrUpdateControls, UpdateControls } from "./UpdateControls.tsx";
+import { HerdrUpdateControls } from "./UpdateControls.tsx";
 import { UsageSettings } from "./UsageSettings.tsx";
 import { useSheetSwipe } from "../lib/sheets.ts";
 import { useMediaQuery } from "../lib/useMediaQuery.ts";
@@ -48,11 +47,9 @@ import { requestedSettingsPage, requestSettingsPage, type SettingsPageId } from 
 
 export interface SettingsDialogProps {
   open: boolean;
-  /** the section to open on, for a button that points at it; the top otherwise */
-  section?: "updates" | null;
   /** the page a link to Settings names (`?settings=`, lib/deepLink.ts), for this opening alone */
   linkPage?: string | null;
-  /** the group on that page a link names (`&section=`): it is scrolled to and focused, as Updates is */
+  /** the group on that page a link names (`&section=`): it is scrolled to and focused */
   linkSection?: string | null;
   /** the page shown, for the address; null while a phone shows its list of pages */
   onPage?: (page: string | null) => void;
@@ -60,7 +57,6 @@ export interface SettingsDialogProps {
   /** Account login runs on this server's PC, even while another PC is selected. */
   onUsageLogin: (paneId: string) => void;
   actions: AppActions;
-  updates: UpdatesModel;
   /** how this browser got in, from the last health check */
   auth: HealthAuth | null;
   /** the herdr this app's server talks to, from the last health check */
@@ -921,11 +917,10 @@ function PluginsGroup() {
   );
 }
 
-function AboutPage({ updates, herdrVersion, bridgesFollow }: { updates: UpdatesModel; herdrVersion: string | null; bridgesFollow: boolean }) {
+function AboutPage({ herdrVersion }: { herdrVersion: string | null }) {
   const t = useT();
   return (
     <>
-      <UpdateControls updates={updates} bridgesFollow={bridgesFollow} />
       <HerdrUpdateControls enabled herdrVersion={herdrVersion} />
       <PluginsGroup />
       <SettingsGroup title={t("About")} className="settings-about" section="about">
@@ -995,20 +990,19 @@ function SaveFailure({ error }: { error: UserError }) {
   </div>;
 }
 
-function OpenSettingsDialog({ section = null, linkPage = null, linkSection = null, onPage, onClose, onUsageLogin, actions, updates, auth, herdrVersion, onEnableNotifications, saveError, overPreview = false }: SettingsDialogProps) {
+function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClose, onUsageLogin, actions, auth, herdrVersion, onEnableNotifications, saveError, overPreview = false }: SettingsDialogProps) {
   const t = useT();
   const narrow = useNarrow();
   // opened by Forward, the dialog shows what that entry of the history showed
   const [restored] = useState(() => shownBy(settingsEntry(window.history.state)));
-  // a phone opens on the list of pages; a wider dialog shows the list beside the first page. A
-  // button that points at Updates opens on About whatever an entry still landing would restore
+  // a phone opens on the list of pages; a wider dialog shows the list beside the first page
   const linked = PAGES.find((candidate) => candidate.id === linkPage)?.id ?? null;
   // a page the command palette named opens first; the request is read, not taken, so a remount in development finds it again
   const [asked] = useState(requestedSettingsPage);
   useEffect(() => requestSettingsPage(null), []);
-  const [chosen, setChosen] = useState<SettingsPage | null>(section === "updates" ? "about" : asked ?? (restored ? restored.page : linked));
+  const [chosen, setChosen] = useState<SettingsPage | null>(asked ?? (restored ? restored.page : linked));
   const page = chosen ?? (narrow ? null : PAGES[0]!.id);
-  const [keyBarOpen, setKeyBarOpen] = useState(section === "updates" ? false : restored?.keyBar ?? false);
+  const [keyBarOpen, setKeyBarOpen] = useState(restored?.keyBar ?? false);
   // every step in is an entry of the history, so the system Back button takes one step out
   // (lib/settingsHistory.ts); the Back control, the X and Escape take the same entries off
   useEffect(() => { recordSettings(settingsLevels(narrow, page, keyBarOpen)); }, [narrow, page, keyBarOpen]);
@@ -1048,8 +1042,8 @@ function OpenSettingsDialog({ section = null, linkPage = null, linkSection = nul
       if (settingsBodyRef.current) settingsBodyRef.current.scrollTop = settingsScrollRef.current;
       keyBarButtonRef.current?.focus({ preventScroll: true });
     } else if (before === null) {
-      // a button that points at Updates opens on it, and the focus goes there too; so does a link to a group
-      const named = section === "updates" ? "updates" : linked && linkSection ? linkSection : null;
+      // a link to a group focuses it too
+      const named = linked && linkSection ? linkSection : null;
       const pointed = named ? settingsBodyRef.current?.querySelector<HTMLElement>(`[data-section="${CSS.escape(named)}"]`) : null;
       if (pointed) { pointed.focus({ preventScroll: true }); pointed.scrollIntoView(); }
       else tab(page)?.focus();
@@ -1058,13 +1052,13 @@ function OpenSettingsDialog({ section = null, linkPage = null, linkSection = nul
       if (page !== null) backRef.current?.focus();
       else tab(before.page)?.focus();
     }
-  }, [page, keyBarOpen, narrow, section]);
+  }, [page, keyBarOpen, narrow]);
   // server-side: the web server updates PC bridges, so it keeps this choice
   const [pcSettings, setPcSettings] = useState<MachineSettings | null>(null);
   const [pcSettingsError, setPcSettingsError] = useState<string | null>(null);
   // asked when a page that shows them opens, so a request that failed earlier is made again
   useEffect(() => {
-    if (page !== "remote" && page !== "about") return;
+    if (page !== "remote") return;
     let live = true;
     machineRequest<MachineSettings>("/settings").then((settings) => { if (live) setPcSettings(settings); }, () => { if (live) setPcSettings(null); });
     return () => { live = false; };
@@ -1109,7 +1103,7 @@ function OpenSettingsDialog({ section = null, linkPage = null, linkSection = nul
       case "devices": return <DevicesPage auth={auth} onSignOut={actions.lock} />;
       case "remote": return <RemotePcsPage actions={actions} pcSettings={pcSettings} pcSettingsError={pcSettingsError} onPcSettings={(patch) => void updatePcSettings(patch)} />;
       case "integrations": return <IntegrationsPage />;
-      case "about": return <AboutPage updates={updates} herdrVersion={herdrVersion} bridgesFollow={pcSettings?.auto_update_bridges === true} />;
+      case "about": return <AboutPage herdrVersion={herdrVersion} />;
       default: return null;
     }
   };

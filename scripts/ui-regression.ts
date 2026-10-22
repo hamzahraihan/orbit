@@ -780,50 +780,6 @@ try {
   await page.getByRole("button", { name: "Close settings", exact: true }).click();
   console.log("PASS sidebar rows switch between one line and two");
 
-  // An update request answered while the page is hidden (a phone app sent to the background) must
-  // still release the buttons: the status poll stops with the page, the request does not.
-  let releaseCheck!: () => void;
-  const checkGate = new Promise<void>((resolve) => { releaseCheck = resolve; });
-  const idleStatus = { managed: true, auto_update: false, phase: "idle", current_revision: null, latest_revision: null, current_version: "0.0.0", latest_version: "0.0.0", available: false, checked_at: new Date().toISOString(), blocked_reason: null, error: null };
-  await page.route("**/api/updates", (route) => route.fulfill({ json: idleStatus }));
-  await page.route("**/api/updates/check", async (route) => { await checkGate; await route.fulfill({ json: { ok: true } }); });
-  const setPageHidden = (hidden: boolean) => page.evaluate((hidden) => {
-    if (hidden) Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
-    else delete (document as unknown as Record<string, unknown>).visibilityState;
-    document.dispatchEvent(new Event("visibilitychange"));
-    // The app takes the change in a task it posts during the event. A hide and a show sent one
-    // after the other both land before that task, and are one render in which nothing changed:
-    // a task of the page's own, posted after the app's, has run once the app has taken it.
-    return new Promise<void>((resolve) => {
-      const channel = new MessageChannel();
-      channel.port1.onmessage = () => resolve();
-      channel.port2.postMessage(null);
-    });
-  }, hidden);
-  // the idle status poll runs every 30 s: a hide and a show restart it at once, onto the fake
-  for (const deadline = Date.now() + 10_000; ;) {
-    const restarted = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/updates", { timeout: 2_000 }).then(() => true, () => false);
-    await setPageHidden(true);
-    await setPageHidden(false);
-    if (await restarted) break;
-    assert.ok(Date.now() < deadline, "a hide and a show restart the update status poll");
-  }
-  await page.keyboard.press("ControlOrMeta+Shift+Comma");
-  await openSettingsPage(page, "About");
-  const checkUpdates = page.getByRole("dialog", { name: "Settings" }).getByRole("button", { name: "Check for updates", exact: true });
-  await checkUpdates.waitFor();
-  await checkUpdates.click();
-  await until(() => checkUpdates.isDisabled(), "the check is pending");
-  await setPageHidden(true);
-  releaseCheck();
-  await page.waitForTimeout(300);
-  await setPageHidden(false);
-  await until(async () => !(await checkUpdates.isDisabled()), "an answer that came while hidden releases the update buttons");
-  await page.getByRole("button", { name: "Close settings", exact: true }).click();
-  await page.unroute("**/api/updates/check");
-  await page.unroute("**/api/updates");
-  console.log("PASS an update answer that arrives while the page is hidden releases the buttons");
-
   // the More menu's Alerts item turns this device's alerts on, and off again (it stayed disabled once on)
   // the header has no button of its own for it or for New tab; from 769px Files is the header's own
   // button and leaves the menu, a phone keeps it there (deep-link-demo-regression)

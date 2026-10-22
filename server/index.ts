@@ -61,7 +61,6 @@ import { processStartedAt } from "./process-start.ts";
 import { PendingRequestBook } from "./pending-requests.ts";
 import { interruptCodexSteering } from "./codex-steering.ts";
 import { OutputWindow, OUTPUT_HIGH_BYTES, OUTPUT_HARD_BYTES, OUTPUT_STALL_MS, ReplayBuffer, wireBytes } from "./output-window.ts";
-import { connectUpdater, handleUpdateRequest, type UpdateService } from "./update-api.ts";
 import { handleHerdrUpdateRequest, HerdrUpdater } from "./herdr-update.ts";
 import { handlePortalRequest, PortalService } from "./portal.ts";
 import { handleUsageRequest, UsageService } from "./usage.ts";
@@ -274,7 +273,6 @@ export function createServer(
     devinDbPath?: string;
     /** Native Hermes store; pane process HERMES_HOME wins when this is unset. Tests use an isolated store. */
     hermesHome?: string;
-    updates?: UpdateService;
     /** updates herdr itself (server/herdr-update.ts); unset, the app offers no herdr update. Tests pass one that runs a stand-in herdr. */
     herdrUpdate?: HerdrUpdater;
     /** a public address through Portal (server/portal.ts); unset, the app offers none. Tests pass one that runs a stand-in portal. */
@@ -1265,9 +1263,6 @@ export function createServer(
         } catch (error) { return errorResponse(error); }
       }
 
-      if (pathname === "/api/updates" || pathname.startsWith("/api/updates/")) {
-        return handleUpdateRequest(request, pathname, options.updates);
-      }
       if (pathname === "/api/herdr/update") return handleHerdrUpdateRequest(request, options.herdrUpdate);
       if (pathname === "/api/portal" || pathname.startsWith("/api/portal/")) {
         return handlePortalRequest(request, pathname, options.portal, { port: bunServer.port ?? DEFAULT_PORT, tokenSet: token !== "", serveOnly });
@@ -2249,11 +2244,10 @@ export function createServer(
 }
 
 if (import.meta.main) {
-  const updates = connectUpdater();
   const portal = new PortalService({ stateDir: defaultStateDir() });
   let instance: ReturnType<typeof createServer>;
   try {
-    instance = createServer({ updates, herdrUpdate: new HerdrUpdater(), portal, registerBridge: true, herdrProfiles: readHerdrProfiles });
+    instance = createServer({ herdrUpdate: new HerdrUpdater(), portal, registerBridge: true, herdrProfiles: readHerdrProfiles });
   } catch (err) {
     const { code, syscall } = err as { code?: string; syscall?: string };
     // only the bind itself: a permission error reading a state file keeps its own message and path

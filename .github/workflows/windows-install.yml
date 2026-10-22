@@ -17,7 +17,6 @@ on:
       - 'scripts/preflight.ps1'
       - 'scripts/windows-install-e2e.ps1'
       - 'server/managed.ts'
-      - 'server/supervisor.ts'
       - 'package.json'
       - 'bun.lock'
       - 'vite.config.ts'
