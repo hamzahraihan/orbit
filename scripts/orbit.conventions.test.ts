@@ -43,4 +43,22 @@ describe("Orbit's removed features", () => {
     fail(offenders, "Orbit removed the app update checks: no source file may poll the upstream releases.");
     expect(offenders).toEqual([]);
   });
+
+  it("does not read a provider account for a usage meter", () => {
+    const present = absent([
+      "server/usage.ts",
+      "server/usage-login.ts",
+      "shared/usage-login.ts",
+      "src/lib/usage.ts",
+      "src/components/UsageMeters.tsx",
+      "src/components/UsageSettings.tsx",
+      "server/cliproxy.ts",
+    ]);
+    fail(present, "Orbit removed the subscription usage meters: the provider adapters must not come back.");
+    expect(present).toEqual([]);
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")),
+      /api\.anthropic\.com\/api\/oauth\/usage|chatgpt\.com\/backend-api\/wham\/usage|api2\.cursor\.sh|cli-chat-proxy\.grok\.com|cloudcode-pa\.googleapis\.com|opencode\.ai\/zen/).map((match) => match.at);
+    fail(offenders, "Orbit removed the subscription usage meters: no source file may read a provider's usage endpoint.");
+    expect(offenders).toEqual([]);
+  });
 });

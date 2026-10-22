@@ -63,10 +63,6 @@ import { interruptCodexSteering } from "./codex-steering.ts";
 import { OutputWindow, OUTPUT_HIGH_BYTES, OUTPUT_HARD_BYTES, OUTPUT_STALL_MS, ReplayBuffer, wireBytes } from "./output-window.ts";
 import { handleHerdrUpdateRequest, HerdrUpdater } from "./herdr-update.ts";
 import { handlePortalRequest, PortalService } from "./portal.ts";
-import { handleUsageRequest, UsageService } from "./usage.ts";
-import { CLIProxyService } from "./cliproxy.ts";
-import { CLIProxyRoutes } from "./cliproxy-routes.ts";
-import { UsageLoginService } from "./usage-login.ts";
 import { handleVoiceRequest, VoiceService } from "./voice.ts";
 
 import { BRIDGE_PROTOCOL } from "../shared/machines.ts";
@@ -277,12 +273,6 @@ export function createServer(
     herdrUpdate?: HerdrUpdater;
     /** a public address through Portal (server/portal.ts); unset, the app offers none. Tests pass one that runs a stand-in portal. */
     portal?: PortalService;
-    /** plan limits of the AI subscriptions signed in here; tests pass one without real sign-ins */
-    usage?: UsageService;
-    /** Tests supply an isolated proxy service, never a user's configured instance. */
-    cliProxy?: CLIProxyService;
-    /** Tests use a disposable credential home and stand-in CLI binaries. */
-    usageLogin?: UsageLoginService;
     /** voice input's key, provider and models; tests pass one with their own env and fetch */
     voice?: VoiceService;
     machines?: boolean;
@@ -379,10 +369,6 @@ export function createServer(
   const devices = new DeviceStore(options.stateDir ?? defaultStateDir());
   const preferences = new PreferenceStore(options.stateDir ?? defaultStateDir());
   const herdrSidebar = new HerdrSidebarConfig(options.herdrConfigPath ?? herdrConfigPath());
-  const cliProxy = options.cliProxy ?? new CLIProxyService(options.stateDir ?? defaultStateDir());
-  const cliProxyRoutes = new CLIProxyRoutes(cliProxy);
-  const usageLogin = options.usageLogin ?? new UsageLoginService();
-  const usage = options.usage ?? new UsageService(undefined, undefined, (refresh) => cliProxy.report(refresh));
   const voice = options.voice ?? new VoiceService({ stateDir: options.stateDir ?? defaultStateDir(), env: process.env, fetch });
   /** a login named here is taken as it is: a tagged node has none of its own to read (HERDR_WEB_TAILSCALE_OWNER) */
   const namedOwner = options.tailscaleOwner !== undefined ? options.tailscaleOwner : process.env["HERDR_WEB_TAILSCALE_OWNER"]?.trim() || undefined;
@@ -619,7 +605,7 @@ export function createServer(
       ...(window ? { flow: { stream_id: window.id, offset: window.write(bytes, wireBytes(data)) } } : {}),
     });
   }
-  const { push, omo, gjc, claudeAgents, plans, clientSnapshot, machines, broadcastAll, logPushError, collector, waitTimer } = createStatusHub({ options, devices, clients, present, pending, drainPending, holdPendingPane, usage, usageLogin });
+  const { push, omo, gjc, claudeAgents, plans, clientSnapshot, machines, broadcastAll, logPushError, collector, waitTimer } = createStatusHub({ options, devices, clients, present, pending, drainPending, holdPendingPane });
   const bridgeToken = randomBytes(32).toString("hex");
 
   function broadcast(paneId: string, message: ServerMessage): void {
@@ -1270,9 +1256,6 @@ export function createServer(
       // what every browser of this server shares; a watching device reads it and cannot change it (above)
       if (pathname === "/api/preferences") return handlePreferencesRequest(request, preferences);
 
-      if (pathname === "/api/usage") return handleUsageRequest(request, url, usage);
-      if (pathname === "/api/usage/login") { bunServer.timeout(request, 30); return usageLogin.handle(request, collector.trackPane); }
-      if (pathname === "/api/cliproxy" || pathname.startsWith("/api/cliproxy/")) { bunServer.timeout(request, 60); return cliProxyRoutes.handle(request); }
       // a long clip can keep the provider silent past Bun's 10 s idle limit before the first line
       if (pathname === "/api/voice" || pathname.startsWith("/api/voice/")) { bunServer.timeout(request, 120); return handleVoiceRequest(request, pathname, voice); }
 

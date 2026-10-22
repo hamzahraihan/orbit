@@ -6,7 +6,6 @@ import { join } from "node:path";
 import { chromium } from "playwright-core";
 import { createServer } from "../server/index.ts";
 import { workspaceCreate, workspaceClose } from "../server/herdr/client.ts";
-import { UsageService } from "../server/usage.ts";
 import { chromePath } from "./chrome-path.ts";
 import { openSettingsPage } from "./settings-page.ts";
 
@@ -274,7 +273,7 @@ if (import.meta.main) {
   // Importing the reusable check must not start herdr; bootstrap only the standalone fixture.
   await import("./test-herdr.ts");
   const root = mkdtempSync(join(tmpdir(), "herdr-terminal-pinch-qa-"));
-  const server = createServer({ port: 0, hostname: "127.0.0.1", stateDir: root, token: "", usage: new UsageService(undefined, []) });
+  const server = createServer({ port: 0, hostname: "127.0.0.1", stateDir: root, token: "" });
   let browser: Browser | undefined;
   let workspace: string | undefined;
   try {

@@ -7,7 +7,6 @@ import { chromium } from "playwright-core";
 import type { Page } from "playwright-core";
 import { createServer } from "../server/index.ts";
 import { HerdrError, herdrRpc, sessionSnapshot, workspaceClose, workspaceCreate } from "../server/herdr/client.ts";
-import { UsageService } from "../server/usage.ts";
 
 type State = {
   readonly selector: string;
@@ -105,7 +104,6 @@ try {
   server = createServer({
     port: 0, hostname: "127.0.0.1", token: "", tailscaleOwner: null,
     stateDir: join(root, "state"), codexHome: join(root, "codex"),
-    usage: new UsageService(undefined, []),
   });
   const origin = `http://127.0.0.1:${server.port}`;
   browser = await chromium.launch({

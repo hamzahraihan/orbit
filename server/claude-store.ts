@@ -79,7 +79,7 @@ export function claudeStoreKey(store: string, id: { dev: bigint; ino: bigint } |
 
 /**
  * The stores a Claude on Windows may use: the default one and each `~/.claude-*` beside it (the
- * usual second account, as usage.ts finds its sign-in). One listing of home, nothing deeper.
+ * usual second account). One listing of home, nothing deeper.
  */
 async function windowsClaudeStores(home: string): Promise<string[]> {
   let siblings: string[] = [];

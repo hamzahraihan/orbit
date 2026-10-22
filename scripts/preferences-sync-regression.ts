@@ -11,9 +11,8 @@ import { chromePath } from "./chrome-path.ts";
 
 await import("./test-herdr.ts");
 const { createServer } = await import("../server/index.ts");
-const { UsageService } = await import("../server/usage.ts");
 const root = mkdtempSync(join(tmpdir(), "herdr-preferences-sync-"));
-const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state"), usage: new UsageService(undefined, []) });
+const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state") });
 const origin = `http://127.0.0.1:${server.port}`;
 
 interface Opened { context: BrowserContext; page: Page; puts: { settings: Record<string, unknown>; pins?: string[] }[] }

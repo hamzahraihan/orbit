@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from "react";
-import { ArrowLeft, Bell, Check, ChevronRight, Gauge, Info, Keyboard, MessageSquare, Mic, Monitor, Palette, Plug, Plus, Search, Smartphone, SquareTerminal, Star, X, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Bell, Check, ChevronRight, Info, Keyboard, MessageSquare, Mic, Monitor, Palette, Plug, Plus, Search, Smartphone, SquareTerminal, Star, X, type LucideIcon } from "lucide-react";
 
 import "./SettingsDialog.css";
 
@@ -38,7 +38,6 @@ import { copyText } from "../lib/clipboard.ts";
 import { PushTestControls } from "./PushTestControls.tsx";
 import { previewAlertSound, unlockAlertSound } from "../lib/alertSound.ts";
 import { HerdrUpdateControls } from "./UpdateControls.tsx";
-import { UsageSettings } from "./UsageSettings.tsx";
 import { useSheetSwipe } from "../lib/sheets.ts";
 import { useMediaQuery } from "../lib/useMediaQuery.ts";
 import { CrashProbe, RegionCrash } from "./AppCrash.tsx";
@@ -54,8 +53,6 @@ export interface SettingsDialogProps {
   /** the page shown, for the address; null while a phone shows its list of pages */
   onPage?: (page: string | null) => void;
   onClose: () => void;
-  /** Account login runs on this server's PC, even while another PC is selected. */
-  onUsageLogin: (paneId: string) => void;
   actions: AppActions;
   /** how this browser got in, from the last health check */
   auth: HealthAuth | null;
@@ -204,7 +201,6 @@ export const PAGES: readonly { id: SettingsPage; icon: LucideIcon }[] = [
   { id: "terminal", icon: SquareTerminal },
   { id: "alerts", icon: Bell },
   { id: "voice", icon: Mic },
-  { id: "usage", icon: Gauge },
   { id: "shortcuts", icon: Keyboard },
   { id: "devices", icon: Smartphone },
   { id: "remote", icon: Monitor },
@@ -990,7 +986,7 @@ function SaveFailure({ error }: { error: UserError }) {
   </div>;
 }
 
-function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClose, onUsageLogin, actions, auth, herdrVersion, onEnableNotifications, saveError, overPreview = false }: SettingsDialogProps) {
+function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClose, actions, auth, herdrVersion, onEnableNotifications, saveError, overPreview = false }: SettingsDialogProps) {
   const t = useT();
   const narrow = useNarrow();
   // opened by Forward, the dialog shows what that entry of the history showed
@@ -1023,7 +1019,7 @@ function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClo
   useSheetSwipe(surface, onClose);
   const shown = useRef<{ page: SettingsPage | null; keyBar: boolean } | null>(null);
   const label = (id: SettingsPage): string => t(id === "appearance" ? "Appearance" : id === "chat" ? "Chat" : id === "terminal" ? "Terminal" : id === "alerts" ? "Alerts" : id === "voice" ? "Voice input"
-    : id === "usage" ? "Subscription usage" : id === "shortcuts" ? "Shortcuts" : id === "devices" ? "Phone & devices" : id === "remote" ? "Remote PCs" : id === "integrations" ? "Agent integrations" : "About");
+    : id === "shortcuts" ? "Shortcuts" : id === "devices" ? "Phone & devices" : id === "remote" ? "Remote PCs" : id === "integrations" ? "Agent integrations" : "About");
   const openPage = (id: SettingsPage): void => { setKeyBarOpen(false); setChosen(id); };
   const openKeyBar = (): void => {
     settingsScrollRef.current = settingsBodyRef.current?.scrollTop ?? 0;
@@ -1098,7 +1094,6 @@ function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClo
       case "terminal": return <TerminalPage keyBarButtonRef={keyBarButtonRef} onEditKeyBar={openKeyBar} />;
       case "alerts": return <AlertsPage onEnableNotifications={onEnableNotifications} />;
       case "voice": return <VoicePage />;
-      case "usage": return <UsageSettings onLocalLogin={onUsageLogin} />;
       case "shortcuts": return <ShortcutsPage />;
       case "devices": return <DevicesPage auth={auth} onSignOut={actions.lock} />;
       case "remote": return <RemotePcsPage actions={actions} pcSettings={pcSettings} pcSettingsError={pcSettingsError} onPcSettings={(patch) => void updatePcSettings(patch)} />;

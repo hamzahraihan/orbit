@@ -12,7 +12,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "playwright-core";
 import { createServer } from "../server/index.ts";
-import { UsageService } from "../server/usage.ts";
 import { herdrRpc, workspaceClose, workspaceCreate } from "../server/herdr/client.ts";
 import { chromePath } from "./chrome-path.ts";
 
@@ -50,7 +49,7 @@ setInterval(() => {}, 1 << 30);
   await ready;
 
   server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(state, "server"),
-    tailscaleOwner: null, usage: new UsageService(undefined, []) });
+    tailscaleOwner: null });
   browser = await chromium.launch({ executablePath: chromePath(), headless: true, args: ["--no-sandbox"] });
   // a Chinese page, as the report's: under zh every fullwidth mark is trimmed, not only ，（）
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: "zh-CN" });

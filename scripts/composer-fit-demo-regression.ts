@@ -24,7 +24,7 @@ const LONG_MODEL = "gpt-5.6-sol-codex-preview-2026-10";
 // ids it names: "GPT-5.6" and "Opus 5.5"; null: the conversation names no model
 const NAMED = ["gpt-5.6", "claude-opus-5-5"] as const;
 
-interface Case { model: string | null; agent?: "claude" | "codex" | "pi" | "omo"; pending?: boolean; effort?: string | null; status?: "working" | "idle"; mic?: boolean; ring?: boolean; chatFontSize?: number | null; showUsage?: boolean; weeklyOnly?: boolean; suggestion?: string | null; contextUsed?: number; stream?: number }
+interface Case { model: string | null; agent?: "claude" | "codex" | "pi" | "omo"; pending?: boolean; effort?: string | null; status?: "working" | "idle"; mic?: boolean; ring?: boolean; chatFontSize?: number | null; suggestion?: string | null; contextUsed?: number; stream?: number }
 type Draw = "full" | "no-effort" | "out";
 
 const measure = (page: Page) => page.evaluate(() => {
@@ -212,7 +212,7 @@ try {
     const context = await browser.newContext({ viewport: { width, height: 844 }, hasTouch: touch, isMobile: touch, locale: "en-US" });
     try {
       await context.addInitScript((fitCase) => {
-        if (localStorage.getItem("herdr-web-ui:settings") === null) localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en", voiceInput: fitCase.mic ? "on" : "off", chatFontSize: fitCase.chatFontSize ?? null, showUsage: fitCase.showUsage ?? false, usageCount: "used" }));
+        if (localStorage.getItem("herdr-web-ui:settings") === null) localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en", voiceInput: fitCase.mic ? "on" : "off", chatFontSize: fitCase.chatFontSize ?? null }));
         Object.assign(window, { fitCase });
       }, { agent: "claude", pending: true, status: "working", effort: "xhigh", mic: false, ring: true, ...state });
       const page = await context.newPage();
@@ -697,19 +697,10 @@ try {
       });
       console.log("PASS connection loss suspends pending items, confirmed holds need Send now, and old bridges keep the draft");
 
-      for (const weeklyOnly of [false, true]) await withCard(browser, 1440, { agent: "codex", model: "gpt-5.6", showUsage: true, weeklyOnly }, async (page) => {
-        const usage = page.locator(".composer-status .composer-usage");
-        await usage.waitFor();
-        assert.equal(await usage.evaluate((node) => node.tagName === "SPAN" && !node.hasAttribute("tabindex")), true, "desktop quota is a read-only glance");
-        assert.equal(await usage.locator('span[aria-hidden="true"]').textContent(), weeklyOnly ? "Weekly 84%" : "5h 22%", "the session precedes the tighter week; no session falls back to the week");
-        assert.equal(await usage.evaluate((node) => node.classList.contains("is-high")), weeklyOnly);
-        assert.match(await usage.getAttribute("title") ?? "", /sam@work\.example/);
-      });
-      await withCard(browser, 390, { agent: "codex", model: "gpt-5.6", showUsage: true }, async (page) => {
-        assert.equal(await page.locator(".composer-status .composer-usage").count(), 0, "mobile omits the desktop quota even when sidebar limits are enabled");
+      await withCard(browser, 390, { agent: "codex", model: "gpt-5.6" }, async (page) => {
         assert.equal(await page.locator(".composer-context").evaluate((node) => node.tagName === "SPAN" && !node.hasAttribute("aria-expanded")), true);
       });
-      console.log("PASS desktop quota is read-only and session-first with weekly fallback; mobile keeps only the inert context ring");
+      console.log("PASS mobile keeps only the inert context ring");
 
       // The message box is typed at the transcript's size (Settings → Chat font size): with a mouse
       // exactly, on a phone never under 16px, the smallest size iOS does not zoom the page for

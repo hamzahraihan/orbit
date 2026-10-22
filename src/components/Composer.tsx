@@ -54,7 +54,6 @@ import { useFacesArrived } from "../lib/fontFaces.ts";
 import { activeTrigger, applyCompletion, type ActiveTrigger } from "../lib/mentions.ts";
 import { resolveComposerMenuActiveItemId } from "../lib/composerMenuHighlight.ts";
 import { quickReplyButtons, useSettings } from "../lib/settings.ts";
-import { composerUsage, formatPercent, formatResetIn, HIGH_PERCENT, meterPercent, meterText, providerForAgent, statusWindows, usageName, useUsage, windowLabel } from "../lib/usage.ts";
 import { AgentMark } from "./AgentMark.tsx";
 import { BackgroundTasks } from "./BackgroundTasks.tsx";
 import { MicButton, VoiceRecordingPill, useDictation } from "./VoiceInput.tsx";
@@ -248,11 +247,6 @@ export function Composer({
   const { fetchPaneCommands, fetchPaneFiles } = useMachineApi();
   const { settings } = useSettings();
   const mobile = useMediaQuery("(max-width: 640px), (pointer: coarse)");
-  const usageEnabled = settings.showUsage && !mobile && machineId === "local" && providerForAgent(agent) !== null;
-  const { report: usageReport } = useUsage(usageEnabled);
-  const usage = usageEnabled && usageReport !== null ? composerUsage(usageReport.providers, agent, settings.usageOrder, settings.usageHidden) : undefined;
-  const usageWindows = usage === undefined ? [] : statusWindows(usage);
-  const usageLimit = usageWindows[0];
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const surfaceRef = useRef<HTMLDivElement | null>(null);
   const statusRef = useRef<HTMLDivElement | null>(null);
@@ -999,12 +993,6 @@ export function Composer({
   const hint = composerStatusHint({ uploading, connected, text, noRoom: roomless !== undefined });
   const model = metadata?.model ? modelLabel(metadata.model) : null;
   const modelShown = Boolean(metadata?.model || metadata?.reasoning_effort);
-  const usageDetail = usageWindows.map((window) => {
-    const reset = formatResetIn(window.resets_at, Date.now());
-    return `${windowLabel(window)} ${meterText(window, settings.usageCount)}${reset ? ` · ${t("Resets in {time}", { time: reset })}` : ""}`;
-  }).join("\n");
-  const usageCaption = usageLimit === undefined ? "" : `${usageLimit.kind === "session" ? "5h" : windowLabel(usageLimit)} ${formatPercent(meterPercent(usageLimit, settings.usageCount))}`;
-  const usageAccessible = usage === undefined ? "" : `${t("Subscription usage")}: ${usageName(usage)}, ${usageDetail.replaceAll("\n", ", ")}`;
   const hintText = hint === null ? null
     : hint === "no-room" ? t("{max}-character limit · {count} over", { max: formatChars(MAX_COMPOSER_CHARS), count: formatChars(roomless?.missing ?? 0) })
     : hint === "near-limit" ? composerFull(text.length, MAX_COMPOSER_CHARS) ? t("{max}-character limit", { max: formatChars(MAX_COMPOSER_CHARS) }) : t("{count} characters left", { count: MAX_COMPOSER_CHARS - text.length })
@@ -1020,7 +1008,7 @@ export function Composer({
   // its number is open on desktop; transcript/status refreshes need no measurement layout.
   useLayoutEffect(fitStatus, [fitStatus, agent, metadata?.model, metadata?.reasoning_effort,
     metadata?.context?.window, contextShown && !mobile && metadata?.context ? contextLeftPercent(metadata.context) : null,
-    contextShown, mobile, usageCaption, usage?.problem, hintText, dictation.shown, backgroundTasks,
+    contextShown, mobile, hintText, dictation.shown, backgroundTasks,
     plan?.done, plan?.total, statusCompact, compactNow !== undefined, facesLoaded, t]);
   const menuId = `composer-menu-${paneId}`;
   // the suggestions' own close, for a pointer or a phone, which has no Escape: it does what Escape does, and the
@@ -1327,13 +1315,6 @@ export function Composer({
                 </span>
               </span>}
               {metadata?.context && <ContextRing context={metadata.context} shown={contextShown} readOnly={mobile} onToggle={() => setContextShown((open) => !open)} onCompact={compactNow} />}
-              {usage !== undefined && usage.problem === null && usageLimit !== undefined && <span
-                className={`composer-usage${usageLimit.used_percent >= HIGH_PERCENT ? " is-high" : ""}${usage.problem ? " has-problem" : ""}`}
-                title={`${usageName(usage)}\n${usageDetail}`}
-              >
-                <span aria-hidden="true">{usageCaption}</span>
-                <span className="visually-hidden">{usageAccessible}</span>
-              </span>}
             </span>
             {/* the chip is a button in the left controls; its count is still said here, where a change is announced */}
             {backgroundTasks > 0 && <span className="composer-task-count visually-hidden">{t(backgroundTasks === 1 ? "{n} background task" : "{n} background tasks", { n: backgroundTasks })}</span>}

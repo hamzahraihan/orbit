@@ -63,7 +63,7 @@ function cacheControlFor(pathname: string): string {
  *   directive that matters: KaTeX output and the agent marks are the two places that put
  *   third-party HTML into the page.
  * - `style-src 'self' 'unsafe-inline'`: inline style attributes are how measured layout
- *   reaches the DOM (AgentPicker, RowMenu, Droplet, UsageMeters), and KaTeX writes one on
+ *   reaches the DOM (AgentPicker, RowMenu, Droplet), and KaTeX writes one on
  *   every expression it cannot render. It is also load-bearing for the terminal itself:
  *   xterm.js builds its layers by appending a <style> element to the DOM, and a
  *   DOM-inserted <style> is subject to style-src, so without 'unsafe-inline' the pane

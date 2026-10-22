@@ -703,9 +703,8 @@ if (import.meta.main) {
   await import("./test-herdr.ts");
   const { chromium } = await import("playwright-core");
   const { createServer } = await import("../server/index.ts");
-  const { UsageService } = await import("../server/usage.ts");
   const state = mkdtempSync(join(tmpdir(), "herdr-web-ui-tab-menu-state-"));
-  const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: state, usage: new UsageService(undefined, []) });
+  const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: state });
   const browser = await chromium.launch({ executablePath: chromePath(), headless: true, args: ["--no-sandbox"] });
   try { await checkTabMenu(browser, `http://127.0.0.1:${server.port}`); }
   finally { await browser.close(); server.stop(); rmSync(state, { recursive: true, force: true }); }

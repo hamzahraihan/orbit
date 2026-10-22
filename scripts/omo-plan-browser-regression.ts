@@ -11,7 +11,6 @@ import { createServer } from "../server/index.ts";
 import { workspaceClose, workspaceCreate } from "../server/herdr/client.ts";
 import { omoSessionFolder } from "../server/omo.ts";
 import { startShellAgent } from "../server/shell-agent.ts";
-import { UsageService } from "../server/usage.ts";
 import type { HerdrPane, ServerMessage } from "../shared/protocol.ts";
 
 const root = mkdtempSync(join(tmpdir(), "omo-plan-browser-"));
@@ -60,7 +59,7 @@ try {
     await startShellAgent("omo", paneId, [], { command: `export OMO_CODING_AGENT_DIR=${quote(store)}; cd ${quote(root)} && exec ${quote(process.execPath)} ${quote(launcher)}` });
     await ready;
   } finally { watcher.close(); }
-  server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state"), tailscaleOwner: null, usage: new UsageService(undefined, []) });
+  server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state"), tailscaleOwner: null });
   const origin = `http://127.0.0.1:${server.port}`;
   // Plan polling pushes its exact changed state, so readiness needs no timing loop.
   await new Promise<void>((resolve, reject) => {

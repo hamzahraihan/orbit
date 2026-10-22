@@ -155,10 +155,9 @@ if (import.meta.main) {
   await import("./test-herdr.ts");
   const { createServer } = await import("../server/index.ts");
   const { workspaceCreate, workspaceClose } = await import("../server/herdr/client.ts");
-  const { UsageService } = await import("../server/usage.ts");
   const { chromium } = await import("playwright-core");
   const root = mkdtempSync(join(tmpdir(), "herdr-command-arrows-qa-"));
-  const server = createServer({ port: 0, hostname: "127.0.0.1", stateDir: root, token: "", usage: new UsageService(undefined, []) });
+  const server = createServer({ port: 0, hostname: "127.0.0.1", stateDir: root, token: "" });
   let browser: Browser | undefined;
   let workspace: string | undefined;
   try {

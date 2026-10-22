@@ -7,7 +7,6 @@ import { basename, join } from "node:path";
 import { chromium } from "playwright-core";
 import { createServer } from "../server/index.ts";
 import { herdrRpc, sessionSnapshot, workspaceClose, workspaceCreate } from "../server/herdr/client.ts";
-import { UsageService } from "../server/usage.ts";
 import { chromePath } from "./chrome-path.ts";
 
 // The sheet's open agent list floats over it: a stroke down on the list at its top is the list's,
@@ -24,7 +23,7 @@ writeFileSync(join(repo, "README.md"), "worktree fixture\n");
 assert.equal(git("add", "README.md").exitCode, 0);
 assert.equal(git("commit", "-q", "-m", "fixture").exitCode, 0, "git commit");
 const owned: string[] = [];
-const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state"), usage: new UsageService(undefined, []) });
+const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state") });
 try {
   const parent = await workspaceCreate({ cwd: repo, label: "herdr-web-ui-test-phone-worktree" });
   owned.push(parent.workspace.workspace_id);

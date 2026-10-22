@@ -6,7 +6,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium, type Browser, type WebSocket as BrowserSocket, type WebSocketRoute } from "playwright-core";
 import { createServer } from "../server/index.ts";
-import { UsageService } from "../server/usage.ts";
 import { herdrRpc, paneSplit, tabCreate, tabRename, workspaceClose, workspaceCreate } from "../server/herdr/client.ts";
 import type { ClientMessage, PendingMessage, ServerMessage } from "../shared/protocol.ts";
 import { openSettingsPage } from "./settings-page.ts";
@@ -48,7 +47,7 @@ try {
     assert.equal(bytes(), expected, label);
   };
   await herdrRpc("pane.report_agent", { pane_id: pane, source: "manual", agent: "claude", state: "working" });
-  server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state"), usage: new UsageService(undefined, []) });
+  server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state") });
   browser = await chromium.launch({ executablePath: chromePath(), headless: true, args: ["--no-sandbox", "--accept-lang=en-US"] });
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: "en-US" });
   await context.addInitScript(() => localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en", defaultView: "chat", alertsOn: false })));

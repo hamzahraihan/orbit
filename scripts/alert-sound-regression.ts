@@ -278,9 +278,8 @@ export async function checkAlertSound(browser: Browser, origin: string): Promise
 if (import.meta.main) {
   const { chromium } = await import("playwright-core");
   const { createServer } = await import("../server/index.ts");
-  const { UsageService } = await import("../server/usage.ts");
   const stateDir = mkdtempSync(join(tmpdir(), "herdr-web-ui-sound-server-"));
-  const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir, usage: new UsageService(undefined, []) });
+  const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir });
   const browser = await chromium.launch({
     executablePath: chromePath(),
     headless: true, args: ["--no-sandbox", "--accept-lang=en-US"],

@@ -6,7 +6,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "playwright-core";
 import { createServer } from "../server/index.ts";
-import { UsageService } from "../server/usage.ts";
 import { herdrRpc, paneScrollInfo, workspaceCreate, workspaceClose } from "../server/herdr/client.ts";
 import { openSettingsPage } from "./settings-page.ts";
 
@@ -43,7 +42,7 @@ sys.stdout.flush()
   await herdrRpc("pane.send_input", { pane_id: paneId, text: "seq 1 300; python3 fixture.py", keys: ["enter"] });
   await ready;
   assert.equal((await paneScrollInfo(paneId))?.max_offset_from_bottom, 0, "the application owns its history");
-  server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(state, "state"), usage: new UsageService(undefined, []) });
+  server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(state, "state") });
   browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? chromium.executablePath(), headless: true, args: ["--no-sandbox"] });
   const context = await browser.newContext({ viewport: { width: 1024, height: 600 }, locale: "en-US" });
   await context.addInitScript(() => {

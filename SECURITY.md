@@ -39,8 +39,6 @@ In scope, for example:
 - script injection in the web client (chat Markdown, file viewer, prompt cards, push payloads);
 - the remote-PC path: SSH, the bridge bundle's checksums and the relay (`server/ssh.ts`,
   `server/remote-bundle.ts`, `server/machine-api.ts`, `server/machine-relay.ts`);
-- sign-ins the subscription usage strip reads (`server/usage.ts`) leaving the server's PC other than
-  to their own provider;
 - push keys and subscriptions (`server/push.ts`).
 
 Out of scope, as documented in [Access and safety](docs/guide.md#access-and-safety):

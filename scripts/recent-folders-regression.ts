@@ -12,7 +12,6 @@ import { chromePath } from "./chrome-path.ts";
 
 await import("./test-herdr.ts");
 const { createServer } = await import("../server/index.ts");
-const { UsageService } = await import("../server/usage.ts");
 // not under a folder recent folders leave out: the temporary directory, or this checkout when it
 // is one of herdr's worktrees (`passingFolder`), so the fixtures live under the home's cache
 const cache = join(homedir(), ".cache", "herdr-web-ui-tests");
@@ -20,7 +19,7 @@ mkdirSync(cache, { recursive: true });
 const root = realpathSync(mkdtempSync(join(cache, "herdr-recent-folders-")));
 if (passingFolder(root)) throw new Error(`the fixtures' folder ${root} is one recent folders leave out`);
 const owned = new Set<string>();
-const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state"), usage: new UsageService(undefined, []) });
+const server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state") });
 try {
   const browser = await chromium.launch({
     executablePath: chromePath(),

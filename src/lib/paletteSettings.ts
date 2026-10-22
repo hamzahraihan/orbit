@@ -1,6 +1,6 @@
 import type { Translate } from "./i18n.ts";
 
-export type SettingsPageId = "appearance" | "chat" | "terminal" | "alerts" | "voice" | "usage" | "shortcuts" | "devices" | "remote" | "integrations" | "about";
+export type SettingsPageId = "appearance" | "chat" | "terminal" | "alerts" | "voice" | "shortcuts" | "devices" | "remote" | "integrations" | "about";
 
 /** What the palette shows for one Settings page: its name and the words a user may look for it by. */
 export interface SettingsPageEntry {
@@ -21,7 +21,6 @@ export function settingsPageEntries(t: Translate): SettingsPageEntry[] {
     { id: "terminal", label: t("Terminal"), aliases: t("terminal font size key bar keyboard clipboard") },
     { id: "alerts", label: t("Alerts"), aliases: t("notifications sound push bell needs input finished") },
     { id: "voice", label: t("Voice input"), aliases: t("dictation microphone speech openai") },
-    { id: "usage", label: t("Subscription usage"), aliases: t("plan limits quota meters") },
     { id: "shortcuts", label: t("Shortcuts"), aliases: t("keyboard keys bindings hotkeys") },
     { id: "devices", label: t("Phone & devices"), aliases: t("phone install keep screen on app") },
     { id: "remote", label: t("Remote PCs"), aliases: t("machines computers ssh bridge plugins") },

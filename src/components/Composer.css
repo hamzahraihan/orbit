@@ -400,20 +400,6 @@
   color: var(--text);
 }
 
-.composer-usage {
-  flex: none;
-  color: var(--text-dim);
-  font-size: var(--fs-xs);
-}
-
-.composer-usage.is-high {
-  color: var(--status-blocked);
-}
-
-.composer-usage.has-problem {
-  color: var(--text-dim);
-}
-
 .composer-status .agent-mark {
   display: inline-flex;
   flex: none;

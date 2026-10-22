@@ -12,7 +12,7 @@
  * one notice instead of a TUI. A message sent from a chat gets a demo answer.
  * What does not: files, images, push and remote PCs, which need a real machine.
  */
-import type { AgentIntegration, AgentStatus, ConversationTurn, IntegrationsResponse, Machine, MachineEvent, PaneDirection, PaneFindMatch, PaneFindRequest, PanePlan, PaneResized, PaneSplit, PaneSwapped, PaneZoomed, PendingMessage, PlanStep, PluginActionResult, PluginActions, PluginActionsResponse, PortalStatus, ServerMessage, SessionSnapshot, TabMoved, UsageReport, WorkspaceCreated, WorkspaceInfo, WorktreeEntry, WorktreeListing, WorktreeOpened, WorktreeRemoved } from "../../shared/protocol.ts";
+import type { AgentIntegration, AgentStatus, ConversationTurn, IntegrationsResponse, Machine, MachineEvent, PaneDirection, PaneFindMatch, PaneFindRequest, PanePlan, PaneResized, PaneSplit, PaneSwapped, PaneZoomed, PendingMessage, PlanStep, PluginActionResult, PluginActions, PluginActionsResponse, PortalStatus, ServerMessage, SessionSnapshot, TabMoved, WorkspaceCreated, WorkspaceInfo, WorktreeEntry, WorktreeListing, WorktreeOpened, WorktreeRemoved } from "../../shared/protocol.ts";
 import type { RepoDiffFile, RepoDiffFileList, RepoDiffFilePatch, RepoDiffRepository, RepoDiffScope } from "../../shared/protocol.ts";
 import { VOICE_DEFAULTS, type VoiceStatus } from "../../shared/voice.ts";
 import { isAgentName } from "../../shared/agent-name.ts";
@@ -467,41 +467,6 @@ const DEMO_DIFF: { file: RepoDiffFile; patch: string | null }[] = [
   ].join("\n") },
 ];
 
-/** Settings → Subscription usage on the demo: plans as the workstation's CLIs might report them, resets counted from now. */
-function usageReport(): UsageReport {
-  const now = Date.now();
-  const at = (hours: number) => new Date(now + hours * 3_600_000).toISOString();
-  // Claude and Codex state a window's length (5 h, 7 days), so the server knows when it began; the others do not
-  const session = (hours: number) => ({ resets_at: at(hours), starts_at: at(hours - 5) });
-  const week = (hours: number) => ({ resets_at: at(hours), starts_at: at(hours - 168) });
-  const checked = new Date(now).toISOString();
-  return { providers: [
-    { id: "claude", key: "claude:demo-claude", account: "sam@example.com", plan: "max", problem: null, checked_at: checked, windows: [
-      { kind: "session", scope: null, used_percent: 38, ...session(2.4) },
-      { kind: "week", scope: null, used_percent: 61, ...week(78) },
-      { kind: "week", scope: "Sonnet", used_percent: 12, ...week(78) },
-    ] },
-    { id: "codex", key: "codex:demo-codex-work", account: "sam@work.example", plan: "pro", problem: null, checked_at: checked, windows: [
-      { kind: "session", scope: null, used_percent: 22, ...session(1.2) },
-      { kind: "week", scope: null, used_percent: 84, ...week(97) },
-    ] },
-    { id: "codex", key: "codex:demo-codex-home", account: "sam@example.com", plan: "plus", problem: null, checked_at: checked, windows: [
-      { kind: "session", scope: null, used_percent: 5, ...session(3.1) },
-      { kind: "week", scope: null, used_percent: 31, ...week(140) },
-    ] },
-    { id: "cursor", key: "cursor:demo-cursor", account: "sam@example.com", plan: "pro", problem: null, checked_at: checked, windows: [
-      { kind: "month", scope: null, used_percent: 27, resets_at: at(290), starts_at: null },
-      { kind: "month", scope: "Cursor models", used_percent: 19, resets_at: at(290), starts_at: null },
-      { kind: "month", scope: "Other models", used_percent: 8, resets_at: at(290), starts_at: null },
-    ] },
-    { id: "opencode", key: "opencode:demo-opencode", account: null, plan: "Go", problem: null, checked_at: checked, windows: [
-      { kind: "session", scope: null, used_percent: 10, resets_at: at(3.2), starts_at: null },
-      { kind: "week", scope: null, used_percent: 28, resets_at: at(18), starts_at: null },
-      { kind: "month", scope: null, used_percent: 15, resets_at: at(520), starts_at: null },
-    ] },
-  ] };
-}
-
 /** One fictional plugin, so the palette's Plugin actions group and Settings have something to show. */
 const PLUGINS: PluginActions[] = [
   { plugin_id: "example.layout", name: "Layout", version: "0.1.0", description: "Apply project layouts", enabled: true, actions: [
@@ -530,28 +495,6 @@ async function route(url: URL, method: string, init: RequestInit | undefined, in
   if (path === "/api/portal") return json({ supported: false, version: null, min_version: "v2.6.1", usable: false, phase: "idle", relay: null, url: null, blocked: null, error: null, output: null } satisfies PortalStatus, 200, { "cache-control": "no-store" });
   if (path === "/api/portal/start" || path === "/api/portal/stop") return error("portal_unsupported", "The demo opens no public address.", 409);
   if (path === "/api/access") return json({ port: 7317, tailscale: { state: "running", dns_name: "workstation.example.ts.net", serving_url: "https://workstation.example.ts.net", serve_command: null, serve_url: null } });
-  if (path === "/api/usage") return json(usageReport(), 200, { "cache-control": "no-store" });
-  if (path === "/api/usage/login") {
-    if (method === "GET") {
-      if (url.searchParams.has("provider")) return json({ accounts: url.searchParams.get("provider") === "cursor" ? ["cursor@example.test"] : [] });
-      return json({ providers: [
-        { id: "claude", cli: "claude", installed: true, local: true, separate_home: true },
-        { id: "codex", cli: "codex", installed: true, local: true, separate_home: true },
-        { id: "cursor", cli: "Cursor CLI (agent)", installed: true, local: true, separate_home: false },
-        { id: "copilot", cli: "GitHub CLI (gh)", installed: true, local: true, separate_home: false },
-        { id: "grok", cli: "grok", installed: false, local: true, separate_home: false },
-        { id: "antigravity", cli: "Antigravity CLI (agy)", installed: true, local: false, separate_home: false },
-        { id: "opencode", cli: "opencode", installed: true, local: true, separate_home: false },
-      ] });
-    }
-    return error("demo", "This demo cannot run a local CLI. Sign in on an installed server.", 409);
-  }
-  // Public demo never saves management credentials or starts a real OAuth login.
-  if (path === "/api/cliproxy") {
-    if (method === "GET") return json({ configured: false, url: "http://localhost:8317", ok: false, problem: null });
-    return error("demo", "Connect CLIProxyAPI from an installed server, not the public demo.", 409);
-  }
-  if (path === "/api/cliproxy/login" || path === "/api/cliproxy/callback") return error("demo", "Sign in from an installed server, not the public demo.", 409);
   if (path === "/api/push" || path.startsWith("/api/push/")) return error("push_unavailable", "the demo sends no alerts", 404);
   if (path === "/api/machines/settings") return json({ auto_update_bridges: true });
   if (path.startsWith("/api/machines/")) return error("demo", "remote PCs need a real machine", 404);

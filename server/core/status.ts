@@ -23,11 +23,9 @@ import type { PendingInputs } from "../pending-input.ts";
 import { promptWaitEnded } from "../prompt.ts";
 import { type AlertTiming, createPushService, defaultStateDir } from "../push.ts";
 import { SessionPlans } from "../session-plan.ts";
-import type { UsageLoginService } from "../usage-login.ts";
-import type { UsageService } from "../usage.ts";
 import { type Client, send } from "./connections.ts";
 
-export function createStatusHub<Lease>({ options, devices, clients, present, pending, drainPending, holdPendingPane, usage, usageLogin }: {
+export function createStatusHub<Lease>({ options, devices, clients, present, pending, drainPending, holdPendingPane }: {
   options: {
     stateDir?: string;
     codexHome?: string;
@@ -44,8 +42,6 @@ export function createStatusHub<Lease>({ options, devices, clients, present, pen
   pending: PendingInputs<Client, Lease>;
   drainPending: (paneId: string) => void;
   holdPendingPane: (paneId: string, fault: { code: string; message: string }) => void;
-  usage: UsageService;
-  usageLogin: UsageLoginService;
 }) {
   const push = createPushService({
     stateDir: options.stateDir ?? defaultStateDir(),
@@ -287,7 +283,6 @@ export function createStatusHub<Lease>({ options, devices, clients, present, pen
       push.resync(panes.map((pane) => ({ ...pane, agent_status: alertStatus(settled(pane), waits.waiting(pane.pane_id)) })), newer);
     },
     onPaneEnded: (paneId) => {
-      if (usageLogin.ended(paneId)) usage.invalidate();
       holdPendingPane(paneId, { code: "pane_not_found", message: "The pane ended; its pending messages were not sent" });
       pending.forget(paneId);
       waits.forget(paneId);

@@ -91,10 +91,10 @@ describe("shared preferences", () => {
   it("keeps the whole document under the limit, not only each change", async () => {
     const store = new PreferenceStore(root());
     expect((await put(store, JSON.stringify({ settings: { quickReplies: ["x".repeat(40_000)] } }))).status).toBe(200);
-    const over = await put(store, JSON.stringify({ settings: { usageOrder: ["y".repeat(40_000)] } }));
+    const over = await put(store, JSON.stringify({ settings: { agentMarks: ["y".repeat(40_000)] } }));
     expect(over.status).toBe(413);
     expect(store.get()).toMatchObject({ revision: 1 });
-    expect(store.get().settings["usageOrder"]).toBeUndefined();
+    expect(store.get().settings["agentMarks"]).toBeUndefined();
   });
 
   it("holds and tells a change only once it is on disk", async () => {

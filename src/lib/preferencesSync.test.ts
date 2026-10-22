@@ -11,7 +11,7 @@ describe("preferences sync", () => {
     expect(preferencesChange(known, { settings: { ...DEFAULT_SETTINGS, terminalFontSize: 20, alertsOn: false, wrapCode: true, markdownWidth: "full" }, pins: ["local:w1:p1"] })).toBeNull();
     expect(preferencesChange(known, { settings: { ...light, terminalFontSize: 20, wrapCode: true, markdownWidth: "full" }, pins: ["local:w1:p1"] })).toEqual({ settings: { theme: "light" } });
     expect(preferencesChange(known, { settings: DEFAULT_SETTINGS, pins: [] })).toEqual({ settings: {}, pins: [] });
-    expect(preferencesChange(known, { settings: { ...DEFAULT_SETTINGS, usageOrder: ["claude"] }, pins: ["local:w1:p1"] })).toEqual({ settings: { usageOrder: ["claude"] } });
+    expect(preferencesChange(known, { settings: { ...DEFAULT_SETTINGS, sidebarRows: "two" }, pins: ["local:w1:p1"] })).toEqual({ settings: { sidebarRows: "two" } });
   });
 
   it("while the server has held no pins, this browser's ride along with its first change, and alone they wait", () => {

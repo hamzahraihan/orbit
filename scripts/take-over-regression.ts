@@ -5,7 +5,6 @@ import { join } from "node:path";
 import type { Browser, Page } from "playwright-core";
 import { createServer } from "../server/index.ts";
 import { workspaceClose, workspaceCreate } from "../server/herdr/client.ts";
-import { UsageService } from "../server/usage.ts";
 
 /**
  * A pane another web bridge holds (a second server on the same herdr, as a Mac's server beside
@@ -18,7 +17,7 @@ export async function checkTakeOver(browser: Browser, origin: string): Promise<v
   mkdirSync(cwd);
   const created = await workspaceCreate({ cwd, label: "herdr-web-ui-test-take-over" });
   const paneId = created.root_pane.pane_id;
-  const other = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state"), usage: new UsageService(undefined, []) });
+  const other = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state") });
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: "en-US" });
   try {
     await context.addInitScript(() => {

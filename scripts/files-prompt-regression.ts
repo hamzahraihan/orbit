@@ -10,7 +10,6 @@ import { join } from "node:path";
 import { chromium, type BrowserContext, type Page } from "playwright-core";
 import { createServer } from "../server/index.ts";
 import { herdrRpc, workspaceClose, workspaceCreate } from "../server/herdr/client.ts";
-import { UsageService } from "../server/usage.ts";
 import { chromePath } from "./chrome-path.ts";
 import { runMoreItem } from "./header-more.ts";
 import "./test-herdr.ts";
@@ -169,7 +168,7 @@ try {
     panes.push(result.root_pane.pane_id);
   }
   const [paneA, paneB] = panes as [string, string];
-  server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state"), usage: new UsageService(undefined, []) });
+  server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(root, "state") });
   browser = await chromium.launch({ executablePath: chromePath(), headless: true, args: ["--no-sandbox", "--accept-lang=en-US"] });
   const origin = `http://127.0.0.1:${server.port}`;
   for (const [label, viewport, phone] of [["desktop", { width: 1280, height: 800 }, false], ["phone", { width: 390, height: 844 }, true]] as const) {

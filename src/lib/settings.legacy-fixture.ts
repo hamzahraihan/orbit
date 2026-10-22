@@ -6,7 +6,7 @@ import { sanitizeUiFontSize } from "./typography.ts";
 import { sanitizeKeyBarExtras } from "./keys.ts";
 import { LANGUAGE_SETTINGS, type LanguageSetting } from "./i18n.ts";
 import { CHAT_WIDTHS, DICTATION_LANGUAGES, DIFF_STYLES, MARKDOWN_WIDTHS, VOICE_BUTTONS,
-  QUICK_REPLIES_MAX, QUICK_REPLY_MAX_CHARS, USAGE_KEYS_MAX, TERMINAL_FONT_MIN, TERMINAL_FONT_MAX,
+  QUICK_REPLIES_MAX, QUICK_REPLY_MAX_CHARS, TERMINAL_FONT_MIN, TERMINAL_FONT_MAX,
   TERMINAL_WHEEL_SPEED_MIN, TERMINAL_WHEEL_SPEED_MAX, CHAT_FONT_MIN, CHAT_FONT_MAX,
   type Settings as CurrentSettings, type ChatWidth, type DictationLanguage, type VoiceButton } from "./settings.ts";
 type Settings = Omit<CurrentSettings, "darkTheme" | "lightTheme" | "fileOpen" | "webLinks" | "claudeLaunchMode" | "codexLaunchMode">;
@@ -49,12 +49,7 @@ export const DEFAULT_SETTINGS: Settings = {
   alertSound: false,
   quickReplies: ["continue", "yes", "no", "commit and push", "retry"],
   showQuickReplies: false,
-  showUsage: false,
-  usageCount: "used",
-  usageGlance: "week",
   defaultView: "auto",
-  usageOrder: [],
-  usageHidden: [],
   voiceInput: "auto",
   voiceLanguage: "auto",
   voicePolishChat: true,
@@ -63,10 +58,6 @@ export const DEFAULT_SETTINGS: Settings = {
   markdownWidth: "readable",
   diffStyle: "unified",
 };
-function usageKeys(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return [...new Set(value.filter((key): key is string => typeof key === "string" && key.length > 0 && key.length <= 512))].slice(0, USAGE_KEYS_MAX);
-}
 function voiceButton(value: unknown): VoiceButton {
   if (value === true) return "on";
   return VOICE_BUTTONS.includes(value as VoiceButton) ? value as VoiceButton : DEFAULT_SETTINGS.voiceInput;
@@ -129,12 +120,7 @@ export function sanitizeSettings(raw: unknown): Settings {
       ? record["quickReplies"].filter((reply): reply is string => typeof reply === "string").slice(0, QUICK_REPLIES_MAX).map((reply) => reply.slice(0, QUICK_REPLY_MAX_CHARS))
       : [...DEFAULT_SETTINGS.quickReplies],
     showQuickReplies: typeof record["showQuickReplies"] === "boolean" ? record["showQuickReplies"] : DEFAULT_SETTINGS.showQuickReplies,
-    showUsage: typeof record["showUsage"] === "boolean" ? record["showUsage"] : DEFAULT_SETTINGS.showUsage,
-    usageCount: record["usageCount"] === "used" || record["usageCount"] === "left" ? record["usageCount"] : DEFAULT_SETTINGS.usageCount,
-    usageGlance: record["usageGlance"] === "week" || record["usageGlance"] === "session" ? record["usageGlance"] : DEFAULT_SETTINGS.usageGlance,
     defaultView: record["defaultView"] === "chat" || record["defaultView"] === "terminal" || record["defaultView"] === "auto" ? record["defaultView"] : DEFAULT_SETTINGS.defaultView,
-    usageOrder: usageKeys(record["usageOrder"]),
-    usageHidden: usageKeys(record["usageHidden"]),
     voiceInput: voiceButton(record["voiceInput"]),
     voiceLanguage: DICTATION_LANGUAGES.includes(record["voiceLanguage"] as (typeof DICTATION_LANGUAGES)[number]) ? record["voiceLanguage"] as DictationLanguage : DEFAULT_SETTINGS.voiceLanguage,
     voicePolishChat: typeof record["voicePolishChat"] === "boolean" ? record["voicePolishChat"] : DEFAULT_SETTINGS.voicePolishChat,

@@ -9,7 +9,6 @@ import "./test-herdr.ts"; // check run gives the server its own herdr session, n
 import { DEVICE_COOKIE } from "../server/auth.ts";
 import { createServer, type ServerInstance } from "../server/index.ts";
 import { PortalService } from "../server/portal.ts";
-import { UsageService } from "../server/usage.ts";
 import type { RemoteAccess } from "../shared/protocol.ts";
 import { openSettingsPage } from "./settings-page.ts";
 
@@ -86,7 +85,6 @@ try {
     tailscaleOwner: null,
     tailscaleServeOnly: false,
     portal,
-    usage: new UsageService(undefined, []),
     registerBridge: false,
   });
   servers.push(server);
@@ -190,7 +188,6 @@ try {
     tailscaleOwner: null,
     tailscaleServeOnly: false,
     portal: blockedPortal,
-    usage: new UsageService(undefined, []),
     registerBridge: false,
   });
   servers.push(blockedServer);

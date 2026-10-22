@@ -6,7 +6,6 @@ import type { HerdrPane, ServerMessage } from "../shared/protocol.ts";
 import { workspaceClose, workspaceCreate } from "./herdr/client.ts";
 import { createServer } from "./index.ts";
 import * as native from "./omo.ts";
-import { UsageService } from "./usage.ts";
 
 /** Subscribe before appending: the server's own poll, not a test delay, delivers the transition. */
 function frame(socket: WebSocket, accepts: (value: ServerMessage) => boolean): Promise<ServerMessage> {
@@ -38,7 +37,7 @@ it("serves BG for detached eval work and DONE after its notification turn stops"
   const message = (role: string, stopReason?: string) => record({ type: "message", message: { role, content: [], ...(stopReason ? { stopReason } : {}) } });
   writeFileSync(path, record({ type: "session", id: "fixture-detached-session", cwd: root }) + message("user"));
   const discovery = spyOn(native, "omoPanes").mockImplementation(async () => new Map([[paneId, { path, startedAt: null }]]));
-  const server = createServer({ port: 0, token: "", stateDir: join(root, "state"), machines: false, registerBridge: false, usage: new UsageService(undefined, []) });
+  const server = createServer({ port: 0, token: "", stateDir: join(root, "state"), machines: false, registerBridge: false });
   const socket = new WebSocket(`ws://127.0.0.1:${server.port}/ws`);
   const snapshot = async () => {
     const response = await fetch(`http://127.0.0.1:${server.port}/api/session`);

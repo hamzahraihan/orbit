@@ -7,7 +7,6 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
 import { createServer } from "../server/index.ts";
-import { UsageService } from "../server/usage.ts";
 import { herdrRpc, paneScrollInfo, workspaceClose, workspaceCreate } from "../server/herdr/client.ts";
 import { omoSessionFolder } from "../server/omo.ts";
 import { chromePath } from "./chrome-path.ts";
@@ -72,7 +71,7 @@ process.stdout.write(Array.from({ length: 400 }, (_, n) => "history " + n + "\\r
     fixtures.push({ pane, omo, log, transcript });
   }
   server = createServer({ port: 0, hostname: "127.0.0.1", token: "", stateDir: join(state, "server"),
-    tailscaleOwner: null, usage: new UsageService(undefined, []) });
+    tailscaleOwner: null });
   browser = await chromium.launch({ executablePath: chromePath(), headless: true, args: ["--no-sandbox"] });
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: "en-US", hasTouch: true });
   await context.addInitScript(() => localStorage.setItem("herdr-web-ui:settings", JSON.stringify({

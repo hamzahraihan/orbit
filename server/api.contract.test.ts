@@ -5,11 +5,10 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { ConversationMonitor } from "./conversation-monitor.ts";
 import { createServer } from "./index.ts";
-import type { AgentKind, AgentStatus, ApiError, HealthAuth, IntegrationsResponse, LanExposure, PortalStatus, PushKey, RemoteAccess, SessionSnapshot, TabMoved, PaneFindResponse, PaneReadResult, UsageReport, WorkspaceCreated, WorktreeListing, WorktreeOpened, WorktreeRemoved } from "../shared/protocol.ts";
+import type { AgentKind, AgentStatus, ApiError, HealthAuth, IntegrationsResponse, LanExposure, PortalStatus, PushKey, RemoteAccess, SessionSnapshot, TabMoved, PaneFindResponse, PaneReadResult, WorkspaceCreated, WorktreeListing, WorktreeOpened, WorktreeRemoved } from "../shared/protocol.ts";
 import { HerdrUpdater } from "./herdr-update.ts";
 import { PortalService } from "./portal.ts";
 import type { HerdrUpdateStatus } from "../shared/update.ts";
-import { USAGE_PROVIDERS, UsageService } from "./usage.ts";
 import { VoiceService } from "./voice.ts";
 import { HerdrSocket } from "../src/lib/ws.ts";
 import { herdrRpc, paneRead, ping, sessionSnapshot, tabCreate, workspaceCreate, workspaceClose } from "./herdr/client.ts";
@@ -256,58 +255,6 @@ describe("Devin conversation API", () => {
       await workspaceClose(created.workspace.workspace_id);
       rmSync(state, { recursive: true, force: true });
     }
-  });
-});
-
-describe("usage API", () => {
-  it("returns OpenCode Go windows without exposing its credential", async () => {
-    const usageState = mkdtempSync(join(tmpdir(), "herdr-opencode-contract-"));
-    const token = "oc_sk_contract_only";
-    const usage = new UsageService({
-      home: usageState, env: { OPENCODE_API_KEY: token }, platform: "linux", now: () => Date.parse("2026-10-06T00:00:00Z"),
-      keychain: async () => ({ status: "missing" }), run: async () => null,
-      fetch: async (url, init) => {
-        expect(url).toBe("https://opencode.ai/zen/go/v1/usage");
-        expect(new Headers(init.headers).get("authorization")).toBe(`Bearer ${token}`);
-        return Response.json({ usage: {
-          rolling: { percent: 12, resetsAt: "2026-10-06T01:00:00Z" },
-          weekly: { percent: 34 }, monthly: { percent: 56 },
-        } });
-      },
-    }, USAGE_PROVIDERS.filter((provider) => provider.id === "opencode"));
-    const app = createServer({ port: 0, stateDir: usageState, usage, token: "report-token" });
-    try {
-      const url = `http://localhost:${app.port}/api/usage`;
-      expect((await fetch(url)).status).toBe(401);
-      const response = await fetch(url, { headers: { authorization: "Bearer report-token" } });
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).not.toContain(token);
-      expect(body).not.toContain(usageState);
-      expect((JSON.parse(body) as UsageReport).providers).toMatchObject([{
-        id: "opencode", account: null, plan: "Go", problem: null,
-        windows: [
-          { kind: "session", used_percent: 12, resets_at: "2026-10-06T01:00:00.000Z" },
-          { kind: "week", used_percent: 34 }, { kind: "month", used_percent: 56 },
-        ],
-      }]);
-    } finally { app.stop(); rmSync(usageState, { recursive: true, force: true }); }
-  });
-
-  it("answers the report and keeps it behind the token gate", async () => {
-    const usageState = mkdtempSync(join(tmpdir(), "herdr-usage-auth-"));
-    const usage = new UsageService(undefined, []);
-    const open = createServer({ port: 0, stateDir: usageState, usage });
-    const gated = createServer({ port: 0, stateDir: usageState, usage, token: "test-usage-token" });
-    try {
-      const answered = await fetch(`http://localhost:${open.port}/api/usage`);
-      expect(answered.status).toBe(200);
-      expect(answered.headers.get("cache-control")).toBe("no-store");
-      expect(await answered.json() as UsageReport).toEqual({ providers: [] });
-      expect((await fetch(`http://localhost:${gated.port}/api/usage`)).status).toBe(401);
-      const withToken = await fetch(`http://localhost:${gated.port}/api/usage`, { headers: { authorization: "Bearer test-usage-token" } });
-      expect(withToken.status).toBe(200);
-    } finally { open.stop(); gated.stop(); rmSync(usageState, { recursive: true, force: true }); }
   });
 });
 
