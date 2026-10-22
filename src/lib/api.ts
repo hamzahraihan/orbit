@@ -64,7 +64,6 @@ import { SUPPORTED_AGENT_KINDS } from "../../shared/supported-agents.ts";
 import type { PaneScrollInfo } from "../../shared/herdr-api.generated.ts";
 import { readInstalledNotes, readUpdateNotes, type HerdrUpdateStatus, type InstalledNotes, type UpdateCommand, type UpdateNotes, type UpdateStatus } from "../../shared/update.ts";
 import type { AlertPrefs } from "../../shared/notify-policy.ts";
-import type { TelemetryChange, TelemetryStatus } from "../../shared/telemetry.ts";
 import type { VoiceConfigUpdate, VoiceStatus } from "../../shared/voice.ts";
 import { MAX_ATTACHMENT_BYTES } from "../../shared/attachments.ts";
 import { t } from "./i18n.ts";
@@ -154,18 +153,6 @@ export async function savePreferences(body: PreferencesChange): Promise<SharedPr
   const response = await fetch(url, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   if (!response.ok) throw await errorFrom(url, response);
   return (await response.json()) as SharedPreferences;
-}
-
-export async function fetchTelemetry(): Promise<TelemetryStatus | null> {
-  try { return await getJson<TelemetryStatus>("/api/telemetry"); }
-  catch (error) { if (error instanceof ApiError && error.status === 404) return null; throw error; }
-}
-
-export async function changeTelemetry(change: TelemetryChange): Promise<TelemetryStatus> {
-  const url = "/api/telemetry";
-  const response = await fetch(url, { method: "POST", headers: { "content-type": "application/json", "x-herdr-update": "1" }, body: JSON.stringify(change) });
-  if (!response.ok) throw await errorFrom(url, response);
-  return (await response.json()) as TelemetryStatus;
 }
 
 /**

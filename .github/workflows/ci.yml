@@ -141,9 +141,9 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run check fast
       # A release (package.json's version not tagged yet) must raise REMOTE_BUNDLE_VERSION when the
-      # bundle's inputs changed, record the telemetry Worker deploy and carry its patch notes. Only the
-      # change that bumps the version against BASE_SHA counts, so PRs merged before the Release run
-      # pass. The checkout is shallow, so the tags and the base it compares with are fetched first.
+      # bundle's inputs changed and carry its patch notes. Only the change that bumps the version
+      # against BASE_SHA counts, so PRs merged before the Release run pass. The checkout is shallow,
+      # so the tags and the base it compares with are fetched first.
       - name: Release guards
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}

@@ -27,7 +27,7 @@ describe("PTY sidecar boundary", () => {
 
   it("loads node-pty only in the Node sidecar", () => {
     // this file names the package in its own examples
-    const code = [...files("{server,src,shared,scripts,site,telemetry}/**/*.{ts,tsx,mjs,cjs,js}"), "vite.config.ts"].filter((file) => file !== "server/conventions.test.ts");
+    const code = [...files("{server,src,shared,scripts,site}/**/*.{ts,tsx,mjs,cjs,js}"), "vite.config.ts"].filter((file) => file !== "server/conventions.test.ts");
     const loads = matches(code, LOAD);
     fail(loads.filter((load) => !NODE_SIDE.has(load.file)).map((load) => load.at),
       "node-pty must never load inside Bun (AGENTS.md, Bridge invariants). PTY work goes through the Node sidecar server/pty/pty-host.mjs via PtySession (server/pty/session.ts).");
@@ -46,7 +46,7 @@ describe("web push", () => {
   // web-push's sendNotification goes through node:https, which Bun does not carry the way it
   // needs; push.ts builds each request with generateRequestDetails and sends it with fetch.
   it("never calls sendNotification", () => {
-    fail(matches(files("{server,src,shared,scripts,telemetry}/**/*.{ts,tsx,mjs,js}").filter((file) => !file.endsWith(".test.ts")), /\bsendNotification\b/).map((match) => match.at),
+    fail(matches(files("{server,src,shared,scripts}/**/*.{ts,tsx,mjs,js}").filter((file) => !file.endsWith(".test.ts")), /\bsendNotification\b/).map((match) => match.at),
       "Web push requests are built with webpush.generateRequestDetails and sent with fetch (server/push.ts); never call sendNotification (AGENTS.md, Bridge invariants).");
   });
 });

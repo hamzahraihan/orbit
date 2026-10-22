@@ -5,13 +5,12 @@ import { join } from "node:path";
 import { parseThemeBlocks, parseThemeValue, resolveEntry, ThemeValueError } from "./themeCss.ts";
 import { LIGHT_ANSI_ROLES } from "./themeRoles.ts";
 import baseline from "./themes.legacy-baseline.json";
-import { DEFAULT_THEME, ROLES, SHADOW_GEOMETRY, SUPPORTED_ENTRIES, THEME_IDS, themeColor as tableThemeColor } from "./themes.ts";
+import { DEFAULT_THEME, ROLES, SHADOW_GEOMETRY, SUPPORTED_ENTRIES, themeColor as tableThemeColor } from "./themes.ts";
 import { DEFAULT_ID } from "../../scripts/generate-themes.ts";
 import { FONT_FAMILY_MAX_CHARS } from "./fontFamily.ts";
 import { DEFAULT_KEY_BAR_ITEMS, migrateKeyBarItems } from "./keyBar.ts";
 import { SHARED_SETTING_KEYS } from "../../shared/preferences.ts";
-import { NOTICE_VERSION, TELEMETRY_SETTINGS_KEYS, TELEMETRY_THEME_SIDE_KEYS, telemetrySettings } from "../../shared/telemetry.ts";
-import { SETTING_SCOPE, telemetrySettingsSnapshot, alertPrefs, CHAT_FONT_MAX, CHAT_FONT_MIN, CHAT_LANE_MAX_REM, CHAT_LANE_MIN, CHAT_WIDTHS, chatFontSize, chatLaneLength, chatLaneWidth, DEFAULT_SETTINGS, MARKDOWN_WIDTHS, QUICK_REPLIES_MAX, QUICK_REPLY_MAX_CHARS, quickReplyButtons, sanitizeSettings, terminalTheme, forgetPaneViews, DICTATION_LANGUAGES, VOICE_BUTTONS, wantsVoiceInput } from "./settings.ts";
+import { SETTING_SCOPE, alertPrefs, CHAT_FONT_MAX, CHAT_FONT_MIN, CHAT_LANE_MAX_REM, CHAT_LANE_MIN, CHAT_WIDTHS, chatFontSize, chatLaneLength, chatLaneWidth, DEFAULT_SETTINGS, MARKDOWN_WIDTHS, QUICK_REPLIES_MAX, QUICK_REPLY_MAX_CHARS, quickReplyButtons, sanitizeSettings, terminalTheme, forgetPaneViews, DICTATION_LANGUAGES, VOICE_BUTTONS, wantsVoiceInput } from "./settings.ts";
 import { applyToDocument, loadSettings, saveSettings } from "./settings.ts";
 import { sanitizeSettings as oldSanitizeSettings, saveSettings as oldSaveSettings } from "./settings.legacy-fixture.ts";
 import { themeFor } from "./themeFor.ts";
@@ -163,171 +162,6 @@ it("draws agent logos in their brand colors unless Mono was chosen", () => {
   for (const agentMarks of [null, "Mono", "off", 1]) {
     expect(sanitizeSettings({ agentMarks }).agentMarks).toBe("color");
   }
-});
-
-describe("telemetry settings snapshot", () => {
-  it("reports current enum, boolean and bounded scalar values", () => {
-    const settings = sanitizeSettings({
-      terminalInputMode: "direct",
-      theme: "light",
-      density: "compact",
-      sidebarRows: "one",
-      agentOrder: "activity",
-      agentMarks: "mono",
-      statusIndicators: "symbols",
-      palette: "catppuccin",
-      terminalFontSize: 22,
-      terminalWheelSpeed: 10,
-      chatFontSize: 11,
-      chatWidth: "wide",
-      autoSendQueued: false,
-      language: "ko",
-      alertDone: "always",
-      usageCount: "left",
-      usageGlance: "session",
-      defaultView: "chat",
-      voiceInput: "on",
-      voiceLanguage: "ko-KR",
-      wrapCode: true,
-      markdownWidth: "full",
-      paletteLight: "catppuccin",
-      paletteDark: "amber",
-      darkTheme: "amber",
-      lightTheme: "catppuccin",
-      uiFontSize: 18,
-      diffStyle: "split",
-    });
-    const snapshot = telemetrySettingsSnapshot(settings);
-
-    expect(NOTICE_VERSION).toBe(4);
-    expect(snapshot).toMatchObject({
-      terminalInputMode: "direct",
-      theme: "light",
-      density: "compact",
-      sidebarRows: "one",
-      agentOrder: "activity",
-      agentMarks: "mono",
-      statusIndicators: "symbols",
-      palette: "catppuccin",
-      terminalFontSize: 22,
-      terminalWheelSpeed: 10,
-      chatFontSize: 11,
-      chatWidth: "wide",
-      autoSendQueued: false,
-      language: "ko",
-      alertDone: "always",
-      usageCount: "left",
-      usageGlance: "session",
-      defaultView: "chat",
-      voiceInput: "on",
-      voiceLanguage: "ko-KR",
-      wrapCode: true,
-      markdownWidth: "full",
-      paletteLight: "catppuccin",
-      paletteDark: "amber",
-      darkTheme: "amber",
-      lightTheme: "catppuccin",
-      uiFontSize: 18,
-      diffStyle: "split",
-    });
-    expect(telemetrySettings(snapshot)).toEqual(snapshot);
-    expect(telemetrySettingsSnapshot(DEFAULT_SETTINGS)).toMatchObject({
-      statusIndicators: "classic",
-      terminalFontCustom: false,
-      chatFontCustom: false,
-      shortcutsCustom: false,
-      keyBarCustom: false,
-      quickRepliesCustom: false,
-      quickReplyCount: DEFAULT_SETTINGS.quickReplies.length,
-      usageHiddenCount: 0,
-      usageOrderCustom: false,
-    });
-  });
-
-  it("summarizes custom text and account-key settings without sending their contents", () => {
-    const settings = sanitizeSettings({
-      terminalFontFamily: "private-terminal-font",
-      chatFontFamily: "private-chat-font",
-      shortcutOverrides: { palette: "x" },
-      keyBarItems: [{ type: "key", key: "x" }],
-      keyBarExtras: ["alt", "shift-tab"],
-      quickReplies: ["private quick reply"],
-      usageOrder: ["private-order-account-id"],
-      usageHidden: ["private-hidden-account-id"],
-    });
-    const snapshot = telemetrySettingsSnapshot(settings);
-    const serialized = JSON.stringify(snapshot);
-
-    expect(snapshot).toMatchObject({
-      terminalFontCustom: true,
-      chatFontCustom: true,
-      shortcutsCustom: true,
-      keyBarCustom: true,
-      quickRepliesCustom: true,
-      quickReplyCount: 1,
-      usageHiddenCount: 1,
-      usageOrderCustom: true,
-    });
-    for (const key of ["keyBarExtras", "keyBarItems", "shortcutOverrides", "terminalFontFamily", "chatFontFamily", "quickReplies", "usageOrder", "usageHidden"]) {
-      expect(snapshot).not.toHaveProperty(key);
-    }
-    for (const raw of ["private-terminal-font", "private-chat-font", "private quick reply", "private-order-account-id", "private-hidden-account-id"]) {
-      expect(serialized).not.toContain(raw);
-    }
-  });
-
-  it("reports every status indicator choice in a valid snapshot", () => {
-    for (const statusIndicators of ["classic", "dots", "symbols"] as const) {
-      const settings = sanitizeSettings({ statusIndicators });
-      const snapshot = telemetrySettingsSnapshot(settings);
-
-      expect(snapshot.statusIndicators).toBe(statusIndicators);
-      expect(telemetrySettings(snapshot)).toEqual(snapshot);
-    }
-  });
-
-  // The Worker refuses a whole snapshot over one key it does not know, and an older deployed
-  // Worker refuses a key added since: a new setting is sent only once the Worker takes it.
-  it("sends exactly the keys the Worker accepts", () => {
-    const sent = Object.keys(telemetrySettingsSnapshot(DEFAULT_SETTINGS));
-    expect([
-      ...sent.filter((key) => !([...TELEMETRY_SETTINGS_KEYS, ...TELEMETRY_THEME_SIDE_KEYS] as string[]).includes(key)).map((key) =>
-        `${key}: the app sends it and the Worker refuses the whole snapshot. Add it to TelemetrySettings and TELEMETRY_SETTINGS_VALIDATORS in shared/telemetry.ts and to the full snapshot in telemetry/worker.test.ts, then deploy the Worker before releasing (telemetry/README.md).`),
-      ...TELEMETRY_SETTINGS_KEYS.filter((key) => !sent.includes(key)).map((key) =>
-        `${key}: the Worker requires it and telemetrySettingsSnapshot in src/lib/settings.ts does not send it. Send it, or remove it from shared/telemetry.ts and deploy the Worker before releasing.`),
-    ]).toEqual([]);
-  });
-
-  it("reports all supported ids on either side and rejects ids outside the schema", () => {
-    for (const id of THEME_IDS) {
-      for (const side of ["darkTheme", "lightTheme"] as const) {
-        const snapshot = telemetrySettingsSnapshot(sanitizeSettings({ [side]: id }));
-        expect(snapshot[side]).toBe(id);
-        expect(telemetrySettings(snapshot)).toEqual(snapshot);
-        expect(telemetrySettings({ ...snapshot, [side]: "not-a-theme" })).toBeNull();
-      }
-    }
-  });
-
-  it("requires a complete, valid schema and reconstructs a clean own-key snapshot", () => {
-    const snapshot = telemetrySettingsSnapshot(DEFAULT_SETTINGS);
-    const clean = telemetrySettings(snapshot);
-
-    expect(clean).toEqual(snapshot);
-    expect(clean).not.toBe(snapshot);
-    expect(Object.getPrototypeOf(clean!)).toBe(Object.prototype);
-    expect(Object.keys(clean!)).toEqual(Object.keys(snapshot));
-    expect(telemetrySettings(Object.fromEntries(Object.entries(snapshot).filter(([key]) => key !== "theme")))).toBeNull();
-    expect(telemetrySettings({ ...snapshot, unknownSetting: true })).toBeNull();
-    expect(telemetrySettings({ ...snapshot, theme: "neon" })).toBeNull();
-    expect(telemetrySettings({ ...snapshot, theme: null })).toBeNull();
-    expect(telemetrySettings({ ...snapshot, terminalFontSize: 9 })).toBeNull();
-    expect(telemetrySettings({ ...snapshot, terminalWheelSpeed: 2.5 })).toBeNull();
-    expect(telemetrySettings({ ...snapshot, chatFontSize: 10 })).toBeNull();
-    expect(telemetrySettings({ ...snapshot, quickReplyCount: 13 })).toBeNull();
-    expect(telemetrySettings({ ...snapshot, usageHiddenCount: 65 })).toBeNull();
-    expect(telemetrySettings(Object.assign(Object.create({ inherited: true }), snapshot))).toBeNull();
-  });
 });
 
 describe("clipboard from a pane", () => {

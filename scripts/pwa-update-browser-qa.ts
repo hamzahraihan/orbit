@@ -90,7 +90,7 @@ try {
   // The copied server resolves its own dist directory. No shared build output is swapped,
   // so this scenario can run alongside the other CI browser shards.
   mkdirSync(app);
-  for (const folder of ["server", "shared", "telemetry"]) {
+  for (const folder of ["server", "shared"]) {
     cpSync(join(repo, folder), join(app, folder), { recursive: true, filter: (path) => !path.endsWith(".test.ts") });
   }
   for (const file of ["package.json", "tsconfig.json"]) copyFileSync(join(repo, file), join(app, file));

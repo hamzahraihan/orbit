@@ -23,19 +23,14 @@ import type { PendingInputs } from "../pending-input.ts";
 import { promptWaitEnded } from "../prompt.ts";
 import { type AlertTiming, createPushService, defaultStateDir } from "../push.ts";
 import { SessionPlans } from "../session-plan.ts";
-import type { Telemetry } from "../telemetry.ts";
 import type { UsageLoginService } from "../usage-login.ts";
 import type { UsageService } from "../usage.ts";
 import { type Client, send } from "./connections.ts";
-
-/** a focus or reconnect re-reads the panes for the daily active message at most this often */
-const VISIT_READ_MS = 10 * 60_000;
 
 export function createStatusHub<Lease>({ options, devices, clients, present, pending, drainPending, holdPendingPane, usage, usageLogin }: {
   options: {
     stateDir?: string;
     codexHome?: string;
-    telemetry?: Telemetry;
     machines?: boolean;
     herdrProfiles?: () => Promise<HerdrMachineProfile[]>;
     alertTiming?: Partial<AlertTiming>;
@@ -133,24 +128,6 @@ export function createStatusHub<Lease>({ options, devices, clients, present, pen
       }),
     };
   };
-  /**
-   * A browser visit for the daily active message: the call is made now so the visit's day is the
-   * trigger's, the panes are read after. Nothing is read while telemetry cannot send; a socket open
-   * passes the snapshot it fetches anyway, and other visits read the panes at most every
-   * VISIT_READ_MS (in between they still count the day, with the kinds already known).
-   */
-  let visitReadAt = -Infinity;
-  function countVisit(snapshot?: ReturnType<typeof clientSnapshot>): void {
-    const telemetry = options.telemetry;
-    if (!telemetry?.counting()) return;
-    let agents: Promise<(string | null)[]> | (string | null)[] = [];
-    if (snapshot || Date.now() - visitReadAt >= VISIT_READ_MS) {
-      visitReadAt = Date.now();
-      agents = (snapshot ?? clientSnapshot()).then((read) => read.panes.map((pane) => pane.agent ?? pane.agent_session?.agent ?? null));
-    }
-    void telemetry.active(agents)
-      .catch((error) => console.error(`telemetry: the visit was not counted (${error instanceof Error ? error.message : String(error)})`));
-  }
   /** A pane's status frame: every one says whether the pane waits on its turn's background work. */
   const paneStatus = (paneId: string, status: AgentStatus, about: { background_tasks?: number; plan?: PlanSummary | null } = {}): ServerMessage =>
     ({ type: "pane-status", pane_id: paneId, agent_status: status, ...about, ...(waits.waiting(paneId) ? { background_wait: true as const } : {}) });
@@ -330,5 +307,5 @@ export function createStatusHub<Lease>({ options, devices, clients, present, pen
   waitTimer.unref?.();
   plans.start();
 
-  return { push, omo, gjc, claudeAgents, plans, clientSnapshot, countVisit, machines, broadcastAll, logPushError, collector, waitTimer };
+  return { push, omo, gjc, claudeAgents, plans, clientSnapshot, machines, broadcastAll, logPushError, collector, waitTimer };
 }

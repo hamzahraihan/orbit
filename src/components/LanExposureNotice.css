@@ -1,4 +1,4 @@
-/* the exposure line shares .update-notice's layout with the update, telemetry and machine-action
+/* the exposure line shares .update-notice's layout with the update and machine-action
    notices (src/components/UpdateControls.css); only the alarm colour is its own */
 .update-notice.is-exposed {
   background: var(--danger-tint);

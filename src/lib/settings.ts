@@ -5,7 +5,6 @@
  * `--term-*` tokens of each theme for PaneTerminal's theme object.
  */
 
-import type { TelemetrySettings } from "../../shared/telemetry.ts";
 import { mirrorPalette, SHARED_SETTING_KEYS, type SharedSettingKey } from "../../shared/preferences.ts";
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { DEFAULT_THEME, isThemeId, terminalColors, themeColor as themeTableColor, type ThemeId, type ThemeEntry } from "./themes.ts";
@@ -173,75 +172,6 @@ export const MARKDOWN_WIDTHS = ["readable", "full"] as const;
 export type MarkdownWidth = (typeof MARKDOWN_WIDTHS)[number];
 export const DIFF_STYLES = ["unified", "split"] as const;
 export type DiffStyle = (typeof DIFF_STYLES)[number];
-
-/** Raw custom text, key combinations and account keys are never copied. Requiring every other
- * Settings field in the projection makes a new field require an explicit collection decision.
- * fileOpen, webLinks and the launch modes are not collected: the telemetry schema (shared/telemetry.ts) does not carry them. */
-type TelemetrySourceSettings = Omit<Settings,
-  "keyBarExtras" | "keyBarItems" | "shortcutOverrides" | "terminalFontFamily" | "chatFontFamily"
-  | "quickReplies" | "usageOrder" | "usageHidden" | "fileOpen" | "webLinks" | "claudeLaunchMode" | "codexLaunchMode">;
-
-/** Compare structured custom settings by content against this app's built-in defaults. */
-function differsFromDefault(value: unknown, defaultValue: unknown): boolean {
-  return JSON.stringify(value) !== JSON.stringify(defaultValue);
-}
-
-/** Full allowlisted snapshot. Text and account-key values are only used for safe summaries. */
-export function telemetrySettingsSnapshot(settings: Settings): TelemetrySettings & TelemetrySourceSettings {
-  return {
-    terminalInputMode: settings.terminalInputMode,
-    theme: settings.theme,
-    density: settings.density,
-    sidebarRows: settings.sidebarRows,
-    agentOrder: settings.agentOrder,
-    agentMarks: settings.agentMarks,
-    statusIndicators: settings.statusIndicators,
-    palette: settings.palette,
-    paletteLight: settings.paletteLight,
-    paletteDark: settings.paletteDark,
-    terminalFontSize: settings.terminalFontSize,
-    terminalWheelSpeed: settings.terminalWheelSpeed,
-    paneClipboard: settings.paneClipboard,
-    releasePaneAway: settings.releasePaneAway,
-    chatFontSize: settings.chatFontSize,
-    uiFontSize: settings.uiFontSize,
-    chatWidth: settings.chatWidth,
-    enterSends: settings.enterSends,
-    autoSendQueued: settings.autoSendQueued,
-    suggestionChip: settings.suggestionChip,
-    showThinking: settings.showThinking,
-    keepScreenOn: settings.keepScreenOn,
-    language: settings.language,
-    alertsOn: settings.alertsOn,
-    alertInput: settings.alertInput,
-    alertDone: settings.alertDone,
-    alertInApp: settings.alertInApp,
-    alertSound: settings.alertSound,
-    showQuickReplies: settings.showQuickReplies,
-    showUsage: settings.showUsage,
-    usageCount: settings.usageCount,
-    usageGlance: settings.usageGlance,
-    defaultView: settings.defaultView,
-    voiceInput: settings.voiceInput,
-    voiceLanguage: settings.voiceLanguage,
-    voicePolishChat: settings.voicePolishChat,
-    voicePolishTerminal: settings.voicePolishTerminal,
-    wrapCode: settings.wrapCode,
-    markdownWidth: settings.markdownWidth,
-    diffStyle: settings.diffStyle,
-    terminalFontCustom: settings.terminalFontFamily !== DEFAULT_SETTINGS.terminalFontFamily,
-    chatFontCustom: settings.chatFontFamily !== DEFAULT_SETTINGS.chatFontFamily,
-    shortcutsCustom: differsFromDefault(settings.shortcutOverrides, DEFAULT_SETTINGS.shortcutOverrides),
-    keyBarCustom: differsFromDefault(settings.keyBarItems, DEFAULT_SETTINGS.keyBarItems)
-      || differsFromDefault(settings.keyBarExtras, DEFAULT_SETTINGS.keyBarExtras),
-    quickRepliesCustom: differsFromDefault(settings.quickReplies, DEFAULT_SETTINGS.quickReplies),
-    quickReplyCount: settings.quickReplies.length,
-    usageHiddenCount: settings.usageHidden.length,
-    usageOrderCustom: settings.usageOrder.length > 0,
-    darkTheme: settings.darkTheme,
-    lightTheme: settings.lightTheme,
-  };
-}
 
 /**
  * Which settings every browser of this server shares (shared/preferences.ts, lib/preferencesSync.ts)
