@@ -6,7 +6,7 @@ check can type into them, so a flaw in who gets in is as serious as it gets here
 ## Reporting a vulnerability
 
 Report it privately through
-[GitHub's private vulnerability reporting](https://github.com/devswha/herdr-web-ui/security/advisories/new).
+[GitHub's private vulnerability reporting](https://github.com/hamzahraihan/orbit/security/advisories/new).
 Do not open a public issue, pull request or discussion about it.
 
 Include what you can of:

@@ -19,8 +19,8 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-666666?labelColor=333333" alt="MIT 许可证"></a>
-  <a href="https://github.com/devswha/herdr-web-ui/stargazers"><img src="https://img.shields.io/github/stars/devswha/herdr-web-ui?labelColor=333333&color=666666&logo=github" alt="GitHub 星标数"></a>
-  <a href="https://github.com/devswha/herdr-web-ui/releases/latest"><img src="https://img.shields.io/github/v/release/devswha/herdr-web-ui?label=release&labelColor=333333&color=666666" alt="最新版本"></a>
+  <a href="https://github.com/hamzahraihan/orbit/stargazers"><img src="https://img.shields.io/github/stars/hamzahraihan/orbit?labelColor=333333&color=666666&logo=github" alt="GitHub 星标数"></a>
+  <a href="https://github.com/hamzahraihan/orbit/releases/latest"><img src="https://img.shields.io/github/v/release/hamzahraihan/orbit?label=release&labelColor=333333&color=666666" alt="最新版本"></a>
   <a href="https://github.com/herdrdev/herdr"><img src="https://img.shields.io/badge/herdr-0.9.0%2B-666666?labelColor=333333" alt="herdr 0.9.0+"></a>
   <a href="docs/guide.md#on-your-phone"><img src="https://img.shields.io/badge/PWA-installable-666666?labelColor=333333" alt="可安装的 PWA"></a>
 </p>
@@ -111,7 +111,7 @@ irm https://herdrweb.dev/install.ps1 | iex
 已经安装了所需依赖？只需安装插件：
 
 ```bash
-herdr plugin install devswha/herdr-web-ui
+herdr plugin install hamzahraihan/orbit
 ```
 
 在 herdr 运行时，打开 **[localhost:7317](http://localhost:7317)**。选择一个窗格，或点击 **New workspace（新建工作区）** 启动智能体。要在手机上使用，请扫描安装程序提供的二维码，并将应用添加到主屏幕。[快速入门 →](docs/guide.md#quick-start)
@@ -175,7 +175,7 @@ Claude Code、Codex、omp、omo、gjc 和 pi 直接从各自的会话文件读�
 ## 开发
 
 ```bash
-git clone https://github.com/devswha/herdr-web-ui.git
+git clone https://github.com/hamzahraihan/orbit.git
 cd herdr-web-ui
 bun install
 

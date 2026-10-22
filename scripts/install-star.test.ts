@@ -18,9 +18,9 @@ type Gh = "starred" | "not" | "refuses" | "denied" | "upstream" | "signed-out" |
 const STAND_INS: Record<string, string> = {
   herdr: `case "$*" in
   --version) echo "herdr 0.9.3" ;;
-  "plugin list") [ ! -e "$SCRATCH/installed" ] || echo "devswha.herdr-web-ui 0.0.0" ;;
-  "plugin list --json") printf '{"result":{"plugins":[{"plugin_id":"devswha.herdr-web-ui","plugin_root":"%s"}]}}\\n' "$SCRATCH/plugin" ;;
-  "plugin install "*) : > "$SCRATCH/installed"; echo "Installed devswha.herdr-web-ui" ;;
+  "plugin list") [ ! -e "$SCRATCH/installed" ] || echo "hamzahraihan.orbit 0.0.0" ;;
+  "plugin list --json") printf '{"result":{"plugins":[{"plugin_id":"hamzahraihan.orbit","plugin_root":"%s"}]}}\\n' "$SCRATCH/plugin" ;;
+  "plugin install "*) : > "$SCRATCH/installed"; echo "Installed hamzahraihan.orbit" ;;
   "status server --json") if [ -e "$SCRATCH/running" ]; then echo '{"running":true}'; else echo '{"running":false}'; fi ;;
   "plugin action invoke "*) ;;
   *) echo "unexpected herdr $*" >&2; exit 1 ;;
@@ -179,7 +179,7 @@ describe.skipIf(platform() === "win32")("install.sh without a terminal", () => {
   it.concurrent("mentions the star with a link when the PC has no gh", async () => {
     const { out, exitCode } = await new Pc().unattended();
     expect(exitCode).toBe(0);
-    expect(out).toContain("Installed devswha.herdr-web-ui");
+    expect(out).toContain("Installed hamzahraihan.orbit");
     expect(out).toContain(MENTION);
     expect(out).not.toContain(QUESTION);
     // the last thing said, so that a question after it can be left without losing a line
@@ -191,7 +191,7 @@ describe.skipIf(platform() === "win32")("install.sh without a terminal", () => {
     const { out, exitCode } = await pc.unattended();
     expect(exitCode).toBe(0);
     expect(out).not.toContain(MENTION);
-    expect(pc.ghCalls()).toEqual(["api --hostname github.com --include user/starred/devswha/herdr-web-ui"]);
+    expect(pc.ghCalls()).toEqual(["api --hostname github.com --include user/starred/hamzahraihan/orbit"]);
   });
 
   it.concurrent("gives the link and asks nothing when the account has not starred", async () => {

@@ -1,0 +1,15 @@
+Orbit
+======
+
+Orbit is a modified fork of herdr-web-ui, Copyright (c) 2026 devswha.
+https://github.com/devswha/herdr-web-ui
+
+Orbit is distributed under the same MIT licence as the original work. The
+copyright notice and permission notice in LICENSE are retained verbatim, as
+the licence requires.
+
+Changes from upstream: the anonymous usage counts (telemetry), the app
+update checks, the subscription usage meters and the Portal relay were
+removed; the remote-PC runtime bundle is fetched from this repository
+instead of the original author's; the plugin id and package name were
+changed.

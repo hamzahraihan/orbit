@@ -1,13 +1,13 @@
 {
-  "name": "herdr-web-ui",
+  "name": "orbit",
   "private": true,
-  "version": "0.4.12",
+  "version": "0.5.0",
   "type": "module",
-  "description": "Browser version of the herdr terminal - live herdr workspaces, panes and agents in a web UI",
+  "description": "Orchestrated Remote Background Integration Terminal - a local-first browser and phone client for herdr",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/devswha/herdr-web-ui.git"
+    "url": "git+https://github.com/hamzahraihan/orbit.git"
   },
   "scripts": {
     "dev": "bun --bun vite",

@@ -60,7 +60,7 @@ if (-not (Get-Command bun -ErrorAction SilentlyContinue)) { throw 'Bun did not i
 $bunVersion = Run-Tool bun @('--version')
 if ([version]($bunVersion -replace '-.*$', '') -lt [version]'1.4.0') { throw "Needs Bun 1.4 or newer; this is $bunVersion." }
 
-$pluginId = 'devswha.herdr-web-ui'
+$pluginId = 'hamzahraihan.orbit'
 function Find-Plugin {
     (Run-Tool herdr @('plugin', 'list', '--json') | ConvertFrom-Json).result.plugins |
         Where-Object { $_.plugin_id -eq $pluginId } | Select-Object -First 1
@@ -78,13 +78,13 @@ if ($plugin -and -not (Test-WindowsPlugin $plugin)) {
 }
 if (-not $plugin) {
     if (-not $Ref) {
-        $Ref = Run-Tool git @('ls-remote', '--tags', '--refs', 'https://github.com/devswha/herdr-web-ui.git', 'v*') |
+        $Ref = Run-Tool git @('ls-remote', '--tags', '--refs', 'https://github.com/hamzahraihan/orbit.git', 'v*') |
             ForEach-Object { if ($_ -match 'refs/tags/(v\d+\.\d+\.\d+)$') { $Matches[1] } } |
             Sort-Object { [version]$_.Substring(1) } | Select-Object -Last 1
     }
     if (-not $Ref) { throw 'Could not find the latest app release on GitHub. Check your connection and run this again.' }
     Write-Host "herdr web ui: installing the plugin at $Ref"
-    Run-Tool herdr @('plugin', 'install', 'devswha/herdr-web-ui', '--ref', $Ref, '--yes')
+    Run-Tool herdr @('plugin', 'install', 'hamzahraihan/orbit', '--ref', $Ref, '--yes')
     $newInstall = $true
     $plugin = Find-Plugin
     if (-not $plugin.plugin_root) { throw 'herdr does not list the plugin after installing it. See: herdr plugin list' }
@@ -377,15 +377,15 @@ function Read-Answer {
 # GitHub says the account has not (404), only at a terminal, and stars only on "y".
 if ($newInstall) {
     try {
-        $starred = Invoke-GhApi 'user/starred/devswha/herdr-web-ui'
+        $starred = Invoke-GhApi 'user/starred/hamzahraihan/orbit'
         if (-not $starred -or $starred.status -ne '204') {
             Write-Host ''
-            Write-Host 'herdr web ui: if it helps you, a GitHub star helps other herdr users find it: https://github.com/devswha/herdr-web-ui'
+            Write-Host 'herdr web ui: if it helps you, a GitHub star helps other herdr users find it: https://github.com/hamzahraihan/orbit'
             if ($starred -and $starred.status -eq '404' -and (Test-Terminal)) {
                 Write-Host -NoNewline 'herdr web ui: star it now with the GitHub account gh is signed in to? [y/N] '
                 $answer = Read-Answer
                 if ("$answer".Trim() -match '^(y|yes)$') {
-                    $given = Invoke-GhApi '--method PUT user/starred/devswha/herdr-web-ui'
+                    $given = Invoke-GhApi '--method PUT user/starred/hamzahraihan/orbit'
                     if ($given -and $given.code -eq 0) { Write-Host 'herdr web ui: starred. Thank you!' }
                     else { Write-Host 'herdr web ui: gh could not star it; the page above can' }
                 }

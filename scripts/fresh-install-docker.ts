@@ -18,7 +18,7 @@ const ref = process.argv[3] ?? Bun.spawnSync(["git", "rev-parse", "--abbrev-ref"
 const name = `herdr-fresh-install-${process.pid}`;
 const oneLine = process.env["ONE_LINE"] === "1";
 const NOISE = /cannot set terminal process group|no job control in this shell|tcsetattr: Inappropriate ioctl/;
-const pluginRoot = `$(herdr plugin list --json | bun -e 'const d = JSON.parse(await Bun.stdin.text()); console.log(d.result.plugins.find((p) => p.plugin_id === "devswha.herdr-web-ui")?.plugin_root ?? "")')`;
+const pluginRoot = `$(herdr plugin list --json | bun -e 'const d = JSON.parse(await Bun.stdin.text()); console.log(d.result.plugins.find((p) => p.plugin_id === "hamzahraihan.orbit")?.plugin_root ?? "")')`;
 
 function originSlug(): string {
   const url = Bun.spawnSync(["git", "remote", "get-url", "origin"]).stdout.toString().trim();
@@ -84,7 +84,7 @@ async function oneLineInstall(): Promise<void> {
   assert.match(again, /already installed/);
   assert.doesNotMatch(again, /not running yet/, "the app is up");
   // the usual case: herdr already runs, and builds the plugin with its own PATH, not install.sh's
-  await asUser("herdr plugin uninstall devswha.herdr-web-ui >/dev/null 2>&1; curl -sf http://127.0.0.1:7317/api/health >/dev/null && pkill -f server/managed.ts; true");
+  await asUser("herdr plugin uninstall hamzahraihan.orbit >/dev/null 2>&1; curl -sf http://127.0.0.1:7317/api/health >/dev/null && pkill -f server/managed.ts; true");
   const running = await step("install.sh with herdr running: builds, starts and waits", () => asUser(`cat /tmp/install.sh | HERDR_WEB_UI_REF=${ref} sh 2>&1; echo "exit=$?"`));
   assert.match(running, /exit=0/, running.slice(-2500));
   assert.match(running, /Installed /, running.slice(-2500));
@@ -110,7 +110,7 @@ async function pluginInstall(): Promise<void> {
   });
   assert.match(await asUser("herdr plugin list"), /enabled/);
   await step("start action, then /api/health", async () => {
-    await asUser("herdr plugin action invoke devswha.herdr-web-ui.start >/dev/null");
+    await asUser("herdr plugin action invoke hamzahraihan.orbit.start >/dev/null");
     const health = await asUser('for i in $(seq 1 20); do if curl -sf http://127.0.0.1:7317/api/health; then exit 0; fi; sleep 1; done; echo TIMEOUT; cat ~/.local/state/herdr/plugins/*/server.log 2>/dev/null | tail -20; exit 1');
     assert.match(health, /"ok":true/);
   });
@@ -119,7 +119,7 @@ async function pluginInstall(): Promise<void> {
     assert.match(out, /PTY_OK/, `the bundled PTY smoke test failed:\n${out.slice(-1500)}`);
   });
   await step("startup hook: herdr restarts, the app comes back by itself", async () => {
-    await asUser("herdr plugin action invoke devswha.herdr-web-ui.stop >/dev/null 2>&1; sleep 1; herdr server stop >/dev/null 2>&1; sleep 2; setsid nohup herdr server > ~/herdr-server2.log 2>&1 < /dev/null &");
+    await asUser("herdr plugin action invoke hamzahraihan.orbit.stop >/dev/null 2>&1; sleep 1; herdr server stop >/dev/null 2>&1; sleep 2; setsid nohup herdr server > ~/herdr-server2.log 2>&1 < /dev/null &");
     const health = await asUser('for i in $(seq 1 25); do if curl -sf http://127.0.0.1:7317/api/health >/dev/null; then echo "up after ${i}s"; exit 0; fi; sleep 1; done; echo TIMEOUT; herdr plugin log list 2>&1 | tail -c 1500; exit 1');
     console.log(`  ${/up after \d+s/.exec(health)?.[0] ?? health.trim().split("\n").pop()}`);
   });

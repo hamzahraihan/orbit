@@ -37,12 +37,12 @@ function herdr {
         '--version' { 'herdr 0.9.3' }
         'plugin list --json' {
             $plugins = @()
-            if ($state.installed) { $plugins = @(@{ plugin_id = 'devswha.herdr-web-ui'; plugin_root = $pluginRoot }) }
+            if ($state.installed) { $plugins = @(@{ plugin_id = 'hamzahraihan.orbit'; plugin_root = $pluginRoot }) }
             @{ result = @{ plugins = $plugins } } | ConvertTo-Json -Depth 4 -Compress
         }
         'status server --json' { @{ running = $state.running } | ConvertTo-Json -Compress }
-        'plugin action invoke devswha.herdr-web-ui.start-windows' { $state.started = $true; '{}' }
-        'plugin uninstall devswha.herdr-web-ui' { $state.installed = $false; $state.uninstalls++; 'Uninstalled' }
+        'plugin action invoke hamzahraihan.orbit.start-windows' { $state.started = $true; '{}' }
+        'plugin uninstall hamzahraihan.orbit' { $state.installed = $false; $state.uninstalls++; 'Uninstalled' }
         default {
             if ($args[0] -eq 'plugin' -and $args[1] -eq 'install') {
                 if ($state.failInstall) { $global:LASTEXITCODE = 1; return }
@@ -260,7 +260,7 @@ exit /b 1
     $childFile = Join-Path $ghStandIn 'child.txt'
     Remove-Item -LiteralPath $childFile -Force -ErrorAction SilentlyContinue
     $clock = [Diagnostics.Stopwatch]::StartNew()
-    $answer = Invoke-GhApi 'user/starred/devswha/herdr-web-ui'
+    $answer = Invoke-GhApi 'user/starred/hamzahraihan/orbit'
     $elapsed = $clock.Elapsed.TotalSeconds
     $childPid = [int](Get-Content -LiteralPath $childFile -ErrorAction SilentlyContinue | Select-Object -First 1)
     Assert ($childPid -gt 0) 'control: the lingering stand-in must have started its child and named its PID'
@@ -337,7 +337,7 @@ public static class ImmediateGh {
             try {
                 Invoke-Expression $case.source
                 $clock = [Diagnostics.Stopwatch]::StartNew()
-                $answer = Invoke-GhApi 'user/starred/devswha/herdr-web-ui'
+                $answer = Invoke-GhApi 'user/starred/hamzahraihan/orbit'
                 Assert ($null -eq $answer -and $clock.Elapsed.TotalSeconds -lt 15) 'regression: immediate child must not keep the call waiting past its deadline'
                 Assert ($ready.WaitOne(0)) 'control: the resumed shim must have started its child'
                 $childPid = [int](Get-Content -LiteralPath $env:HERDR_TEST_GH_CHILD)

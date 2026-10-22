@@ -1,10 +1,10 @@
 # Contributing
 
-Thanks for helping. Bugs and ideas go in an [issue](https://github.com/devswha/herdr-web-ui/issues/new/choose);
+Thanks for helping. Bugs and ideas go in an [issue](https://github.com/hamzahraihan/orbit/issues/new/choose);
 security problems never do: see [SECURITY.md](SECURITY.md). For a larger change, open an issue first so
 the approach can be agreed before you build it. Small fixes can go straight to a PR.
 
-**Features.** Open a [feature request](https://github.com/devswha/herdr-web-ui/issues/new?template=feature_request.yml)
+**Features.** Open a [feature request](https://github.com/hamzahraihan/orbit/issues/new?template=feature_request.yml)
 and wait for a maintainer's yes before you write code; a feature PR without one may be closed, however
 well it is built. The app is a bridge to herdr, so a feature should either mirror something herdr's
 own TUI does, or meet a need that widely used coding-agent apps already meet (the Codex and Claude

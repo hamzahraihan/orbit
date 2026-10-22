@@ -16,9 +16,9 @@ import { useLocale, useT } from "../lib/i18n.ts";
 
 declare const __APP_VERSION__: string;
 
-const CHANGELOG = "https://github.com/devswha/herdr-web-ui/blob/main/CHANGELOG.md";
+const CHANGELOG = "https://github.com/hamzahraihan/orbit/blob/main/CHANGELOG.md";
 /** the restart commands for a plugin and a source install */
-const RESTART_HELP = "https://github.com/devswha/herdr-web-ui/blob/main/docs/guide.md#updates";
+const RESTART_HELP = "https://github.com/hamzahraihan/orbit/blob/main/docs/guide.md#updates";
 
 /**
  * What an update brings, or brought: each release it installs, newest first. A release is told

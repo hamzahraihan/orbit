@@ -8,8 +8,8 @@ import type { PhonePlan } from "../lib/phone.ts";
 import { QrCode } from "./QrCode.tsx";
 import { useT } from "../lib/i18n.ts";
 
-const README_PHONE = "https://github.com/devswha/herdr-web-ui#on-your-phone";
-const README_SAFETY = "https://github.com/devswha/herdr-web-ui#access-and-safety";
+const README_PHONE = "https://github.com/hamzahraihan/orbit#on-your-phone";
+const README_SAFETY = "https://github.com/hamzahraihan/orbit#access-and-safety";
 
 export interface PhonePanelProps {
   plan: PhonePlan;

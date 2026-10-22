@@ -19,8 +19,8 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-666666?labelColor=333333" alt="MIT license"></a>
-  <a href="https://github.com/devswha/herdr-web-ui/stargazers"><img src="https://img.shields.io/github/stars/devswha/herdr-web-ui?labelColor=333333&color=666666&logo=github" alt="GitHub stars"></a>
-  <a href="https://github.com/devswha/herdr-web-ui/releases/latest"><img src="https://img.shields.io/github/v/release/devswha/herdr-web-ui?label=release&labelColor=333333&color=666666" alt="Latest release"></a>
+  <a href="https://github.com/hamzahraihan/orbit/stargazers"><img src="https://img.shields.io/github/stars/hamzahraihan/orbit?labelColor=333333&color=666666&logo=github" alt="GitHub stars"></a>
+  <a href="https://github.com/hamzahraihan/orbit/releases/latest"><img src="https://img.shields.io/github/v/release/hamzahraihan/orbit?label=release&labelColor=333333&color=666666" alt="Latest release"></a>
   <a href="https://github.com/herdrdev/herdr"><img src="https://img.shields.io/badge/herdr-0.9.0%2B-666666?labelColor=333333" alt="herdr 0.9.0+"></a>
   <a href="docs/guide.md#on-your-phone"><img src="https://img.shields.io/badge/PWA-installable-666666?labelColor=333333" alt="Installable PWA"></a>
 </p>
@@ -111,7 +111,7 @@ irm https://herdrweb.dev/install.ps1 | iex
 필요한 도구가 이미 있다면 플러그인만 설치해도 됩니다.
 
 ```bash
-herdr plugin install devswha/herdr-web-ui
+herdr plugin install hamzahraihan/orbit
 ```
 
 herdr가 실행 중인 상태에서 **[localhost:7317](http://localhost:7317)**을 여세요. pane을 고르거나 **New workspace**로 에이전트를 시작합니다. 폰에서 쓰려면 설치 스크립트가 보여 준 QR 코드를 찍고 앱을 홈 화면에 추가하세요. [빠른 시작 →](docs/guide.md#quick-start)
@@ -183,7 +183,7 @@ Claude Code, Codex, omp, omo, gjc, pi는 각자의 세션 파일에서 읽습니
 ## 개발
 
 ```bash
-git clone https://github.com/devswha/herdr-web-ui.git
+git clone https://github.com/hamzahraihan/orbit.git
 cd herdr-web-ui
 bun install
 

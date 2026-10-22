@@ -43,7 +43,7 @@ import { descendantProcesses, windowsArgv, windowsProcessTable } from "../server
 const ENV_FILES = ["env", ".env"];
 const ROOT = resolve(process.env["HERDR_PLUGIN_ROOT"] ?? join(import.meta.dir, ".."));
 const DEFAULT_STATE_DIR = join(homedir(), ".local", "state", "herdr-web-ui");
-const MANAGED_STATE_DIR = join(herdrStateDir(process.env, platform(), homedir()), "plugins", "devswha.herdr-web-ui");
+const MANAGED_STATE_DIR = join(herdrStateDir(process.env, platform(), homedir()), "plugins", "hamzahraihan.orbit");
 // run by hand, without herdr's HERDR_PLUGIN_STATE_DIR: a server started from a checkout keeps its
 // own dir while it runs; otherwise the dir herdr gives the plugin, where its startup hook wrote
 const STATE_DIR = process.env["HERDR_PLUGIN_STATE_DIR"]
@@ -72,7 +72,7 @@ function herdrConfigDir(): string | null {
   const herdr = Bun.which("herdr");
   if (herdr === null) return null;
   try {
-    const result = Bun.spawnSync([herdr, "plugin", "config-dir", "devswha.herdr-web-ui"], { windowsHide: true, stdout: "pipe", stderr: "ignore", timeout: 3000 });
+    const result = Bun.spawnSync([herdr, "plugin", "config-dir", "hamzahraihan.orbit"], { windowsHide: true, stdout: "pipe", stderr: "ignore", timeout: 3000 });
     const dir = result.exitCode === 0 ? result.stdout.toString().trim() : "";
     return dir !== "" && ENV_FILES.some((name) => existsSync(join(dir, name))) ? dir : null;
   } catch {

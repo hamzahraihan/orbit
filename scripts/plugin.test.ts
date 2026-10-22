@@ -281,7 +281,7 @@ describe("stop", () => {
 
 describe("the state dir when run by hand", () => {
   const legacy = () => join(scratch, ".local", "state", "herdr-web-ui");
-  const managed = (base = join(scratch, ".local", "state")) => join(base, "herdr", "plugins", "devswha.herdr-web-ui");
+  const managed = (base = join(scratch, ".local", "state")) => join(base, "herdr", "plugins", "hamzahraihan.orbit");
   const pidFile = (dir: string, pid: number) => { mkdirSync(dir, { recursive: true }); writeFileSync(join(dir, "server.pid"), `${pid}\n`); };
   const byHand = (extra: Record<string, string | undefined> = {}) => run("status", { HERDR_PLUGIN_STATE_DIR: undefined, PORT: "1", ...extra });
 

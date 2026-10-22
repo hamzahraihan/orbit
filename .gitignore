@@ -23,3 +23,6 @@ _film/
 
 # one-off screenshot and probe scripts kept inside the repo so imports resolve
 scripts/*.tmp.ts
+
+# the PowerShell module analysis cache, dropped in the checkout by the Windows install test
+Microsoft/

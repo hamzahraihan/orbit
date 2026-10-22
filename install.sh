@@ -18,8 +18,8 @@
 #   HERDR_WEB_UI_REF=<branch or tag>   install that ref instead of the latest release
 set -eu
 
-REPO="devswha/herdr-web-ui"
-PLUGIN="devswha.herdr-web-ui"
+REPO="hamzahraihan/orbit"
+PLUGIN="hamzahraihan.orbit"
 BIN_DIR="$HOME/.local/bin"
 NODE_DIR="$HOME/.local/share/herdr-web-ui/node"
 # Official digests from nodejs.org/dist/v22.23.2/SHASUMS256.txt, as scripts/build-remote-bundle.ts pins them
