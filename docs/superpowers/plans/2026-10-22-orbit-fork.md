@@ -24,6 +24,7 @@
 - **Every task's gate:** `bun run typecheck`, `bun run build`, `bun scripts/ci-tests.ts unit` and `bun scripts/ci-tests.ts integration` all exit 0
 - `herdr plugin link` does **not** run build commands, so `bun install` and `bun run build` must run before the plugin is linked (Task 8)
 - The build is `bun --bun vite build` and takes ~90s; the baseline is verified green at `97a48035`
+- **No Docker.** Nothing in this plan uses it. The two upstream scripts named `fresh-install-docker.ts` and `ssh-password-docker.ts` are not `*.test.ts` files, so no test lane runs them; `scripts/self-hosted-runner.test.ts` writes a fake `docker` shell script into a temp directory and asserts on it. The test lanes use the local `herdr` binary and a `herdr-web-ui-test` session. Do not install, start or shell out to Docker
 
 ## Review Focus
 
