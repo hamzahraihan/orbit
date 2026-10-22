@@ -1102,6 +1102,7 @@ git push origin main
 
 **Files:**
 - Modify: `README.md`, `README.ja.md`, `README.ko.md`, `README.zh-CN.md`, `docs/guide.md`, `docs/development.md`, `DESIGN.md`, `docs/remote-pcs.md`, `INSTALL.md`
+- Delete: `docs/app-updates.md`
 - Create: `changelog.d/orbit-fork.md` if the repo's changelog fragment folder is the convention (it is — `changelog.d/` exists)
 
 **Interfaces:**
@@ -1124,6 +1125,9 @@ Each command lists the passages to rewrite.
 
 - `docs/guide.md`: delete the "## Anonymous usage counts" section; delete the `HERDR_WEB_TELEMETRY` row from the configuration table; delete the Portal paragraphs and the Portal row; delete the usage-meter and update-check rows; keep the rows for `HOST`, `PORT`, `HERDR_SOCKET`, `HERDR_WEB_TOKEN`, `HERDR_WEB_STATE_DIR` and `HERDR_WEB_AUTO_UPDATE` — the last still applies to nothing now, so check whether the row should stay.
 - `docs/development.md`: delete the telemetry Worker deploy steps.
+- `docs/app-updates.md`: delete the file. It documents the updater, the supervisor, the handover
+  and the release notes, none of which exist any more; drop its links from `docs/guide.md` and the
+  four READMEs in the same commit, so no link points at a missing page.
 - `DESIGN.md`: update the Settings-layout notes that describe the Portal group.
 - `README*.md`: replace the anonymous-count sentence with a line saying Orbit sends nothing; add a short "This is a fork" note pointing at `NOTICE`.
 - `INSTALL.md`, `docs/remote-pcs.md`: update the remote-PC bundle references to `hamzahraihan/orbit` and note that `remote-v31` must be published from the fork.
