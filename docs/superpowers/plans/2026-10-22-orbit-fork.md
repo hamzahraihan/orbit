@@ -445,7 +445,9 @@ Append this `it()` inside `describe("Orbit's removed features", …)` in `script
     expect(present).toEqual([]);
     // the remote-PC bundle URL is Task 6's business: it names the upstream releases until
     // Task 6 repoints it, and Task 6's own guard covers that file
-    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts") && file !== "server/remote-bundle.ts"), /github\.com\/devswha\/herdr-web-ui\/releases/).map((match) => match.at);
+    // (a path is written the way the platform writes it, so the name is compared without it)
+    const portable = (file: string): string => file.replaceAll("\\", "/");
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts") && portable(file) !== "server/remote-bundle.ts"), /github\.com\/devswha\/herdr-web-ui\/releases/).map((match) => match.at);
     fail(offenders, "Orbit removed the app update checks: no source file may poll the upstream releases.");
     expect(offenders).toEqual([]);
   });
@@ -559,7 +561,7 @@ In `server/update-state.ts` delete `export const HANDOVER_EXIT = 75;` — only `
 
 In `src/App.tsx` delete `import { useUpdates } from "./lib/updates.ts";`, `import { UpdateNotice } from "./components/UpdateControls.tsx";`, the `const updates = useUpdates(locked === false);` line, the `<UpdateNotice … />` line, the `updates={updates}` prop on `<SettingsDialog …>`, and the `settingsSection` state if nothing else sets `"updates"`.
 
-In `src/components/SettingsDialog.tsx` delete the `UpdatesModel` type import, the `HerdrUpdateControls, UpdateControls` import, the `<UpdateControls … />` and `<HerdrUpdateControls … />` lines, and the `updates` prop from `SettingsDialogProps`.
+In `src/components/SettingsDialog.tsx` delete the `UpdatesModel` type import, the `UpdateControls` import and the `<UpdateControls … />` line, and the `updates` prop from `SettingsDialogProps`. Keep `HerdrUpdateControls`: the herdr self-update stays. Its `bridgesFollow` prop went with `UpdateControls`, so `AboutPage` no longer takes it.
 
 In `src/components/UpdateControls.tsx` delete `ReleaseNotes`, `UpdateProgress`, `UpdateControls` and `UpdateNotice`. **Keep `ChunkFailureNotice`** and keep `src/components/UpdateControls.css` — `LanExposureNotice.css` shares the `.update-notice` layout.
 
