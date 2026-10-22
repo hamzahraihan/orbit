@@ -1101,7 +1101,7 @@ git push origin main
 ### Task 7: Finish the documentation sweep
 
 **Files:**
-- Modify: `README.md`, `README.ja.md`, `README.ko.md`, `README.zh-CN.md`, `docs/guide.md`, `docs/development.md`, `DESIGN.md`, `docs/remote-pcs.md`, `INSTALL.md`
+- Modify: `README.md`, `README.ja.md`, `README.ko.md`, `README.zh-CN.md`, `docs/guide.md`, `docs/development.md`, `DESIGN.md`, `docs/remote-pcs.md`, `INSTALL.md`, `site/index.html`, `site/zh/index.html`, `herdr-plugin.toml`
 - Delete: `docs/app-updates.md`
 - Create: `changelog.d/orbit-fork.md` if the repo's changelog fragment folder is the convention (it is — `changelog.d/` exists)
 
@@ -1117,6 +1117,8 @@ git grep -n -i "telemetry\|anonymous usage count\|HERDR_WEB_TELEMETRY" -- '*.md'
 git grep -n -i "portal relay\|HERDR_WEB_TAILSCALE_SERVE_ONLY\|/api/portal" -- '*.md' ':!CHANGELOG.md'
 git grep -n -i "subscription usage\|usage meter\|/api/usage" -- '*.md' ':!CHANGELOG.md'
 git grep -n -i "check for updates\|what's new\|/api/updates" -- '*.md' ':!CHANGELOG.md'
+# the site's own privacy paragraphs repeat the READMEs' wording, in HTML:
+git grep -n -i "anonymous count\|usage meters\|Anonymous usage counts" -- 'site/*.html' 'site/*/*.html'
 ```
 
 Each command lists the passages to rewrite.
@@ -1128,9 +1130,18 @@ Each command lists the passages to rewrite.
 - `docs/app-updates.md`: delete the file. It documents the updater, the supervisor, the handover
   and the release notes, none of which exist any more; drop its links from `docs/guide.md` and the
   four READMEs in the same commit, so no link points at a missing page.
-- `DESIGN.md`: update the Settings-layout notes that describe the Portal group.
+- `DESIGN.md`: update the Settings-layout notes that describe the Portal group; delete the
+  "### Plan meters (`.usage*`)" section and the "Subscription usage" Settings page (and the hub
+  notes under it) — the meters and the hub are gone.
 - `README*.md`: replace the anonymous-count sentence with a line saying Orbit sends nothing; add a short "This is a fork" note pointing at `NOTICE`.
+- `site/index.html`, `site/zh/index.html`: the privacy paragraph repeats the README's wording —
+  "enabled usage meters contact provider APIs", "The app sends an anonymous count …" and
+  "Settings → About → Anonymous usage counts". Rewrite it the way the README's paragraph is
+  rewritten, in both languages.
 - `INSTALL.md`, `docs/remote-pcs.md`: update the remote-PC bundle references to `hamzahraihan/orbit` and note that `remote-v31` must be published from the fork.
+- `herdr-plugin.toml`: the action titles still read "Start herdr web ui", "Stop herdr web ui" and
+  "herdr web ui status" (Task 1's ruling carried them here). Rename them to Orbit: "Start Orbit",
+  "Stop Orbit" and "Orbit status". The `id`s, commands and pane titles stay.
 
 - [ ] **Step 3: Write the changelog entry**
 
@@ -1151,7 +1162,7 @@ Orbit is a local-first fork of herdr-web-ui.
 
 - [ ] **Step 4: Verify the docs no longer describe what is gone**
 
-Re-run the four `git grep` commands from Step 1. Expected: no output for the telemetry, usage-meter and portal greps. The update-check grep may still match the herdr self-update section, which stays.
+Re-run the four `git grep` commands from Step 1 and the site grep. Expected: no output for the telemetry, usage-meter and portal greps, and none for the site grep. The update-check grep may still match the herdr self-update section, which stays.
 
 - [ ] **Step 5: Gate**
 
