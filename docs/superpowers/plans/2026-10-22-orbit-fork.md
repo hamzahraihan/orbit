@@ -104,6 +104,19 @@ and the repository block:
   },
 ```
 
+`bun.lock` records the root package's name, so it goes stale the moment `package.json` changes.
+Refresh it and commit the result, or CI's `bun install --frozen-lockfile` (ten workflows use it)
+fails on the name mismatch:
+
+```bash
+bun install
+git diff --stat bun.lock
+```
+
+Expected: `bun.lock` changes on exactly one line — the root workspace's `"name"` becomes `"orbit"`.
+No dependency version may move. If a version moved, the install resolved something new: revert
+`bun.lock` and re-run `bun install` with the lockfile's existing pins intact.
+
 - [ ] **Step 3: Rename the plugin manifest**
 
 In `herdr-plugin.toml`, replace the first five lines with:
