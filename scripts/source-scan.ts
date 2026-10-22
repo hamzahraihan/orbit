@@ -52,3 +52,14 @@ export function stripComments(text: string, { strings = false } = {}): string {
 
 /** The 1-based line of an offset. */
 export const lineOf = (text: string, index: number): number => text.slice(0, index).split("\n").length;
+
+/** Every match of `pattern` in each file's code (comments removed), as `file:line: text`. */
+export function matches(fileList: string[], pattern: RegExp): { file: string; at: string; index: number; code: string }[] {
+  return fileList.flatMap((file) => {
+    const code = stripComments(read(file));
+    return [...code.matchAll(new RegExp(pattern.source, pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`))].map((match) => {
+      const line = lineOf(code, match.index);
+      return { file, index: match.index, code, at: `${file}:${line}: ${code.split("\n")[line - 1]!.trim().slice(0, 160)}` };
+    });
+  });
+}

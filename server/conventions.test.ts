@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { fail, files, lineOf, read, stripComments } from "../scripts/source-scan.ts";
+import { fail, files, lineOf, matches, read, stripComments } from "../scripts/source-scan.ts";
 
 // Server rules from AGENTS.md and server/AGENTS.md that used to be prose only. Each failure says
 // what to change; client rules are in src/conventions.test.ts, repo-wide ones in
@@ -7,17 +7,6 @@ import { fail, files, lineOf, read, stripComments } from "../scripts/source-scan
 
 /** Server code that ships: not tests, not test stand-ins. */
 const serverCode = (): string[] => files("server/**/*.{ts,mjs,js}").filter((file) => !/\.test\.ts$|\.fake\.ts$/.test(file));
-
-/** Every match of `pattern` in each file's code (comments removed), as `file:line: text`. */
-function matches(fileList: string[], pattern: RegExp): { file: string; at: string; index: number; code: string }[] {
-  return fileList.flatMap((file) => {
-    const code = stripComments(read(file));
-    return [...code.matchAll(new RegExp(pattern.source, pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`))].map((match) => {
-      const line = lineOf(code, match.index);
-      return { file, index: match.index, code, at: `${file}:${line}: ${code.split("\n")[line - 1]!.trim().slice(0, 160)}` };
-    });
-  });
-}
 
 describe("PTY sidecar boundary", () => {
   // node-pty panics Bun (oven-sh/bun#18546): only the Node sidecar loads it. `Bun.resolveSync`
