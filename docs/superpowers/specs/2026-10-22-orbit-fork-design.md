@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-22
 **Status:** Approved (design), pending written-spec review
-**Repo:** `github.com/hamzahraihan/orbit` (public) · base `v0.4.12` (commit `1ed80e79`)
+**Repo:** `github.com/hamzahraihan/orbit` (public) · base `97a48035` (upstream `main`)
 
 ---
 
@@ -20,7 +20,7 @@ removed:
 | Portal relay (author-operated remote access) | **removed** |
 | Remote-PC runtime bundle downloads | **repointed** to `hamzahraihan/orbit` |
 
-Orbit = **O**n-demand **R**emote **A**gent **E**xecution & **I**ntegration **T**erminal.
+Orbit = **O**rchestrated **R**emote **B**ackground **I**ntegration **T**erminal.
 
 ### Non-goals
 
@@ -36,7 +36,7 @@ Orbit = **O**n-demand **R**emote **A**gent **E**xecution & **I**ntegration **T**
 | Local path | `C:\herdr-plugins-project\orbit` |
 | `origin` | `https://github.com/hamzahraihan/orbit.git` |
 | `upstream` | `https://github.com/devswha/herdr-web-ui.git` (read-only) |
-| Base commit | `v0.4.12` = `1ed80e79` |
+| Base commit | `97a48035` — upstream `main`, 7 commits after the `v0.4.12` tag, and exactly the commit the installed plugin was running |
 | Plugin id | `hamzahraihan.orbit` |
 | Qualified actions | `hamzahraihan.orbit.start`, `hamzahraihan.orbit.start-windows`, … |
 | Package name | `orbit` |
@@ -65,7 +65,7 @@ Everything that talks only to the local machine and the local herdr server:
 
 ## 4. Removal inventory
 
-Line numbers refer to `v0.4.12`. Every deletion below is followed by a typecheck, build and test
+Line numbers refer to the base commit `97a48035`. Every deletion below is followed by a typecheck, build and test
 gate (§6).
 
 ### 4.1 Telemetry
@@ -120,11 +120,11 @@ gate (§6).
 | Path | Change |
 | --- | --- |
 | `server/managed.ts` | Becomes a thin launcher: spawn `server/index.ts`, forward its exit code, drop the `HANDOVER_EXIT` handover loop |
-| `src/lib/updateNotes.ts` | Keep `reloadReason()` only, reworked to return `"incomplete"` (chunk-load failure) — the `"updated"` and `"restart"` cases came from `/api/updates`. Delete the rest of the module (`offeredNotes`, `notesOffer`, `summaryFor`, `installedUpdate`, `announcesUpdate`, `readAnnounced`, `writeAnnounced`, `watchAnnounced`) |
+| `src/lib/updateNotes.ts` | **Delete the whole module.** `reloadReason()`'s only production consumer is `src/lib/updates.ts`, which this task also deletes; the rest (`offeredNotes`, `notesOffer`, `summaryFor`, `installedUpdate`, `announcesUpdate`, `readAnnounced`, `writeAnnounced`, `watchAnnounced`) exists only to serve an offered update. `ChunkFailureNotice` was already independent — it reads `src/lib/lazyChunk.ts` alone and its own comment calls it "the reload line alone, for a page without the update model" |
 | `src/components/UpdateControls.tsx` | Delete `ReleaseNotes`, `UpdateProgress`, `UpdateControls`, `UpdateNotice`. **Keep `ChunkFailureNotice`** — it depends only on `src/lib/lazyChunk.ts` and is used by `FileReader.tsx` |
 | `src/components/UpdateControls.css` | Keep — `LanExposureNotice.css` shares the `.update-notice` layout |
 | `server/update-api.ts` | Reduce to the `updateRequestAllowed(request)` guard, still used by herdr self-update. Delete `connectUpdater`, `servedRevision`, `withServed` and the `/api/updates*` branch of `handleUpdateRequest` |
-| `shared/update.ts` | Keep `HerdrUpdateStatus` and the types `reloadReason` needs; delete the rest of the app-update surface |
+| `shared/update.ts` | Keep only the herdr-update surface: `HerdrUpdateStatus` and its neighbours, which `server/herdr-update.ts` and the herdr-update frontend still use. `reloadReason()` goes with `src/lib/updateNotes.ts` (see §5, item 2). Delete the rest of the app-update surface |
 | `server/release-notes.ts` | After the updater is gone this module is used only by release tooling: `scripts/release-guards.ts` imports `SUMMARIES_FILE`, `scripts/release-notes.ts` imports `SUMMARIES_FILE` and `releaseSummaries`. Move those two into `scripts/release-notes.ts` and delete the server-side module and `server/release-notes.test.ts`. `compareVersions` and the server-side `releaseNotes` are used only by the deleted updater and go with it. Note `scripts/release-notes.ts` already exports a *different* `releaseNotes` — do not merge the two bodies |
 
 **Edit**
@@ -230,9 +230,12 @@ Three changes are not simple deletions:
    `scripts/plugin.ts` already polls `/api/health` itself, so the supervisor's health gate was
    redundant.
 
-2. **`reloadReason()` is reworked, not deleted.** It returned `"updated" | "restart" |
-   "incomplete"`. The first two came from `/api/updates`; `"incomplete"` (a failed lazy chunk)
-   is independent and must survive, because `ChunkFailureNotice` depends on it.
+2. **`src/lib/updateNotes.ts` is deleted whole, not reworked.** `reloadReason()` returned
+   `"updated" | "restart" | "incomplete"`; the first two came from `/api/updates`. Its only
+   production caller is `src/lib/updates.ts`, which goes with the updater, so nothing survives to
+   call it. The chunk-failure line the user still needs does **not** go through it:
+   `ChunkFailureNotice` reads `src/lib/lazyChunk.ts` alone and was already written to stand
+   without the update model.
 
 3. **`shared/protocol.ts`, `shared/update.ts`, `src/lib/settings.ts` and `src/lib/api.ts` each
    change exactly once**, centrally, rather than once per area. These four files carry most of
@@ -317,10 +320,13 @@ rewrite `shared/protocol.ts`, `src/lib/settings.ts` and `src/lib/api.ts` heavily
 - `git log upstream/main -- <file>` to spot candidates.
 - Orbit's `main` is the source of truth. Upstream is never merged into it automatically.
 
-Upstream `main` is 113 commits ahead of the `v0.4.12` base. Those commits remain reachable and
-cherry-pickable. The base was chosen as `v0.4.12` because it is the released, proven state that
-was already running on this machine, and because the removal inventory in §4 was verified against
-it.
+Upstream `main` is 106 commits ahead of the `97a48035` base. Those commits remain reachable and
+cherry-pickable. The base was chosen as `97a48035` because it is the exact commit that was
+running on this machine — the one the removal inventory in §4 was verified against — and because
+it sits on the released `0.4.12` line rather than in the middle of unreleased feature work.
+It is 7 commits after the `v0.4.12` tag, and those 7 commits include refactors that moved code
+into `server/core/`, so the `v0.4.12` tag itself is **not** the right base: the inventory's
+locations (for example `countVisit()` in `server/core/status.ts`) do not exist there.
 
 ## 10. Risks
 
@@ -328,7 +334,7 @@ it.
 | --- | --- |
 | The i18n test fails on dictionary entries the code no longer uses | Delete the matching ja/ko/zh strings in the same commit as the component that used them (§4) |
 | Four shared files carry most of the coupling | Change each once, centrally (§5, item 3) |
-| `server/release-notes.ts` is used by release tooling, not only the runtime updater | Move it to `scripts/` rather than deleting it (§4.2) |
+| `server/release-notes.ts` is used by release tooling, not only the runtime updater | Move `SUMMARIES_FILE` and `releaseSummaries` to `scripts/` rather than deleting them (§4.2) |
 | The fork's CI workflows reference upstream-only infrastructure (the telemetry Worker) | Strip the Worker references from `ci.yml` and `release.yml` in commit 1 |
 | The remote-PC feature has no bundle until `remote-v31` is published from the fork | Publish it as part of commit 7 (§8.10) |
 | Removing the usage meters leaves the `herdr-quota-context-cache` plugin as the only quota path | Intentional — that plugin is already installed |
