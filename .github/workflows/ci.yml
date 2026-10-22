@@ -246,7 +246,7 @@ jobs:
         run: echo "version=$(bun -e 'console.log(require("playwright-core/package.json").version)')" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browser
         if: needs.changes.outputs.draft != 'true' && runner.environment != 'self-hosted'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .ci-cache/playwright
           key: playwright-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright-version.outputs.version }}
@@ -306,7 +306,7 @@ jobs:
         run: echo "version=$(bun -e 'console.log(require("playwright-core/package.json").version)')" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browser
         if: needs.changes.outputs.draft != 'true' && runner.environment != 'self-hosted'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .ci-cache/playwright
           key: playwright-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright-version.outputs.version }}
