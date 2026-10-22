@@ -235,7 +235,7 @@ Create `scripts/orbit.conventions.test.ts`:
 import { describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { fail, files, lineOf, read, repo, stripComments } from "./source-scan.ts";
+import { fail, files, matches, repo } from "./source-scan.ts";
 
 /**
  * Orbit's own rules, added as features were removed. Upstream's rules live in
@@ -246,17 +246,6 @@ import { fail, files, lineOf, read, repo, stripComments } from "./source-scan.ts
 
 /** Every source file that ships: not tests. */
 const SOURCES = [...files("{src,server,shared,scripts}/**/*.{ts,tsx,mjs,cjs,js}"), "vite.config.ts"];
-
-/** Every match of `pattern` in each file's code (comments removed), as `file:line: text`. */
-function matches(fileList: string[], pattern: RegExp): { file: string; at: string; index: number; code: string }[] {
-  return fileList.flatMap((file) => {
-    const code = stripComments(read(file));
-    return [...code.matchAll(new RegExp(pattern.source, pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`))].map((match) => {
-      const line = lineOf(code, match.index);
-      return { file, index: match.index, code, at: `${file}:${line}: ${code.split("\n")[line - 1]!.trim().slice(0, 160)}` };
-    });
-  });
-}
 
 /** The modules Orbit removed, and the files that must not come back. */
 function absent(removed: string[]): string[] {
