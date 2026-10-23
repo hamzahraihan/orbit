@@ -251,3 +251,14 @@ it("types into the pane through herdr", () => {
   expect(written).toEqual(["ls\r"]);
   session.kill();
 });
+
+it("enables the visible cursor at the prompt when showCursor is true", async () => {
+  expect(mirrorFrame("hello", 24, true)).toBe("\x1b[?25l\x1b[0m\x1b[H\x1b[2J\x1b[?7lhello\x1b[0m\x1b[?7h\x1b[?25h");
+  expect(mirrorRows("hello", "hello world", 24, true)).toContain("\x1b[?25h");
+  const { session, read, frames } = pane({ showCursor: true });
+  (await read(1)).resolve("prompt> ");
+  await read(2);
+  expect(frames[0]).toContain("\x1b[?25h");
+  expect(session.current).toContain("\x1b[?25h");
+  session.kill();
+});
