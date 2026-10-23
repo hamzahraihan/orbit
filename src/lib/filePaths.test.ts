@@ -19,6 +19,17 @@ describe("file paths in chat text", () => {
     // the text around a path is kept, whole
     expect(splitFilePaths("open src/a.ts now")).toEqual(["open ", { path: "src/a.ts" }, " now"]);
   });
+  it("recognizes Windows drive paths, backslashes, and compiler error parenthesis references", () => {
+    expect(paths("Error in C:\\repo\\src\\App.tsx:42 and C:\\project\\app.ts(120,8)")).toEqual([
+      "C:\\repo\\src\\App.tsx:42", "C:\\project\\app.ts(120,8)",
+    ]);
+    expect(paths("Check src\\lib\\keys.ts, .\\server\\index.ts, and ~\\docs\\notes.md.")).toEqual([
+      "src\\lib\\keys.ts", ".\\server\\index.ts", "~\\docs\\notes.md",
+    ]);
+    expect(codeIsFilePath("src\\components\\Button.tsx")).toBe(true);
+    expect(codeIsFilePath("C:\\repo\\src\\App.tsx:42")).toBe(true);
+    expect(codeIsFilePath("C:\\project\\app.ts(120,8)")).toBe(true);
+  });
 
   it("finds a path named in any script, and stops at a particle written onto it", () => {
     expect(paths("열면 docs/스플릿뷰-결과.html 이 보여요, ~/사진/화면.png")).toEqual(["docs/스플릿뷰-결과.html", "~/사진/화면.png"]);
@@ -73,6 +84,9 @@ describe("fileLineTarget", () => {
       expect(fileLineTarget(`src/app.ts${suffix}`)).toEqual({ path: "src/app.ts", line: 12 });
     }
     expect(fileLineTarget("C:\\repo\\app.ts:12:8")).toEqual({ path: "C:\\repo\\app.ts", line: 12 });
+    expect(fileLineTarget("C:\\repo\\src\\App.tsx:42")).toEqual({ path: "C:\\repo\\src\\App.tsx", line: 42 });
+    expect(fileLineTarget("C:\\project\\app.ts(120,8)")).toEqual({ path: "C:\\project\\app.ts", line: 120 });
+    expect(fileLineTarget("src\\app.ts(45)")).toEqual({ path: "src\\app.ts", line: 45 });
   });
   it("leaves ordinary names intact and ignores invalid line numbers", () => {
     expect(fileLineTarget("src/app.ts")).toEqual({ path: "src/app.ts", line: null });
