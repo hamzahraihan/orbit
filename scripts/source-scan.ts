@@ -11,7 +11,10 @@ export const read = (file: string): string => readFileSync(join(repo, file), "ut
 
 /** Repository-relative paths matching a glob, sorted; `node_modules` is never included. */
 export const files = (pattern: string): string[] =>
-  [...new Bun.Glob(pattern).scanSync({ cwd: repo })].filter((file) => !file.split("/").includes("node_modules")).sort();
+  [...new Bun.Glob(pattern).scanSync({ cwd: repo })]
+    .map((file) => file.replaceAll("\\", "/"))
+    .filter((file) => !file.split("/").includes("node_modules"))
+    .sort();
 
 /** Throws one message, the instruction first and then each offender, when there are offenders. */
 export function fail(offenders: string[], instruction: string): void {
