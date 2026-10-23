@@ -1,5 +1,5 @@
 /**
- * Web Push: pane alerts that reach a device even when herdr-web-ui is closed there.
+ * Web Push: pane alerts that reach a device even when Orbit is closed there.
  *
  * The browser hands us a subscription (an endpoint on its vendor's push service plus
  * the keys to encrypt for it); we POST encrypted payloads there, signed with our VAPID

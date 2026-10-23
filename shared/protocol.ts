@@ -1,5 +1,5 @@
 /**
- * herdr-web-ui's own HTTP/WebSocket contract, shared by the Bun server and the React client.
+ * Orbit's own HTTP/WebSocket contract, shared by the Bun server and the React client.
  *
  * The herdr WIRE types are NOT hand-written here: they are generated from herdr's
  * published API schema into ./herdr-api.generated.ts and re-exported below, so a
@@ -280,7 +280,7 @@ export interface HealthAuth {
  * reach that address is let in (`open` in `server/access.ts`). It is a warning, never a gate:
  * nothing about who is let in changes because this field exists.
  *
- * Never sent to a request that did not get in. "This host runs herdr-web-ui with no token"
+ * Never sent to a request that did not get in. "This host runs Orbit with no token"
  * is reconnaissance for whoever is asking, not help.
  */
 export interface LanExposure {

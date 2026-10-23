@@ -1,5 +1,5 @@
 /**
- * Optional shared-token gate for herdr-web-ui.
+ * Optional shared-token gate for Orbit.
  *
  * There is no user database here: the token is the whole authorization decision,
  * and whoever holds it can type into live terminals. Hence constant-time compares
