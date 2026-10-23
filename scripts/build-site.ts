@@ -34,7 +34,7 @@ const copies: Array<[from: string, to: string]> = [
   ["site/index.html", "index.html"],
   ["site/zh/index.html", "zh/index.html"],
   ["site/googlec8861932279eca6b.html", "googlec8861932279eca6b.html"],
-  // the one-line installer: curl -fsSL https://herdrweb.dev/install.sh | sh
+  // the one-line installer: curl -fsSL https://raw.githubusercontent.com/hamzahraihan/orbit/main/install.sh | sh
   ["install.sh", "install.sh"],
   ["install.ps1", "install.ps1"],
   ["public/favicon.ico", "favicon.ico"],
@@ -208,7 +208,7 @@ for (const name of pages) {
 // A rebuild is not necessarily a content change; omit the optional lastmod rather than invent it.
 writeFileSync(
   join(out, "sitemap.xml"),
-  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://herdrweb.dev/</loc></url>\n  <url><loc>https://herdrweb.dev/zh/</loc></url>\n</urlset>\n`,
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://hamzahraihan.github.io/orbit/</loc></url>\n  <url><loc>https://hamzahraihan.github.io/orbit/zh/</loc></url>\n</urlset>\n`,
 );
 
 // the demo: the real client, relative paths, the transport in front of it
