@@ -49,6 +49,8 @@ export interface MirrorOptions {
   echoMs?: number;
   wholeMs?: number;
   quietMs?: number;
+  /** whether to keep the terminal cursor visible; defaults to true */
+  showCursor?: boolean;
 }
 
 /**
@@ -60,8 +62,8 @@ export interface MirrorOptions {
  * headless herdr after a split: the layout said 20 rows, the read gave 40); the last
  * `gridRows` are the screen.
  */
-export function mirrorFrame(screen: string, gridRows = Number.POSITIVE_INFINITY): string {
-  return `\x1b[?25l\x1b[0m\x1b[H\x1b[2J\x1b[?7l${rowsOf(screen).slice(-gridRows).join("\r\n")}\x1b[0m\x1b[?7h`;
+export function mirrorFrame(screen: string, gridRows = Number.POSITIVE_INFINITY, showCursor = false): string {
+  return `\x1b[?25l\x1b[0m\x1b[H\x1b[2J\x1b[?7l${rowsOf(screen).slice(-gridRows).join("\r\n")}\x1b[0m\x1b[?7h${showCursor ? "\x1b[?25h" : ""}`;
 }
 
 const rowsOf = (screen: string): string[] => screen.replace(/(?:\r?\n)+$/, "").split(/\r?\n/);
@@ -74,7 +76,7 @@ const rowsOf = (screen: string): string[] => screen.replace(/(?:\r?\n)+$/, "").s
  * frame leaves it. The client pans a grid larger than its screen to the cursor, and one left
  * on a spinner's row at the top took a phone away from the prompt at the bottom.
  */
-export function mirrorRows(before: string, after: string, gridRows: number): string {
+export function mirrorRows(before: string, after: string, gridRows: number, showCursor = false): string {
   const was = rowsOf(before).slice(-gridRows);
   const now = rowsOf(after).slice(-gridRows);
   const last = now.length - 1;
@@ -83,7 +85,7 @@ export function mirrorRows(before: string, after: string, gridRows: number): str
     if (row === last || was[row] === now[row]) continue;
     frame += `\x1b[${row + 1};1H\x1b[0m\x1b[2K${now[row] ?? ""}`;
   }
-  return `${frame}\x1b[${last + 1};1H\x1b[0m\x1b[2K${now[last]}\x1b[0m\x1b[?7h`;
+  return `${frame}\x1b[${last + 1};1H\x1b[0m\x1b[2K${now[last]}\x1b[0m\x1b[?7h${showCursor ? "\x1b[?25h" : ""}`;
 }
 
 export class MirrorSession {
@@ -111,12 +113,14 @@ export class MirrorSession {
   private patched = false;
   /** when the screen last changed */
   private changedAt = 0;
+  private showCursor: boolean;
 
   constructor(private readonly options: MirrorOptions) {
     this.exited = new Promise((resolve) => { this.finish = resolve; });
     this.delay = options.activeMs ?? MIRROR_ACTIVE_MS;
     this.cols = options.cols;
     this.rows = options.rows;
+    this.showCursor = options.showCursor ?? false;
     void this.tick();
   }
 
@@ -196,9 +200,9 @@ export class MirrorSession {
   /** Sends the screen if it is not the one last sent: its changed rows, or all of it when a client's screen cannot be built on. */
   private flush(): boolean {
     if (this.paused || this.screen === null || this.screen === this.sent) return false;
-    const all = mirrorFrame(this.screen, this.rows);
+    const all = mirrorFrame(this.screen, this.rows, this.showCursor);
     const due = this.sent === null || Date.now() - this.wholeAt >= (this.options.wholeMs ?? MIRROR_WHOLE_MS);
-    const rows = due ? null : mirrorRows(this.sent!, this.screen, this.rows);
+    const rows = due ? null : mirrorRows(this.sent!, this.screen, this.rows, this.showCursor);
     // a screen that scrolled changed every row, and each row drawn in its place costs more than the screen whole
     const whole = rows === null || Buffer.byteLength(rows) >= Buffer.byteLength(all);
     const frame = whole ? all : rows;
@@ -219,7 +223,7 @@ export class MirrorSession {
     if (!this.patched || this.paused || this.sent === null) return;
     this.patched = false;
     this.wholeAt = Date.now();
-    this.options.onData(mirrorFrame(this.sent, this.rows));
+    this.options.onData(mirrorFrame(this.sent, this.rows, this.showCursor));
   }
 
   /**
@@ -239,7 +243,7 @@ export class MirrorSession {
 
   /** The screen last sent, whole, for a client joining now: a stream tail could cut a large one in two. */
   get current(): string | null {
-    return this.sent === null ? null : mirrorFrame(this.sent, this.rows);
+    return this.sent === null ? null : mirrorFrame(this.sent, this.rows, this.showCursor);
   }
 
   write(data: string): void {
