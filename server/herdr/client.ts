@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import { stripVTControlCharacters } from "node:util";
 import type {
   AgentIntegration,
@@ -18,10 +19,13 @@ import type { HerdrIdentity } from "../../shared/machines.ts";
 const DEFAULT_TIMEOUT_MS = 10_000;
 
 /** herdr's default socket: ~/.config/herdr on Unix, %APPDATA%\herdr on Windows. */
-export function herdrSocketPath(): string {
-  if (process.env.HERDR_SOCKET) return process.env.HERDR_SOCKET;
-  if (process.platform === "win32") return `${process.env.APPDATA ?? ""}\\herdr\\herdr.sock`;
-  return `${process.env.HOME ?? ""}/.config/herdr/herdr.sock`;
+export function herdrSocketPath(env: NodeJS.ProcessEnv = process.env): string {
+  if (env.HERDR_SOCKET) return env.HERDR_SOCKET;
+  if (process.platform === "win32") {
+    const config = env.XDG_CONFIG_HOME || env.APPDATA || (env.USERPROFILE ? `${env.USERPROFILE}\\AppData\\Roaming` : `${homedir()}\\AppData\\Roaming`);
+    return `${config}\\herdr\\herdr.sock`;
+  }
+  return `${env.HOME ?? ""}/.config/herdr/herdr.sock`;
 }
 
 /**
