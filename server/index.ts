@@ -742,6 +742,7 @@ export function createServer(
       const mirror = new MirrorSession({
         cols: spawnCols,
         rows: spawnRows,
+        showCursor: true,
         size: async () => {
           const now = (await terminalInfoFor(paneId)).rect;
           return now ? { cols: now.width, rows: now.height } : null;
@@ -1417,7 +1418,8 @@ export function createServer(
         }
       }
 
-      const paneResponse = await handlePaneRequest(request, url, pathname, options);
+      const paneStores = { ...options, onScroll: (paneId: string) => { attachments.get(paneId)?.mirror?.poke(); } };
+      const paneResponse = await handlePaneRequest(request, url, pathname, paneStores);
       if (paneResponse) return paneResponse;
 
       if (pathname === "/api/pane/omo-tasks") {

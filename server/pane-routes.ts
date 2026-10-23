@@ -16,7 +16,7 @@ import { agentRename, HerdrError, layoutSetSplitRatio, paneClear, paneClose, pan
 import { PasteImageError, readImageBody, savePaneImage } from "./paste.ts";
 
 /** the native stores createServer was given; unset, each reader finds its own */
-export type PaneStores = { codexHome?: string; grokHome?: string; opencodeDb?: string; devinDbPath?: string; hermesHome?: string };
+export type PaneStores = { codexHome?: string; grokHome?: string; opencodeDb?: string; devinDbPath?: string; hermesHome?: string; onScroll?: (paneId: string) => void };
 
 /** the sides herdr's pane.swap and pane.resize take; anything else is refused before the RPC, which would answer invalid_request */
 const isPaneDirection = (value: unknown): value is PaneDirection => value === "left" || value === "right" || value === "up" || value === "down";
@@ -149,7 +149,9 @@ export async function handlePaneRequest(request: Request, url: URL, pathname: st
     if (typeof payload.pane_id !== "string" || payload.pane_id.length === 0) return badRequest("missing_pane_id", "pane_id is required");
     if (!isCount(payload.offset_from_bottom)) return badRequest("invalid_offset", "offset_from_bottom must be a non-negative integer");
     try {
-      return jsonResponse({ scroll: await paneScroll(payload.pane_id, payload.offset_from_bottom) });
+      const scroll = await paneScroll(payload.pane_id, payload.offset_from_bottom);
+      options.onScroll?.(payload.pane_id);
+      return jsonResponse({ scroll });
     } catch (error) {
       return errorResponse(error);
     }
