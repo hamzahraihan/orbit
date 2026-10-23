@@ -203,3 +203,19 @@ export function ctrlEnterSequence(modifyOtherKeys: number): string | null {
 export function mirroredCtrlEnterKey(mirrored: boolean, modifyOtherKeys: number): string | null {
   return mirrored && modifyOtherKeys === 0 ? "ctrl+enter" : null;
 }
+
+/** Whether the browser environment is running on Windows. */
+export function isWindowsPlatform(nav: { userAgent?: string; platform?: string } | null = typeof navigator !== "undefined" ? navigator : null): boolean {
+  if (!nav) return false;
+  return /Windows/.test(nav.userAgent ?? "") || /Win/.test(nav.platform ?? "");
+}
+
+/**
+ * Quotes a path for pasting into a terminal shell.
+ * On Windows, shells (PowerShell, cmd.exe) accept double quotes with internal quotes doubled.
+ * On POSIX shells, single-quoting with '\'' escaping is standard.
+ */
+export function quoteTerminalPath(path: string, isWindows: boolean): string {
+  if (isWindows) return `"${path.replaceAll('"', '""')}"`;
+  return `'${path.replaceAll("'", "'\\''")}'`;
+}
