@@ -8,25 +8,25 @@ import { createContext } from "react";
  */
 
 /** The terminal's matcher takes the same line, column and range suffixes. */
-const LINE_SUFFIX = /(?::(\d+)(?::\d+)?|#L(\d+)(?:-L?\d+)?)$/;
+const LINE_SUFFIX = /(?::(\d+)(?::\d+)?|#L(\d+)(?:-L?\d+)?|\((\d+)(?:,\d+)?\))$/;
 /** what a name is made of, as in the terminal's matcher: any script's letters, digits and marks */
 const NAME = "\\p{L}\\p{N}\\p{M}_";
-const ROOT = "(?:~\\/|\\.{1,2}\\/|\\/)";
+const ROOT = "(?:~[\\\\/]|\\.{1,2}[\\\\/]|[\\\\/]|[A-Za-z]:[\\\\/]|\\\\\\\\)";
 const EXTENSION = "\\.[A-Za-z0-9]{1,8}";
-const LINE = "(?::\\d+(?::\\d+)?|#L\\d+(?:-L?\\d+)?)?";
+const LINE = "(?::\\d+(?::\\d+)?|#L\\d+(?:-L?\\d+)?|\\(\\d+(?:,\\d+)?\\))?";
 const SEGMENT = `[${NAME}@.+-]+`;
 const FILE_NAME = `[${NAME}@+-][${NAME}@.+-]*${EXTENSION}`;
 // a path starts where a run of its characters starts, `+` among them: a line of plus signs is
 // otherwise tried as a path from every one of them, to its end. `~/` still starts one after a
 // plus sign (`+~/notes/a.md`, a line of a diff). It ends at an ASCII word character only, so a
 // particle written onto it in Korean or Japanese prose is not taken as part of the name.
-const BARE_PATH = new RegExp(`(?<![${NAME}/.@~-])(?<!\\+(?!~))(${ROOT}?(?:${SEGMENT}\\/)+${FILE_NAME}${LINE})(?![\\w/])`, "gu");
+const BARE_PATH = new RegExp(`(?<![${NAME}/.@~\\\\-])(?<!\\+(?!~))(${ROOT}?(?:${SEGMENT}[\\\\/])+${FILE_NAME}${LINE})(?![\\w/\\\\])`, "gu");
 // A code span is delimited, so a path in it may hold single spaces (`.senpi/pages/a b.html`):
 // after a root (`~/My Docs/a.md`) or past a first folder, never in a bare name or a first word,
 // so a command (`bun scripts/check.ts`) or a phrase (`run a.ts`) is not one
 const SPACED = `${SEGMENT}(?: ${SEGMENT})*`;
 const SPACED_NAME = `[${NAME}@+-](?:[${NAME}@.+-]| (?=[${NAME}@.+-]))*${EXTENSION}`;
-const CODE_PATH = new RegExp(`^(?:${ROOT}(?:${SPACED}\\/)*${SPACED_NAME}|${SEGMENT}\\/(?:${SPACED}\\/)*${SPACED_NAME}|${FILE_NAME})${LINE}$`, "u");
+const CODE_PATH = new RegExp(`^(?:${ROOT}(?:${SPACED}[\\\\/])*${SPACED_NAME}|${SEGMENT}[\\\\/](?:${SPACED}[\\\\/])*${SPACED_NAME}|${FILE_NAME})${LINE}$`, "u");
 
 /**
  * A bare dotted name that is code or a host, not a file: what agents write in backticks all the
@@ -36,7 +36,7 @@ const CODE_PATH = new RegExp(`^(?:${ROOT}(?:${SPACED}\\/)*${SPACED_NAME}|${SEGME
  */
 const CODE_NAME = /^(?:process\.(?:env|argv|cwd|exit|platform|stdout|stderr|stdin)(?:\.\w+)?|Math\.(?:random|floor|ceil|round|max|min|abs|pow|sqrt|trunc|sign)|JSON\.(?:parse|stringify)|console\.(?:log|error|warn|info|debug)|Object\.(?:keys|values|entries|assign|freeze)|Array\.(?:from|isArray)|Promise\.(?:all|race|any|allSettled|resolve|reject)|Number\.(?:isFinite|isInteger|parseInt|parseFloat)|tool\.(?:monitor|read|bash|grep|write|edit)|os\.(?:path|environ|getcwd|getenv)|sys\.(?:argv|path|exit|stdout|stderr)|window\.(?:location|history|open)|document\.(?:body|title|cookie))$/;
 function isCodeName(name: string): boolean {
-  return !name.includes("/") && CODE_NAME.test(name);
+  return !name.includes("/") && !name.includes("\\") && CODE_NAME.test(name);
 }
 
 // Chinese and Japanese prose writes a Latin path straight onto its words ("open src/app.ts"
@@ -81,7 +81,7 @@ export function codeIsFilePath(code: string): boolean {
 export function fileLineTarget(target: string): { path: string; line: number | null } {
   const suffix = LINE_SUFFIX.exec(target);
   if (suffix === null) return { path: target, line: null };
-  const line = Number(suffix[1] ?? suffix[2]);
+  const line = Number(suffix[1] ?? suffix[2] ?? suffix[3]);
   return { path: target.slice(0, suffix.index), line: Number.isSafeInteger(line) && line >= 1 ? line : null };
 }
 
