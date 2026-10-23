@@ -63,7 +63,7 @@ phone("phone-terminal", "15b-phone-terminal-font10.png");
 ff("-f", "lavfi", "-i", "nullsrc=s=256x256,geq=random(1)*255:128:128,format=gray", "-frames:v", "1", join(out, "grain.png"));
 // the logo mark in paper (for graphite) and ink, same crop and alpha as scripts/generate-brand.ts
 const icon = join(root, "docs/brand/icon-source.png");
-const mark = (rgb: string) => `crop=1040:1040:145:127,scale=512:512:flags=lanczos,format=rgba,geq=${rgb}:a='clip((200-r(X,Y))*2.5,0,255)'`;
+const mark = (rgb: string) => `crop=1040:1040:120:120,scale=512:512:flags=lanczos,format=rgba,geq=${rgb}:a='clip(max(215-r(X,Y),max(abs(216-g(X,Y)),abs(216-b(X,Y))))*2.5,0,255)'`;
 ff("-i", icon, "-vf", mark("r=242:g=235:b=223"), join(out, "mark-paper.png"));
 ff("-i", icon, "-vf", mark("r=22:g=18:b=13"), join(out, "mark-ink.png"));
 console.log(`site assets written to ${out}`);
