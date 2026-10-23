@@ -158,7 +158,18 @@ describe("terminal file links", () => {
   it("links a compiler's file(line,column) and leaves a call alone", async () => {
     const term = new Terminal({ cols: 120, allowProposedApi: true });
     await written(term, "src/App.tsx(120,8): error TS1000 lib/run.js(42) and lib/run.js(arg)");
-    expect(terminalFileLinks(term.buffer.active, 1, () => {}).map((link) => link.text)).toEqual(["src/App.tsx", "lib/run.js"]);
+    expect(terminalFileLinks(term.buffer.active, 1, () => {}).map((link) => link.text)).toEqual(["src/App.tsx(120,8)", "lib/run.js(42)"]);
+    term.dispose();
+  });
+
+  it("links Windows drive paths and compiler errors with line and column", async () => {
+    const term = new Terminal({ cols: 120, allowProposedApi: true });
+    await written(term, "C:\\project\\file.ts(15,2): error TS2304 and C:\\repo\\src\\App.tsx:42");
+    const opened: string[] = [];
+    const links = terminalFileLinks(term.buffer.active, 1, (path) => opened.push(path));
+    expect(links.map((link) => link.text)).toEqual(["C:\\project\\file.ts(15,2)", "C:\\repo\\src\\App.tsx:42"]);
+    links[0]?.activate(click);
+    expect(opened).toEqual(["C:\\project\\file.ts(15,2)"]);
     term.dispose();
   });
 
