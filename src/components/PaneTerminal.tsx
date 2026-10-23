@@ -708,6 +708,7 @@ export function PaneTerminal({
     });
     attachTerminalWheel(term, wheelStateRef, {
       drag: (event) => { if (!drag) return false; dragWheel(event); return true; },
+      observing: () => observeRef.current,
       adopted: () => adopted(),
       scroll: (lines) => lineScroll.current?.(lines),
     });
@@ -1677,9 +1678,14 @@ export function PaneTerminal({
       const across = touchX - first.clientX;
       touchX = first.clientX;
       touchY = first.clientY;
-      if (adopted()) {
+      if (observeRef.current) {
         panned = true;
         host.scrollBy(across, delta);
+        return;
+      }
+      if (fixedGridRef.current && Math.abs(across) > Math.abs(delta) && host.scrollWidth > host.clientWidth) {
+        panned = true;
+        host.scrollBy(across, 0);
         return;
       }
       // xterm sends herdr one report per wheel event however far it went, and herdr scrolls a
@@ -1706,7 +1712,7 @@ export function PaneTerminal({
     const onTouchEnd = (event: TouchEvent): void => {
       // a lifted one-finger drag sends what is left once it reaches half a step: a flick shorter
       // than one step still scrolls, and a long drag loses at most half a step at its end
-      if (tracking && event.type === "touchend" && !pinchStroke && !adopted()) {
+      if (tracking && event.type === "touchend" && !pinchStroke && !observeRef.current) {
         sendTouchWheels(finalStep(touchPixels, cellHeight() * HERDR_MOUSE_SCROLL_LINES));
       }
       touchPixels = 0;
