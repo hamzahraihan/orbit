@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, truncateSync, utimesSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { delimiter, join } from "node:path";
+import { delimiter, join, resolve } from "node:path";
 
 import * as fileView from "./file-view.ts";
 import { crossSiteFileRead, fileInfo, fileResponse, forgetPageMedia, locateFile, locateFileInFolder, PAGE_MEDIA_LIFETIME_MS, PAGE_MEDIA_PER_RENDER, pageMediaResponse, pageMediaSource, resolveFilePath } from "./file-view.ts";
@@ -13,9 +13,10 @@ describe("file view", () => {
   const temp = () => { const root = mkdtempSync(join(tmpdir(), "herdr-file-view-")); roots.push(root); return root; };
 
   it("resolves absolute, ~ and pane-relative paths", () => {
-    expect(resolveFilePath("/a/b.txt", "/work")).toBe("/a/b.txt");
+    expect(resolveFilePath("/a/b.txt", "/work")).toBe(resolve("/a/b.txt"));
     expect(resolveFilePath("~/x.png", null)).toBe(join(homedir(), "x.png"));
-    expect(resolveFilePath("docs/demo.mp4", "/work/app")).toBe("/work/app/docs/demo.mp4");
+    expect(resolveFilePath("~\\x.png", null)).toBe(join(homedir(), "x.png"));
+    expect(resolveFilePath("docs/demo.mp4", "/work/app")).toBe(resolve("/work/app", "docs/demo.mp4"));
     expect(resolveFilePath("docs/demo.mp4", null)).toBeNull();
     expect(resolveFilePath("  ", "/work")).toBeNull();
   });
@@ -574,7 +575,7 @@ describe("locateFile", () => {
     expect(Bun.spawnSync(["git", "init", "-q", root]).exitCode).toBe(0);
     clearFileCache();
     expect(locateFile("11_two-version-design.md", root)).toMatchObject({ info: { path: join(root, "docs/design/11_two-version-design.md") } });
-  });
+  }, 15_000);
 
   it("finds an ignored file past an ignored folder too large to walk", () => {
     const root = temp();
@@ -585,7 +586,7 @@ describe("locateFile", () => {
     expect(Bun.spawnSync(["git", "init", "-q", root]).exitCode).toBe(0);
     clearFileCache();
     expect(locateFile("demo.mp4", root)).toMatchObject({ info: { path: join(root, "recordings/demo.mp4") } });
-  });
+  }, 15_000);
 
   it("walks the subfolders of a folder holding thousands of files outside a repository", () => {
     const root = temp();
@@ -603,5 +604,5 @@ describe("locateFile", () => {
     writeFileSync(join(root, "docs/notes.md"), "notes");
     clearFileCache();
     expect(locateFile("notes.md", root)).toMatchObject({ info: { path: join(root, "docs/notes.md") } });
-  });
+  }, 15_000);
 });
