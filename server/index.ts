@@ -2224,7 +2224,8 @@ if (import.meta.main) {
   console.log(`Orbit listening on http://${instance.hostname}:${instance.port}`);
   const socket = herdrSocketPath();
   void ping(socket).catch(() => {
-    console.error(`herdr is not reachable at ${socket}: start herdr, or set HERDR_SOCKET to its socket (named sessions: ~/.config/herdr/sessions/<name>/herdr.sock).`);
+    const sessionHint = process.platform === "win32" ? "%APPDATA%\\herdr\\sessions\\<name>\\herdr.sock" : "~/.config/herdr/sessions/<name>/herdr.sock";
+    console.error(`herdr is not reachable at ${socket}: start herdr, or set HERDR_SOCKET to its socket (named sessions: ${sessionHint}).`);
   });
   // the state folder is created on first write, so test the nearest folder that exists
   const stateDir = defaultStateDir();
