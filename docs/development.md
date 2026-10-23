@@ -13,6 +13,11 @@ bun run dev      # Vite on :5173, proxies /api and /ws
 `bun run server` serves the last `bun run build` and needs a restart after a change under
 `server/`; `bun run dev` rebuilds the client as you edit and proxies to a running server.
 
+To have herdr start this checkout as a plugin, build it and link it: `bun run build`, then
+`herdr plugin link <path to the checkout>`. Link runs no build commands, so the server serves
+whatever `dist/` holds. The plugin's own settings are the `env` file in the directory
+`herdr plugin config-dir hamzahraihan.orbit` prints.
+
 ## Checks
 
 Production builds create Brotli (`.br`) and gzip (`.gz`) sidecars for JavaScript and CSS under
