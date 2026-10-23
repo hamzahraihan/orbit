@@ -119,8 +119,9 @@ describe("DESIGN.md", () => {
  */
 const ICON_VERSIONS: Record<string, { sha256: string; cacheName: string }> = {
   ram1: { sha256: "ed82342db3ec3ed2151ddd2d0d77805233e9251758e29972b4f09aa95602041e", cacheName: "herdr-web-ui-v4-ram" },
+  orbit1: { sha256: "d6c93f2080414b00e4e3a15d6ee036bf2cf38ebea2a68d3bec49a1147638a1d5", cacheName: "orbit-v1" },
 };
-const CURRENT_ICONS = "ram1";
+const CURRENT_ICONS = "orbit1";
 
 /** The icon images: dotfiles and other strays in public/icons (a Finder .DS_Store) are not icons. */
 function iconFiles(): string[] {

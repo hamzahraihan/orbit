@@ -1,5 +1,5 @@
 /*
- * Shell layout + shared primitives for herdr web ui.
+ * Shell layout + shared primitives for Orbit.
  *
  * Every color, size and space is a :root token; DESIGN.md is the human-readable
  * mirror of this block and the two must not drift. Dark is the default theme and
@@ -1805,11 +1805,6 @@ button {
   display: block;
   width: var(--mark-size);
   height: var(--mark-size);
-}
-
-.brand-sub {
-  color: var(--text-dim);
-  font-weight: var(--fw-medium);
 }
 
 /* The selected pane on one line: mark and title, then PC › workspace › folder. The title may

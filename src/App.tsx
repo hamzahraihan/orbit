@@ -193,10 +193,8 @@ function ConnectionChip({ connected, word, title }: { connected: boolean; word: 
 function Brand() {
   return (
     <h1 className="brand">
-      <img src="/icons/icon-192.png?v=ram1" alt="" width="22" height="22" className="brand-mark" />
-      <span className="brand-name">
-        herdr <span className="brand-sub">web ui</span>
-      </span>
+      <img src="/icons/icon-192.png?v=orbit1" alt="" width="22" height="22" className="brand-mark" />
+      <span className="brand-name">Orbit</span>
     </h1>
   );
 }
