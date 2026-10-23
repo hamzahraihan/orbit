@@ -34,7 +34,7 @@ https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
 
 A browser and phone client for [herdr](https://github.com/herdrdev/herdr). Read and reply to the same agent sessions running on your computer — on desktop or phone, as chat, with the terminal when you need it.
 
-**This is a fork.** Orbit is a modified fork of [herdr-web-ui](https://github.com/devswha/herdr-web-ui): the anonymous usage counts, the app update checks, the subscription usage meters and the Portal relay are removed. [NOTICE](NOTICE) records the changes.
+**This is a fork.** Orbit is a modified fork of the upstream project: the anonymous usage counts, the app update checks, the subscription usage meters and the Portal relay are removed. [NOTICE](NOTICE) records the changes.
 
 <table>
   <tr>
@@ -138,7 +138,7 @@ No. Tailscale, an SSH tunnel, a VPN or your own HTTPS proxy can provide a route 
 
 **Does my code or conversation leave my machine?**
 
-Session files stay on the PC running each agent, and their contents are served to browsers you connect. Orbit has no hosted relay or account service of its own and sends no usage counts anywhere. Optional voice input sends audio (and text when polishing) to the configured provider. Remote-PC setup and push alerts can also use external services. Orbit is a modified fork of herdr-web-ui: [NOTICE](NOTICE) lists what changed. The agents’ own model connections depend on their configuration. [Data flow and access →](docs/guide.md#faq)
+Session files stay on the PC running each agent, and their contents are served to browsers you connect. Orbit has no hosted relay or account service of its own and sends no usage counts anywhere. Optional voice input sends audio (and text when polishing) to the configured provider. Remote-PC setup and push alerts can also use external services. Orbit is a modified fork of the upstream project: [NOTICE](NOTICE) lists what changed. The agents’ own model connections depend on their configuration. [Data flow and access →](docs/guide.md#faq)
 
 **Does it work on Windows?**
 
@@ -172,7 +172,7 @@ Helping someone install the app? Follow [INSTALL.md](INSTALL.md). For repository
 
 ```bash
 git clone https://github.com/hamzahraihan/orbit.git
-cd herdr-web-ui
+cd orbit
 bun install
 
 bun run server      # API + WebSocket on :7317

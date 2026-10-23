@@ -792,7 +792,7 @@
         "The phone key bar starts with Esc, Tab and Ctrl+C; saved layouts keep their order",
         "Settings → Shortcuts explains the app's keys and marks keys the browser or OS keeps",
         "vim, tmux and Claude Code in a pane copy to your clipboard again, no trip to Settings",
-        "The website moved to herdrweb.dev and reads in Simplified Chinese; old links still work",
+        "The website moved and now reads in Simplified Chinese; old links still work",
         "GitHub releases open with short patch notes like these"
       ],
       "fixed": [
@@ -814,7 +814,7 @@
         "폰 키 바가 Esc, Tab, Ctrl+C로 시작합니다. 저장한 배치는 순서를 그대로 유지합니다",
         "설정 → 단축키가 앱 키를 설명하고, 브라우저나 OS가 쓰는 키를 표시합니다",
         "pane 안 vim, tmux, Claude Code가 설정을 거치지 않고 다시 클립보드에 복사합니다",
-        "웹사이트가 herdrweb.dev로 옮겼고 중국어 간체로도 읽을 수 있습니다. 옛 링크도 그대로 됩니다",
+        "웹사이트가 이전했고 중국어 간체로도 읽을 수 있습니다. 옛 링크도 그대로 됩니다",
         "GitHub 릴리스가 이런 짧은 패치 노트로 시작합니다"
       ],
       "fixed": [
@@ -836,7 +836,7 @@
         "スマホのキーバーが Esc、Tab、Ctrl+C から始まります。保存した並びはそのままです",
         "設定 → ショートカットがアプリのキーを説明し、ブラウザや OS が使うキーを示します",
         "ペイン内の vim、tmux、Claude Code が、設定を経ずに再びクリップボードへコピーできます",
-        "ウェブサイトは herdrweb.dev に移り、簡体字中国語でも読めます。古いリンクも使えます",
+        "ウェブサイトは移転し、簡体字中国語でも読めます。古いリンクも使えます",
         "GitHub のリリースが、このような短いパッチノートで始まります"
       ],
       "fixed": [
@@ -858,7 +858,7 @@
         "手机按键栏以 Esc、Tab 和 Ctrl+C 开头;已保存的布局保持原有顺序",
         "设置 → 快捷键 会说明应用的按键,并标出浏览器或系统占用的按键",
         "窗格中的 vim、tmux 和 Claude Code 无需进入设置即可再次复制到剪贴板",
-        "网站迁移到 herdrweb.dev,并提供简体中文版;旧链接仍然有效",
+        "网站已迁移,并提供简体中文版;旧链接仍然有效",
         "GitHub 发布页以这样的简短更新说明开头"
       ],
       "fixed": [

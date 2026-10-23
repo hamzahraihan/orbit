@@ -7,9 +7,11 @@
   tunnel.
 
 ### Changed
-- The app is named Orbit everywhere it names itself: the page title, the installed app's name and
-  icon label, Settings → About, the terminal's error prefix, and every message that says to
-  restart it.
+- The app is named Orbit everywhere it names itself: the page title and header, the sign-in
+  screen, the installed app's name and icon label, Settings → About, the terminal's error prefix,
+  and every message that says to restart it.
+- The app icon, favicon, notification badge and site mark are a new Orbit ring with a satellite;
+  the upstream ram artwork is no longer shipped.
 - The installer one-liners, README, guide and site point at this repository instead of the upstream
   website, and the About dialog drops that site link; until the first release tag, the one-line
   installer installs `main`.

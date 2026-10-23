@@ -34,7 +34,7 @@ https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
 
 [herdr](https://github.com/herdrdev/herdr)를 브라우저와 폰에서 쓰는 클라이언트입니다. 컴퓨터에서 돌아가는 에이전트 세션을 그대로, 데스크톱에서든 폰에서든 채팅으로 읽고 답합니다. 필요할 때는 터미널로 넘어갑니다.
 
-**포크입니다.** Orbit은 [herdr-web-ui](https://github.com/devswha/herdr-web-ui)를 수정한 포크로, 익명 사용 통계, 앱 업데이트 확인, 구독 사용량 미터, Portal 릴레이를 제거했습니다. 변경 사항은 [NOTICE](NOTICE)에 기록되어 있습니다.
+**포크입니다.** Orbit은 업스트림 프로젝트를 수정한 포크로, 익명 사용 통계, 앱 업데이트 확인, 구독 사용량 미터, Portal 릴레이를 제거했습니다. 변경 사항은 [NOTICE](NOTICE)에 기록되어 있습니다.
 
 <table>
   <tr>
@@ -141,7 +141,7 @@ Claude Code, Codex, omp, omo, gjc, pi는 각자의 세션 파일에서 읽습니
 
 **코드나 대화가 내 컴퓨터 밖으로 나가나요?**
 
-세션 파일은 각 에이전트가 실행되는 PC에 남고, 내용은 연결한 브라우저로 전송됩니다. Orbit에는 자체 클라우드 중계나 계정 서비스가 없고 사용 통계를 어디에도 보내지 않습니다. 선택 기능인 음성 입력은 녹음을, 텍스트 다듬기를 쓰면 텍스트도 설정된 제공업체로 보냅니다. 원격 PC 설정과 푸시 알림도 외부 서비스에 접속할 수 있습니다. Orbit은 herdr-web-ui를 수정한 포크입니다. 변경 사항은 [NOTICE](NOTICE)에 있습니다. 에이전트 자체의 모델 연결은 해당 에이전트 설정에 따릅니다. [데이터 전송과 접근 →](docs/guide.md#faq)
+세션 파일은 각 에이전트가 실행되는 PC에 남고, 내용은 연결한 브라우저로 전송됩니다. Orbit에는 자체 클라우드 중계나 계정 서비스가 없고 사용 통계를 어디에도 보내지 않습니다. 선택 기능인 음성 입력은 녹음을, 텍스트 다듬기를 쓰면 텍스트도 설정된 제공업체로 보냅니다. 원격 PC 설정과 푸시 알림도 외부 서비스에 접속할 수 있습니다. Orbit은 업스트림 프로젝트를 수정한 포크입니다. 변경 사항은 [NOTICE](NOTICE)에 있습니다. 에이전트 자체의 모델 연결은 해당 에이전트 설정에 따릅니다. [데이터 전송과 접근 →](docs/guide.md#faq)
 
 **Windows에서도 되나요?**
 
@@ -185,7 +185,7 @@ Claude Code, Codex, omp, omo, gjc, pi는 각자의 세션 파일에서 읽습니
 
 ```bash
 git clone https://github.com/hamzahraihan/orbit.git
-cd herdr-web-ui
+cd orbit
 bun install
 
 bun run server      # API + WebSocket, :7317

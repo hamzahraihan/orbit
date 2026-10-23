@@ -121,7 +121,7 @@ herdr plugin action invoke hamzahraihan.orbit.start
 
 ```bash
 git clone https://github.com/hamzahraihan/orbit.git
-cd herdr-web-ui
+cd orbit
 bun install
 bun run start
 ```

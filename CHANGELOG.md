@@ -1,6 +1,6 @@
 # Changelog
 
-herdr web ui is versioned with [semantic versioning](https://semver.org/). Each release is a
+Orbit is versioned with [semantic versioning](https://semver.org/). Each release is a
 `vX.Y.Z` Git tag with a GitHub release. Installs update only to releases; commits on `main`
 between releases do not reach them. Remote-PC runtime bundles are versioned separately as
 `remote-vN` releases.
@@ -72,7 +72,7 @@ between releases do not reach them. Remote-PC runtime bundles are versioned sepa
   the address bar's Install adds it. Over SSH they print the `ssh -L` tunnel to run instead, and
   `HERDR_WEB_NO_OPEN=1` turns the opening off.
   ([#1228](https://github.com/devswha/herdr-web-ui/pull/1228))
-- herdrweb.dev shows Windows visitors the PowerShell install command and copies it.
+- The website shows Windows visitors the PowerShell install command and copies it.
   ([#1228](https://github.com/devswha/herdr-web-ui/pull/1228))
 - The installed desktop app can fold Chrome's title bar away (the chevron next to the window
   controls): the header takes its place, drags the window and leaves room for the controls.
@@ -585,7 +585,7 @@ between releases do not reach them. Remote-PC runtime bundles are versioned sepa
   desktop; without the fade's delay the button hid while the keyboard focus crossed to it, and the
   focus fell out of the tab strip.
   ([#1246](https://github.com/devswha/herdr-web-ui/pull/1246))
-- The terminal's "Terminal ended", "Reconnecting to herdr web ui…", "Input held:" and view-only
+- The terminal's "Terminal ended", "Reconnecting to Orbit…", "Input held:" and view-only
   banners are translated into Korean, Japanese and Chinese, and wrap inside a narrow pane (a phone,
   or a split on a desktop) instead of running past its edge.
   ([#1246](https://github.com/devswha/herdr-web-ui/pull/1246))
@@ -1404,7 +1404,7 @@ between releases do not reach them. Remote-PC runtime bundles are versioned sepa
   at the phone's width: the terminal goes back to the desktop's size at once.
   ([#1068](https://github.com/devswha/herdr-web-ui/pull/1068))
 - When the source checkout a managed server runs from is replaced under it (`herdr plugin install`
-  run again, or `git pull` and a build), the app now tells you to restart herdr web ui on the PC
+  run again, or `git pull` and a build), the app now tells you to restart Orbit on the PC
   instead of showing "App updated" and **Reload app**, which never went away because a reload
   loaded the same build again. The notice shows on the page's next status read, links to the
   restart commands, and goes away once the server restarts.
@@ -2279,11 +2279,9 @@ between releases do not reach them. Remote-PC runtime bundles are versioned sepa
 - A GitHub release opens with its patch notes, short lines under New features, Improvements and
   Bug fixes as an install shows them, with the full changelog folded underneath.
   ([#598](https://github.com/devswha/herdr-web-ui/pull/598))
-- The website moved to <https://herdrweb.dev/>, and the install commands with it:
-  `curl -fsSL https://herdrweb.dev/install.sh | sh` and
-  `irm https://herdrweb.dev/install.ps1 | iex`. Every address under
-  `devswha.github.io/herdr-web-ui/`, the old install commands included, still leads to the same page
-  or file there. The website can also be read in Simplified Chinese, at <https://herdrweb.dev/zh/>.
+- The website moved, and the install commands with it: `install.sh` and `install.ps1`. Every
+  address under the old GitHub Pages path, the old install commands included, still leads to the
+  same page or file there. The website can also be read in Simplified Chinese.
   ([#610](https://github.com/devswha/herdr-web-ui/pull/610))
 
 ### Fixed
@@ -2973,7 +2971,7 @@ between releases do not reach them. Remote-PC runtime bundles are versioned sepa
   bridge" line are drawn over the pane, not across the window.
   ([#461](https://github.com/devswha/herdr-web-ui/pull/461))
 
-- The sidebar's footer ends at Settings and the plan meters: the "herdr web ui v…" line and the
+- The sidebar's footer ends at Settings and the plan meters: the old version line and the
   herdr version beside it are gone from under them. Both versions are read in Settings, in every
   state: **Updates** always opens with the running app version, and **herdr** shows the running
   herdr version also where herdr cannot be updated from the app, such as on Windows. A tab that

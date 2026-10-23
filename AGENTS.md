@@ -1,4 +1,4 @@
-# herdr-web-ui
+# Orbit
 
 Browser UI for the herdr terminal multiplexer: a React 19 + xterm.js client (`src/`), a Bun
 backend (`server/`) that bridges herdr's unix-socket API, and the wire contract both import
@@ -58,12 +58,12 @@ to change. Also read [server/AGENTS.md](server/AGENTS.md) and [src/AGENTS.md](sr
   pass merges, unless the maintainer asks that session to merge. One session that edits files per
   worktree; read-only sessions may share it.
 - A worktree an agent adds with `git worktree add` that outlives its session (an open PR) goes
-  under `~/.herdr/worktrees/herdr-web-ui-wt/`, named after its branch with `/` as `-`
-  (`fix/pin-order` in `herdr-web-ui-wt/fix-pin-order`); a short-lived one may stay in the run's
+  under `~/.herdr/worktrees/orbit-wt/`, named after its branch with `/` as `-`
+  (`fix/pin-order` in `orbit-wt/fix-pin-order`); a short-lived one may stay in the run's
   temp root, and skills that name their own path keep it. Once its PR merges, remove the
   worktree and its branch.
 - After a merge, the merge pass also closes the herdr worktree workspace the PR came from (the
-  one checked out on the PR's branch, under `~/.herdr/worktrees/herdr-web-ui/`), only when all
+  one checked out on the PR's branch, under `~/.herdr/worktrees/orbit/`), only when all
   hold: no pane in it has an agent `working`, `git status` there is clean, and the branch's tip
   is the PR's head commit (`gh pr view --json headRefOid`), so nothing was added after it. Close
   it with `herdr worktree remove --workspace <id>`, never `git worktree remove`, so the
