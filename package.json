@@ -24,7 +24,8 @@
     "generate:themes": "bun run scripts/generate-themes.ts",
     "build:remote": "bun run scripts/build-remote-bundle.ts",
     "build:site": "bun scripts/build-site.ts",
-    "test:ssh": "bun run scripts/ssh-integration.ts"
+    "test:ssh": "bun run scripts/ssh-integration.ts",
+    "clean:processes": "bun scripts/clean-processes.ts"
   },
   "dependencies": {
     "@legendapp/list": "3.3.5",
