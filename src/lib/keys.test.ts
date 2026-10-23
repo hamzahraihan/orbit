@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { altSequence, clipboardKey, physicalKey, controlCode, ctrlEnterSequence, mirroredCtrlEnterKey, isPrintable, keySequence, modifyOtherKeysLevel, sanitizeKeyBarExtras, navigationSequence, terminalChord, keyFromData } from "./keys.ts";
+import { altSequence, clipboardKey, physicalKey, controlCode, ctrlEnterSequence, mirroredCtrlEnterKey, isPrintable, keySequence, modifyOtherKeysLevel, sanitizeKeyBarExtras, navigationSequence, terminalChord, keyFromData, quoteTerminalPath, isWindowsPlatform } from "./keys.ts";
 
 describe("clipboardKey", () => {
   it("recognizes native Ctrl+C/V on Korean and Russian layouts without replacing Latin layout letters", () => {
@@ -217,5 +217,29 @@ describe("mirroredCtrlEnterKey", () => {
     // control: unchanged on an attached pane, with or without modifyOtherKeys
     expect(mirroredCtrlEnterKey(false, 0)).toBeNull();
     expect(mirroredCtrlEnterKey(false, 2)).toBeNull();
+  });
+});
+
+describe("quoteTerminalPath", () => {
+  it("quotes Windows paths with double quotes and doubles internal double quotes", () => {
+    expect(quoteTerminalPath("C:\\Users\\John\\My Folder\\file.txt", true)).toBe('"C:\\Users\\John\\My Folder\\file.txt"');
+    expect(quoteTerminalPath('C:\\test "folder"\\file.txt', true)).toBe('"C:\\test ""folder""\\file.txt"');
+    expect(quoteTerminalPath("C:\\plain\\file.txt", true)).toBe('"C:\\plain\\file.txt"');
+  });
+
+  it("quotes POSIX paths with single quotes and escapes internal single quotes", () => {
+    expect(quoteTerminalPath("/home/user/my file.txt", false)).toBe("'/home/user/my file.txt'");
+    expect(quoteTerminalPath("/home/user/John's file.txt", false)).toBe("'/home/user/John'\\''s file.txt'");
+    expect(quoteTerminalPath("/home/user/plain.txt", false)).toBe("'/home/user/plain.txt'");
+  });
+});
+
+describe("isWindowsPlatform", () => {
+  it("detects Windows from userAgent or platform", () => {
+    expect(isWindowsPlatform({ userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" })).toBe(true);
+    expect(isWindowsPlatform({ platform: "Win32" })).toBe(true);
+    expect(isWindowsPlatform({ userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)" })).toBe(false);
+    expect(isWindowsPlatform({ userAgent: "Mozilla/5.0 (X11; Linux x86_64)" })).toBe(false);
+    expect(isWindowsPlatform(null)).toBe(false);
   });
 });
