@@ -1,10 +1,11 @@
 import { describe, expect, it } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   HerdrError,
   herdrRpc,
+  herdrSocketPath,
   paneRead,
   paneSendKeys,
   paneSendText,
@@ -20,6 +21,22 @@ import {
  * live socket protocol, so a mocked socket would prove nothing about it.
  * Only the polling regression creates/writes a pane, in its own workspace.
  */
+describe("herdrSocketPath", () => {
+  it("prefers HERDR_SOCKET if set", () => {
+    expect(herdrSocketPath({ HERDR_SOCKET: "/custom/herdr.sock" })).toBe("/custom/herdr.sock");
+  });
+
+  it("resolves Windows config directories with fallback when APPDATA is unset", () => {
+    if (process.platform === "win32") {
+      expect(herdrSocketPath({ APPDATA: "C:\\Users\\Test\\AppData\\Roaming" })).toBe("C:\\Users\\Test\\AppData\\Roaming\\herdr\\herdr.sock");
+      expect(herdrSocketPath({ USERPROFILE: "C:\\Users\\Test" })).toBe("C:\\Users\\Test\\AppData\\Roaming\\herdr\\herdr.sock");
+      expect(herdrSocketPath({})).toBe(`${homedir()}\\AppData\\Roaming\\herdr\\herdr.sock`);
+    } else {
+      expect(herdrSocketPath({ HOME: "/home/test" })).toBe("/home/test/.config/herdr/herdr.sock");
+    }
+  });
+});
+
 
 describe("ping", () => {
   it("reaches the live herdr server and reports its protocol", async () => {
