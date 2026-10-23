@@ -169,7 +169,7 @@ Claude Code, Codex, omp, omo, gjc, pi는 각자의 세션 파일에서 읽습니
 
 ## 감사
 
-[herdr](https://github.com/herdrdev/herdr) 위에서 만들었고, [chatmux](https://github.com/devswha/chatmux)에서 영감을 받았으며, [xterm.js](https://xtermjs.org), [React](https://react.dev), [Bun](https://bun.sh), [Lucide](https://lucide.dev)를 사용합니다.
+[herdr](https://github.com/herdrdev/herdr) 위에서 만들었고, chatmux에서 영감을 받았으며, [xterm.js](https://xtermjs.org), [React](https://react.dev), [Bun](https://bun.sh), [Lucide](https://lucide.dev)를 사용합니다.
 
 기여해 주신 모든 분께 감사드립니다. 특히 [@Yoonwoo-Ha](https://github.com/Yoonwoo-Ha)님께 감사드립니다.
 
@@ -205,4 +205,4 @@ bun run test:ui    # 브라우저 회귀 테스트
 
 ## 라이선스
 
-[MIT](LICENSE). Copyright © 2026 devswha.
+[MIT](LICENSE). Copyright © 2026 Orbit contributors.

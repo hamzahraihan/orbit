@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn `devswha/herdr-web-ui` into `hamzahraihan/orbit` — a local-first fork with telemetry, app update checks, usage meters and the author-operated portal relay removed, and the remote-PC bundle repointed at the fork.
+**Goal:** Turn `upstream/herdr-web-ui` into `hamzahraihan/orbit` — a local-first fork with telemetry, app update checks, usage meters and the author-operated portal relay removed, and the remote-PC bundle repointed at the fork.
 
 **Architecture:** Eight sequential commits on `main`, each ending with a green typecheck + build + test gate. Five feature areas are removed from one codebase; the coupling between them concentrates in four shared files (`shared/protocol.ts`, `shared/update.ts`, `src/lib/settings.ts`, `src/lib/api.ts`), each edited exactly once. Every removal is pinned by a permanent source-scanning guard in `scripts/orbit.conventions.test.ts`, so a removed feature cannot quietly return. The base is upstream `main` at `97a48035` — the commit that was running on this machine.
 
@@ -15,11 +15,11 @@
 ## Global Constraints
 
 - Working directory for every task: `C:\herdr-plugins-project\orbit`
-- Base commit is `97a48035`; `origin` is `github.com/hamzahraihan/orbit` (public); `upstream` is `github.com/devswha/herdr-web-ui` and is **read-only** — never `git merge upstream/main`
+- Base commit is `97a48035`; `origin` is `github.com/hamzahraihan/orbit` (public); `upstream` is `github.com/upstream/herdr-web-ui` and is **read-only** — never `git merge upstream/main`
 - Plugin id is `hamzahraihan.orbit`; qualified actions are `hamzahraihan.orbit.<action>`; local action ids stay `start`, `start-windows`, `stop`, `stop-windows`, `status`, `status-windows`, `phone`, `phone-windows`
 - Package name is `orbit`, version is `0.5.0`
-- The MIT licence and its copyright notice (`Copyright (c) 2026 devswha`) are retained verbatim in `LICENSE`; `NOTICE` records the fork
-- The remote-PC bundle URL must point at `github.com/hamzahraihan/orbit` and **never** at `devswha`
+- The MIT licence and its copyright notice (`Copyright (c) 2026 upstream`) are retained verbatim in `LICENSE`; `NOTICE` records the fork
+- The remote-PC bundle URL must point at `github.com/hamzahraihan/orbit` and **never** at `upstream`
 - No telemetry, update-check, usage-meter or portal code may survive in `server/`, `shared/`, `src/`, `scripts/` or `dist/`
 - **Every task's gate:** `bun run typecheck`, `bun run build`, `bun scripts/ci-tests.ts unit` and `bun scripts/ci-tests.ts integration` all exit 0
 - `herdr plugin link` does **not** run build commands, so `bun install` and `bun run build` must run before the plugin is linked (Task 8)
@@ -34,7 +34,7 @@ The five inputs most likely to bite a person using Orbit, most likely first. Eac
 2. **A settings payload from an older browser still carrying removed keys** (`showUsage`, `usageCount`, `usageGlance`, `usageOrder`, `usageHidden`). The shared-preferences endpoint and the settings sanitiser must ignore unknown keys, not crash on them. → Task 4.
 3. **A persisted `telemetry.json` left in the state dir.** The file stays on disk after the code is gone; nothing may read it and nothing may send it. → Task 2.
 4. **A browser tab that loaded the pre-removal bundle** calls `/api/telemetry` and gets `404 not_found`. The app must treat that as "no telemetry" — no error surfaced, no retry loop. → Task 2.
-5. **The remote-PC manifest for `remote-v31`.** It must exist in `hamzahraihan/orbit`; a remote PC must never be pointed at `devswha`'s release, and a missing manifest must fail loudly rather than silently fall back to someone else's bundle. → Task 6 and Task 8.
+5. **The remote-PC manifest for `remote-v31`.** It must exist in `hamzahraihan/orbit`; a remote PC must never be pointed at `upstream`'s release, and a missing manifest must fail loudly rather than silently fall back to someone else's bundle. → Task 6 and Task 8.
 
 ---
 
@@ -44,7 +44,7 @@ The five inputs most likely to bite a person using Orbit, most likely first. Eac
 
 | Path | Responsibility |
 | --- | --- |
-| `NOTICE` | Records that Orbit is a modified fork of `devswha/herdr-web-ui`, retaining the MIT notice |
+| `NOTICE` | Records that Orbit is a modified fork of `upstream/herdr-web-ui`, retaining the MIT notice |
 | `scripts/orbit.conventions.test.ts` | The permanent guard: no source file may reference a removed service's host, and no removed module may exist. One `it()` is added per removed area |
 | `docs/superpowers/plans/2026-10-22-orbit-fork.md` | This plan |
 
@@ -141,8 +141,8 @@ cat > NOTICE <<'EOF'
 Orbit
 ======
 
-Orbit is a modified fork of herdr-web-ui, Copyright (c) 2026 devswha.
-https://github.com/devswha/herdr-web-ui
+Orbit is a modified fork of herdr-web-ui, Copyright (c) 2026 upstream.
+https://github.com/upstream/herdr-web-ui
 
 Orbit is distributed under the same MIT licence as the original work. The
 copyright notice and permission notice in LICENSE are retained verbatim, as
@@ -158,13 +158,13 @@ EOF
 
 - [ ] **Step 5: Sweep the repository references**
 
-Run this, which rewrites every remaining `devswha/herdr-web-ui` to `hamzahraihan/orbit`:
+Run this, which rewrites every remaining `upstream/herdr-web-ui` to `hamzahraihan/orbit`:
 
 ```bash
 cd C:\herdr-plugins-project\orbit
-git grep -l "devswha/herdr-web-ui" -- . ':!CHANGELOG.md' ':!docs/superpowers' \
+git grep -l "upstream/herdr-web-ui" -- . ':!CHANGELOG.md' ':!docs/superpowers' \
   ':!server/remote-bundle.ts' ':!server/remote-bundle.test.ts' ':!telemetry/' \
-  | while read -r f; do sed -i 's#devswha/herdr-web-ui#hamzahraihan/orbit#g' "$f"; done
+  | while read -r f; do sed -i 's#upstream/herdr-web-ui#hamzahraihan/orbit#g' "$f"; done
 ```
 
 `server/remote-bundle.ts` and its test are excluded on purpose: Task 6 changes that URL test-first, with a failing test, rather than by a sweep. `CHANGELOG.md` is history and `docs/superpowers/` deliberately names the upstream.
@@ -172,7 +172,7 @@ git grep -l "devswha/herdr-web-ui" -- . ':!CHANGELOG.md' ':!docs/superpowers' \
 Verify only the intended files changed:
 
 ```bash
-git grep -n "devswha/herdr-web-ui" -- . ':!CHANGELOG.md' ':!docs/superpowers' ':!server/remote-bundle.ts' ':!server/remote-bundle.test.ts' ':!telemetry/'
+git grep -n "upstream/herdr-web-ui" -- . ':!CHANGELOG.md' ':!docs/superpowers' ':!server/remote-bundle.ts' ':!server/remote-bundle.test.ts' ':!telemetry/'
 ```
 
 Expected: five hits, all of them links to upstream's own history, which the sweep must not move:
@@ -254,7 +254,7 @@ function absent(removed: string[]): string[] {
 
 describe("Orbit's removed features", () => {
   it("sends nothing to the telemetry worker", () => {
-    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /herdr-web-ui-telemetry\.devswha\.workers\.dev/).map((match) => match.at);
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /herdr-web-ui-telemetry\.upstream\.workers\.dev/).map((match) => match.at);
     fail(offenders, "Orbit removed the anonymous usage counts: no source file may name the telemetry worker.");
     expect(offenders).toEqual([]);
   });
@@ -267,7 +267,7 @@ describe("Orbit's removed features", () => {
 bun test scripts/orbit.conventions.test.ts
 ```
 
-Expected: FAIL, naming `server/telemetry.ts` — the URL `https://herdr-web-ui-telemetry.devswha.workers.dev/v1/events` is still there.
+Expected: FAIL, naming `server/telemetry.ts` — the URL `https://herdr-web-ui-telemetry.upstream.workers.dev/v1/events` is still there.
 
 - [ ] **Step 3: Delete the telemetry modules**
 
@@ -447,7 +447,7 @@ Append this `it()` inside `describe("Orbit's removed features", …)` in `script
     // Task 6 repoints it, and Task 6's own guard covers that file
     // (a path is written the way the platform writes it, so the name is compared without it)
     const portable = (file: string): string => file.replaceAll("\\", "/");
-    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts") && portable(file) !== "server/remote-bundle.ts"), /github\.com\/devswha\/herdr-web-ui\/releases/).map((match) => match.at);
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts") && portable(file) !== "server/remote-bundle.ts"), /github\.com\/upstream\/herdr-web-ui\/releases/).map((match) => match.at);
     fail(offenders, "Orbit removed the app update checks: no source file may poll the upstream releases.");
     expect(offenders).toEqual([]);
   });
@@ -1033,7 +1033,7 @@ In `server/remote-bundle.test.ts`, the test named *"uses the release only when t
 bun test server/remote-bundle.test.ts
 ```
 
-Expected: FAIL, showing `https://github.com/devswha/herdr-web-ui/releases/download/remote-v31/manifest.json` where `hamzahraihan/orbit` was expected.
+Expected: FAIL, showing `https://github.com/upstream/herdr-web-ui/releases/download/remote-v31/manifest.json` where `hamzahraihan/orbit` was expected.
 
 - [ ] **Step 3: Change the URL**
 
@@ -1059,7 +1059,7 @@ Append inside `describe("Orbit's removed features", …)`:
 
 ```ts
   it("never points a remote PC at the upstream release", () => {
-    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /github\.com\/devswha\/herdr-web-ui/).map((match) => match.at);
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /github\.com\/upstream\/herdr-web-ui/).map((match) => match.at);
     fail(offenders, "A remote PC must fetch its runtime from hamzahraihan/orbit, never from the upstream project.");
     expect(offenders).toEqual([]);
   });
@@ -1193,7 +1193,7 @@ git push origin main
 
 **Files:**
 - Modify: `C:\Users\Asep Saepuloh\AppData\Roaming\herdr\plugins\config\hamzahraihan.orbit\env` (create)
-- Read: `C:\Users\Asep Saepuloh\AppData\Roaming\herdr\plugins\config\devswha.herdr-web-ui\env` (the file written during the diagnosis)
+- Read: `C:\Users\Asep Saepuloh\AppData\Roaming\herdr\plugins\config\upstream.herdr-web-ui\env` (the file written during the diagnosis)
 
 **Interfaces:**
 - Consumes: everything from Tasks 1–7
@@ -1222,7 +1222,7 @@ cat > "C:/Users/Asep Saepuloh/AppData/Roaming/herdr/plugins/config/hamzahraihan.
 # Read by the plugin launcher (scripts/plugin.ts) and passed to the server process.
 # Orbit sends no telemetry: the collector is not in the tree.
 EOF
-rm -rf "C:/Users/Asep Saepuloh/AppData/Roaming/herdr/plugins/config/devswha.herdr-web-ui"
+rm -rf "C:/Users/Asep Saepuloh/AppData/Roaming/herdr/plugins/config/upstream.herdr-web-ui"
 ```
 
 Do **not** delete `C:\Users\Asep Saepuloh\.config\herdr-web-ui` — that is the app's own state directory (push keys, device subscriptions, preferences), not the plugin's, and it survives the rename.
@@ -1230,8 +1230,8 @@ Do **not** delete `C:\Users\Asep Saepuloh\.config\herdr-web-ui` — that is the 
 - [ ] **Step 3: Stop the old plugin and unregister it**
 
 ```bash
-herdr plugin action invoke devswha.herdr-web-ui.stop-windows
-herdr plugin uninstall devswha.herdr-web-ui
+herdr plugin action invoke upstream.herdr-web-ui.stop-windows
+herdr plugin uninstall upstream.herdr-web-ui
 ```
 
 Expected: the action reports `stopped herdr web ui`; the uninstall reports the plugin unregistered.
@@ -1243,7 +1243,7 @@ herdr plugin link "C:\herdr-plugins-project\orbit"
 herdr plugin list
 ```
 
-Expected: the list shows `hamzahraihan.orbit` as `local:C:\herdr-plugins-project\orbit`, enabled, and no longer shows `devswha.herdr-web-ui`.
+Expected: the list shows `hamzahraihan.orbit` as `local:C:\herdr-plugins-project\orbit`, enabled, and no longer shows `upstream.herdr-web-ui`.
 
 - [ ] **Step 5: Start it and verify the health**
 
@@ -1337,7 +1337,7 @@ bun scripts/ci-tests.ts integration
 herdr plugin list
 ```
 
-Expected: all four commands exit 0; the plugin list shows `hamzahraihan.orbit` enabled and no `devswha.herdr-web-ui`.
+Expected: all four commands exit 0; the plugin list shows `hamzahraihan.orbit` enabled and no `upstream.herdr-web-ui`.
 
 ---
 

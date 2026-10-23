@@ -8,7 +8,7 @@
 
 ## 1. Goal
 
-Take `devswha/herdr-web-ui` — a browser and phone client for herdr — and make it **Orbit**, a
+Take `upstream/herdr-web-ui` — a browser and phone client for herdr — and make it **Orbit**, a
 plugin the user owns and controls, with every channel to the original author's infrastructure
 removed:
 
@@ -35,7 +35,7 @@ Orbit = **O**rchestrated **R**emote **B**ackground **I**ntegration **T**erminal.
 | Repository | `github.com/hamzahraihan/orbit` — **public** (see §7) |
 | Local path | `C:\herdr-plugins-project\orbit` |
 | `origin` | `https://github.com/hamzahraihan/orbit.git` |
-| `upstream` | `https://github.com/devswha/herdr-web-ui.git` (read-only) |
+| `upstream` | `https://github.com/upstream/herdr-web-ui.git` (read-only) |
 | Base commit | `97a48035` — upstream `main`, 7 commits after the `v0.4.12` tag, and exactly the commit the installed plugin was running |
 | Plugin id | `hamzahraihan.orbit` |
 | Qualified actions | `hamzahraihan.orbit.start`, `hamzahraihan.orbit.start-windows`, … |
@@ -46,7 +46,7 @@ Orbit = **O**rchestrated **R**emote **B**ackground **I**ntegration **T**erminal.
 Actions keep their local ids (`start`, `start-windows`, `stop`, `stop-windows`, `status`,
 `status-windows`, `phone`, `phone-windows`); only the plugin-id prefix changes.
 
-A `NOTICE` file records that Orbit is a modified fork of `devswha/herdr-web-ui`, preserving the
+A `NOTICE` file records that Orbit is a modified fork of `upstream/herdr-web-ui`, preserving the
 MIT copyright notice as the licence requires.
 
 ## 3. What survives
@@ -208,7 +208,7 @@ The remote-PC feature stays. Only the download source changes.
 
 | Path | Change |
 | --- | --- |
-| `server/remote-bundle.ts` | `bundleManifestSource()` L20: `github.com/devswha/herdr-web-ui` → `github.com/hamzahraihan/orbit` |
+| `server/remote-bundle.ts` | `bundleManifestSource()` L20: `github.com/upstream/herdr-web-ui` → `github.com/hamzahraihan/orbit` |
 | `server/remote-bundle.test.ts` | Update the expected URL |
 | `shared/machines.ts` | `REMOTE_BUNDLE_VERSION` stays `"31"`; our fork publishes its own `remote-v31` |
 | `scripts/build-remote-bundle.ts` | Unchanged |
@@ -269,7 +269,7 @@ a broken removal are indistinguishable.
 
 Commit 0 contains: `package.json` (name `orbit`, version `0.5.0`, repository `hamzahraihan/orbit`),
 `herdr-plugin.toml` (id `hamzahraihan.orbit`, name `Orbit`, version `0.5.0`, description), the
-`NOTICE` file, and the `devswha/herdr-web-ui` → `hamzahraihan/orbit` reference sweep across
+`NOTICE` file, and the `upstream/herdr-web-ui` → `hamzahraihan/orbit` reference sweep across
 `README*.md`, `INSTALL.md`, `SECURITY.md`, `CONTRIBUTING.md`, `install.sh`, `install.ps1`,
 `docs/`, `scripts/`, `.github/ISSUE_TEMPLATE/`, `server/push.ts`, `src/components/PhonePanel.tsx`,
 `src/components/SettingsDialog.tsx`, `src/components/UpdateControls.tsx`.
@@ -293,7 +293,7 @@ copyright notice, which is retained. Nothing private is in the tree — the remo
 
 **Final, against the running plugin:**
 
-1. `herdr plugin uninstall devswha.herdr-web-ui`, then
+1. `herdr plugin uninstall upstream.herdr-web-ui`, then
    `herdr plugin link C:\herdr-plugins-project\orbit`
 2. `herdr plugin action invoke hamzahraihan.orbit.start-windows` → exit 0
 3. `GET http://127.0.0.1:7317/api/health` → 200
@@ -301,7 +301,7 @@ copyright notice, which is retained. Nothing private is in the tree — the remo
 5. `GET /api/usage`, `/api/portal`, `/api/updates` → **404**
 6. `grep -r "workers.dev" dist/ server/ shared/ src/` → **no hits**
 7. `grep -r "api.anthropic.com\|chatgpt.com\|api2.cursor.sh\|cli-chat-proxy.grok.com\|cloudcode-pa\|opencode.ai/zen" dist/ server/ src/` → **no hits**
-8. `grep -r "github.com/devswha/herdr-web-ui" .` (excluding `upstream` refs and `CHANGELOG.md`) → **no hits**
+8. `grep -r "github.com/upstream/herdr-web-ui" .` (excluding `upstream` refs and `CHANGELOG.md`) → **no hits**
 9. `herdr plugin action invoke hamzahraihan.orbit.phone-windows` opens the Phone setup pane and it
    still renders the QR code — the phone path never went through the Portal
 10. Publish `remote-v31` from the fork and set up a remote PC end to end

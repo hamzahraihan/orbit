@@ -160,7 +160,7 @@ For a closer look: [how it works](docs/guide.md#how-it-works) · [chat transcrip
 
 ## thanks
 
-Built on [herdr](https://github.com/herdrdev/herdr), with inspiration from [chatmux](https://github.com/devswha/chatmux), and powered by [xterm.js](https://xtermjs.org), [React](https://react.dev), [Bun](https://bun.sh) and [Lucide](https://lucide.dev).
+Built on [herdr](https://github.com/herdrdev/herdr), with inspiration from chatmux, and powered by [xterm.js](https://xtermjs.org), [React](https://react.dev), [Bun](https://bun.sh) and [Lucide](https://lucide.dev).
 
 Thanks to everyone who has contributed, including [@Yoonwoo-Ha](https://github.com/Yoonwoo-Ha).
 
@@ -190,4 +190,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) to send a change, [development](docs/deve
 
 ## license
 
-[MIT](LICENSE). Copyright © 2026 devswha.
+[MIT](LICENSE). Copyright © 2026 Orbit contributors.

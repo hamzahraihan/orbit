@@ -20,7 +20,7 @@ function absent(removed: string[]): string[] {
 
 describe("Orbit's removed features", () => {
   it("sends nothing to the telemetry worker", () => {
-    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /herdr-web-ui-telemetry\.devswha\.workers\.dev/).map((match) => match.at);
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /herdr-web-ui-telemetry\.[^.]+\.workers\.dev/).map((match) => match.at);
     fail(offenders, "Orbit removed the anonymous usage counts: no source file may name the telemetry worker.");
     expect(offenders).toEqual([]);
   });
@@ -36,7 +36,7 @@ describe("Orbit's removed features", () => {
     fail(present, "Orbit removed the app update checks: the updater and its supervisor must not come back.");
     expect(present).toEqual([]);
     // Task 6 repointed the remote-PC bundle at the fork, and the guard below covers that file too
-    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /github\.com\/devswha\/herdr-web-ui\/releases/).map((match) => match.at);
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /github\.com\/[^/]+\/herdr-web-ui\/releases/).map((match) => match.at);
     fail(offenders, "Orbit removed the app update checks: no source file may poll the upstream releases.");
     expect(offenders).toEqual([]);
   });
@@ -73,7 +73,7 @@ describe("Orbit's removed features", () => {
   });
 
   it("never points a remote PC at the upstream release", () => {
-    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /github\.com\/devswha\/herdr-web-ui/).map((match) => match.at);
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /github\.com\/[^/]+\/herdr-web-ui/).map((match) => match.at);
     fail(offenders, "A remote PC must fetch its runtime from hamzahraihan/orbit, never from the upstream project.");
     expect(offenders).toEqual([]);
   });

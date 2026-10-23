@@ -165,7 +165,7 @@ Claude Code、Codex、omp、omo、gjc 和 pi 直接从各自的会话文件读�
 
 ## 致谢
 
-本项目基于 [herdr](https://github.com/herdrdev/herdr) 构建，灵感来自 [chatmux](https://github.com/devswha/chatmux)，并使用了 [xterm.js](https://xtermjs.org)、[React](https://react.dev)、[Bun](https://bun.sh) 和 [Lucide](https://lucide.dev)。
+本项目基于 [herdr](https://github.com/herdrdev/herdr) 构建，灵感来自 chatmux，并使用了 [xterm.js](https://xtermjs.org)、[React](https://react.dev)、[Bun](https://bun.sh) 和 [Lucide](https://lucide.dev)。
 
 感谢所有贡献者，包括 [@Yoonwoo-Ha](https://github.com/Yoonwoo-Ha)。
 
@@ -195,4 +195,4 @@ bun run test:ui    # browser regression checks
 
 ## 许可证
 
-[MIT](LICENSE)。Copyright © 2026 devswha.
+[MIT](LICENSE)。Copyright © 2026 Orbit contributors.

@@ -1,7 +1,7 @@
 # Chat mode audit — 2026-09-22
 
 Target: `herdr-web-ui`. Reference: local
-`devswha/chatmux`, `main` at `3b1f3b49216157399e3fb9666a49c942908c3e32`.
+`chatmux`, `main` at `3b1f3b49216157399e3fb9666a49c942908c3e32`.
 Inspected its Codex session provider and native-session discovery. Chatmux is
 AGPL-3.0 and this project is MIT: only behavior and native record shapes informed
 the implementation; no source implementation was copied and no dependency added.
@@ -94,7 +94,7 @@ changes were preserved and are included in the running tree.
 
 ## September 27 transcript fidelity follow-up
 
-Reviewed [chatmux at b258b576](https://github.com/devswha/chatmux/tree/b258b5766f0b6b6c3b5db1474eed220f53524efb).
+Reviewed chatmux at b258b576.
 The changes adapt its attachment, session-correlation, strict paste-envelope and
 incremental-log patterns to this bridge. No provider implementation was copied:
 chatmux declares AGPL-3.0-or-later, while this repository remains MIT. No new
@@ -138,7 +138,7 @@ not end-to-end browser or live-session latency.
 ## History boundaries and late responses — 2026-09-27
 
 Follow-up to the fidelity transfer: inspected chatmux
-[`b258b57`](https://github.com/devswha/chatmux/tree/b258b5766f0b6b6c3b5db1474eed220f53524efb).
+`b258b57`.
 Adapted the native-record rules and request ownership idea independently for this
 MIT bridge; no AGPL implementation or dependency was copied.
 
