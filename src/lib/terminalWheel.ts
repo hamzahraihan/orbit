@@ -10,7 +10,8 @@ export interface TerminalWheelState {
 interface WheelViewport {
   /** A selecting drag owns its wheel before any application routing. */
   readonly drag: (event: WheelEvent) => boolean;
-  readonly adopted: () => boolean;
+  readonly observing?: () => boolean;
+  readonly adopted?: () => boolean;
   readonly scroll: (lines: number) => void;
 }
 
@@ -18,19 +19,18 @@ interface WheelViewport {
 export function attachTerminalWheel(term: Terminal, state: { readonly current: TerminalWheelState }, viewport: WheelViewport): void {
   term.attachCustomWheelEventHandler((event) => {
     if (viewport.drag(event)) return false;
-    // Observed/fixed grids pan in the browser instead of changing herdr's viewport.
-    if (viewport.adopted()) return false;
+    // Observed grids (read-only) pan in the browser instead of changing herdr's shared viewport.
+    if (viewport.observing ? viewport.observing() : viewport.adopted?.()) return false;
     if (term.hasSelection()) term.clearSelection();
-    // OmO consumes wheel reports without acting while a question captures mouse input, so the
-    // wheel moves herdr's history itself, as far as the reports below would: one three-line step
-    // per event whatever its delta, repeated at the chosen speed for a real wheel only.
-    if (state.current.omoQuestion && !event.ctrlKey && !event.shiftKey) {
+    const reporting = term.modes.mouseTrackingMode !== "none";
+    // When OmO has a question open or when mouse reporting is off (standard shell, build output, logs),
+    // the wheel moves herdr's native history: three lines per step * configured wheel speed.
+    // Trackpad pinches (Ctrl) and Shift-wheels are excluded so font zoom and horizontal actions work.
+    if ((!reporting || state.current.omoQuestion) && !event.ctrlKey && !event.shiftKey) {
       event.preventDefault();
       if (event.deltaY !== 0) viewport.scroll(-Math.sign(event.deltaY) * HERDR_MOUSE_SCROLL_LINES * (event.isTrusted ? state.current.speed : 1));
       return false;
     }
-    const reporting = term.modes.mouseTrackingMode !== "none";
-    // A program that does not report must not receive xterm's fallback arrow keys.
     // Trusted wheels replay at the chosen speed; touch/replays already supply their steps.
     // A trackpad pinch (Ctrl) keeps its original single-event path and all replayed modifiers.
     if (reporting && event.isTrusted && event.target && !event.ctrlKey) {
