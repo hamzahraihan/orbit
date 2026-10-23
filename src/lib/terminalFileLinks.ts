@@ -10,7 +10,7 @@ const NAME = "\\p{L}\\p{N}\\p{M}_";
  * would open over the terminal for it. A chat's plain text is read the same way (BARE_PATH in
  * filePaths.ts).
  */
-const FILE_PATH = new RegExp(`(?<![${NAME}/.@~:-])((?:~\\/|\\.{1,2}\\/|\\/)?(?:[${NAME}@.+-]+\\/)*[${NAME}@+-][${NAME}@.+-]*\\.[A-Za-z0-9]{1,8})(?::\\d+(?::\\d+)?|#L\\d+(?:-L?\\d+)?)?(?![${NAME}/])`, "gu");
+const FILE_PATH = new RegExp(`(?<![${NAME}/.@~:\\\\])((?:~[\\\\/]|\\.{1,2}[\\\\/]|[\\\\/]|[A-Za-z]:[\\\\/])?(?:[${NAME}@.+-]+[\\\\/])*[${NAME}@+-][${NAME}@.+-]*\\.[A-Za-z0-9]{1,8})(?::\\d+(?::\\d+)?|#L\\d+(?:-L?\\d+)?|\\(\\d+(?:,\\d+)?\\))?(?![${NAME}/\\\\])`, "gu");
 /** `name.ext(` is a call, not a file, unless the parenthesis holds a compiler's line and column: `App.tsx(120,8)` */
 const CALL = /\s*\((?!\d+(?:,\d+)?\))/y;
 const FILE_URI = /file:\/\/\/[^\s<>"`]+/gi;
@@ -164,7 +164,7 @@ export function terminalFileLinks(buffer: IBuffer, lineNumber: number, open: (pa
   let span = 0;
   for (const match of text.matchAll(FILE_PATH)) {
     const path = match[1];
-    if (!path || !path.includes("/") || !/\p{L}/u.test(path.replace(/\.[A-Za-z0-9]{1,8}$/, ""))) continue;
+    if (!path || (!path.includes("/") && !path.includes("\\")) || !/\p{L}/u.test(path.replace(/\.[A-Za-z0-9]{1,8}$/, ""))) continue;
     if (/^v?\d+(?:\.\d+)+$/.test(path)) continue;
     CALL.lastIndex = match.index + match[0].length;
     if (CALL.test(text)) continue;
