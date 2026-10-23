@@ -20,6 +20,9 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* the grid keeps a small gutter of its own: the host (styles.css) has none, because the
@@ -67,6 +70,9 @@
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* A pinch's target size floats above xterm, without taking rows or touches. */
