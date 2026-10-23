@@ -39,6 +39,7 @@ import { availableParallelism, tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { finished } from "node:stream/promises";
 import { DISPOSABLE_CONFIG_ENV, DISPOSABLE_CONFIG_FILE } from "./disposable-config.ts";
+import { endProcessTree } from "./process-tree.ts";
 import { testShellEnv } from "./test-shell.ts";
 import {
   artifactIdentity,
@@ -618,13 +619,14 @@ async function main(): Promise<void> {
       }
       saveReport();
       void (async () => {
-        // The step runs in a process group of its own, and a lane starts processes of its own
-        // in it: the whole group gets the signal, and has ended before the herdr and the
-        // directory it uses are taken away.
-        await Promise.all([
-          child?.pid !== undefined ? endGroup(child.pid, signal) : undefined,
-          concurrentUnit?.pid !== undefined ? endGroup(concurrentUnit.pid, signal) : undefined,
+        // The step leads a process group of its own (a tree on Windows), and a lane starts
+        // processes of its own in it: the whole group is ended, and has ended before the herdr
+        // and the directory it uses are taken away.
+        const ended = await Promise.all([
+          child?.pid !== undefined ? endProcessTree(child.pid, signal, { startedAfter: activeStartedAtMs || undefined }) : undefined,
+          concurrentUnit?.pid !== undefined ? endProcessTree(concurrentUnit.pid, signal) : undefined,
         ]);
+        if (ended.includes(false)) console.error("check: processes from the interrupted step are still running");
         if (activeStepFinished) await activeStepFinished;
         if (concurrentUnitFinished) await concurrentUnitFinished;
         cleanup();
@@ -745,7 +747,9 @@ async function main(): Promise<void> {
             stdoutStream?.destroy();
             stderrStream?.destroy();
             void (async () => {
-              if (started.pid !== undefined) await endGroup(started.pid, "SIGTERM");
+              if (started.pid !== undefined && !(await endProcessTree(started.pid, "SIGTERM", { startedAfter: startedAtMs }))) {
+                console.error("check: processes from the step that ended are still running");
+              }
               finish(exitCode, exitSignal);
             })();
           }, OUTPUT_DRAIN_GRACE_MS);
@@ -957,28 +961,8 @@ async function main(): Promise<void> {
   process.exit(code);
 }
 
-/** How long a step's processes get to end after a signal before they are killed. */
-const END_GRACE_MS = 5_000;
 /** How long to drain inherited output pipes after the direct child exits. */
 const OUTPUT_DRAIN_GRACE_MS = 2_000;
-
-/** Signals a process group and waits until no process is left in it, killing what outlasts the grace. */
-async function endGroup(group: number, signal: NodeJS.Signals): Promise<void> {
-  // only "no such process" says the group is empty: a process that may not be signalled is still there
-  const none = (error: unknown): boolean => (error as NodeJS.ErrnoException).code === "ESRCH";
-  const left = (): boolean => { try { process.kill(-group, 0); return true; } catch (error) { return !none(error); } };
-  const gone = async (ms: number): Promise<boolean> => {
-    for (const deadline = Date.now() + ms; left();) {
-      if (Date.now() > deadline) return false;
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-    return true;
-  };
-  try { process.kill(-group, signal); } catch (error) { if (none(error)) return; }
-  if (await gone(END_GRACE_MS)) return;
-  try { process.kill(-group, "SIGKILL"); } catch (error) { if (none(error)) return; }
-  if (!(await gone(2_000))) console.error(`check: processes in step process group ${group} are still running`);
-}
 
 /**
  * Workflow syntax, with the release CI pins. It is fetched once into node_modules/.cache; a
