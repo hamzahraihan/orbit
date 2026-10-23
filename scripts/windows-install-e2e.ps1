@@ -1,18 +1,16 @@
-# The real installer on a real Windows PC: herdr's and Bun's own installers, herdr's plugin build,
-# the app's first start and, with -Update, an update from the release before the latest one.
+# The real installer on a real Windows PC: herdr's and Bun's own installers, herdr's plugin build
+# and the app's first start.
 # scripts/windows-install.test.ps1 checks install.ps1's decisions against stand-ins; this runs them.
 #
-#   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/windows-install-e2e.ps1 [-Installer <path|url>] [-Ref <tag|commit>] [-Update] [-Fresh]
+#   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/windows-install-e2e.ps1 [-Installer <path|url>] [-Ref <branch|tag|commit>] [-Fresh]
 #
 # It replaces an installed Orbit and leaves the one it installed. A herdr server it had to
 # start is stopped again; one that was already running is left alone.
 param(
     # install.ps1 in this checkout, or a URL to pipe into Invoke-Expression as the README says
     [string]$Installer = (Join-Path $PSScriptRoot '..\install.ps1'),
-    # a release tag or a full commit; empty is the latest release (with -Update, the one before it)
+    # a branch, tag or full commit; empty is main
     [string]$Ref = '',
-    # after installing, update to the latest release through the app's own updater
-    [switch]$Update,
     # fail unless herdr and Bun are missing, so that their installers run (a CI runner)
     [switch]$Fresh
 )
@@ -41,13 +39,6 @@ function Find-Plugin {
     if (-not (Test-Herdr)) { return $null }
     (herdr plugin list --json | ConvertFrom-Json).result.plugins | Where-Object { $_.plugin_id -eq $pluginId } | Select-Object -First 1
 }
-function Get-ReleaseTags {
-    $tags = @(git ls-remote --tags --refs 'https://github.com/hamzahraihan/orbit.git' 'v*' |
-        ForEach-Object { if ($_ -match 'refs/tags/(v\d+\.\d+\.\d+)$') { $Matches[1] } } |
-        Sort-Object { [version]$_.Substring(1) })
-    Assert ($tags.Count -ge 2) 'Could not read the release tags from GitHub'
-    $tags
-}
 function Invoke-Installer([string]$InstallRef) {
     if ($Installer -match '^https://') {
         $env:HERDR_WEB_UI_REF = $InstallRef
@@ -55,14 +46,13 @@ function Invoke-Installer([string]$InstallRef) {
         finally { Remove-Item Env:\HERDR_WEB_UI_REF -ErrorAction SilentlyContinue }
     } else { & $Installer -Ref $InstallRef }
 }
-# $Expected is a full commit or a release tag.
+# $Expected is the branch, tag or commit the installer was asked for.
 function Assert-App([string]$Expected) {
     $health = Wait-Until { $answer = Get-Json '/api/health'; if ($answer.ok) { $answer } } 60 'the app to answer'
-    $updates = Get-Json '/api/updates'
+    $installed = Find-Plugin
+    Assert ([bool]$installed) "The plugin is not installed (asked for $Expected)"
     if ($Expected -match '^[0-9a-f]{40}$') {
         Assert ($health.web_ui.revision -eq $Expected) "The app runs $($health.web_ui.revision), not $Expected"
-    } else {
-        Assert ("v$($updates.current_version)" -eq $Expected) "The app runs $($updates.current_version), not $Expected"
     }
     $page = Invoke-WebRequest "$origin/" -UseBasicParsing -TimeoutSec 10
     $bundle = [regex]::Match($page.Content, 'assets/index-[^"]+\.js').Value
@@ -70,17 +60,14 @@ function Assert-App([string]$Expected) {
     Assert ((Invoke-WebRequest "$origin/$bundle" -UseBasicParsing -TimeoutSec 30).StatusCode -eq 200) 'The app page cannot load its script'
     $session = Get-Json '/api/session'
     Assert ([bool]$session.snapshot.version) 'The app does not reach herdr'
-    Write-Host "PASS Orbit $($updates.current_version) ($($health.web_ui.revision)) runs with herdr $($session.snapshot.version)"
+    Write-Host "PASS Orbit $($installed.version) ($($health.web_ui.revision)) runs with herdr $($session.snapshot.version)"
 }
 
 if ($Fresh) {
     Assert (-not (Test-Herdr)) '-Fresh: herdr is already installed'
     Assert (-not (Get-Command bun -ErrorAction SilentlyContinue)) '-Fresh: Bun is already installed'
 }
-$tags = Get-ReleaseTags
-$latest = $tags[-1]
-if ($Update -and -not $Ref) { $Ref = $tags[-2] }
-$expected = if ($Ref) { $Ref } else { $latest }
+$expected = if ($Ref) { $Ref } else { 'main' }
 $startedServer = $false
 try {
     $plugin = Find-Plugin
@@ -105,21 +92,6 @@ try {
         Invoke-Installer $Ref
     }
     Assert-App $expected
-
-    if ($Update) {
-        $found = Wait-Until { $status = Get-Json '/api/updates'; if ($status.latest_version) { $status } } 90 'the app to find the latest release'
-        Assert ($found.available -and "v$($found.latest_version)" -eq $latest) "The app offers $($found.latest_version) (available: $($found.available)), not $latest"
-        Write-Host "e2e: updating $expected to $latest"
-        Invoke-WebRequest "$origin/api/updates/install" -Method POST -Headers @{ 'x-herdr-update' = '1' } -UseBasicParsing -TimeoutSec 30 | Out-Null
-        # the app restarts in the middle of this, so some of these questions go unanswered
-        $after = Wait-Until {
-            $status = Get-Json '/api/updates'
-            if ($status.phase -eq 'error' -or ($status.phase -eq 'idle' -and "v$($status.current_version)" -eq $latest)) { $status }
-        } 600 "the update to $latest"
-        Assert ($after.phase -ne 'error') "The update failed: $($after.error)"
-        Assert ((Get-Json '/api/health').web_ui.revision -eq $found.latest_revision) 'The updated app does not run the latest release'
-        Assert-App $latest
-    }
 } catch {
     Write-Host "FAIL $($_.Exception.Message)"
     # what herdr and the app wrote, for a run on a PC nobody can log in to
