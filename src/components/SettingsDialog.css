@@ -182,12 +182,6 @@
   overflow-wrap: anywhere;
 }
 
-.settings-link {
-  color: var(--accent);
-  font-size: var(--fs-xs);
-  overflow-wrap: anywhere;
-}
-
 /* a column, not a grid: a grid's track is as wide as a text field asks to be, and on a phone
    that pushed each row's Remove button out of the card */
 .quick-replies-list {
