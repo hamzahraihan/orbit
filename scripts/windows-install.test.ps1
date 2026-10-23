@@ -4,7 +4,7 @@ $installer = Join-Path $PSScriptRoot '..\install.ps1'
 $originalPath = $env:PATH
 $originalLocalAppData = $env:LOCALAPPDATA
 $originalUserProfile = $env:USERPROFILE
-$state = @{ installed = $false; installs = 0; uninstalls = 0; ref = ''; running = $true; started = $false; failInstall = $false; bunVersion = '1.4.2'; failBun = $false; windowsRelease = $true }
+$state = @{ installed = $false; installs = 0; uninstalls = 0; ref = ''; running = $true; started = $false; failInstall = $false; bunVersion = '1.4.2'; failBun = $false; windowsRelease = $true; noTags = $false }
 $global:herdrInstallOpened = @()
 # gh is a stand-in .cmd, first on PATH: the installer runs gh as a process, and no real star is read or given.
 # mode.txt beside it is what it answers: starred, not, refuses (the star itself), upstream, signed-out, hangs or
@@ -20,6 +20,7 @@ function Start-Process { $global:herdrInstallOpened += ($args -join ' ') }
 # Tool boundaries only: no downloads, installed plugins, processes or user settings are changed.
 function git {
     $global:LASTEXITCODE = 0
+    if ($state.noTags) { return }
     "aaa`trefs/tags/v1.9.0"
     "bbb`trefs/tags/v1.10.0"
     "ccc`trefs/tags/v2.0.0-rc.1"
@@ -125,6 +126,10 @@ exit /b 1
     Assert ($state.installed -and $state.ref -eq 'v1.10.0' -and $state.started) 'Install must choose the highest stable release and start a running server'
     & $installer -Ref ''
     Assert ($state.installs -eq 1) 'Rerun must preserve the installed plugin'
+    $state.installed = $false; $state.noTags = $true
+    & $installer -Ref ''
+    Assert ($state.installed -and $state.ref -eq 'main') 'Without a release tag the installer must install main'
+    $state.noTags = $false
     & {
         $ErrorActionPreference = 'Continue'
         Invoke-Expression (Get-Content -Raw $installer)
