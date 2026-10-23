@@ -1485,6 +1485,18 @@ try {
       freshWorktreeListFinished = true;
     }
   });
+  // A hidden and shown page refetches what it polls. The app takes the change in a task it posts
+  // during the event; a task of the page's own, posted after the app's, has run once it has.
+  const setPageHidden = (hidden: boolean) => page.evaluate((hidden) => {
+    if (hidden) Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+    else delete (document as unknown as Record<string, unknown>).visibilityState;
+    document.dispatchEvent(new Event("visibilitychange"));
+    return new Promise<void>((resolve) => {
+      const channel = new MessageChannel();
+      channel.port1.onmessage = () => resolve();
+      channel.port2.postMessage(null);
+    });
+  }, hidden);
   await setPageHidden(true);
   await setPageHidden(false);
   await until(() => worktreeListCaptured, "a pre-create worktree inventory is held");
