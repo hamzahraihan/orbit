@@ -742,6 +742,7 @@ export function PaneTerminal({
       const cursorBottom = screen.offsetTop + (term.buffer.active.cursorY + 1) * row;
       const max = host.scrollHeight - host.clientHeight;
       host.scrollTop = cursorBottom <= host.clientHeight ? 0 : cursorBottom - row >= max ? max : cursorBottom - host.clientHeight;
+      if (!fixedGridRef.current && !observeRef.current && host.scrollWidth <= host.clientWidth) host.scrollLeft = 0;
     };
     followCursorRef.current = () => { panned = false; followCursor(); };
     /** before a fit: true when the keyboard holds the grid, and the fit waits (`force`: it was to re-assert the grid) */
@@ -768,6 +769,7 @@ export function PaneTerminal({
       // xterm's helper textarea can sit at the old grid's cursor row for a while and keep the host
       // scrollable: a view panned under the keyboard would stay panned past the grid's top
       host.scrollTop = 0;
+      if (!fixedGridRef.current && !observeRef.current && host.scrollWidth <= host.clientWidth) host.scrollLeft = 0;
     };
     keyboardHoldsRef.current = keyboardHolds;
     fittedRef.current = fitted;
@@ -1553,6 +1555,9 @@ export function PaneTerminal({
     // Two fingers pinch the font size: the font follows them locally, and the shared pty resizes once when one lifts.
     let touchX = 0;
     let touchY = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchMoved = false;
     /** finger travel of this gesture not yet sent as a wheel report */
     let touchPixels = 0;
     let tracking = false;
@@ -1637,10 +1642,13 @@ export function PaneTerminal({
       }
       tracking = event.touches.length === 1;
       touchPixels = 0;
+      touchMoved = false;
       const first = event.touches[0];
       if (tracking && first) {
         touchX = first.clientX;
         touchY = first.clientY;
+        touchStartX = first.clientX;
+        touchStartY = first.clientY;
       }
     };
     const onTouchMove = (event: TouchEvent): void => {
@@ -1670,9 +1678,12 @@ export function PaneTerminal({
         return;
       }
       if (!tracking || event.touches.length !== 1) return;
-      event.preventDefault();
       const first = event.touches[0];
       if (!first) return;
+      if (!touchMoved && Math.hypot(first.clientX - touchStartX, first.clientY - touchStartY) > 8) {
+        touchMoved = true;
+      }
+      event.preventDefault();
       // finger moving down (y > touchY) shows older lines: a wheel scrolling up, negative deltaY
       const delta = touchY - first.clientY;
       const across = touchX - first.clientX;
@@ -1683,7 +1694,7 @@ export function PaneTerminal({
         host.scrollBy(across, delta);
         return;
       }
-      if (fixedGridRef.current && Math.abs(across) > Math.abs(delta) && host.scrollWidth > host.clientWidth) {
+      if ((fixedGridRef.current || host.scrollWidth > host.clientWidth) && Math.abs(across) > Math.abs(delta) && host.scrollWidth > host.clientWidth) {
         panned = true;
         host.scrollBy(across, 0);
         return;
@@ -1713,7 +1724,13 @@ export function PaneTerminal({
       // a lifted one-finger drag sends what is left once it reaches half a step: a flick shorter
       // than one step still scrolls, and a long drag loses at most half a step at its end
       if (tracking && event.type === "touchend" && !pinchStroke && !observeRef.current) {
-        sendTouchWheels(finalStep(touchPixels, cellHeight() * HERDR_MOUSE_SCROLL_LINES));
+        if (!touchMoved) {
+          if (!chatViewRef.current && !inputLineRef.current && activeRef.current) {
+            term.focus();
+          }
+        } else {
+          sendTouchWheels(finalStep(touchPixels, cellHeight() * HERDR_MOUSE_SCROLL_LINES));
+        }
       }
       touchPixels = 0;
       tracking = false;
