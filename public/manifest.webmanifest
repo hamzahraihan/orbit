@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "herdr web ui",
-  "short_name": "herdr",
+  "name": "Orbit",
+  "short_name": "Orbit",
   "description": "Chat with your coding agents and use live herdr terminals from your browser or phone.",
   "start_url": "/",
   "scope": "/",

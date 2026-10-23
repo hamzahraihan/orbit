@@ -246,7 +246,7 @@ async function settlePort(): Promise<"ready" | "running" | "failed"> {
     const why = await healthError();
     if (why === null) return "running";
     const pid = recordedPid();
-    failStart(`herdr web ui is running at ${origin}${pid === null ? "" : ` (pid ${pid})`} but cannot reach herdr: ${why}. It keeps this port and answers again once herdr is back.`);
+    failStart(`Orbit is running at ${origin}${pid === null ? "" : ` (pid ${pid})`} but cannot reach herdr: ${why}. It keeps this port and answers again once herdr is back.`);
     return "failed";
   }
   const settings = CONFIG_FILES.at(-1) ?? join(CONFIG_DIR, "env");
@@ -271,14 +271,14 @@ async function settlePort(): Promise<"ready" | "running" | "failed"> {
 async function start(): Promise<number> {
   warnShadowed();
   if (await health()) {
-    process.stdout.write(`herdr web ui already running at ${origin}\n`);
+    process.stdout.write(`Orbit already running at ${origin}\n`);
     return 0;
   }
   mkdirSync(STATE_DIR, { recursive: true });
   const settled = await settlePort();
   if (settled === "failed") return 1;
   if (settled === "running") {
-    process.stdout.write(`herdr web ui already running at ${origin}\n`);
+    process.stdout.write(`Orbit already running at ${origin}\n`);
     return 0;
   }
   if (!portSet) {
@@ -318,7 +318,7 @@ async function start(): Promise<number> {
   // a server that has exited will not answer: its last words are in the log now
   while (Date.now() < deadline && child.exitCode === null) {
     if (await health()) {
-      process.stdout.write(`herdr web ui listening at ${origin}\n`);
+      process.stdout.write(`Orbit listening at ${origin}\n`);
       if ((env["HERDR_WEB_TOKEN"] ?? "") === "") {
         process.stdout.write(`no token set: your own Tailscale devices get in as you; pair any other device in Settings → Devices, or put HERDR_WEB_TOKEN=<token> in ${join(CONFIG_DIR, "env")}\n`);
       }
@@ -392,7 +392,7 @@ export async function stop(dependencies: StopDependencies = stopDependencies): P
   const pid = recordedPid();
   if (pid === null) {
     rmSync(PID_FILE, { force: true });
-    process.stdout.write("herdr web ui is not running\n");
+    process.stdout.write("Orbit is not running\n");
     return 0;
   }
   // the whole process group when the server leads one, as `start` spawns it
@@ -408,7 +408,7 @@ export async function stop(dependencies: StopDependencies = stopDependencies): P
       || owner.started === undefined || owner.started > recordedAt
       || !existsSync(PID_FILE) || statSync(PID_FILE).mtimeMs !== recordedAt
       || Number(readFileSync(PID_FILE, "utf8").trim()) !== pid) {
-      process.stderr.write("could not verify the recorded herdr web ui process; it was left running and its pid file was kept\n");
+      process.stderr.write("could not verify the recorded Orbit process; it was left running and its pid file was kept\n");
       return 1;
     }
     const tree = [owner, ...descendantProcesses(processes, pid).flatMap(({ pid: memberPid }) => {
@@ -418,7 +418,7 @@ export async function stop(dependencies: StopDependencies = stopDependencies): P
     // Windows has no Unix process groups or graceful SIGTERM: include the entry and bridge.
     const killed = dependencies.terminateTree(pid);
     if (killed.status !== 0 && recordedPid() !== null) {
-      process.stderr.write(`could not stop herdr web ui: ${killed.error?.message ?? killed.stderr.trim()}\n`);
+      process.stderr.write(`could not stop Orbit: ${killed.error?.message ?? killed.stderr.trim()}\n`);
       return 1;
     }
     const deadline = Date.now() + 10_000;
@@ -434,13 +434,13 @@ export async function stop(dependencies: StopDependencies = stopDependencies): P
       await Bun.sleep(50);
     }
     if (!exited) {
-      process.stderr.write("could not confirm herdr web ui stopped; its pid file was kept\n");
+      process.stderr.write("could not confirm Orbit stopped; its pid file was kept\n");
       return 1;
     }
     // Never send another kill to a number Windows may have reassigned after taskkill.
     if (existsSync(PID_FILE) && statSync(PID_FILE).mtimeMs === recordedAt
       && Number(readFileSync(PID_FILE, "utf8").trim()) === pid) rmSync(PID_FILE);
-    process.stdout.write(`stopped herdr web ui (pid ${pid})\n`);
+    process.stdout.write(`stopped Orbit (pid ${pid})\n`);
     return 0;
   } else {
     try {
@@ -468,13 +468,13 @@ export async function stop(dependencies: StopDependencies = stopDependencies): P
     const killDeadline = Date.now() + KILL_WAIT_MS;
     while (running() && Date.now() < killDeadline) await Bun.sleep(100);
     if (running()) {
-      process.stderr.write(`herdr web ui (pid ${pid}) is still running after SIGKILL; its pid file is kept\n`);
+      process.stderr.write(`Orbit (pid ${pid}) is still running after SIGKILL; its pid file is kept\n`);
       return 1;
     }
   }
   // a start that ran meanwhile may have recorded its own server: leave that one's pid file alone
   if (existsSync(PID_FILE) && Number(readFileSync(PID_FILE, "utf8").trim()) === pid) rmSync(PID_FILE, { force: true });
-  process.stdout.write(`stopped herdr web ui (pid ${pid})${killed ? `; it was still running after ${STOP_TIMEOUT_MS / 1000}s, so it was killed` : ""}\n`);
+  process.stdout.write(`stopped Orbit (pid ${pid})${killed ? `; it was still running after ${STOP_TIMEOUT_MS / 1000}s, so it was killed` : ""}\n`);
   return 0;
 }
 
@@ -485,7 +485,7 @@ export async function stop(dependencies: StopDependencies = stopDependencies): P
  */
 async function pair(): Promise<number> {
   if (!(await health())) {
-    process.stderr.write(`herdr web ui is not running at ${origin}; start it first\n`);
+    process.stderr.write(`Orbit is not running at ${origin}; start it first\n`);
     return 1;
   }
   const headers: Record<string, string> = { "content-type": "application/json", "x-herdr-machine": "1" };
@@ -521,7 +521,7 @@ async function pair(): Promise<number> {
 async function phone(): Promise<number> {
   const say = (line = "") => process.stdout.write(line + "\n");
   const running = await health();
-  say(`herdr web ui on this PC: ${link(origin)}${running ? "" : " (not running yet: it starts with herdr)"}`);
+  say(`Orbit on this PC: ${link(origin)}${running ? "" : " (not running yet: it starts with herdr)"}`);
   if (!["127.0.0.1", "0.0.0.0", "localhost"].includes(host)) {
     say(`HOST is ${host}, so Tailscale, which serves 127.0.0.1, is left alone. On the phone, open ${link(`http://${host}:${port}`)}.`);
     return 0;
@@ -588,7 +588,7 @@ async function phoneSetup(): Promise<number> {
   process.stdout.write(`Phone setup\n\nApp on this PC: ${link(origin)}\n`);
   let code = 0;
   if (!(await health())) {
-    process.stdout.write("The app is not running. Run the Start herdr web ui action, then reopen Phone setup.\n");
+    process.stdout.write("The app is not running. Run the Start Orbit action, then reopen Phone setup.\n");
     code = 1;
   } else {
     const headers: Record<string, string> = {};

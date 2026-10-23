@@ -59,7 +59,7 @@ describe("HERDR_WEB_APP_NAME", () => {
   it("renames the iOS home-screen title in the shell and nothing else", () => {
     const renamed = renameShell(shell, "laptop");
     expect(renamed).toContain('<meta name="apple-mobile-web-app-title" content="laptop" />');
-    expect(renamed.replace("content=\"laptop\"", "content=\"herdr\"")).toBe(shell);
+    expect(renamed.replace("content=\"laptop\"", "content=\"Orbit\"")).toBe(shell);
   });
 
   it("frames the other ports of the request's own host and no other host", () => {

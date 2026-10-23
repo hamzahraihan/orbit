@@ -1,10 +1,10 @@
-# Installing herdr web ui (guide for coding agents)
+# Installing Orbit (guide for coding agents)
 
-Follow these steps in order to install herdr web ui for a user. Run each command and check its output
+Follow these steps in order to install Orbit for a user. Run each command and check its output
 before moving on. Every step says what success looks like. Stop and ask the user whenever a step says
 **Ask**.
 
-herdr web ui is a browser and phone client for [herdr](https://github.com/herdrdev/herdr). It adds a
+Orbit is a browser and phone client for [herdr](https://github.com/herdrdev/herdr). It adds a
 web server on port `7317` and never replaces herdr, its sessions or the user's own terminal.
 
 ## Rules
@@ -18,7 +18,7 @@ web server on port `7317` and never replaces herdr, its sessions or the user's o
   user where it is.
 - Do not install herdr, Bun or Node yourself unless the user agrees. Say which one is missing and how
   to install it.
-- Do not stop or restart the user's herdr server (`herdr server stop`). Restarting herdr web ui is fine.
+- Do not stop or restart the user's herdr server (`herdr server stop`). Restarting Orbit is fine.
 
 ## 1. Check prerequisites
 
@@ -88,7 +88,7 @@ On Windows, the start and stop action IDs are `hamzahraihan.orbit.start-windows`
 `hamzahraihan.orbit.stop-windows`. The menu titles are the same on every platform.
 
 The command only queues the action and prints herdr's JSON acknowledgement; the action's own output
-(`herdr web ui listening at http://127.0.0.1:7317`, and possibly `no token set: ...`, expected for a
+(`Orbit listening at http://127.0.0.1:7317`, and possibly `no token set: ...`, expected for a
 local-only install) goes to the plugin log (`herdr plugin log list`). Check it with step 4.
 
 Plugin settings do **not** come from the user's shell. They go in an `env` file (no dot):
@@ -192,7 +192,7 @@ code, or the exact command still to run. Who gets in:
 
    For a source install, write the same line to a file only the user can read (for example
    `~/.config/herdr-web-ui/token.env`, mode `600`) and start with
-   `env $(cat ~/.config/herdr-web-ui/token.env) bun run start`. Restart herdr web ui either way.
+   `env $(cat ~/.config/herdr-web-ui/token.env) bun run start`. Restart Orbit either way.
 
 Tell the user the HTTPS address. Until a device is paired, and with no token set, a LAN or proxied
 address is open to anyone who reaches it, as before; the server warns on startup. A token sent over

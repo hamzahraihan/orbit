@@ -177,7 +177,7 @@ export const ZH: Record<string, string> = {
 
   // ---- app header and shell ----
   "Opening link…": "正在打开链接…",
-  "Connecting to herdr web ui…": "正在连接 herdr web ui…",
+  "Connecting to Orbit…": "正在连接 Orbit…",
   "Close workspace list": "关闭工作区列表",
   "Open workspace list": "打开工作区列表",
   "Show workspace list": "显示工作区列表",
@@ -351,7 +351,7 @@ export const ZH: Record<string, string> = {
   "Cancel update": "取消更新",
   "Bridge update needed": "需要更新 bridge",
   "Setup needed": "需要设置",
-  "This PC runs a bridge from a different version of herdr web ui. Update it to reconnect; herdr sessions keep running.": "此 PC 运行的 bridge 来自其他版本的 herdr web ui。更新后即可重新连接，herdr 会话会继续运行。",
+  "This PC runs a bridge from a different version of Orbit. Update it to reconnect; herdr sessions keep running.": "此 PC 运行的 bridge 来自其他版本的 Orbit。更新后即可重新连接，herdr 会话会继续运行。",
   "Saved in herdr": "已保存在 herdr 中",
   "Connect once to enable automatic reconnection. Installation and startup need separate approval.": "连接一次后即可自动重新连接。安装和启动仍需单独批准。",
   "Managed by herdr. Rename, disable or remove it there.": "由 herdr 管理。请在 herdr 中重命名、禁用或移除。",
@@ -711,7 +711,7 @@ export const ZH: Record<string, string> = {
   "Codex has a question open in the terminal: answer it above first": "Codex 在终端中有一个未关闭的问题。请先在上方回答",
   "Confirm your answer in the card above, or type another…": "请在上方卡片中确认你的回答，或输入其他回答…",
   "Terminal ended": "终端已结束",
-  "Reconnecting to herdr web ui…": "正在重新连接 herdr web ui…",
+  "Reconnecting to Orbit…": "正在重新连接 Orbit…",
   "Input held:": "保留的输入：",
   "Send held input": "发送保留的输入",
   "Discard held input": "丢弃保留的输入",
@@ -771,7 +771,7 @@ export const ZH: Record<string, string> = {
   "That item no longer exists on the PC. Refresh and try again.": "该项目在电脑上已不存在。请刷新后重试。",
   "It changed on the PC while you were acting. Check it and try again.": "你操作期间电脑上的内容已更改。请检查后重试。",
   "The PC took too long to answer. Try again.": "电脑响应时间过长。请重试。",
-  "The PC could not do that. Try again; if it keeps failing, restart herdr web ui on the PC.": "电脑无法完成该操作。请重试；如果一直失败，请在电脑上重启 herdr web ui。",
+  "The PC could not do that. Try again; if it keeps failing, restart Orbit on the PC.": "电脑无法完成该操作。请重试；如果一直失败，请在电脑上重启 Orbit。",
   "Can't reach the PC. Check your connection, then try again.": "无法连接到电脑。请检查网络连接后重试。",
   "Something went wrong. Try again.": "出了点问题。请重试。",
   "Not signed in to this PC": "未登录此电脑",
@@ -785,7 +785,7 @@ export const ZH: Record<string, string> = {
   "Refresh and try again.": "请刷新后重试。",
   "Check it and try again.": "请检查后重试。",
   "Check your connection, then try again.": "请检查网络连接后重试。",
-  "Try again; if it keeps failing, restart herdr web ui on the PC.": "请重试；如果一直失败，请在电脑上重启 herdr web ui。",
+  "Try again; if it keeps failing, restart Orbit on the PC.": "请重试；如果一直失败，请在电脑上重启 Orbit。",
   "The server cannot save settings: check that its state folder is writable.": "服务器无法保存设置：请检查其状态文件夹是否可写。",
 
   // ---- sign-in ----

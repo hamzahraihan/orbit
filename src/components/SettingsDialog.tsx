@@ -919,7 +919,7 @@ function AboutPage({ herdrVersion }: { herdrVersion: string | null }) {
       <SettingsGroup title={t("About")} className="settings-about" section="about">
         <div className="settings-row">
           <div className="settings-row-text">
-            <span className="settings-label">herdr web ui</span>
+            <span className="settings-label">Orbit</span>
             <a className="settings-link" href="https://herdrweb.dev/" target="_blank" rel="noreferrer">herdrweb.dev</a>
           </div>
           <a className="btn" href="https://github.com/hamzahraihan/orbit" target="_blank" rel="noreferrer"><Star aria-hidden="true" />{t("Star on GitHub")}</a>

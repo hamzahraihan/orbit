@@ -7,6 +7,9 @@
   tunnel.
 
 ### Changed
+- The app is named Orbit everywhere it names itself: the page title, the installed app's name and
+  icon label, Settings → About, the terminal's error prefix, and every message that says to
+  restart it.
 - The remote-PC runtime bundle is fetched from this repository instead of the upstream project's
   releases.
 - The plugin id is `hamzahraihan.orbit` and the package is `orbit`.

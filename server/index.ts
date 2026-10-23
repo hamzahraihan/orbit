@@ -2201,11 +2201,11 @@ if (import.meta.main) {
     const host = process.env["HOST"] ?? "127.0.0.1";
     const port = process.env["PORT"] || DEFAULT_PORT;
     const reason = code === "EADDRINUSE"
-      ? `the port is in use. Another app (or herdr web ui) may already use it; start with another PORT=, or open http://${host === "0.0.0.0" || host === "::" ? "127.0.0.1" : host}:${port} if it is this app`
+      ? `the port is in use. Another app (or Orbit) may already use it; start with another PORT=, or open http://${host === "0.0.0.0" || host === "::" ? "127.0.0.1" : host}:${port} if it is this app`
       : code === "EADDRNOTAVAIL"
         ? "this PC has no such address; try HOST=127.0.0.1"
         : "the port needs permission; try a PORT above 1024";
-    console.error(`herdr web ui cannot listen on ${host}:${port}: ${reason}.`);
+    console.error(`Orbit cannot listen on ${host}:${port}: ${reason}.`);
     process.exit(1);
   }
   let stopping = false;
@@ -2219,7 +2219,7 @@ if (import.meta.main) {
   process.on("SIGTERM", shutdown);
   process.on("SIGINT", shutdown);
   if (process.env["HERDR_WEB_MANAGED"] === "1") process.on("disconnect", shutdown);
-  console.log(`herdr-web-ui listening on http://${instance.hostname}:${instance.port}`);
+  console.log(`Orbit listening on http://${instance.hostname}:${instance.port}`);
   const socket = herdrSocketPath();
   void ping(socket).catch(() => {
     console.error(`herdr is not reachable at ${socket}: start herdr, or set HERDR_SOCKET to its socket (named sessions: ~/.config/herdr/sessions/<name>/herdr.sock).`);

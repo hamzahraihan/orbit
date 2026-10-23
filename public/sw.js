@@ -1,4 +1,4 @@
-// Service worker for herdr web ui. Policy: navigations are network-first (so a
+// Service worker for Orbit. Policy: navigations are network-first (so a
 // fresh build always wins when online) falling back to the cached shell when
 // offline; static assets (hashed bundles, icons, favicons) are cache-first since
 // they are content-addressed or rarely change. The web manifest is not: its URL

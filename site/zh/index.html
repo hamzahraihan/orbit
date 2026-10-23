@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>herdr web ui：在手机上使用 Claude Code 和 Codex</title>
+    <title>Orbit：在手机上使用 Claude Code 和 Codex</title>
     <meta name="description" content="herdr 的浏览器与手机客户端：无论身在何处，都能以聊天或实时终端的方式阅读并回复你电脑上运行的 Claude Code 和 Codex 智能体。" />
     <link rel="canonical" href="https://herdrweb.dev/zh/" />
     <link rel="alternate" hreflang="en" href="https://herdrweb.dev/" />
@@ -12,19 +12,19 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://herdrweb.dev/zh/" />
     <meta property="og:locale" content="zh_CN" />
-    <meta property="og:title" content="herdr web ui：在手机上使用 Claude Code 和 Codex" />
+    <meta property="og:title" content="Orbit：在手机上使用 Claude Code 和 Codex" />
     <meta property="og:description" content="在任何地方运行 herdr。通过 herdr 的浏览器与手机客户端，在电脑和手机上使用 Claude Code 和 Codex。" />
     <meta property="og:image" content="https://herdrweb.dev/assets/social-preview.png" />
     <meta property="og:image:width" content="1280" />
     <meta property="og:image:height" content="640" />
-    <meta property="og:image:alt" content="herdr web ui：一只公羊、一个终端提示符、一个浏览器窗口和一个指针" />
+    <meta property="og:image:alt" content="Orbit：一只公羊、一个终端提示符、一个浏览器窗口和一个指针" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#12100e" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        "name": "herdr web ui",
+        "name": "Orbit",
         "description": "herdr 的浏览器与手机客户端：以聊天或实时终端的方式，阅读并回复你电脑上运行的 Claude Code 和 Codex 智能体。",
         "inLanguage": "zh-CN",
         "url": "https://herdrweb.dev/",
@@ -325,7 +325,7 @@
   <body>
     <header class="top">
       <div class="frame">
-        <a class="brand" href="./"><span class="mark" aria-hidden="true"></span>herdr web ui</a>
+        <a class="brand" href="./"><span class="mark" aria-hidden="true"></span>Orbit</a>
         <nav class="caps" aria-label="栏目">
           <a href="https://github.com/hamzahraihan/orbit/blob/main/docs/guide.md">指南</a>
           <a href="../demo/">演示</a>
@@ -450,12 +450,12 @@
           <div class="n">05</div>
           <div>
             <h3>沿用现有工作流。<span class="arw" aria-hidden="true">→</span></h3>
-            <p>智能体由 herdr 管理，本应用负责连接。无需包装命令，无需第二个守护进程，无需账号。在 Settings（设置）中更新应用，无需停止智能体，每次更新带来的变化以更新说明列出。</p>
+            <p>智能体由 herdr 管理，本应用负责连接。无需包装命令，无需第二个守护进程，无需账号。更新时重新安装插件即可，智能体会继续运行。</p>
           </div>
           <div class="ev" aria-hidden="true">
             <div class="ev-row"><span>herdr</span><b><i class="dot done"></i>掌管所有 pty</b></div>
-            <div class="ev-row"><span>herdr web ui</span><b>herdr terminal attach</b></div>
-            <div class="ev-note">监听 127.0.0.1 · 健康检查失败时更新自动回滚</div>
+            <div class="ev-row"><span>Orbit</span><b>herdr terminal attach</b></div>
+            <div class="ev-note">监听 127.0.0.1 · 可通过 Tailscale、SSH 隧道或你自己的代理访问</div>
           </div>
         </a>
         <a class="row" href="https://github.com/hamzahraihan/orbit/blob/main/docs/guide.md#voice-input">
@@ -536,7 +536,7 @@
             <thead>
               <tr>
                 <th scope="col"><span class="visually-hidden">项目</span></th>
-                <th scope="col" class="us">herdr web ui</th>
+                <th scope="col" class="us">Orbit</th>
                 <th scope="col"><a href="https://github.com/AltanS/collie">collie</a></th>
                 <th scope="col"><a href="https://github.com/powerfooI/roamgate">roamgate</a></th>
                 <th scope="col"><a href="https://github.com/dcolinmorgan/herdr-remote">herdr-remote</a></th>
@@ -545,49 +545,49 @@
             <tbody>
               <tr>
                 <th scope="row">运行方式</th>
-                <td class="us" data-client="herdr web ui">herdr 插件。由 herdr 构建和启动，并会自行更新。</td>
+                <td class="us" data-client="Orbit">herdr 插件。由 herdr 构建和启动；更新版本时重新安装插件。</td>
                 <td data-client="collie">自带桥接服务，可用 curl 安装程序安装，或作为 herdr 插件。</td>
                 <td data-client="roamgate">自带服务器，可用 curl 安装程序安装，或作为 herdr 插件。</td>
                 <td data-client="herdr-remote">macOS 菜单栏或 Windows 托盘应用，外加一个供手机使用的 Python 中继。</td>
               </tr>
               <tr>
                 <th scope="row">支持的终端</th>
-                <td class="us" data-client="herdr web ui">herdr</td>
+                <td class="us" data-client="Orbit">herdr</td>
                 <td data-client="collie">herdr、tmux 或 zellij</td>
                 <td data-client="roamgate">herdr</td>
                 <td data-client="herdr-remote">herdr</td>
               </tr>
               <tr>
                 <th scope="row">阅读内容</th>
-                <td class="us" data-client="herdr web ui">智能体自己的会话记录，以聊天显示，每轮的工作折叠起来。其他程序显示实时终端。</td>
+                <td class="us" data-client="Orbit">智能体自己的会话记录，以聊天显示，每轮的工作折叠起来。其他程序显示实时终端。</td>
                 <td data-client="collie">窗格输出，以及一个把需要你输入的内容排在最前的仪表盘。</td>
                 <td data-client="roamgate">终端、智能体会话、文件和 diff。</td>
                 <td data-client="herdr-remote">智能体时间线和终端输出。</td>
               </tr>
               <tr>
                 <th scope="row">回答方式</th>
-                <td class="us" data-client="herdr web ui">提示卡片（发送前与实时菜单核对），或直接用终端。两者都能语音输入。</td>
+                <td class="us" data-client="Orbit">提示卡片（发送前与实时菜单核对），或直接用终端。两者都能语音输入。</td>
                 <td data-client="collie">可点按的提示按钮、快捷回复、语音输入。</td>
                 <td data-client="roamgate">在终端中输入，可用编辑框或直接按键。</td>
                 <td data-client="herdr-remote">在手机、菜单栏或 Telegram 上一键批准。</td>
               </tr>
               <tr>
                 <th scope="row">连到手机</th>
-                <td class="us" data-client="herdr web ui">你自己的 Tailscale、SSH 隧道或 HTTPS 代理。你的 Tailscale 登录可直接进入，其他设备用验证码配对。</td>
+                <td class="us" data-client="Orbit">你自己的 Tailscale、SSH 隧道或 HTTPS 代理。你的 Tailscale 登录可直接进入，其他设备用验证码配对。</td>
                 <td data-client="collie">Tailscale serve，或你自己的入口。</td>
                 <td data-client="roamgate">Tailscale Serve、SSH 转发或原生 HTTPS，以令牌或密码保护。Web 推送。</td>
                 <td data-client="herdr-remote">免费的 Cloudflare 隧道、Telegram、Web 推送。</td>
               </tr>
               <tr>
                 <th scope="row">其他机器</th>
-                <td class="us" data-client="herdr web ui">通过 SSH 连接 Linux、macOS 和 Windows 电脑，在设置中添加。</td>
+                <td class="us" data-client="Orbit">通过 SSH 连接 Linux、macOS 和 Windows 电脑，在设置中添加。</td>
                 <td data-client="collie">Crews：每台机器一个 collie，统一在一个 URL 之后。</td>
                 <td data-client="roamgate">通过 SSH 配置连接其他 Linux 和 macOS 主机上的 herdr。</td>
                 <td data-client="herdr-remote">由中继汇集多台机器。</td>
               </tr>
               <tr>
                 <th scope="row">其他</th>
-                <td class="us" data-client="herdr web ui">查看智能体生成文件的查看器、Web 推送、随应用保持最新的远程电脑桥接，以及英文、中文、日文和韩文界面。</td>
+                <td class="us" data-client="Orbit">查看智能体生成文件的查看器、Web 推送、随应用保持最新的远程电脑桥接，以及英文、中文、日文和韩文界面。</td>
                 <td data-client="collie">六种界面语言、设备配对、输出搜索、只读的变更视图。</td>
                 <td data-client="roamgate">带 diff 批注的文件浏览器、Ranger 助手，还能帮你安装 herdr。</td>
                 <td data-client="herdr-remote">每日摘要、TUI、MacBook 刘海面板。</td>
@@ -733,7 +733,7 @@
             if (view === "live" && !live) {
               live = document.createElement("iframe");
               live.src = "../demo/app/";
-              live.title = "herdr web ui，运行在虚构的演示会话上";
+              live.title = "Orbit，运行在虚构的演示会话上";
               live.allow = "clipboard-write; fullscreen";
               win.append(live);
             }

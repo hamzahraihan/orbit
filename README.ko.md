@@ -1,7 +1,7 @@
-# herdr web ui
+# Orbit
 
 <p align="center">
-  <img src="public/icons/icon-192.png" alt="herdr web ui" width="100">
+  <img src="public/icons/icon-192.png" alt="Orbit" width="100">
 </p>
 
 <p align="center">

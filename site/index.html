@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>herdr web ui: Claude Code and Codex from your phone</title>
+    <title>Orbit: Claude Code and Codex from your phone</title>
     <meta name="description" content="A browser and phone client for herdr: read and answer the Claude Code and Codex agents running on your computer, as a chat or in the live terminal, from wherever you are." />
     <link rel="canonical" href="https://herdrweb.dev/" />
     <link rel="alternate" hreflang="en" href="https://herdrweb.dev/" />
@@ -11,19 +11,19 @@
     <link rel="alternate" hreflang="x-default" href="https://herdrweb.dev/" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://herdrweb.dev/" />
-    <meta property="og:title" content="herdr web ui: Claude Code and Codex from your phone" />
+    <meta property="og:title" content="Orbit: Claude Code and Codex from your phone" />
     <meta property="og:description" content="Run herdr from anywhere. Claude Code and Codex on your desktop and your phone, through a browser and phone client for herdr." />
     <meta property="og:image" content="https://herdrweb.dev/assets/social-preview.png" />
     <meta property="og:image:width" content="1280" />
     <meta property="og:image:height" content="640" />
-    <meta property="og:image:alt" content="herdr web ui: a ram, a terminal prompt, a browser window and a pointer" />
+    <meta property="og:image:alt" content="Orbit: a ram, a terminal prompt, a browser window and a pointer" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#12100e" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        "name": "herdr web ui",
+        "name": "Orbit",
         "description": "A browser and phone client for herdr: read and answer the Claude Code and Codex agents running on your computer, as a chat or in the live terminal.",
         "url": "https://herdrweb.dev/",
         "image": "https://herdrweb.dev/assets/social-preview.png",
@@ -320,7 +320,7 @@
   <body>
     <header class="top">
       <div class="frame">
-        <a class="brand" href="./"><span class="mark" aria-hidden="true"></span>herdr web ui</a>
+        <a class="brand" href="./"><span class="mark" aria-hidden="true"></span>Orbit</a>
         <nav class="caps" aria-label="Sections">
           <a href="https://github.com/hamzahraihan/orbit/blob/main/docs/guide.md">Guide</a>
           <a href="demo/">Demo</a>
@@ -445,12 +445,12 @@
           <div class="n">05</div>
           <div>
             <h3>Keep your workflow.<span class="arw" aria-hidden="true">→</span></h3>
-            <p>herdr owns the agents; this app connects to them. No wrapper command, no second daemon, no account. Update from Settings without stopping them, with patch notes for what each update brings.</p>
+            <p>herdr owns the agents; this app connects to them. No wrapper command, no second daemon, no account. A new version is a plugin reinstall, and the agents keep running.</p>
           </div>
           <div class="ev" aria-hidden="true">
             <div class="ev-row"><span>herdr</span><b><i class="dot done"></i>owns every pty</b></div>
-            <div class="ev-row"><span>herdr web ui</span><b>herdr terminal attach</b></div>
-            <div class="ev-note">listens on 127.0.0.1 · updates roll back on a failed health check</div>
+            <div class="ev-row"><span>Orbit</span><b>herdr terminal attach</b></div>
+            <div class="ev-note">listens on 127.0.0.1 · reach it over Tailscale, an SSH tunnel or your own proxy</div>
           </div>
         </a>
         <a class="row" href="https://github.com/hamzahraihan/orbit/blob/main/docs/guide.md#voice-input">
@@ -531,7 +531,7 @@
             <thead>
               <tr>
                 <th scope="col"><span class="visually-hidden">What</span></th>
-                <th scope="col" class="us">herdr web ui</th>
+                <th scope="col" class="us">Orbit</th>
                 <th scope="col"><a href="https://github.com/AltanS/collie">collie</a></th>
                 <th scope="col"><a href="https://github.com/powerfooI/roamgate">roamgate</a></th>
                 <th scope="col"><a href="https://github.com/dcolinmorgan/herdr-remote">herdr-remote</a></th>
@@ -540,49 +540,49 @@
             <tbody>
               <tr>
                 <th scope="row">Runs as</th>
-                <td class="us" data-client="herdr web ui">A herdr plugin. herdr builds it, starts it and it updates itself.</td>
+                <td class="us" data-client="Orbit">A herdr plugin. herdr builds and starts it; a new version is a plugin reinstall.</td>
                 <td data-client="collie">Its own bridge, from a curl installer or as a herdr plugin.</td>
                 <td data-client="roamgate">Its own server, from a curl installer or as a herdr plugin.</td>
                 <td data-client="herdr-remote">A macOS menu-bar or Windows tray app, plus a Python relay for the phone.</td>
               </tr>
               <tr>
                 <th scope="row">Drives</th>
-                <td class="us" data-client="herdr web ui">herdr</td>
+                <td class="us" data-client="Orbit">herdr</td>
                 <td data-client="collie">herdr, tmux or zellij</td>
                 <td data-client="roamgate">herdr</td>
                 <td data-client="herdr-remote">herdr</td>
               </tr>
               <tr>
                 <th scope="row">What you read</th>
-                <td class="us" data-client="herdr web ui">The agent's own transcript as a chat, with the work folded per turn. The live terminal for everything else.</td>
+                <td class="us" data-client="Orbit">The agent's own transcript as a chat, with the work folded per turn. The live terminal for everything else.</td>
                 <td data-client="collie">Pane output, with a dashboard led by what needs your input.</td>
                 <td data-client="roamgate">Terminals, agent sessions, files and diffs.</td>
                 <td data-client="herdr-remote">An agent timeline and terminal output.</td>
               </tr>
               <tr>
                 <th scope="row">Answering</th>
-                <td class="us" data-client="herdr web ui">Prompt cards checked against the live menu, or the terminal. Dictation into either.</td>
+                <td class="us" data-client="Orbit">Prompt cards checked against the live menu, or the terminal. Dictation into either.</td>
                 <td data-client="collie">Prompts as tappable buttons, quick replies, voice input.</td>
                 <td data-client="roamgate">Typed into the terminal, from a composer or as direct keys.</td>
                 <td data-client="herdr-remote">One-tap approvals from the phone, the menu bar or Telegram.</td>
               </tr>
               <tr>
                 <th scope="row">Reaching your phone</th>
-                <td class="us" data-client="herdr web ui">Your Tailscale, SSH tunnel or HTTPS proxy. Your Tailscale login gets in; other devices are paired with a code.</td>
+                <td class="us" data-client="Orbit">Your Tailscale, SSH tunnel or HTTPS proxy. Your Tailscale login gets in; other devices are paired with a code.</td>
                 <td data-client="collie">Tailscale serve, or your own ingress.</td>
                 <td data-client="roamgate">Tailscale Serve, SSH forwarding or native HTTPS, behind a token or password. Web push.</td>
                 <td data-client="herdr-remote">A free Cloudflare tunnel, Telegram, web push.</td>
               </tr>
               <tr>
                 <th scope="row">Other machines</th>
-                <td class="us" data-client="herdr web ui">Linux, macOS and Windows PCs over SSH, added from Settings.</td>
+                <td class="us" data-client="Orbit">Linux, macOS and Windows PCs over SSH, added from Settings.</td>
                 <td data-client="collie">Crews: one collie per machine behind one URL.</td>
                 <td data-client="roamgate">SSH profiles to herdr on other Linux and macOS hosts.</td>
                 <td data-client="herdr-remote">The relay collects several machines.</td>
               </tr>
               <tr>
                 <th scope="row">Also</th>
-                <td class="us" data-client="herdr web ui">A viewer for the files agents make, web push, remote-PC bridges kept current with the app, and an interface in English, Chinese, Japanese and Korean.</td>
+                <td class="us" data-client="Orbit">A viewer for the files agents make, web push, remote-PC bridges kept current with the app, and an interface in English, Chinese, Japanese and Korean.</td>
                 <td data-client="collie">Six UI languages, device pairing, output search, a read-only view of changes.</td>
                 <td data-client="roamgate">A file explorer with diff annotations, the Ranger assistant, and it can install herdr for you.</td>
                 <td data-client="herdr-remote">A daily digest, a TUI, a notch panel on a MacBook.</td>
@@ -728,7 +728,7 @@
             if (view === "live" && !live) {
               live = document.createElement("iframe");
               live.src = "demo/app/";
-              live.title = "herdr web ui, running on a fictional demo session";
+              live.title = "Orbit, running on a fictional demo session";
               live.allow = "clipboard-write; fullscreen";
               win.append(live);
             }

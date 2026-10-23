@@ -173,7 +173,7 @@ export const KO: Record<string, string> = {
 
   // ---- app header and shell ----
   "Opening link…": "링크 여는 중…",
-  "Connecting to herdr web ui…": "herdr web ui에 연결하는 중…",
+  "Connecting to Orbit…": "Orbit에 연결하는 중…",
   "Close workspace list": "워크스페이스 목록 닫기",
   "Open workspace list": "워크스페이스 목록 열기",
   "Show workspace list": "워크스페이스 목록 보이기",
@@ -347,7 +347,7 @@ export const KO: Record<string, string> = {
   "Cancel update": "업데이트 취소",
   "Bridge update needed": "브리지 업데이트 필요",
   "Setup needed": "설정 필요",
-  "This PC runs a bridge from a different version of herdr web ui. Update it to reconnect; herdr sessions keep running.": "이 PC의 브리지가 다른 버전의 herdr web ui입니다. 업데이트하면 다시 연결됩니다. herdr 세션은 계속 돕니다.",
+  "This PC runs a bridge from a different version of Orbit. Update it to reconnect; herdr sessions keep running.": "이 PC의 브리지가 다른 버전의 Orbit입니다. 업데이트하면 다시 연결됩니다. herdr 세션은 계속 돕니다.",
   "Saved in herdr": "herdr에 저장됨",
   "Connect once to enable automatic reconnection. Installation and startup need separate approval.": "한 번 연결하면 이후 자동으로 다시 연결됩니다. 설치 및 시작에는 별도의 승인이 필요합니다.",
   "Managed by herdr. Rename, disable or remove it there.": "herdr에서 관리합니다. 이름 변경, 비활성화 또는 삭제는 herdr에서 하세요.",
@@ -707,7 +707,7 @@ export const KO: Record<string, string> = {
   "Codex has a question open in the terminal: answer it above first": "Codex가 터미널에 질문을 열어 두었습니다. 먼저 위에서 답하세요",
   "Confirm your answer in the card above, or type another…": "위 카드에서 답을 확인하거나 다른 답을 입력하세요…",
   "Terminal ended": "터미널 종료됨",
-  "Reconnecting to herdr web ui…": "herdr web ui에 다시 연결하는 중…",
+  "Reconnecting to Orbit…": "Orbit에 다시 연결하는 중…",
   "Input held:": "보관한 입력:",
   "Send held input": "보관한 입력 보내기",
   "Discard held input": "보관한 입력 버리기",
@@ -767,7 +767,7 @@ export const KO: Record<string, string> = {
   "That item no longer exists on the PC. Refresh and try again.": "그 항목은 PC에 더 이상 없습니다. 새로 고친 뒤 다시 시도하세요.",
   "It changed on the PC while you were acting. Check it and try again.": "작업하는 동안 PC에서 내용이 바뀌었습니다. 확인한 뒤 다시 시도하세요.",
   "The PC took too long to answer. Try again.": "PC가 너무 오래 응답하지 않았습니다. 다시 시도하세요.",
-  "The PC could not do that. Try again; if it keeps failing, restart herdr web ui on the PC.": "PC에서 그 작업을 할 수 없었습니다. 다시 시도하고, 계속 실패하면 PC에서 herdr web ui를 다시 시작하세요.",
+  "The PC could not do that. Try again; if it keeps failing, restart Orbit on the PC.": "PC에서 그 작업을 할 수 없었습니다. 다시 시도하고, 계속 실패하면 PC에서 Orbit을 다시 시작하세요.",
   "Can't reach the PC. Check your connection, then try again.": "PC에 연결할 수 없습니다. 연결을 확인한 뒤 다시 시도하세요.",
   "Something went wrong. Try again.": "문제가 생겼습니다. 다시 시도하세요.",
   "Not signed in to this PC": "이 PC에 로그인되어 있지 않음",
@@ -781,7 +781,7 @@ export const KO: Record<string, string> = {
   "Refresh and try again.": "새로 고친 뒤 다시 시도하세요.",
   "Check it and try again.": "확인한 뒤 다시 시도하세요.",
   "Check your connection, then try again.": "연결을 확인한 뒤 다시 시도하세요.",
-  "Try again; if it keeps failing, restart herdr web ui on the PC.": "다시 시도하고, 계속 실패하면 PC에서 herdr web ui를 다시 시작하세요.",
+  "Try again; if it keeps failing, restart Orbit on the PC.": "다시 시도하고, 계속 실패하면 PC에서 Orbit을 다시 시작하세요.",
   "The server cannot save settings: check that its state folder is writable.": "서버가 설정을 저장할 수 없습니다. 서버의 상태 폴더에 쓸 수 있는지 확인하세요.",
 
   // ---- sign-in ----

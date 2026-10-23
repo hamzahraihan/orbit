@@ -3,7 +3,7 @@
  * `fetch("/api/…")`, `new EventSource("/api/machines/events")` and `new WebSocket("…/ws")` from
  * fixtures (site/demo/fixtures/, captured by scripts/demo-fixtures.ts from the staged fictional
  * session) instead of the network. The app's own code is unchanged: it believes it talks to a
- * herdr web ui server on a PC called "workstation".
+ * Orbit server on a PC called "workstation".
  *
  * What works: the sidebar (two repositories, each with two agent worktrees) and its live statuses,
  * every chat, the Codex approval card (answering it sets Codex to work and ends the turn), the

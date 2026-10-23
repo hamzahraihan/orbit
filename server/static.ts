@@ -223,7 +223,7 @@ export async function serveStatic(pathname: string, acceptEncoding?: string | nu
   const indexPath = join(DIST_DIR, "index.html");
   if (!existsSync(indexPath)) {
     return new Response(
-      "herdr-web-ui server is running, but the browser client has not been built yet.\nRun: bun run build\n",
+      "Orbit's server is running, but the browser client has not been built yet.\nRun: bun run build\n",
       { status: 200, headers: { "content-type": "text/plain; charset=utf-8" } },
     );
   }

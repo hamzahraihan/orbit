@@ -175,7 +175,7 @@ export const JA: Record<string, string> = {
 
   // ---- app header and shell ----
   "Opening link…": "リンクを開いています…",
-  "Connecting to herdr web ui…": "herdr web ui に接続しています…",
+  "Connecting to Orbit…": "Orbit に接続しています…",
   "Close workspace list": "ワークスペース一覧を閉じる",
   "Open workspace list": "ワークスペース一覧を開く",
   "Show workspace list": "ワークスペース一覧を表示",
@@ -349,7 +349,7 @@ export const JA: Record<string, string> = {
   "Cancel update": "更新をキャンセル",
   "Bridge update needed": "ブリッジの更新が必要です",
   "Setup needed": "セットアップが必要です",
-  "This PC runs a bridge from a different version of herdr web ui. Update it to reconnect; herdr sessions keep running.": "この PC では別バージョンの herdr web ui のブリッジが動作しています。更新すると再接続されます。herdr のセッションは実行されたままです。",
+  "This PC runs a bridge from a different version of Orbit. Update it to reconnect; herdr sessions keep running.": "この PC のブリッジは別バージョンの Orbit です。更新すると再接続されます。herdr のセッションは実行されたままです。",
   "Saved in herdr": "herdr に保存済み",
   "Connect once to enable automatic reconnection. Installation and startup need separate approval.": "一度接続すると、自動で再接続します。インストールと起動には別途承認が必要です。",
   "Managed by herdr. Rename, disable or remove it there.": "herdr で管理されています。名前の変更、無効化、削除は herdr で行ってください。",
@@ -709,7 +709,7 @@ export const JA: Record<string, string> = {
   "Codex has a question open in the terminal: answer it above first": "Codex がターミナルで質問を表示しています。先に上で回答してください",
   "Confirm your answer in the card above, or type another…": "上のカードで回答を確認するか、別の回答を入力してください…",
   "Terminal ended": "ターミナルが終了しました",
-  "Reconnecting to herdr web ui…": "herdr web ui に再接続しています…",
+  "Reconnecting to Orbit…": "Orbit に再接続しています…",
   "Input held:": "保持した入力:",
   "Send held input": "保持した入力を送信",
   "Discard held input": "保持した入力を破棄",
@@ -769,7 +769,7 @@ export const JA: Record<string, string> = {
   "That item no longer exists on the PC. Refresh and try again.": "その項目は PC にもうありません。更新してからもう一度お試しください。",
   "It changed on the PC while you were acting. Check it and try again.": "操作中に PC 側で変更されました。確認してからもう一度お試しください。",
   "The PC took too long to answer. Try again.": "PC の応答に時間がかかりすぎました。もう一度お試しください。",
-  "The PC could not do that. Try again; if it keeps failing, restart herdr web ui on the PC.": "PC でその操作を実行できませんでした。もう一度お試しください。失敗が続く場合は PC で herdr web ui を再起動してください。",
+  "The PC could not do that. Try again; if it keeps failing, restart Orbit on the PC.": "PC でその操作を実行できませんでした。もう一度お試しください。失敗が続く場合は PC で Orbit を再起動してください。",
   "Can't reach the PC. Check your connection, then try again.": "PC に接続できません。接続を確認してからもう一度お試しください。",
   "Something went wrong. Try again.": "問題が発生しました。もう一度お試しください。",
   "Not signed in to this PC": "この PC にサインインしていません",
@@ -783,7 +783,7 @@ export const JA: Record<string, string> = {
   "Refresh and try again.": "更新してからもう一度お試しください。",
   "Check it and try again.": "確認してからもう一度お試しください。",
   "Check your connection, then try again.": "接続を確認してからもう一度お試しください。",
-  "Try again; if it keeps failing, restart herdr web ui on the PC.": "もう一度お試しください。失敗が続く場合は PC で herdr web ui を再起動してください。",
+  "Try again; if it keeps failing, restart Orbit on the PC.": "もう一度お試しください。失敗が続く場合は PC で Orbit を再起動してください。",
   "The server cannot save settings: check that its state folder is writable.": "サーバーが設定を保存できません。サーバーの状態フォルダーに書き込めるか確認してください。",
 
   // ---- sign-in ----
