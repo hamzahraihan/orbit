@@ -24,7 +24,7 @@ export function resolveFilePath(input: string, cwd: string | null): string | nul
   const path = input.trim();
   if (path === "") return null;
   if (path === "~") return homedir();
-  if (path.startsWith("~/")) return resolve(homedir(), path.slice(2));
+  if (path.startsWith("~/") || path.startsWith("~\\")) return resolve(homedir(), path.slice(2));
   if (isAbsolute(path)) return resolve(path);
   return cwd === null ? null : resolve(cwd, path);
 }
@@ -87,7 +87,8 @@ function pathsByName(path: string): string[] {
  * file under the pane's folder whose path ends in it (agents often name `demo.mp4` without
  * `docs/screenshots/`). Several such files come back as candidates to choose from.
  */
-export function locateFile(input: string, cwd: string | null, anyForm = false): { info: FileInfo } | { candidates: string[] } | null {
+export type LocatedFile = { info: FileInfo } | { candidates: string[] } | null;
+export function locateFile(input: string, cwd: string | null, anyForm = false): LocatedFile {
   const path = resolveFilePath(input, cwd);
   const info = anyForm || path === null ? null : fileInfo(path);
   if (info !== null) return { info };
@@ -108,20 +109,31 @@ export function locateFile(input: string, cwd: string | null, anyForm = false): 
 }
 
 /** A relative fallback stays in its own folder, including after following symlinks. */
-export function locateFileInFolder(input: string, folder: string, anyForm = false): ReturnType<typeof locateFile> {
+export function locateFileInFolder(input: string, folder: string, anyForm = false): LocatedFile {
   const relative = input.trim();
-  if (isAbsolute(relative) || relative.startsWith("~") || !resolve(folder, relative).startsWith(resolve(folder) + sep)) return null;
+  const folderResolved = resolve(folder);
+  const targetResolved = resolve(folder, relative);
+  const isWindows = process.platform === "win32";
+  const folderPrefix = folderResolved + sep;
+  const isUnderFolder = isWindows
+    ? targetResolved.toLowerCase().startsWith(folderPrefix.toLowerCase())
+    : targetResolved.startsWith(folderPrefix);
+  if (isAbsolute(relative) || relative.startsWith("~") || !isUnderFolder) return null;
   const found = locateFile(relative, folder, anyForm);
   if (found === null) return null;
   try {
     const root = realpathSync(folder) + sep;
     const paths = "info" in found ? [found.info.path] : found.candidates;
-    return paths.every((path) => realpathSync(path).startsWith(root)) ? found : null;
+    const isRootPrefix = (p: string) => {
+      const rp = realpathSync(p);
+      return isWindows ? rp.toLowerCase().startsWith(root.toLowerCase()) : rp.startsWith(root);
+    };
+    return paths.every(isRootPrefix) ? found : null;
   } catch { return null; /* a missing or unreadable target is not a fallback */ }
 }
 
 /** Try every exact place before opening a name stored in another form. */
-export async function findFile(input: string, cwd: string | null, scratchFolder: () => Promise<string | null>): Promise<ReturnType<typeof locateFile>> {
+export async function findFile(input: string, cwd: string | null, scratchFolder: () => Promise<string | null>): Promise<LocatedFile> {
   const exact = locateFile(input, cwd);
   if (exact !== null) return exact;
   let folder: string | null = null;
