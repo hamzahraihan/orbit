@@ -9,7 +9,9 @@
  *   bun scripts/release-guards.ts --base <sha>      CI (ci.yml, Fast checks): a remote-vN tag may still be unpublished
  *   bun scripts/release-guards.ts --release X.Y.Z   release.yml preflight: remote-vN must be published from this tree
  *
- * Reads tags, so a shallow checkout fetches them first (ci.yml does).
+ * Reads tags, so a shallow checkout fetches them first (ci.yml does). A tree with no `v*` tag at
+ * all is a fork before its first release: its CI checks nothing, and its Release run checks the
+ * metadata before it creates the tag.
  */
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -96,7 +98,11 @@ export function check(cwd: string, publishing: boolean, base?: string): Verdict 
   const read = (path: string) => readFileSync(join(cwd, path), "utf8");
   const version = (JSON.parse(read("package.json")) as { version: string }).version;
   const tags = git(cwd, "tag", "--list").out.split("\n").filter(Boolean);
-  if (!tags.some((tag) => /^v\d/.test(tag))) throw new Error("No v* tags: fetch them first (git fetch --tags), or a release cannot be told apart from any other tree.");
+  // A fork cut from another project's history has no release tags of its own until its first
+  // Release run, so nothing can be told apart yet: its pushes are not a release, and the Release
+  // run checks the metadata before it creates the tag. Where tags exist, one is a release's own.
+  const released = tags.some((tag) => /^v\d/.test(tag));
+  if (!publishing && !released) return { version: null, problems: [] };
   if (!publishing && tags.includes(`v${version}`)) return { version: null, problems: [] };
   const before = base && !publishing ? git(cwd, "show", `${base}:package.json`) : null;
   if (before?.ok && (JSON.parse(before.out) as { version: string }).version === version) return { version: null, problems: [] };

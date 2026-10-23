@@ -77,6 +77,23 @@ describe("check", () => {
     expect(check(released({ "server/index.ts": "b", "src/App.tsx": "b" }), false)).toEqual({ version: null, problems: [] });
   });
 
+  it("leaves a fork's first tree alone until the Release run checks it", () => {
+    const dir = mkdtempSync(join(tmpdir(), "hwc-release-"));
+    made.push(dir);
+    const write = (path: string, text: string) => { mkdirSync(dirname(join(dir, path)), { recursive: true }); writeFileSync(join(dir, path), text); };
+    write("package.json", JSON.stringify({ version: "0.5.0", dependencies: { a: "1" } }));
+    write("herdr-plugin.toml", 'version = "0.5.0"\n');
+    write("CHANGELOG.md", "## [Unreleased]\n\n## [0.5.0]\n\n- New.\n");
+    write("release-summaries.json", JSON.stringify({ "0.5.0": Object.fromEntries(["en", "ko", "ja", "zh"].map((language) => [language, { new: ["New."] }])) }));
+    write("shared/machines.ts", 'export const REMOTE_BUNDLE_VERSION = "31";\n');
+    write("server/index.ts", "a");
+    run(dir, "init", "-q");
+    run(dir, "add", "-A");
+    run(dir, "commit", "-qm", "fork");
+    expect(check(dir, false)).toEqual({ version: null, problems: [] });
+    expect(check(dir, true).problems[0]).toContain("remote-v31 is not published");
+  });
+
   it("passes a release PR that changed only the client", () => {
     const dir = released({ "src/App.tsx": "b" });
     releasePr(dir);
