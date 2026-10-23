@@ -461,7 +461,7 @@ The values are the ones in `src/styles.css`. Every token but `--fs-input` is `ca
 |-------|-------|-------|
 | `--ui-scale` | `1`; Settings → Appearance → Interface font size over the density's body size, written on `<html>` | Multiplies every `--fs-*` token but `--fs-input` |
 | `--font-ui` | `"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Malgun Gothic", sans-serif` | Chrome and chat prose |
-| `--font-mono` | `"Symbols Nerd Font Mono", "JetBrains Mono Web", ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "D2Coding", monospace` | Code, paths, keys, terminal-adjacent metadata |
+| `--font-mono` | `"Symbols Nerd Font Mono", "JetBrains Mono Web", ui-monospace, "SF Mono", "JetBrains Mono", Menlo, "Cascadia Code", "Cascadia Mono", Consolas, "D2Coding", monospace` | Code, paths, keys, terminal-adjacent metadata |
 | `--lh-tight` | `1.2` | Titles |
 | `--lh-base` | `1.5` comfortable / `1.45` compact | Body copy |
 | `--lh-code` | `1.6` | Code blocks; the message box with a mouse |
