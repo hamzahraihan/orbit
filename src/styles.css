@@ -105,7 +105,7 @@
   --font-ui: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Malgun Gothic", sans-serif;
   /* "JetBrains Mono Web" is the bundled face (fonts/fonts.css): after the icon font, which draws
      the private use area alone, and never in the terminal's own stack (lib/fontFamily.ts) */
-  --font-mono: "Symbols Nerd Font Mono", "JetBrains Mono Web", ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "D2Coding", monospace;
+  --font-mono: "Symbols Nerd Font Mono", "JetBrains Mono Web", ui-monospace, "SF Mono", "JetBrains Mono", Menlo, "Cascadia Code", "Cascadia Mono", Consolas, "D2Coding", monospace;
   /* Settings → Appearance → Interface font size: the chosen body size over the density's (lib/settings.ts
      writes it on <html>). Every size below is the scale at 1, except --fs-input: the floor under which
      iOS Safari zooms a focused field stays a floor */
