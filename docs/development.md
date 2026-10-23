@@ -388,7 +388,7 @@ bun scripts/film/render.ts check                # acceptance frame grabs, sizes,
 
 ## Website
 
-<https://herdrweb.dev/> is `site/index.html`, a static page with desktop and phone
+`site/index.html` is a static page with desktop and phone
 demos, a screenshot gallery, supported agents, phone setup and a comparison table. `site/zh/index.html`
 is the same page in Simplified Chinese at `/zh/`, linked from the header; a change to one page belongs in
 the other. `bun run build:site`
@@ -416,7 +416,7 @@ history while the Website workflow waits for its successful completion.
 
 ### The browser demo
 
-<https://herdrweb.dev/demo/> is the real client on a fictional session, no server.
+`_site/demo/` is the real client on a fictional session, no server.
 `build-site.ts` builds the client a second time with `vite build --base ./` into `_site/demo/app/`,
 bundles `site/demo/transport.ts` in front of it and frames it with `site/demo/index.html`. The
 transport answers the app's `fetch("/api/…")`, the machines event stream and the `/ws` terminal
