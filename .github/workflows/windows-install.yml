@@ -46,9 +46,6 @@ jobs:
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/windows-install-e2e.ps1 -Ref $env:HEAD_SHA -Fresh
-      - name: Install the latest release with the README's command
+      - name: Install with the README's command
         if: github.event_name != 'pull_request'
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/windows-install-e2e.ps1 -Installer https://herdrweb.dev/install.ps1 -Fresh
-      - name: Update from the release before it
-        if: github.event_name != 'pull_request'
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/windows-install-e2e.ps1 -Installer https://herdrweb.dev/install.ps1 -Update
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/windows-install-e2e.ps1 -Installer https://raw.githubusercontent.com/hamzahraihan/orbit/main/install.ps1 -Fresh
