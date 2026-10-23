@@ -17,7 +17,7 @@ export async function bundleManifestSource(platform: string, options: BundleSour
   const local = join(options.directory ?? join(import.meta.dir, "..", "remote-bundles"), `manifest-${platform}.json`);
   try { await access(local); return local; }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
-  return `https://github.com/devswha/herdr-web-ui/releases/download/remote-v${REMOTE_BUNDLE_VERSION}/manifest.json`;
+  return `https://github.com/hamzahraihan/orbit/releases/download/remote-v${REMOTE_BUNDLE_VERSION}/manifest.json`;
 }
 export interface BundleFile { path: string; sha256: string; size: number }
 interface BundleFileOptions extends BundleSourceOptions {

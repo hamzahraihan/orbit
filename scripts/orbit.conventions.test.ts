@@ -35,11 +35,8 @@ describe("Orbit's removed features", () => {
     ]);
     fail(present, "Orbit removed the app update checks: the updater and its supervisor must not come back.");
     expect(present).toEqual([]);
-    // the remote-PC bundle URL is Task 6's business: it names the upstream releases until
-    // Task 6 repoints it, and Task 6's own guard covers that file
-    // (a path is written the way the platform writes it, so the name is compared without it)
-    const portable = (file: string): string => file.replaceAll("\\", "/");
-    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts") && portable(file) !== "server/remote-bundle.ts"), /github\.com\/devswha\/herdr-web-ui\/releases/).map((match) => match.at);
+    // Task 6 repointed the remote-PC bundle at the fork, and the guard below covers that file too
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /github\.com\/devswha\/herdr-web-ui\/releases/).map((match) => match.at);
     fail(offenders, "Orbit removed the app update checks: no source file may poll the upstream releases.");
     expect(offenders).toEqual([]);
   });
@@ -72,6 +69,12 @@ describe("Orbit's removed features", () => {
     expect(present).toEqual([]);
     const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /\bportal expose\b|--strip-request-header\b/).map((match) => match.at);
     fail(offenders, "Orbit removed the Portal relay: no source file may drive the portal binary.");
+    expect(offenders).toEqual([]);
+  });
+
+  it("never points a remote PC at the upstream release", () => {
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /github\.com\/devswha\/herdr-web-ui/).map((match) => match.at);
+    fail(offenders, "A remote PC must fetch its runtime from hamzahraihan/orbit, never from the upstream project.");
     expect(offenders).toEqual([]);
   });
 });
