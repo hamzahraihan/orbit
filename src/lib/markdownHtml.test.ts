@@ -21,8 +21,8 @@ describe("HTML blocks in a markdown file", () => {
     expect(image).toMatchObject({ type: "image", src: "public/icons/icon-192.png", alt: "Orbit", width: 100 });
     const languages = blocks.find((block) => block.type === "paragraph" && text(block.lines.flat()).includes("English"));
     expect(languages?.type === "paragraph" && languages.lines.flat().some((node) => node.type === "file" && node.path === "README.ko.md")).toBe(true);
-    const site = blocks.find((block) => block.type === "paragraph" && text(block.lines.flat()).includes("website"));
-    expect(site?.type === "paragraph" && site.lines.flat().some((node) => node.type === "link" && node.href === "https://herdrweb.dev/")).toBe(true);
+    const site = blocks.find((block) => block.type === "paragraph" && text(block.lines.flat()).includes("GitHub"));
+    expect(site?.type === "paragraph" && site.lines.flat().some((node) => node.type === "link" && node.href === "https://github.com/hamzahraihan/orbit")).toBe(true);
   });
 
   it("keeps text, drops comments and unknown tags, and reads headings, breaks, emphasis and entities", () => {
