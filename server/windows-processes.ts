@@ -65,7 +65,7 @@ const TABLE_SCRIPT = "[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-Cim
  * The process table of this PC, or nothing when it cannot be read. A query that stalls is
  * killed at `timeoutMs`, so a caller with a deadline keeps it.
  */
-export async function windowsProcessTable(timeoutMs = 10_000, command: string[] = ["powershell", "-NoProfile", "-NonInteractive", "-Command", TABLE_SCRIPT]): Promise<ProcessRow[]> {
+export async function windowsProcessTable(timeoutMs = 10_000, command: string[] = ["powershell", "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", TABLE_SCRIPT]): Promise<ProcessRow[]> {
   try {
     const probe = Bun.spawn(command, { windowsHide: true, stdin: "ignore", stdout: "pipe", stderr: "ignore", timeout: timeoutMs, killSignal: "SIGKILL" });
     const [code, out] = await Promise.all([probe.exited, new Response(probe.stdout).text()]);
