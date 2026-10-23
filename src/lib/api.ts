@@ -94,7 +94,6 @@ export async function requestPortal(action: "start" | "stop", relay?: string): P
   if (!response.ok) throw await errorFrom(url, response);
 }
 
-/** Anonymous install and update counts; null from a server that sends none (404). */
 /** What every browser of this server shares (shared/preferences.ts); null where the server predates it. */
 export async function fetchPreferences(): Promise<SharedPreferences | null> {
   try { return await getJson<SharedPreferences>("/api/preferences"); }
