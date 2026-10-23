@@ -42,6 +42,11 @@ to change. Also read [server/AGENTS.md](server/AGENTS.md) and [src/AGENTS.md](sr
   then hand over `http://<that address>:<port>`. A Tailscale-only bind stays inside the tailnet
   (`lanExposed` in `server/access.ts`); never bind `0.0.0.0` for it. Tests keep `port: 0` on
   loopback.
+- Leave no process behind when you stop working. A run that was signalled, whose terminal closed
+  or whose agent was killed can leave its lane, Chromium and test herdr running; run
+  `bun run clean:processes` after it (`--dry-run` lists what it would stop). Never leave
+  `bun run dev`, `bun run server`, a demo server or a browser script in the background when you
+  finish.
 - Mac and iOS Simulator checks run on the maintainer's test MacBook Air, `ssh eamac`, which stays
   awake for it. Never drive the MacBook Pro (`ssh macbook`, `ssh mymac`): it is the maintainer's
   working machine, and automation there takes over their keyboard and focus. On eamac, run a
