@@ -87,6 +87,11 @@ const syncKeyboard = (): void => {
 viewport?.addEventListener("resize", syncKeyboard);
 viewport?.addEventListener("scroll", syncKeyboard);
 window.addEventListener("resize", syncKeyboard);
+window.addEventListener("scroll", () => {
+  if (window.scrollX !== 0 && document.querySelector(".app") !== null) {
+    window.scrollTo(0, window.scrollY);
+  }
+}, { passive: true });
 window.addEventListener("orientationchange", syncKeyboard);
 touch.addEventListener("change", syncKeyboard);
 keyboard?.addEventListener("geometrychange", syncKeyboard);
