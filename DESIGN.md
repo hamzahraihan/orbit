@@ -702,7 +702,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   not restore, `--term-bg` and the rule. A tab strip takes the same surface as the header over
   it from `769px` (`--strip-bg`: `--bg` under the chat lens, `--term-bg` otherwise, `--bg-panel`
   below `769px`) and keeps its hairline, under the chat the one line over the transcript (no
-  fade under it). The update notice and a PC's action banner are drawn in the pane column, over
+  fade under it). The reload notice and a PC's action banner are drawn in the pane column, over
   the tab strip, never across the window: the sidebar and its top row stay one piece. A layout
   call the palette made that a PC's bridge from before the route answered 404 to reads there too,
   for a moment, as a `.pane-notice` line of `--status-blocked` `--fs-xs` text under a hairline
@@ -873,7 +873,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
 - Mono metadata at `--chip-h`. Offline is the one header pill that stays, and uses danger tokens. A deep link waiting for its PC's roster says **Opening link…** in the same `.header-note` pill (`role="status"`) until it lands or its failure note replaces it. That status stays in the document while there is no note, clipped and empty (`.visually-hidden`, never `display: none`, as `.conn-live`), and the words of a page that opens with a link land a frame after it: a live region that appears together with its content is not announced. The `.header-note` pill carries a sentence, so it is set in the interface face (`--font-ui`), not the mono one. A deep link that could not open what it named, and Copy link, say so in a plain `.header-note` pill for a moment (8 s, 1.6 s for Link copied). The note takes the flexible context's place and ellipsizes when narrow, keeping the lens and More controls in view.
 
 ### Sidebar roster row and footer
-- No top bar. The sidebar opens with the plan panel (when Settings puts it there), the PC workspace groups and a separate **Agents** list spanning the connected PCs. A workspace starts from the `+` on its PC's header, or from the **New workspace**
+- No top bar. The sidebar opens with the PC workspace groups and a separate **Agents** list spanning the connected PCs. A workspace starts from the `+` on its PC's header, or from the **New workspace**
   button in the dashed **No workspaces yet** box of an empty PC. **Add PC** lives in Settings →
   Remote PCs and in the command palette. Search lives in the command palette, not the roster.
 - Every row sits on one grid, built from existing tokens as `--side-*` aliases on `.sidebar-shell`:
@@ -1032,24 +1032,8 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   with `--touch-target` controls, and draws no hover fill; reduced motion removes row transitions
   and keeps the working dot's breath (opacity only).
 - Footer holds the contextual **Install app** action and Settings, its gear alone (named
-  **Settings** to screen readers and in its tooltip), with the plan meters filling the rest of its row,
-  as rows on the same grid with no rule above.
+  **Settings** to screen readers and in its tooltip), on the same grid with no rule above.
   It carries no product name or version: the running versions are read in Settings.
-
-### Plan meters (`.usage*`)
-- Right of the Settings gear, one button holding as many chips as the row has room for (judged
-  by the widest chip drawn, so the count settles), the rest folded into `+N`, one per account in
-  the user's order: provider mark, mono `--fs-2xs` percent of the limit chosen in Settings, the
-  plan's session by default or its week (what is left by default, or what is used), and a 2px bar on a `--border-strong` track
-  filled to that percent. From 80% used the percent and bar take `--status-blocked`; amber stays
-  chrome. A chip whose numbers are stale or missing dims. An account hidden in Settings is
-  left out of the strip and the popover; with every account hidden, neither shows. The button's
-  name and tooltip add, per account, another of its limits from 80% used that the chip does not
-  show (`(Weekly 9% left)`); the chip itself does not mark it.
-- The button opens a popover above the footer (`--shadow-pop`, `--radius-lg`), as wide as the
-  footer and scrolling when it outgrows the sidebar: per account its mark, name and plan pill with
-  the email or login right-aligned and ellipsized, then one row per limit (label, reset time, right-aligned percent) over a 4px bar. A problem
-  note is dim, red for an expired sign-in or a failed request.
 
 ### New workspace dialog
 - Agent select comes from `GET /api/agents`; shell-only is always available. Directory defaults to
@@ -1603,11 +1587,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   uses that scaled size or `--fs-input`, whichever is larger, keeping the 16px floor that avoids
   iOS zoom. Changing Chat font size or density resizes the box around its existing draft. The
   box's height is automatic only: it has no resize grip.
-- A local desktop composer shows the first visible account in Settings order for its agent's
-  provider as a read-only usage reference inside the model pill. Plan-wide five-hour session is
-  preferred, with weekly fallback; scoped, failed and unavailable limits do not substitute.
-  The title names the account and reset times. This is not active-account detection. Mobile and
-  remote panes omit it. The context ring is inert on mobile; details stay on desktop.
+- The context ring is inert on mobile; details stay on desktop.
 - Working Send on a supporting bridge adds a pending message above the input card, before the
   prompt dock. `PendingMessages` uses the chat's column and neutral user-bubble surface: plain
   text aligned right, with no outer card. Its scrolling stack is capped by `--pending-max-h`
@@ -1793,11 +1773,10 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   **Composer**: Enter sends, send queued messages automatically, and on a touch screen the suggestion
   chip (off by default); then **Quick replies**; then **File viewer**: wrap long
   lines, Markdown width, Diff layout), **Terminal** (font size, font family, wheel
-  speed, input mode, Key bar), **Alerts**, **Voice input**, **Subscription usage**,
+  speed, input mode, Key bar), **Alerts**, **Voice input**,
   **Shortcuts** (the platform-resolved global bindings), **Phone & devices** (the phone address,
-  Keep screen on, Install; then Portal, where the server offers it; then paired devices),
-  **Remote PCs**, **About** (Updates, herdr, the repository links). A button that points at
-  Updates opens the dialog on About.
+  Keep screen on, Install; then paired devices),
+  **Remote PCs**, **About** (herdr, the repository links).
 - Every page is built from the same parts (`components/SettingsControls.tsx`). A group is an
   optional caption (`--fs-sm`, `--fw-semibold`, `--text-dim`, sentence case) over one card:
   `--bg-elevated`, hairline `--border`, `--radius-lg`, its rows parted by hairlines and never
@@ -1831,57 +1810,13 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   workspace-list toggle. Under the row, once the server has answered, the bridge auto-update switch.
 - Install (a row of the Phone group) reflects installed, promptable or browser-instructions state;
   About links the repository.
-- Portal, a group of its own between Phone and Devices where the server offers it: while it runs,
-  the address and QR code as the Phone group draws them over a Relay row with Stop; otherwise one
-  hint for what blocks it (no token, serve-only, no `portal` or an old one, with a link to get it)
-  or a wide Relay row whose text field and Start stack on a phone. Starting and stopping are one
-  dim status line; a failure is the server's sentence over Portal's own lines, folded.
-- The running versions are always written, since the sidebar carries none. Updates opens with
+- The running versions are always written, since the sidebar carries none. About opens with
   **Running vX.Y.Z (commit)**: the server's version and commit, or the client's own build version
   before the server answers and where it names neither. While the server runs another version than
-  this tab was built from (updated, not yet reloaded), a second line names the tab's own. The
+  this tab was built from (rebuilt, not yet restarted), a second line names the tab's own. The
   **herdr** section opens with
   **Running herdr X.Y.Z**; where herdr cannot be updated from here (Windows, an older server) the
   section is that line alone, from the health check.
-- Subscription usage keeps its meter preferences first, then an **Accounts** header with a dim total
-  count and one **Add account** button (Plus + label). With meters off, one note follows it without
-  provider placeholders; the configured hub connection remains available. With meters on, provider cards are ordered Claude,
-  Codex, then the remaining reported providers; headings show mark, name and dim account count.
-  Each row has email/name, then dim source (**This PC** or **Hub**), known plan and written
-  sign-in status with an existing status-token dot, without badge pills. Within-provider reorder
-  and visibility controls stay in fixed columns; hidden rows remain listed but fade. Empty lists
-  show one dim sentence.
-- The global Add opens the shared `.modal` (a bottom sheet at 640px and below), with the existing
-  focus trap, Escape/close and return focus. Its small stepper leads through provider (Claude, Codex,
-  Cursor, GitHub Copilot, Grok, Antigravity, OpenCode, then Hub, in server discovery order),
-  method, and authentication; Back preserves the provider context. The provider step uses two equal
-  columns above 640px to fit eight choices without expanding the existing modal width, and a single
-  column on phones. The existing bounded `.modal-body` alone scrolls inside the sheet; its header
-  and Back/Close remain fixed. No grid reordering: keyboard and reading order match the server.
-  Use **Hub** in labels and source metadata; name CLIProxyAPI only in the picker description,
-  **Import accounts from CLIProxyAPI**. Descriptions stay short across all four languages.
-  Only Claude/Codex offer the hub method and a named credential home. Other providers have no
-  name field or disabled hub choice. PATH discovery replaces unavailable local actions with a
-  named CLI installation hint. Single-home sign-in reads local account metadata without querying
-  upstream usage, warns about an existing account and requires Continue; the POST independently
-  refuses an unconfirmed replacement. Antigravity offers app sign-in guidance
-  instead of an unverified standalone login command. OpenCode explains which subscriptions
-  supply plan limits. Local sign-in uses a new native terminal tab on the connection server's local PC
-  without moving native focus. It uses in-app pane selection and the existing canonical link writer,
-  not a page reload, even when another PC was selected. Hub OAuth
-  keeps the synchronous popup, bounded waiting, Cancel and redirect-paste form. Closing account setup
-  cancels a pending hub sign-in; changing the UI language does not cancel it. The hub connection
-  step has a labeled URL and DOM-only password, Connect, then Connected and Done; an account count
-  is fetched only when plan limits are enabled. Connection save/edit/remove never requests usage
-  while that opt-in is off.
-- A configured hub is one compact connection row below Accounts, including with meters off: network
-  icon, Hub label, dim URL/status and ghost Edit/Remove actions. Editing reopens the hub step
-  with its URL filled and key blank. Remove uses `.confirm-dialog`, with Cancel initially focused
-  and the danger action on the right, before deleting the saved management key. An unconfigured hub renders nothing. No dedicated Usage sources
-  section, new tokens or decorative motion. References: Paseo's global account picker/provider counts
-  and t3code's inline authentication metadata/compact hub row; their pixels are not copied.
-  An unreadable hub configuration leaves the hub unconfigured without blocking server startup;
-  its fixed diagnostic is logged and returned by the hub status endpoint, never its saved key.
 
 ### Terminal host, key bar and drawer
 - **Find in terminal** in the header's More menu and Mod+Shift+F opens a find bar above the

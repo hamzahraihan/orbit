@@ -88,7 +88,7 @@ bun install
 bun run start
 ```
 
-You need herdr 0.9.0+, Bun 1.4+ and Node 18+, and herdr must be installed and running first: start it with `herdr`. `start` builds the client and runs the server under the update supervisor. It talks to `~/.config/herdr/herdr.sock` unless `HERDR_SOCKET` says otherwise. If herdr isn't running there, the app still opens, but its header shows **herdr offline** and the page says it cannot reach herdr at that socket.
+You need herdr 0.9.0+, Bun 1.4+ and Node 18+, and herdr must be installed and running first: start it with `herdr`. `start` builds the client and runs the server. It talks to `~/.config/herdr/herdr.sock` unless `HERDR_SOCKET` says otherwise. If herdr isn't running there, the app still opens, but its header shows **herdr offline** and the page says it cannot reach herdr at that socket.
 
 </details>
 
@@ -116,7 +116,7 @@ tab, and you type in whichever half is active; the other half shows that tab at 
 
 ### In a terminal
 
-**The phone address, again:** run the one-line installer again. On a PC where the app is installed it installs nothing and prints the address and its QR code, serving the app to your tailnet first if nothing does yet. It finds the version that actually runs: herdr's plugin directory keeps the version first installed, and **Settings → Updates** runs newer ones from `~/.config/herdr-web-ui/updates`. From a checkout, `bun scripts/plugin.ts phone` does the same.
+**The phone address, again:** run the one-line installer again. On a PC where the app is installed it installs nothing and prints the address and its QR code, serving the app to your tailnet first if nothing does yet. It finds the version that actually runs: herdr's plugin directory keeps the version first installed. From a checkout, `bun scripts/plugin.ts phone` does the same.
 
 **A pairing code, on a PC with no browser of its own:**
 
@@ -135,7 +135,7 @@ herdr plugin action invoke hamzahraihan.orbit.phone    # visible phone setup pan
 herdr plugin action invoke hamzahraihan.orbit.stop
 ```
 
-Its PID and log live under `HERDR_PLUGIN_STATE_DIR`. For persistent settings (see [Configuration](#configuration)), add `KEY=value` lines to the `env` file (no dot) in the directory that `herdr plugin config-dir hamzahraihan.orbit` prints. A plugin checkout from 0.3.25 on also reads `.env` there, which wins where both set a key; an older one needs a plugin reinstall first, since in-app updates do not replace the checkout. The plugin's `status` prints the files it read. Protect that file if it holds a token.
+Its PID and log live under `HERDR_PLUGIN_STATE_DIR`. For persistent settings (see [Configuration](#configuration)), add `KEY=value` lines to the `env` file (no dot) in the directory that `herdr plugin config-dir hamzahraihan.orbit` prints. A plugin checkout from 0.3.25 on also reads `.env` there, which wins where both set a key; an older one needs a plugin reinstall first, since a plugin update does not replace the checkout. The plugin's `status` prints the files it read. Protect that file if it holds a token.
 
 ### Uninstall
 
@@ -145,7 +145,7 @@ herdr plugin uninstall hamzahraihan.orbit
 tailscale serve --https=<port> off    # the port the installer printed, if it served the app
 ```
 
-The installer's herdr, Bun and Node stay, since other tools may use them: `~/.local/bin/herdr`, `~/.bun`, and `~/.local/share/herdr-web-ui/node` with its link `~/.local/bin/node`. Push keys, paired devices and the identity file that owns the app's Portal address are in `~/.config/herdr-web-ui`.
+The installer's herdr, Bun and Node stay, since other tools may use them: `~/.local/bin/herdr`, `~/.bun`, and `~/.local/share/herdr-web-ui/node` with its link `~/.local/bin/node`. Push keys and paired devices are in `~/.config/herdr-web-ui`.
 
 ## Supported agents
 
@@ -217,7 +217,6 @@ A pane's plan is the task list a Claude Code agent keeps (`TaskCreate` / `TaskUp
 | **See what changed** | **Browse files → Changes** lists what changed in the git repository the pane sits in: the **Working tree**, what is **Staged**, or two **Commits** you name, as a folder tree with git's status letter and the added and removed lines. A row opens its diff, **Unified** or **Split** (Settings → Chat → File viewer → Diff layout; a phone shows one column), with **Copy path**, **Copy patch** and **Open file**. The files a turn's edit tools changed, listed in its work block, open the same diff. It only reads; a remote PC's repository is read on that PC. |
 | **Manage sessions** | Start an agent in a folder you type or pick with **Browse**. In New workspace, Browse filters the currently loaded folders as you type (case-insensitive); opening a folder updates Directory, so **Start** uses that path even without **Use this folder** (which closes Browse), and a folder under home stays written as `~/…`. **New folder** (the folder-plus button in Browse's bar) makes a folder inside the one shown and opens it. It does not search subfolders or folders beyond the displayed 500. Add a tab to a workspace (as herdr's prefix+c), switch tabs from the strip over the pane, rename workspaces from their ⋯/right-click menu and panes from their own menu, reorder workspaces (drag a row, or on a phone long-press it and drag; Alt+Up/Down moves a focused row one step), and jump anywhere from the command palette. |
 | **Speak instead of typing** | A mic beside Attach in the composer and beside Send in the terminal input line. Hold to talk or tap twice; the words land at the caret and are never sent by themselves. See [Voice input](#voice-input). |
-| **Watch your plan limits** | Beside the Settings gear, how much of each AI subscription signed in on the PC is left, or used: the session's or the week's limit per account, and every limit with its reset time on a tap. See [Subscription usage](#subscription-usage). |
 | **Make it yours** | English, Korean, Japanese or Simplified Chinese, following the browser or chosen in Settings. Dark, light or system mode, with a dark theme and a light theme picked from Amber, Charcoal, Catppuccin and herdr's built-in themes, compact density, interface size, terminal and chat fonts and sizes (Chromium lists the installed fonts to pick from), a resizable composer, Enter behavior and thinking visibility. |
 
 Every agent has the same chat controls on desktop and phones: Stop while it works with an empty
@@ -232,37 +231,6 @@ discarded after checking the terminal. Previously held browser messages still ne
 or **Discard**. A message is never pasted over text typed in Claude Code's own input box: while
 that box holds a draft the message stays in the list with the reason, and **Send now** delivers it
 once the draft is sent or cleared in the terminal.
-
-## Subscription usage
-
-On a local desktop pane, the composer shows a compact read-only limit for the agent's provider:
-its plan-wide five-hour session first, or its week when no session is reported. It uses the first
-visible account in Settings order; it does not identify the pane's active sign-in. Its hover text
-names that account and the reset times. Details stay in the strip beside Settings. Phones and
-remote panes do not show this compact reference; failed or unavailable limits are omitted.
-
-
-The strip beside the **Settings** gear shows the plan limits of the AI tools signed in on the PC the app's server runs on: for each account its provider's logo and one limit, what is left of its 5-hour session by default, or its week, or the share used, as chosen in Settings (red from 80% used). As many accounts show as the row has room for, the rest as `+N`; hovering the strip also names a limit near its end that a chip does not show. A plan with neither shows its limit closest to running out. Tap it for every limit (5-hour session, week, month, per model where a plan has them) and when each starts over. It is off until you turn it on in **Settings → Subscription usage**: turning it on sends the sign-ins on the server's PC to each provider's usage endpoint.
-
-| Provider | Sign-in it reads |
-| --- | --- |
-| Claude | Claude Code: the macOS keychain item `Claude Code-credentials`, else `~/.claude/.credentials.json`; the same for each config directory in `CLAUDE_CONFIG_DIR` or `~/.claude-*`. The email from its `.claude.json` |
-| Codex | `auth.json` in `CODEX_HOME`, `~/.config/codex`, `~/.codex` and each `~/.codex-*`, else the macOS keychain item `Codex Auth`. The email in its token |
-| Cursor | The Cursor app's `state.vscdb` and the `cursor-agent` CLI's macOS keychain item, once when both are one account. Its monthly share, and within it Cursor's own models and the rest |
-| Copilot | `~/.config/github-copilot/apps.json` or `hosts.json`, then every account the GitHub CLI holds (`gh auth status`): per GitHub login, the first token that finds a plan |
-| Grok | Every account in `~/.grok/auth.json` |
-| Antigravity | The macOS keychain item Antigravity signs in with (Gemini and other-model quota) |
-| OpenCode | OpenCode Go: the `opencode-go` key, else the `opencode` key, in `~/.local/share/opencode/auth.json` (`opencode/auth.json` under `XDG_DATA_HOME` when it is set), else `OPENCODE_API_KEY`. Its rolling, weekly and monthly limits; a key without a Go subscription is left out |
-
-Only providers with a sign-in are shown; a GitHub account without Copilot is left out. One PC signed in to two accounts of a provider shows both, each named by its email (a login for Copilot) and told apart by its account id, so the same account found in two places counts once. A credential file, a command's output or a provider's answer over 1 MiB is treated as unreadable. Where each sign-in lives and which endpoint states its limits follows [OpenUsage](https://github.com/robinebers/openusage).
-
-- **Read only.** The server never refreshes a token: Claude, Codex, Cursor and Grok rotate refresh tokens, and a refresh the tool did not make would sign it out. An expired sign-in says so; using the tool once renews it.
-- **Asked only while someone looks.** Nothing runs in the background. The server asks a provider at most every five minutes, a refresh from the popover at most every 30 seconds, and a provider that answered 429 not before it said to.
-- **Yours to arrange.** Settings → Subscription usage groups accounts by provider, orders accounts within each provider, picks the limit the strip shows (**Weekly** or **Session**), hides any (from the strip and its popover alike), and switches the meters between what is used and what is left. Each account shows whether it comes from **This PC** or **Hub**.
-- **Add an account.** The single **Add account** button lists Claude, Codex, Cursor, GitHub Copilot, Grok, Antigravity and OpenCode, then Hub. Installed CLIs sign in in a new terminal tab; missing ones show an installation hint. Only Claude and Codex offer hub sign-in and a separate `~/.claude-<name>` or `~/.codex-<name>` credential home. Other providers keep their existing home and require **Continue** before replacing a discovered sign-in. Account names use lowercase letters, numbers and hyphens. Codex and Grok use a device code only if their installed help lists it; Cursor prints its URL without opening a server browser. Claude may need a localhost callback. Antigravity gives interactive sign-in guidance rather than guessing a login command. OpenCode plan limits require OpenCode Go/Zen, not an arbitrary provider selected in its CLI. Hub sign-in provides a waiting state and a redirect-paste field.
-- **Connect a hub.** Choose **Hub** (**Import accounts from CLIProxyAPI**) in the same picker to enter its URL and server-saved management key. The connected hub appears as one compact row after the accounts, with **Edit** and **Remove**. Account rows show their source, plan and sign-in status inline.
-- **The server's PC only.** Remote PCs are not included.
-- On macOS, a server started outside the logged-in desktop session (over SSH, or by a multiplexer started there) reads the keychain item through a one-shot job in that desktop session. A keychain that still cannot be opened shows as such instead of the numbers.
 
 ## Voice input
 
@@ -335,7 +303,7 @@ Open Settings → Remote PCs and choose **Add PC** (the command palette has it t
 - **SSH runs on the server**, as the web server's account, with its OpenSSH configuration and agent. The browser never opens SSH itself.
 - **The remote side gets a private runtime bundle** and a loopback-only bridge, reached through an SSH forward.
 - **A herdr already running there** is never stopped or replaced.
-- **Bridge updates:** when an app update needs a newer bridge, PCs that connect with their saved key are updated in the background.
+- **Bridge updates:** when the server's bundle version changes, PCs that connect with their saved key are updated in the background.
 
 More in [remote PCs](remote-pcs.md).
 
@@ -354,7 +322,7 @@ Anyone who can reach the server can type into your terminals, so what matters is
 | `tailscale serve`, your own devices | Nothing needed: your login. With `HERDR_WEB_TAILSCALE_SERVE_ONLY=1` on a one-login tailnet, the owner's phone needs nothing either. With a token set, the token, once per device |
 | `tailscale serve` on a tailnet you share with others | Your devices: your login (with a token set, the token once). Theirs: refused unless you pair them |
 | Your LAN (`HOST=0.0.0.0` or a LAN address) | Pair each device, or set a token |
-| A public domain, reverse proxy or Portal | Set a token, with HTTPS, and set the proxy up as in [Behind a reverse proxy](#behind-a-reverse-proxy). Never `tailscale funnel` it |
+| A public domain or reverse proxy | Set a token, with HTTPS, and set the proxy up as in [Behind a reverse proxy](#behind-a-reverse-proxy). Never `tailscale funnel` it |
 
 Until the first device is paired, and with no token set, a LAN or proxied address is open to anyone who reaches it, as it always was: the server warns on startup. The exception is a proxy on this PC while its Tailscale login is known, as with `tailscale serve`: a request that carries no login there needs pairing from the start, unless `HERDR_WEB_TAILSCALE_SERVE_ONLY=1` is set and that tailnet has one login and no tagged node, where such a request is the owner's own device. With that setting off, which is the default, every such request pairs. The first pairing closes access only after the browser returns its new device cookie. If the cookie is blocked or the pairing response is lost, the unconfirmed pairing does not restrict access; retry after checking browser and proxy cookie settings. Once confirmed, the gate stays closed: revoking every device does not reopen it. This app-level restriction also applies behind a proxy with its own authentication; other browsers need their own pairing or the app's token. Without a token, this computer itself stays in whatever happens, so you can never lock yourself out: revoke everything and pair again from `http://localhost:7317`. With a token set, this computer signs in with the token.
 
@@ -434,28 +402,6 @@ To check the app's gate, request its `/api/session` directly without a token: it
 If the proxy signs people in, also check that a signed-out visitor cannot reach the app through
 the public address.
 
-[Portal](https://github.com/gosuda/portal-tunnel) gives this PC a public HTTPS address with no account and no domain of your own. From v2.6.1, its `--http-route` does all four things and can drop a header a visitor sends; the plain `portal expose 7317` sends no `X-Forwarded-Proto`, so the app's own requests are refused (`invalid_origin`).
-
-**On a PC that runs Tailscale, keep `--strip-request-header Tailscale-User-Login` in the command.** Without it Portal passes on a visitor's copy of that header, and with no token set the server trusts it, so a visitor who sends your Tailscale login gets in. Do not set `HERDR_WEB_TAILSCALE_SERVE_ONLY=1` while Portal runs either: it says `tailscale serve` is the only way into this port, and Portal is another (see [Configuration](#configuration)). `tailscale serve` is the simpler route on such a PC.
-
-Set `HERDR_WEB_TOKEN` to a long random value first (for example from `openssl rand -hex 32`; [In a terminal](#in-a-terminal) says where settings go), then start Portal:
-
-```bash
-portal expose --http-route /=7317 \
-  --strip-request-header Tailscale-User-Login \
-  --name herdr-$(openssl rand -hex 8) \
-  --identity-path ~/.config/portal/herdr.json \
-  --relays <relay> --discovery=false --hide
-```
-
-Take `<relay>` from `portal list`; it has to run v2.6.1 or later. A `portal` process on this PC ends the HTTPS connection; a relay running Portal's code only reads the address to route by and passes the encrypted bytes on, so it sees connection addresses, timing and volume, not the traffic ([Portal's security model](https://gosuda.github.io/portal-tunnel/security-model)). It does hold the certificate for its domain, so a relay set up to intercept could read the traffic; that is why the relay must be one you trust. One relay with `--discovery=false` keeps one address, which cookies, the installed app and alerts are tied to. `--hide` keeps the address off the relay's public list, and the random name keeps its short form hard to guess. The first run saves that name in the identity file, and later runs reuse it, so the address does not change on each start.
-
-Portal prints `service ready at https://<name>-<address>.<relay>:443`, where `<address>` is the identity file's 40-character address; with or without `:443` it is the same address. That address belongs to the identity, so nobody else can take it, even while Portal is stopped; keep the identity file private and keep using it, since a new identity gives a new address. Check it as above: `https://<name>-<address>.<relay>/api/session`, opened from another device without signing in, must answer 401. Then open it on the phone and sign in with the token, or pair the phone from **Settings → Phone & devices → Pair a device** on the PC. Use that address, not the shorter `https://<name>.<relay>`, which another identity can claim while Portal is stopped.
-
-**Settings → Phone & devices → Portal** runs that command for you once Portal v2.6.1 or later is installed on this PC ([Portal's install script](https://github.com/gosuda/portal-tunnel#quick-start) puts `portal` in `~/.local/bin`): enter a relay and press **Start**. It starts only with `HERDR_WEB_TOKEN` set and `HERDR_WEB_TAILSCALE_SERVE_ONLY` off, and asks the relay for its version first. The address and its QR code show on every signed-in device, any device that can type into your terminals can stop it, and one left on comes back when the app restarts. The app keeps an identity file of its own in `HERDR_WEB_STATE_DIR`, so its address stays the same from one start to the next and differs from the one a `portal` you run yourself has.
-
-At startup, the app waits for any recorded Portal process to stop before answering requests. If `portal/state.json` under `HERDR_WEB_STATE_DIR` is damaged, or the recorded process cannot be identified or stopped, requests fail closed rather than risk exposing a server restarted without a token. Check the server log. After confirming that this app's Portal process has stopped, repair or remove only `portal/state.json` and restart the app. Keep `portal/identity.json` to preserve the address; never discard the state record while its tunnel may still be running. Servers on different ports need separate state directories to control their own Portal addresses.
-
 **Sign out** in Settings → Devices clears, after asking once, this browser's token and device cookies; terminal sessions and agents keep running. It is shown when this browser signed in with the token or as a paired device, not when a proxy sends the token in the `Authorization` header (sign out at the proxy) or for automatic local or Tailscale access.
 
 If `devices.json` under `HERDR_WEB_STATE_DIR` (default `~/.config/herdr-web-ui`) is corrupt or unreadable, the server keeps unrecognized external clients out and preserves the file. Local access and the owner's trusted Tailscale login without a configured token, and a valid token, still work. Settings → Phone & devices and the server log explain the error. Restore a valid registry from backup or fix its permissions, then restart; pairing and device changes remain disabled until it is repaired.
@@ -481,11 +427,9 @@ Observe connections cannot take a pane, and a displaced bridge never takes it ba
 | `HERDR_WEB_CSP` | unset (enforced) | `report-only` sends the policy as `Content-Security-Policy-Report-Only`: the browser reports what it would block and the app keeps working. Used to measure the policy after a change |
 | `HERDR_WEB_TAILSCALE_OWNER` | this PC's Tailscale login | The Tailscale login that gets in through `tailscale serve` without pairing. Set it on a PC whose Tailscale node is tagged, which has no login of its own |
 | `HERDR_WEB_TAILSCALE_SERVE_ONLY` | unset (off) | `1` declares `tailscale serve` the only way anything reaches this port. Then the owner's own device gets in through serve without a code, on a tailnet one login owns with no tagged node. Enable it only when no public reverse proxy, tunnel or other forwarding server exposes this port: a visitor through one would otherwise get the owner's access |
-| `HERDR_WEB_STATE_DIR` | `~/.config/herdr-web-ui` | Push keys, device subscriptions, PC registrations, update builds and the app's Portal identity |
+| `HERDR_WEB_STATE_DIR` | `~/.config/herdr-web-ui` | Push keys, device subscriptions and PC registrations |
 | `HERDR_WEB_OPENAI_API_KEY` | unset | OpenAI API key for [voice input](#voice-input). Set here, it cannot be changed from the app |
 | `HERDR_WEB_OPENAI_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible API root for voice input |
-| `HERDR_WEB_AUTO_UPDATE` | `0` | `1` installs new releases without asking |
-| `HERDR_WEB_TELEMETRY` | unset (on) | `0` sends no [anonymous usage counts](#anonymous-usage-counts), whatever the switch in Settings says. `DO_NOT_TRACK=1` does the same |
 | `HERDR_WEB_PUSH_SUBJECT` | this repository's URL | VAPID contact URL or `mailto:` address |
 | `HERDR_WEB_BUNDLE_MANIFEST` | unset | Remote-PC bundle manifest (path or URL) that overrides local and published bundles |
 | `HERDR_WEB_HERDR_BIN` | `herdr` | herdr executable used for terminal attach |
@@ -496,11 +440,9 @@ Observe connections cannot take a pane, and a displaced bridge never takes it ba
 
 ## Updates
 
-`bun run start` and the plugin look for a newer **release** 10 seconds after start and then every 5 minutes. A release is a `vX.Y.Z` tag ([changelog](../CHANGELOG.md)); commits between releases never reach installs. When a new version is out, a line under the header names it, and its **Update** button installs it and shows the install's steps; **Settings → Updates** has the same controls and the full error when an install fails. The release's notes are there too, under **What's new**: every release the update installs, newest first, as a short list of what is new, improved and fixed in the app's language, with **Show every change** opening that release's changelog, and the line's **What's new** button opens Settings on them. After the update and the reload, the line says which version now runs, with the same **What's new** button, until you close it; **Settings → Updates** keeps the notes under **What the last update brought**. To install releases without asking, set `HERDR_WEB_AUTO_UPDATE=1`.
+Orbit has no in-app update checks: update it the way you installed it. A herdr plugin install is updated by reinstalling the plugin; a source checkout by `git pull` and `bun run build`.
 
-An update is built and typechecked in a private checkout while the current server keeps serving. The new server must pass a health check, or the previous build comes back. herdr and your agents keep running, and a **Reload app** notice lets you save drafts before the new frontend loads.
-
-After a herdr plugin reinstall, or a `git pull` and a build, in the checkout the app runs from, reloading the page cannot bring the update in: the server keeps running its old code. The page says so on its next status read, in place of the **Reload app** notice, and asks you to restart herdr web ui on the PC. The notice goes away once it restarts:
+After a plugin reinstall, or a `git pull` and a build, the running server keeps its old code: reloading the page is not enough, stop and start Orbit on the PC.
 
 ```sh
 herdr plugin action invoke hamzahraihan.orbit.stop    # plugin install
@@ -511,8 +453,6 @@ herdr plugin action invoke hamzahraihan.orbit.start-windows
 
 From a checkout, stop `bun run start` and run it again.
 
-Updates need a clean checkout: `main` for a source install, or herdr's plugin checkout. Local changes block an update, and they are never overwritten. More in [app updates](app-updates.md).
-
 ### Updating herdr
 
 herdr itself is updated from **Settings → About → Update herdr**. herdr refuses `herdr update` typed into one of its panes ("run `herdr update` outside herdr"), and every terminal in the app is a pane, so the server runs it instead, for the herdr on the PC the app runs on:
@@ -522,18 +462,6 @@ herdr itself is updated from **Settings → About → Update herdr**. herdr refu
 - What herdr printed is shown under the button. A herdr installed with Homebrew, mise or Nix is updated with that tool, and herdr's message names the command.
 
 This is for Linux and macOS. On Windows, and for a remote PC, update herdr on that PC.
-
-## Anonymous usage counts
-
-The app tells its maintainer how many installs there are, which versions they run, which countries the messages come from and which app settings people choose. It sends one message when it is first installed and one each time it runs a new version, plus a daily active message described below. The first time you open the app, a line under the header says so, with **What is sent**, which opens **Settings → About** and its switch. Nothing is sent before that line has been shown, and the first message waits ten minutes after it, so turning the switch off there stops it. An install that saw an older notice sees the expanded notice (version 4, which adds the daily active message) once more, and sends nothing until then. An existing choice to turn counts off stays off.
-
-A message holds the event (`install` or `update`), a random ID made on this PC, the app's version and the version an update replaced, the OS and CPU architecture, how the app was installed (herdr plugin, `bun run start`, or `bun run server`), and an allowlisted `settings` snapshot. The snapshot contains actual choices for appearance, terminal and chat behavior, notifications, language, voice controls, usage-meter display and the file viewer, including defaults. Custom fonts, shortcuts, key-bar layouts, quick replies and the usage meters' account order are represented by customization flags, not their text, key combinations or account names; quick replies and hidden usage accounts also have counts. Account identifiers and the order itself, paths, addresses, credentials, commands, terminal content, conversations and files are not collected.
-
-The daily active message goes out at most once per UTC day on which the app is opened in a browser. It's dated with that day even when it goes out later (for example after the ten-minute wait), and it's sent again the same day only if a new kind of coding agent shows up. It holds the event (`active`), the day, the random ID, the app's version, the OS and CPU architecture, how the app was installed, and `harnesses`: the kinds of coding agents running in herdr panes, taken from a fixed list (such as `claude` or `codex`), with any other agent counted as `other`. Pane names, pane counts, paths and terminal content are never part of it, and a remote PC's panes aren't included.
-
-The snapshot is the last one a browser reported to this server, not a list of devices or a complete picture of a person. Changing a setting updates that local snapshot but does not send another telemetry event. Before a browser reports, `settings` is `null`. The receiver ([`telemetry/`](../telemetry/README.md)) keeps the event fields, the day and the country the message came from (two letters, such as `KR`, worked out by its host from the connection), and never stores your IP address or anything finer than the country. The random install ID and settings can link events from an installation; they do not guarantee anonymity.
-
-**Settings → About → Anonymous usage counts** shows the next message exactly as it would be sent, and its switch turns the counts off for this PC. `HERDR_WEB_TELEMETRY=0` or `DO_NOT_TRACK=1` in the server's environment turns them off whatever the switch says, and they are always off in CI. A remote PC's bridge sends nothing.
 
 ## Keyboard shortcuts
 
@@ -658,7 +586,6 @@ No, but a phone needs two things Tailscale gives at once: a way to reach the PC 
 - **An SSH tunnel from the phone** (Termux, Blink): `ssh -L 7317:127.0.0.1:7317 <pc>`, then open `http://localhost:7317` on the phone. Browsers treat localhost as secure, so installing and alerts should work while the tunnel is up (not verified on iOS yet). The phone still has to reach the PC over SSH.
 - **A VPN into your home** (WireGuard, ZeroTier, a router VPN): the LAN address works in the browser, but a plain `http://` address can neither install the app nor receive alerts.
 - **A reverse proxy with a real certificate** on a domain you own, with a token set and the proxy sending `X-Forwarded-For`: [Behind a reverse proxy](#behind-a-reverse-proxy) has Caddy and nginx examples to copy. This exposes the server to the internet, so read [Access and safety](#access-and-safety) first.
-- **A public address with Portal**, a tunnel with no account and no domain of your own, with a long random token set: [Behind a reverse proxy](#behind-a-reverse-proxy) has the command, and **Settings → Phone & devices → Portal** runs it for you. This exposes the server to the internet too.
 </details>
 
 <details>
@@ -668,10 +595,8 @@ Session files stay on the PC running each agent, and their contents are sent to 
 
 Optional features can send data off the PC:
 - [Voice input](#voice-input) sends recordings to the configured transcription provider; polishing also sends the transcribed text. Without a configured API key, browser speech recognition may use the browser vendor's service.
-- [Subscription usage](#subscription-usage), when enabled, sends each provider's credentials to that provider's usage endpoint.
-- Updates and remote-PC setup fetch releases or configured runtime bundles over the network; remote panes are reached over SSH.
+- Updates and remote-PC setup fetch configured runtime bundles over the network; remote panes are reached over SSH.
 - Enabled push alerts go through the browser vendor's push service as encrypted notifications.
-- [Portal](#behind-a-reverse-proxy), while it runs, carries every connection to the app through the relay you chose: the relay sees connection addresses, timing and volume, and holds the certificate for the address.
 
 See [Access and safety](#access-and-safety) for who can connect to the app.
 </details>
@@ -685,7 +610,7 @@ The chat needs the agent's own session file. Check that the agent runs in a herd
 <details>
 <summary><b>The colors look too dark, or the light theme looks dark, in Samsung Internet.</b></summary>
 
-Samsung Internet has a forced dark mode that repaints every page, including one that brings its own light and dark themes, as this app does. A light theme comes out dark, and a dark one is darkened a second time: similar shades run together, and the bars of the plan meters can look empty. Turn off **Force dark mode for web content** (**웹 콘텐츠에 어두운 화면 모드 강제 적용**) in Samsung Internet's settings, or open the app in Chrome. Reported on a Galaxy Tab S7+ ([#451](https://github.com/devswha/herdr-web-ui/issues/451)).
+Samsung Internet has a forced dark mode that repaints every page, including one that brings its own light and dark themes, as this app does. A light theme comes out dark, and a dark one is darkened a second time: similar shades run together. Turn off **Force dark mode for web content** (**웹 콘텐츠에 어두운 화면 모드 강제 적용**) in Samsung Internet's settings, or open the app in Chrome. Reported on a Galaxy Tab S7+ ([#451](https://github.com/devswha/herdr-web-ui/issues/451)).
 </details>
 
 <details>
@@ -693,7 +618,7 @@ Samsung Internet has a forced dark mode that repaints every page, including one 
 
 All three are in the herdr plugin marketplace too, and each does something this app does not. [collie](https://github.com/AltanS/collie) is a mobile terminal for herdr, tmux and zellij, with a status dashboard, a key pad, quick replies and voice input, served over Tailscale by its own bridge. [roamgate](https://github.com/powerfooI/roamgate) is a browser client for herdr with a file explorer and diff annotations, installed by its own script. [herdr-remote](https://github.com/dcolinmorgan/herdr-remote) is a macOS menu-bar app with a phone dashboard and a Telegram bot behind a relay and a free tunnel.
 
-herdr web ui reads the agent's own transcript, so Claude Code, Codex, omp, omo, gjc, pi, OpenCode and identifiable Devin CLI panes are a chat with the work folded per turn. Supported prompt cards are checked against the live menu before an answer is typed; Devin prompts use Terminal. The terminal is the same live pane as your TUI, other PCs join over SSH from the sidebar, and it installs and updates as a herdr plugin, with no server or account of its own. It brings no tunnel: you reach it over Tailscale, SSH or your own HTTPS proxy. If you want tmux or zellij, diffs, Telegram or a tunnel out of the box, one of the others is the better fit.
+herdr web ui reads the agent's own transcript, so Claude Code, Codex, omp, omo, gjc, pi, OpenCode and identifiable Devin CLI panes are a chat with the work folded per turn. Supported prompt cards are checked against the live menu before an answer is typed; Devin prompts use Terminal. The terminal is the same live pane as your TUI, other PCs join over SSH from the sidebar, and it installs as a herdr plugin, with no server or account of its own. It brings no tunnel: you reach it over Tailscale, SSH or your own HTTPS proxy. If you want tmux or zellij, diffs, Telegram or a tunnel out of the box, one of the others is the better fit.
 </details>
 
 <details>

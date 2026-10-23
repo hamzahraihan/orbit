@@ -19,8 +19,8 @@ export const HIGHLIGHT_LIMIT = 160;
 export const HIGHLIGHTS_PER_GROUP = 8;
 
 /**
- * A summary as it was written or sent (release-summaries.json from a Git remote, the supervisor
- * over IPC, the server over HTTP): the lines that are text, under the lists and languages the
+ * A summary as it was written or sent (release-summaries.json from a Git remote, the server over
+ * HTTP): the lines that are text, under the lists and languages the
  * app has, each cut to a line and each list to a handful. Nothing when no line is left.
  */
 export function readSummary(value: unknown): ReleaseSummary | undefined {

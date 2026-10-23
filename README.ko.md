@@ -35,6 +35,8 @@ https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
 
 [herdr](https://github.com/herdrdev/herdr)를 브라우저와 폰에서 쓰는 클라이언트입니다. 컴퓨터에서 돌아가는 에이전트 세션을 그대로, 데스크톱에서든 폰에서든 채팅으로 읽고 답합니다. 필요할 때는 터미널로 넘어갑니다.
 
+**포크입니다.** Orbit은 [herdr-web-ui](https://github.com/devswha/herdr-web-ui)를 수정한 포크로, 익명 사용 통계, 앱 업데이트 확인, 구독 사용량 미터, Portal 릴레이를 제거했습니다. 변경 사항은 [NOTICE](NOTICE)에 기록되어 있습니다.
+
 <table>
   <tr>
     <td width="50%" valign="top">
@@ -140,7 +142,7 @@ Claude Code, Codex, omp, omo, gjc, pi는 각자의 세션 파일에서 읽습니
 
 **코드나 대화가 내 컴퓨터 밖으로 나가나요?**
 
-세션 파일은 각 에이전트가 실행되는 PC에 남고, 내용은 연결한 브라우저로 전송됩니다. 이 앱 자체의 클라우드 중계나 계정 서비스는 없습니다. 선택 기능인 음성 입력은 녹음을, 텍스트 다듬기를 쓰면 텍스트도 설정된 제공업체로 보내며, 사용량 표시를 켜면 제공업체 API에 접속합니다. 업데이트, 원격 PC 설정, 푸시 알림도 외부 서비스에 접속할 수 있습니다. 앱은 설치될 때, 업데이트될 때마다, 그리고 앱을 연 날 하루 한 번(실행 중인 코딩 에이전트 종류 포함) 익명 카운트를 보냅니다(버전, OS, 설치 방식, 무작위 ID이며 IP 주소는 저장하지 않습니다). **Settings → About → Anonymous usage counts**에서 보내는 내용을 보고 끌 수 있습니다. 에이전트 자체의 모델 연결은 해당 에이전트 설정에 따릅니다. [데이터 전송과 접근 →](docs/guide.md#faq)
+세션 파일은 각 에이전트가 실행되는 PC에 남고, 내용은 연결한 브라우저로 전송됩니다. Orbit에는 자체 클라우드 중계나 계정 서비스가 없고 사용 통계를 어디에도 보내지 않습니다. 선택 기능인 음성 입력은 녹음을, 텍스트 다듬기를 쓰면 텍스트도 설정된 제공업체로 보냅니다. 원격 PC 설정과 푸시 알림도 외부 서비스에 접속할 수 있습니다. Orbit은 herdr-web-ui를 수정한 포크입니다. 변경 사항은 [NOTICE](NOTICE)에 있습니다. 에이전트 자체의 모델 연결은 해당 에이전트 설정에 따릅니다. [데이터 전송과 접근 →](docs/guide.md#faq)
 
 **Windows에서도 되나요?**
 
@@ -160,7 +162,7 @@ Claude Code, Codex, omp, omo, gjc, pi는 각자의 세션 파일에서 읽습니
 
 [사용자 가이드](docs/guide.md)부터 보세요: [빠른 시작](docs/guide.md#quick-start) · [지원 에이전트](docs/guide.md#supported-agents) · [기능](docs/guide.md#features) · [폰](docs/guide.md#on-your-phone) · [원격 PC](docs/remote-pcs.md) · [접근과 보안](docs/guide.md#access-and-safety) · [설정](docs/guide.md#configuration) · [키보드 단축키](docs/guide.md#keyboard-shortcuts) · [FAQ](docs/guide.md#faq).
 
-더 자세히: [동작 방식](docs/guide.md#how-it-works) · [채팅 기록](docs/chat-mode-audit.md) · [터미널 흐름 제어](docs/terminal-flow-control.md) · [앱 업데이트](docs/app-updates.md) · [변경 기록](CHANGELOG.md).
+더 자세히: [동작 방식](docs/guide.md#how-it-works) · [채팅 기록](docs/chat-mode-audit.md) · [터미널 흐름 제어](docs/terminal-flow-control.md) · [변경 기록](CHANGELOG.md).
 
 문서는 영어로 쓰여 있습니다.
 

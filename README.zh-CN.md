@@ -35,6 +35,8 @@ https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
 
 [herdr](https://github.com/herdrdev/herdr) 的浏览器与手机客户端。无论在电脑还是手机上，都能以聊天方式阅读并回复你电脑上正在运行的同一批智能体会话，需要时可切换到终端。
 
+**这是分支版本。** Orbit 是 [herdr-web-ui](https://github.com/devswha/herdr-web-ui) 的修改版分支，移除了匿名使用统计、应用更新检查、订阅用量仪表和 Portal 中继。变更记录见 [NOTICE](NOTICE)。
+
 <table>
   <tr>
     <td width="50%" valign="top">
@@ -140,7 +142,7 @@ Claude Code、Codex、omp、omo、gjc 和 pi 直接从各自的会话文件读�
 
 **我的代码或对话会离开我的电脑吗？**
 
-会话文件保留在运行各个智能体的电脑上，内容会发送到你连接的浏览器。本应用没有自有的云端中继或账号服务。可选的语音输入会把录音发送给配置的服务商；启用文字整理时也会发送文本。启用用量显示后，会连接服务商的 API。更新、远程电脑设置和推送提醒也可能连接外部服务。应用在安装时、每次更新时，以及打开应用的当天每天一次（附带正在运行的编程智能体类型）会发送匿名计数（版本、操作系统、安装方式和一个随机 ID，不保存 IP 地址），可在 **Settings → About → Anonymous usage counts** 中查看发送内容并关闭。智能体自身如何连接模型，取决于它的配置。[数据传输与访问 →](docs/guide.md#faq)
+会话文件保留在运行各个智能体的电脑上，内容会发送到你连接的浏览器。Orbit 没有自有的云端中继或账号服务，也不会向任何地方发送使用统计。可选的语音输入会把录音发送给配置的服务商；启用文字整理时也会发送文本。远程电脑设置和推送提醒也可能连接外部服务。Orbit 是 herdr-web-ui 的修改版分支，变更记录见 [NOTICE](NOTICE)。智能体自身如何连接模型，取决于它的配置。[数据传输与访问 →](docs/guide.md#faq)
 
 **支持 Windows 吗？**
 
@@ -160,7 +162,7 @@ Claude Code、Codex、omp、omo、gjc 和 pi 直接从各自的会话文件读�
 
 从[用户指南](docs/guide.md)开始：[快速入门](docs/guide.md#quick-start) · [支持的智能体](docs/guide.md#supported-agents) · [功能](docs/guide.md#features) · [手机](docs/guide.md#on-your-phone) · [远程电脑](docs/remote-pcs.md) · [访问与安全](docs/guide.md#access-and-safety) · [配置](docs/guide.md#configuration) · [键盘快捷键](docs/guide.md#keyboard-shortcuts) · [常见问题](docs/guide.md#faq)。
 
-深入了解：[工作原理](docs/guide.md#how-it-works) · [聊天记录](docs/chat-mode-audit.md) · [终端流量控制](docs/terminal-flow-control.md) · [应用更新](docs/app-updates.md) · [更新日志](CHANGELOG.md)。
+深入了解：[工作原理](docs/guide.md#how-it-works) · [聊天记录](docs/chat-mode-audit.md) · [终端流量控制](docs/terminal-flow-control.md) · [更新日志](CHANGELOG.md)。
 
 ## 致谢
 

@@ -100,7 +100,7 @@ echo "$CONFIG_DIR/env"
 
 The file holds `KEY=value` lines. A plugin checkout from 0.3.25 on also reads `.env` there (the name
 herdr's plugin docs use), and `.env` wins where both set a key. An older checkout reads only `env`,
-and in-app updates do not replace the checkout: reinstall the plugin (see [Update](#update)) before
+and a plugin update does not replace the checkout: reinstall the plugin (see [Update](#update)) before
 relying on `.env`. The plugin path comes from `herdr plugin list`, since herdr 0.9.4 moved plugin
 checkouts. Run:
 
@@ -127,7 +127,8 @@ bun run start
 
 `bun run start` runs in the foreground. Start it in a separate herdr pane, or under the user's
 service manager, so it keeps running. Settings are environment variables on that command.
-`bun run server` and `bun run dev` are development commands and do not update themselves.
+`bun run server` serves the last `bun run build`, so build again after a client change and restart
+it after a change under `server/`; `bun run dev` rebuilds the client as you edit.
 
 ## 4. Verify
 
@@ -208,20 +209,15 @@ Other PCs over SSH are added from the web UI (Settings → Remote PCs → **Add 
 | `PORT` | `7317` | HTTP and WebSocket port |
 | `HERDR_WEB_TOKEN` | unset | Token for scripts and proxies. Once set, every client that is not a paired device or the user's own Tailscale login needs it, this PC included |
 | `HERDR_SOCKET` | `~/.config/herdr/herdr.sock` | herdr socket. The plugin follows herdr's session (herdr passes `HERDR_SOCKET_PATH`); a `HERDR_SOCKET` set in the plugin config wins |
-| `HERDR_WEB_AUTO_UPDATE` | `0` | `1` installs new versions automatically |
-| `HERDR_WEB_STATE_DIR` | `~/.config/herdr-web-ui` | Push keys, device subscriptions, PC registrations, update builds. Keep it across reinstalls. |
+| `HERDR_WEB_STATE_DIR` | `~/.config/herdr-web-ui` | Push keys, device subscriptions and PC registrations. Keep it across reinstalls. |
 
 The [user guide](docs/guide.md#configuration) lists the rest.
 
 ## Update
 
-- Settings → **About** → **Update and restart** when a new release (`vX.Y.Z`) is out. It works for
-  both install methods. The new
-  version is built separately and the app restarts only if the build and health check pass.
 - Plugin alternative: `herdr plugin install hamzahraihan/orbit --yes` again. It replaces the
   checkout; restart the plugin afterwards.
-- Source alternative: `git pull` on `main`, then restart `bun run start`. The in-app updater only
-  offers published releases (`vX.Y.Z` tags); `main` can be ahead of the latest release.
+- Source alternative: `git pull` on `main`, then `bun run build` and restart `bun run start`.
 
 ## Uninstall
 
@@ -231,5 +227,5 @@ herdr plugin uninstall hamzahraihan.orbit
 ```
 
 Uninstall removes herdr's managed checkout. It does not touch `~/.config/herdr-web-ui` (push
-subscriptions, saved PCs, update builds). Check whether the plugin config directory (it holds the
+subscriptions and saved PCs). Check whether the plugin config directory (it holds the
 token) is still there. Delete either one only if the user asks.

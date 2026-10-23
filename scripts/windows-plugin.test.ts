@@ -116,7 +116,7 @@ it.skipIf(process.platform !== "win32")("starts after its launcher exits, stops 
     Path: ["taskkill", "powershell", "git"].map(tool => dirname(Bun.which(tool)!)).join(";"),
     HERDR_SOCKET: socket, HERDR_SOCKET_PATH: socket, HERDR_PLUGIN_ROOT: undefined,
     HERDR_PLUGIN_STATE_DIR: state, HERDR_PLUGIN_CONFIG_DIR: config, HERDR_WEB_STATE_DIR: join(scratch, "app-state"),
-    HERDR_WEB_AUTO_UPDATE: "0", HERDR_WEB_TOKEN: "", HOST: "127.0.0.1", PORT: String(port) };
+    HERDR_WEB_TOKEN: "", HOST: "127.0.0.1", PORT: String(port) };
   delete env["PATH"];
   const run = async (command: string, expectedCode = 0) => {
     const entry = command === "start" ? manifest.startup.find(entry => entry.platforms.includes("windows"))

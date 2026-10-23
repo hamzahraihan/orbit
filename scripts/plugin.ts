@@ -53,7 +53,7 @@ const PID_FILE = join(STATE_DIR, "server.pid");
 const LOG_FILE = join(STATE_DIR, "server.log");
 /** the server needs a moment to bind and open its first herdr connection */
 const READY_TIMEOUT_MS = 20_000;
-/** the supervisor gives its bridge 6 s to exit before it kills it */
+/** how long a stopped server's process tree gets to exit before it is killed */
 const STOP_TIMEOUT_MS = 15_000;
 /** how long a killed server gets to disappear before `stop` reports that it could not stop it */
 const KILL_WAIT_MS = 3_000;
@@ -385,9 +385,8 @@ const stopDependencies: StopDependencies = {
 };
 
 /**
- * Returns once the server is gone. It stops answering at once, but its supervisor holds the
- * checkout's lock until the bridge under it exits, and a `start` before then finds that lock,
- * gives up, and leaves nothing running.
+ * Returns once the server is gone. It stops answering at once; the rest of its process tree,
+ * the bridge and the terminals under it, exits right after, and this waits for that.
  */
 export async function stop(dependencies: StopDependencies = stopDependencies): Promise<number> {
   const pid = recordedPid();
@@ -416,7 +415,7 @@ export async function stop(dependencies: StopDependencies = stopDependencies): P
       const member = processes.find(row => row.pid === memberPid);
       return member ? [member] : [];
     })];
-    // Windows has no Unix process groups or graceful SIGTERM: include the supervisor and bridge.
+    // Windows has no Unix process groups or graceful SIGTERM: include the entry and bridge.
     const killed = dependencies.terminateTree(pid);
     if (killed.status !== 0 && recordedPid() !== null) {
       process.stderr.write(`could not stop herdr web ui: ${killed.error?.message ?? killed.stderr.trim()}\n`);

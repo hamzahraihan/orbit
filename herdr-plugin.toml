@@ -41,42 +41,42 @@ platforms = ["windows"]
 
 [[actions]]
 id = "start"
-title = "Start herdr web ui"
+title = "Start Orbit"
 contexts = ["workspace"]
 command = ["sh", "scripts/with-bun.sh", "scripts/plugin.ts", "start"]
 platforms = ["linux", "macos"]
 
 [[actions]]
 id = "start-windows"
-title = "Start herdr web ui"
+title = "Start Orbit"
 contexts = ["workspace"]
 command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/plugin.ps1", "start"]
 platforms = ["windows"]
 
 [[actions]]
 id = "stop"
-title = "Stop herdr web ui"
+title = "Stop Orbit"
 contexts = ["workspace"]
 command = ["sh", "scripts/with-bun.sh", "scripts/plugin.ts", "stop"]
 platforms = ["linux", "macos"]
 
 [[actions]]
 id = "stop-windows"
-title = "Stop herdr web ui"
+title = "Stop Orbit"
 contexts = ["workspace"]
 command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/plugin.ps1", "stop"]
 platforms = ["windows"]
 
 [[actions]]
 id = "status"
-title = "herdr web ui status"
+title = "Orbit status"
 contexts = ["workspace"]
 command = ["sh", "scripts/with-bun.sh", "scripts/plugin.ts", "status"]
 platforms = ["linux", "macos"]
 
 [[actions]]
 id = "status-windows"
-title = "herdr web ui status"
+title = "Orbit status"
 contexts = ["workspace"]
 command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/plugin.ps1", "status"]
 platforms = ["windows"]

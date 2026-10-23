@@ -35,6 +35,8 @@ https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
 
 A browser and phone client for [herdr](https://github.com/herdrdev/herdr). Read and reply to the same agent sessions running on your computer — on desktop or phone, as chat, with the terminal when you need it.
 
+**This is a fork.** Orbit is a modified fork of [herdr-web-ui](https://github.com/devswha/herdr-web-ui): the anonymous usage counts, the app update checks, the subscription usage meters and the Portal relay are removed. [NOTICE](NOTICE) records the changes.
+
 <table>
   <tr>
     <td width="50%" valign="top">
@@ -137,7 +139,7 @@ No. Tailscale, an SSH tunnel, a VPN or your own HTTPS proxy can provide a route 
 
 **Does my code or conversation leave my machine?**
 
-Session files stay on the PC running each agent, and their contents are served to browsers you connect. The app has no hosted relay or account service of its own. Optional voice input sends audio (and text when polishing) to the configured provider; enabled usage meters contact provider APIs. Updates, remote-PC setup and push alerts can also use external services. The app sends an anonymous count when it is installed, each time it is updated (the version, the OS, how it was installed and a random ID; no IP address is stored) and once a day the app is opened (with the kinds of coding agents running), and **Settings → About → Anonymous usage counts** shows what is sent and turns it off. The agents’ own model connections depend on their configuration. [Data flow and access →](docs/guide.md#faq)
+Session files stay on the PC running each agent, and their contents are served to browsers you connect. Orbit has no hosted relay or account service of its own and sends no usage counts anywhere. Optional voice input sends audio (and text when polishing) to the configured provider. Remote-PC setup and push alerts can also use external services. Orbit is a modified fork of herdr-web-ui: [NOTICE](NOTICE) lists what changed. The agents’ own model connections depend on their configuration. [Data flow and access →](docs/guide.md#faq)
 
 **Does it work on Windows?**
 
@@ -155,7 +157,7 @@ Those projects provide their own ways to start or manage agent sessions. This ap
 
 Start with the [user guide](docs/guide.md): [quick start](docs/guide.md#quick-start) · [supported agents](docs/guide.md#supported-agents) · [features](docs/guide.md#features) · [phone](docs/guide.md#on-your-phone) · [remote PCs](docs/remote-pcs.md) · [access and safety](docs/guide.md#access-and-safety) · [configuration](docs/guide.md#configuration) · [keyboard shortcuts](docs/guide.md#keyboard-shortcuts) · [FAQ](docs/guide.md#faq).
 
-For a closer look: [how it works](docs/guide.md#how-it-works) · [chat transcripts](docs/chat-mode-audit.md) · [terminal flow control](docs/terminal-flow-control.md) · [app updates](docs/app-updates.md) · [changelog](CHANGELOG.md).
+For a closer look: [how it works](docs/guide.md#how-it-works) · [chat transcripts](docs/chat-mode-audit.md) · [terminal flow control](docs/terminal-flow-control.md) · [changelog](CHANGELOG.md).
 
 ## thanks
 

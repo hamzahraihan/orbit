@@ -10,7 +10,8 @@ bun run server   # API + WebSocket on :7317
 bun run dev      # Vite on :5173, proxies /api and /ws
 ```
 
-`bun run server` and `bun run dev` never update themselves; only `bun run start` and the plugin run the update supervisor.
+`bun run server` serves the last `bun run build` and needs a restart after a change under
+`server/`; `bun run dev` rebuilds the client as you edit and proxies to a running server.
 
 ## Checks
 
@@ -439,9 +440,7 @@ after changing the staged session. Files, images, push and remote PCs are not pa
    English lists under New features, Improvements and Bug fixes, then the version's whole
    changelog section folded under **Full changelog**.
    When the release guards (below) say so, the same PR raises `REMOTE_BUNDLE_VERSION` in
-   `shared/machines.ts`, and after deploying the telemetry Worker
-   ([telemetry/README.md](../telemetry/README.md#deploy)) commits `telemetry/deployed.json` written by
-   `bun scripts/release-guards.ts --worker-deployed`.
+   `shared/machines.ts`.
 2. Merge it after CI passes.
 3. If it raised `REMOTE_BUNDLE_VERSION` to N, push the tag `remote-vN` on the merged commit and wait
    for the **Remote PC bundles** workflow to publish it ([remote PCs](remote-pcs.md)). Merge nothing
@@ -453,8 +452,8 @@ after changing the staged session. Files, images, push and remote PCs are not pa
 The workflow validates metadata, then runs the same unit, integration and browser checks
 as PRs against the exact `main` commit selected when the run starts. Only after all checks
 pass does it create the tag and GitHub release. A failed validation creates neither.
-Do not push release tags by hand: installed updaters read Git tags directly, so a tag is
-visible to them even without a GitHub release. Existing tags cannot be reused; fix a
+Do not push release tags by hand: the Release workflow validates the tree before it creates the
+tag, so a hand-made tag skips that check. Existing tags cannot be reused; fix a
 published version with a new patch release. If publishing fails after a tag was created,
 verify that tag's commit and repair its GitHub release rather than moving the tag.
 
@@ -463,9 +462,8 @@ that matches its server (step 3). See [remote PCs](remote-pcs.md).
 
 `scripts/release-guards.ts` fails a release PR (CI's Fast checks) and the Release run when the bundle's
 inputs changed since the published `remote-vN` without a raised `REMOTE_BUNDLE_VERSION`, when the raised
-one is not published yet (Release only), when `telemetry/worker.ts` or `shared/telemetry.ts` changed
-since the deploy recorded in `telemetry/deployed.json` ([telemetry/README.md](../telemetry/README.md#deploy)),
-or when the step 1 metadata is incomplete. In CI only the change that bumps the version is checked;
+one is not published yet (Release only), or when the step 1 metadata is incomplete. In CI only the
+change that bumps the version is checked;
 PRs merged before the Release run pass, and the Release run checks the whole tree again.
 
 ## Pull requests and CI
@@ -634,8 +632,7 @@ do; measure setup, test execution and retries separately when comparing speed. S
 [scripts/self-hosted-runner/README.md](../scripts/self-hosted-runner/README.md).
 
 `scripts/ci-tests.ts` discovers all `.test.ts` files under src/shared/server/scripts.
-Files named `*.contract.test.ts`, tests under `server/herdr/` and `server/pty/`, and
-`server/updater.test.ts` (which includes real bridge restart/rollback cases) belong
+Files named `*.contract.test.ts`, tests under `server/herdr/` and `server/pty/` belong
 to integration; everything else belongs to unit. Name new live-server tests
 `*.contract.test.ts`. Plain `bun test` still runs both suites for local development.
 
@@ -670,10 +667,10 @@ input regression matrix.
 | Path | Contents |
 | --- | --- |
 | [`src/`](../src/) | React UI: chat, terminal, composer, sidebar, settings |
-| [`server/`](../server/) | API, WebSockets, transcript readers, push, PTY bridge, remote PCs and updater |
+| [`server/`](../server/) | API, WebSockets, transcript readers, push, PTY bridge, remote PCs and the herdr self-update |
 | [`shared/`](../shared/) | HTTP/WebSocket contract and generated herdr types |
 | [`scripts/`](../scripts/) | Plugin lifecycle, type generation, remote bundles, README media, the film and browser checks |
 | [`public/`](../public/) | PWA manifest, service worker and icons |
-| [`docs/`](.) | Remote PCs, updates, flow control, chat audit, brand assets and README media (`docs/media/`) |
+| [`docs/`](.) | Remote PCs, flow control, chat audit, brand assets and README media (`docs/media/`) |
 | [`site/`](../site/) | The website, built by `scripts/build-site.ts` and deployed by GitHub Pages |
 | [`DESIGN.md`](../DESIGN.md) | Design tokens and UI conventions |

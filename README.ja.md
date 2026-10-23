@@ -35,6 +35,8 @@ https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
 
 [herdr](https://github.com/herdrdev/herdr) のブラウザ・スマートフォン向けクライアントです。自分のコンピューターで実行中の同じエージェントセッションを、パソコンでもスマートフォンでもチャットで読んで返答できます。必要なときはターミナルも使えます。
 
+**これはフォークです。** Orbit は [herdr-web-ui](https://github.com/devswha/herdr-web-ui) を改変したフォークで、匿名の使用統計、アプリのアップデート確認、サブスクリプションの使用量メーター、Portal リレーを取り除いています。変更点は [NOTICE](NOTICE) に記録しています。
+
 <table>
   <tr>
     <td width="50%" valign="top">
@@ -140,7 +142,7 @@ Claude Code、Codex、omp、omo、gjc、pi は、それぞれのセッション�
 
 **コードや会話が自分のマシンの外に出ることはありますか？**
 
-セッションファイルは各エージェントを実行している PC に残り、その内容は接続したブラウザへ送られます。このアプリ独自のクラウド中継やアカウントサービスはありません。任意の音声入力は録音を、文章の整形も使う場合はテキストも、設定したプロバイダーへ送ります。使用量表示を有効にするとプロバイダーの API に接続します。更新、リモート PC の設定、プッシュ通知でも外部サービスに接続することがあります。アプリはインストール時、アップデートのたび、そしてアプリを開いた日に1日1回（実行中のコーディングエージェントの種類つき）匿名のカウントを送ります（バージョン、OS、インストール方法、ランダムな ID で、IP アドレスは保存されません）。**Settings → About → Anonymous usage counts** で送信内容を確認し、オフにできます。エージェント自身のモデルへの接続は、そのエージェントの設定によります。[データの送信とアクセス →](docs/guide.md#faq)
+セッションファイルは各エージェントを実行している PC に残り、その内容は接続したブラウザへ送られます。Orbit には独自のクラウド中継やアカウントサービスはなく、使用統計をどこにも送りません。任意の音声入力は録音を、文章の整形も使う場合はテキストも、設定したプロバイダーへ送ります。リモート PC の設定やプッシュ通知でも外部サービスに接続することがあります。Orbit は herdr-web-ui を改変したフォークです。変更点は [NOTICE](NOTICE) にあります。エージェント自身のモデルへの接続は、そのエージェントの設定によります。[データの送信とアクセス →](docs/guide.md#faq)
 
 **Windows でも動きますか？**
 
@@ -160,7 +162,7 @@ Claude Code、Codex、omp、omo、gjc、pi は、それぞれのセッション�
 
 まずは[ユーザーガイド](docs/guide.md)をご覧ください：[クイックスタート](docs/guide.md#quick-start) · [対応エージェント](docs/guide.md#supported-agents) · [機能](docs/guide.md#features) · [スマートフォン](docs/guide.md#on-your-phone) · [リモート PC](docs/remote-pcs.md) · [アクセスと安全性](docs/guide.md#access-and-safety) · [設定](docs/guide.md#configuration) · [キーボードショートカット](docs/guide.md#keyboard-shortcuts) · [よくある質問](docs/guide.md#faq)。
 
-さらに詳しく：[仕組み](docs/guide.md#how-it-works) · [チャットの会話履歴](docs/chat-mode-audit.md) · [ターミナルのフロー制御](docs/terminal-flow-control.md) · [アプリのアップデート](docs/app-updates.md) · [変更履歴](CHANGELOG.md)。
+さらに詳しく：[仕組み](docs/guide.md#how-it-works) · [チャットの会話履歴](docs/chat-mode-audit.md) · [ターミナルのフロー制御](docs/terminal-flow-control.md) · [変更履歴](CHANGELOG.md)。
 
 <a id="thanks"></a>
 

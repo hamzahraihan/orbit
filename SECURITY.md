@@ -23,8 +23,8 @@ the details private until that release is out.
 
 ## Supported versions
 
-Only the latest `vX.Y.Z` release gets fixes. Installs update to it from **Settings → About** (or
-by themselves with `HERDR_WEB_AUTO_UPDATE=1`). A fix in the remote-PC runtime ships as a new
+Only the latest `vX.Y.Z` release gets fixes. Update by reinstalling the herdr plugin, or from a
+checkout with `git pull` and `bun run build`. A fix in the remote-PC runtime ships as a new
 `remote-vN` bundle together with the release that uses it.
 
 ## Scope
