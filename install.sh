@@ -1,7 +1,7 @@
 #!/bin/sh
 # Orbit in one line, from a PC that may have none of it yet:
 #
-#   curl -fsSL https://herdrweb.dev/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/hamzahraihan/orbit/main/install.sh | sh
 #
 # 1. Installs what is missing, for this user only and without sudo: herdr (its own installer, into
 #    ~/.local/bin), Bun (its own installer, into ~/.bun) and Node 22 (the official build, checked
@@ -254,11 +254,12 @@ main() {
   [ "${node_major:-0}" -ge 18 ] || install_node
 
   if herdr plugin list 2>/dev/null | grep -q "$PLUGIN "; then
-    say "already installed as a herdr plugin; Settings → Updates keeps it current"
+    say "already installed as a herdr plugin; reinstall it to update"
   else
     need git
     ref=${HERDR_WEB_UI_REF:-$(latest_release)}
-    [ -n "$ref" ] || fail "could not look up the latest release on github.com. Check the connection and run this again."
+    # no v* tag yet: main is the only thing to install, and CI validated it
+    [ -n "$ref" ] || ref=main
     say "installing the herdr plugin at $ref (herdr clones and builds it: about a minute)"
     # herdr previews the whole manifest first; on success its last word is enough, on failure all of it
     log=$(mktemp)
