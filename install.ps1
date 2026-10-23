@@ -1,4 +1,4 @@
-# Native Windows install: irm https://herdrweb.dev/install.ps1 | iex
+# Native Windows install: irm https://raw.githubusercontent.com/hamzahraihan/orbit/main/install.ps1 | iex
 param([string]$Ref = $env:HERDR_WEB_UI_REF)
 
 & {
@@ -82,7 +82,9 @@ if (-not $plugin) {
             ForEach-Object { if ($_ -match 'refs/tags/(v\d+\.\d+\.\d+)$') { $Matches[1] } } |
             Sort-Object { [version]$_.Substring(1) } | Select-Object -Last 1
     }
-    if (-not $Ref) { throw 'Could not find the latest app release on GitHub. Check your connection and run this again.' }
+    if (-not $Ref) {
+        $Ref = 'main' # no v* tag yet: main is the only thing to install, and CI validated it
+    }
     Write-Host "Orbit: installing the plugin at $Ref"
     Run-Tool herdr @('plugin', 'install', 'hamzahraihan/orbit', '--ref', $Ref, '--yes')
     $newInstall = $true
