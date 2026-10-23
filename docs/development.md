@@ -131,6 +131,13 @@ installers, a headless herdr, then `herdr plugin install` of a pushed ref (defau
 branch), the start action, `/api/health`, the PTY smoke test on the box's Node, and the startup hook
 after a herdr restart. It prints the time each step took. `KEEP=1` leaves the container for a look.
 
+A run that is killed outright cannot clean up after itself, and on Windows a detached lane outlives
+the process that started it. `bun run clean:processes` stops this project's test herdr sessions
+(`herdr-web-ui-test`, `herdr-web-ui-demo`, `check-…`), kills an orphaned lane with its browser tree,
+and removes an interrupted check's own `hwc-…` temp directory; a live run's processes, sessions and
+directories are left alone. `--dry-run` lists what it would do. It never touches `bun run dev`,
+`bun run server` or the default herdr session.
+
 Tests run against a herdr session of their own, `herdr-web-ui-test`. The first run starts a headless `herdr --session herdr-web-ui-test server` and later runs reuse it, so test workspaces never show in the herdr you work in (`scripts/test-herdr.ts`). Stop it with `herdr --session herdr-web-ui-test server stop`. `HERDR_TEST_SESSION` picks another name, and `HERDR_TEST_LIVE=1` runs against `HERDR_SOCKET` or your default session instead.
 
 Browser checks launch `CHROME_PATH` when it is set, else Google Chrome at `/opt/google/chrome/chrome` where that exists, else the lockfile's Playwright Chromium (`scripts/chrome-path.ts`; install it with `bun node_modules/playwright-core/cli.js install chromium`). After a herdr upgrade, refresh the generated wire types with `bun run generate:types --refresh` (and `--check` to verify).
