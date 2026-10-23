@@ -61,16 +61,6 @@ export type { Machine, MachineEvent, PaneTarget, SetupJob, SetupRequest, SetupAc
  *  GET    /api/session                   -> { snapshot: SessionSnapshot }
  *  GET    /api/access                    -> RemoteAccess (how a phone can reach this server: what
  *         Tailscale on this PC already serves, or the command to run), no-store
- *  GET    /api/portal                    -> PortalStatus (an optional public HTTPS address through
- *         Portal, server/portal.ts), no-store
- *  POST   /api/portal/start              -> 202 { accepted: true }; body { relay }; 400 invalid_relay,
- *         409 token_required / serve_only / portal_busy / portal_state_in_use / portal_unsupported
- *  POST   /api/portal/stop               -> 202 { accepted: true }; 409 portal_unsupported
- *         Portal POSTs require X-Herdr-Update: 1 and same-origin, like the update POSTs:
- *         403 invalid_portal_request (or invalid_origin from the outer origin gate).
- *         Unsupported methods/actions get 405 method_not_allowed; a watch-only device gets
- *         403 read_only. Startup holds HTTP/WS requests until leftover Portal cleanup completes;
- *         unreadable saved state or unverifiable cleanup fails closed with 500 internal_error.
  *  GET    /api/agents                    -> { agents: AgentKind[] } (herdr's agent manifests: the
  *         kinds `agent.start` accepts, plus omo and gjc when they are on this server's PATH,
  *         each with `installed`: whether its command is on this server's PATH; for the
@@ -333,32 +323,6 @@ export interface TailscaleAccess {
   readonly serve_command: string | null;
   /** ... and the address that command gives, when the DNS name is known */
   readonly serve_url: string | null;
-}
-
-/**
- * GET /api/portal: a public HTTPS address for this server through the Portal on its PC
- * (gosuda/portal-tunnel), which the app starts and stops (Settings → Phone & devices).
- */
-export interface PortalStatus {
-  /** false on a server started without Portal (tests, the demo): the section stays hidden */
-  readonly supported: boolean;
-  /** what `portal version` says of the `portal` on PATH; null when there is none or it does not answer */
-  readonly version: string | null;
-  /** the oldest Portal that can run this app's tunnel */
-  readonly min_version: string;
-  /** `version` is `min_version` or later: Start is offered */
-  readonly usable: boolean;
-  readonly phase: "idle" | "starting" | "running" | "stopping" | "error";
-  /** the relay the tunnel uses, or used last; an https origin */
-  readonly relay: string | null;
-  /** the public address while it runs, without the default port */
-  readonly url: string | null;
-  /** why a start would be refused now: no token set, or tailscale serve declared the only way in */
-  readonly blocked: "token_required" | "serve_only" | null;
-  /** what went wrong last; null after a success */
-  readonly error: string | null;
-  /** the tail of what Portal printed, for when the error alone does not say enough */
-  readonly output: string | null;
 }
 
 /** GET /api/push: base64url VAPID public key, the `applicationServerKey` a browser subscribes with. */

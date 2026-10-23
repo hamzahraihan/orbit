@@ -61,4 +61,17 @@ describe("Orbit's removed features", () => {
     fail(offenders, "Orbit removed the subscription usage meters: no source file may read a provider's usage endpoint.");
     expect(offenders).toEqual([]);
   });
+
+  it("runs no relay of the author's", () => {
+    const present = absent([
+      "server/portal.ts",
+      "src/components/PortalPanel.tsx",
+      "src/lib/portal.ts",
+    ]);
+    fail(present, "Orbit removed the Portal relay: the portal service must not come back.");
+    expect(present).toEqual([]);
+    const offenders = matches(SOURCES.filter((file) => !file.endsWith(".test.ts")), /\bportal expose\b|--strip-request-header\b/).map((match) => match.at);
+    fail(offenders, "Orbit removed the Portal relay: no source file may drive the portal binary.");
+    expect(offenders).toEqual([]);
+  });
 });

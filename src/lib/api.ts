@@ -38,7 +38,6 @@ import type {
   ProjectFavicon,
   PromptAnswer,
   PushKey,
-  PortalStatus,
   RemoteAccess,
   RemoveWorktreeRequest,
   ResizePaneRequest,
@@ -80,17 +79,6 @@ export function fetchHerdrUpdate(): Promise<HerdrUpdateStatus> {
 export async function requestHerdrUpdate(): Promise<void> {
   const url = "/api/herdr/update";
   const response = await fetch(url, { method: "POST", headers: { "x-herdr-update": "1" } });
-  if (!response.ok) throw await errorFrom(url, response);
-}
-
-/** Settings → Phone & devices: Portal's public address for the server's PC. */
-export function fetchPortal(): Promise<PortalStatus> {
-  return getJson<PortalStatus>("/api/portal");
-}
-
-export async function requestPortal(action: "start" | "stop", relay?: string): Promise<void> {
-  const url = `/api/portal/${action}`;
-  const response = await fetch(url, { method: "POST", headers: { "content-type": "application/json", "x-herdr-update": "1" }, body: JSON.stringify(relay === undefined ? {} : { relay }) });
   if (!response.ok) throw await errorFrom(url, response);
 }
 

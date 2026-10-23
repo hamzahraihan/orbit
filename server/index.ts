@@ -62,7 +62,6 @@ import { PendingRequestBook } from "./pending-requests.ts";
 import { interruptCodexSteering } from "./codex-steering.ts";
 import { OutputWindow, OUTPUT_HIGH_BYTES, OUTPUT_HARD_BYTES, OUTPUT_STALL_MS, ReplayBuffer, wireBytes } from "./output-window.ts";
 import { handleHerdrUpdateRequest, HerdrUpdater } from "./herdr-update.ts";
-import { handlePortalRequest, PortalService } from "./portal.ts";
 import { handleVoiceRequest, VoiceService } from "./voice.ts";
 
 import { BRIDGE_PROTOCOL } from "../shared/machines.ts";
@@ -271,8 +270,6 @@ export function createServer(
     hermesHome?: string;
     /** updates herdr itself (server/herdr-update.ts); unset, the app offers no herdr update. Tests pass one that runs a stand-in herdr. */
     herdrUpdate?: HerdrUpdater;
-    /** a public address through Portal (server/portal.ts); unset, the app offers none. Tests pass one that runs a stand-in portal. */
-    portal?: PortalService;
     /** voice input's key, provider and models; tests pass one with their own env and fetch */
     voice?: VoiceService;
     machines?: boolean;
@@ -1087,17 +1084,6 @@ export function createServer(
     closeAttachment(paneId);
   }
 
-  type PortalStartup = { ok: true } | { ok: false; error: unknown };
-  let settlePortalStartup!: (result: PortalStartup) => void;
-  let portalStartupResult: PortalStartup | undefined;
-  const portalStartup = new Promise<PortalStartup>((resolve) => {
-    settlePortalStartup = (result) => {
-      if (portalStartupResult !== undefined) return;
-      portalStartupResult = result;
-      resolve(result);
-    };
-  });
-
   const envPort = process.env["PORT"];
   const server = Bun.serve<SocketData>({
     port: options.port ?? (envPort ? Number(envPort) : DEFAULT_PORT),
@@ -1105,8 +1091,6 @@ export function createServer(
     maxRequestBodySize: BUN_BODY_CEILING,
 
     async fetch(request, bunServer) {
-      const startup = portalStartupResult ?? await portalStartup;
-      if (!startup.ok) return compressResponse(request, errorResponse(startup.error));
       // the route's answer, gzipped for a browser that takes it (server/compress.ts)
       return compressResponse(request, await (async (): Promise<Response | undefined> => {
       const url = new URL(request.url);
@@ -1250,9 +1234,6 @@ export function createServer(
       }
 
       if (pathname === "/api/herdr/update") return handleHerdrUpdateRequest(request, options.herdrUpdate);
-      if (pathname === "/api/portal" || pathname.startsWith("/api/portal/")) {
-        return handlePortalRequest(request, pathname, options.portal, { port: bunServer.port ?? DEFAULT_PORT, tokenSet: token !== "", serveOnly });
-      }
       // what every browser of this server shares; a watching device reads it and cannot change it (above)
       if (pathname === "/api/preferences") return handlePreferencesRequest(request, preferences);
 
@@ -2176,21 +2157,6 @@ export function createServer(
     },
   });
 
-  if (options.portal) {
-    let resume: Promise<void>;
-    try {
-      resume = options.portal.resume({ port: server.port ?? DEFAULT_PORT, tokenSet: token !== "", serveOnly });
-    } catch (error) {
-      resume = Promise.reject(error);
-    }
-    void resume.then(
-      () => settlePortalStartup({ ok: true }),
-      (error: unknown) => settlePortalStartup({ ok: false, error }),
-    );
-  } else {
-    settlePortalStartup({ ok: true });
-  }
-
   const registration = options.registerBridge ? registerBridge(server.port ?? 0, bridgeToken) : null;
 
   // ACKs can stop arriving entirely (a suspended tab). Bound the pause even then.
@@ -2207,7 +2173,6 @@ export function createServer(
     alertsSettled: () => push.settled(),
     stop: () => {
       stopped = true;
-      settlePortalStartup({ ok: false, error: new Error("Server stopped before Portal startup cleanup completed") });
       conversations.stop();
       clearInterval(outputTimer);
       collector.stop();
@@ -2217,7 +2182,6 @@ export function createServer(
       clearInterval(waitTimer);
       plans.stop();
       machines?.stop();
-      void options.portal?.shutdown();
       registration?.close();
       for (const client of clients) killWatches(client);
       for (const paneId of [...attachments.keys()]) closeAttachment(paneId);
@@ -2227,10 +2191,9 @@ export function createServer(
 }
 
 if (import.meta.main) {
-  const portal = new PortalService({ stateDir: defaultStateDir() });
   let instance: ReturnType<typeof createServer>;
   try {
-    instance = createServer({ herdrUpdate: new HerdrUpdater(), portal, registerBridge: true, herdrProfiles: readHerdrProfiles });
+    instance = createServer({ herdrUpdate: new HerdrUpdater(), registerBridge: true, herdrProfiles: readHerdrProfiles });
   } catch (err) {
     const { code, syscall } = err as { code?: string; syscall?: string };
     // only the bind itself: a permission error reading a state file keeps its own message and path
@@ -2250,9 +2213,8 @@ if (import.meta.main) {
     if (stopping) return;
     stopping = true;
     instance.stop();
-    // Attach sidecars need ~1.2s to release herdr's exclusive client slot; Portal unregisters from
-    // its relay, and the pipes it logs to must outlive it
-    void Promise.all([Bun.sleep(2000), portal.shutdown()]).then(() => process.exit(0));
+    // Attach sidecars need ~1.2s to release herdr's exclusive client slot.
+    void Bun.sleep(2000).then(() => process.exit(0));
   };
   process.on("SIGTERM", shutdown);
   process.on("SIGINT", shutdown);

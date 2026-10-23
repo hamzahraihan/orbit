@@ -1,7 +1,7 @@
 /**
  * The only thing left in this file: whether an update POST came from this app's own controls.
  * The app's own update checks are gone (Orbit has no release channel), but the herdr self-update
- * and the portal still post through here, so the guard stays.
+ * posts through here, so the guard stays.
  *
  * A custom header is not submit-able by an HTML form. Cross-origin preflights are refused
  * (no CORS headers); Sec-Fetch-Site also rejects browser CSRF.
