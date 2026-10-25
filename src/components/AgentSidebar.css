@@ -263,6 +263,16 @@
   }
 }
 
+/* As a workspace row's (Sidebar.css): a narrow window keeps the menu button visible instead of
+   waiting for a hover that may never come. */
+@media (max-width: 768px) {
+  .agent-actions {
+    width: auto;
+    overflow: visible;
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .agent-item { transition: none; }
 }

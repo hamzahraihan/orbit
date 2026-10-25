@@ -684,6 +684,17 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
   }
 }
 
+/* A narrow window is not a desktop's row: a phone-shaped browser on a workstation, or a split
+   beside a narrow lane, keeps the menu button visible instead of hiding it until a hover that a
+   reader may never make. The right-click path stays on wider fine-pointer layouts. */
+@media (max-width: 768px) {
+  .workspace-actions {
+    width: auto;
+    overflow: visible;
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .workspace,
   .workspace-header {
