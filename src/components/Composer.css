@@ -449,7 +449,10 @@
     "left status right";
   background: var(--bg-elevated);
   border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-2xl);
+  /* the input band: squared corners and the sign color on its top edge, the way a sign
+     panel is framed. Resting surfaces carry no shadow beyond this one card */
+  border-top: calc(3 * var(--hairline)) solid var(--accent);
+  border-radius: var(--radius-sm);
   box-shadow: var(--shadow-card);
   transition:
     border-color var(--dur-fast) var(--ease-out),

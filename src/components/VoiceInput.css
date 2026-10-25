@@ -111,8 +111,8 @@
   visibility: visible;
   pointer-events: auto;
   transition:
-    opacity var(--dur-base) var(--ease-spring),
-    transform var(--dur-base) var(--ease-spring),
+    opacity var(--dur-base) var(--ease-settle),
+    transform var(--dur-base) var(--ease-settle),
     visibility 0s;
 }
 
@@ -194,7 +194,7 @@
   height: 20px;
   transform-origin: center;
   transition:
-    transform var(--dur-base) var(--ease-spring),
+    transform var(--dur-base) var(--ease-settle),
     opacity var(--dur-base) var(--ease-out);
 }
 
