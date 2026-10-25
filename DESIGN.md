@@ -830,7 +830,8 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   focus where it was.
   A desktop (`pointer: fine` wider than 768px, the tab strip's rule) draws no row `⋯`: a
   right-click or the context-menu key opens the menu, at the pointer or at the row, and dismissal
-  returns the focus where it was.
+  returns the focus where it was. A window 768px or narrower keeps the `⋯` drawn, as a finger's
+  does, since a hover may never come there.
 
 - Close follows herdr's `ui.confirm_close`: a workspace close, or a pane close that takes its
   workspace with it, asks in a confirm first. A busy pane also asks before it stops. After a
@@ -850,17 +851,17 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   without changing which pane is focused. The pane header's ellipsis opens the same menu on touch.
 
 ### Badge (`.badge`)
-- Agent states read **READY**, **RUN**, **INPUT**, **DONE**; unknown reads **—**. **BG** is a pane
+- Agent states read **READY**, **RUN**, **INPUT**, **DONE**; unknown reads **—**. **BACKGROUND** is a pane
   whose turn ended while work it started still runs in the background (`background_wait`): it
   stands in for DONE or READY until that work's turn ends.
 - Idle is elevated/dim; working, blocked and done use their own tint and text. RUN carries a small
-  breathing dot before the word; the word itself never fades. BG takes the working tint and text,
+  breathing dot before the word; the word itself never fades. BACKGROUND takes the working tint and text,
   holding still; a tab's dot for it is a working-coloured ring.
 - The written label and unknown dashed edge keep color from being the only signal.
 - The sidebar's compact variant weights each state by how much it asks of the user. Waiting for
   an answer is the one filled glyph, a filled message circle in `--status-blocked`; finished and
   not yet looked at is an 8px dot in `--status-done`, as an unread mark is; working is the same
-  dot in `--status-working` that breathes (`--dur-breathe`); BG is an 8px ring in
+  dot in `--status-working` that breathes (`--dur-breathe`); BACKGROUND is an 8px ring in
   `--status-working` held still, since nothing about it moves until its work ends; ready and
   unknown draw nothing. A pane herdr could not restore
   draws a warning triangle in `--status-blocked`. The element, its label and its tooltip are there
@@ -871,7 +872,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   blocked and done, `○` for ready, `·` for unknown. Symbols: `◐` working, `×` blocked, `✓` done,
   `○` ready, `·` unknown. Their colors are herdr's default theme's, the `--indicator-*` tokens
   (Catppuccin Mocha, Latte in light): working yellow, blocked red, done teal, ready green, unknown
-  grey. Working breathes as the dot does; BG, which herdr does not have, holds working's glyph still.
+  grey. Working breathes as the dot does; BACKGROUND, which herdr does not have, holds working's glyph still.
   A tab's mark follows the same choice, held still.
 
 ### Pill (`.pill`)
@@ -1002,7 +1003,8 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   where it lands. Alt+Up/Down moves the focused row one step at a time.
   Dragging is disabled while a name field is open. Each workspace's `⋯` opens its row menu
   (`.row-menu-toggle`: no width at rest; shown on hover, focus, selection and while its menu is
-  open; always on touch; not drawn on a desktop, where a right-click opens the menu). Inline server failures
+  open; always on touch and in a window 768px or narrower, where a hover may never come; not drawn
+  on a wider desktop, where a right-click opens the menu). Inline server failures
   stay beside their workspace. A repository's workspace moves past the
   next or previous group with its worktrees, and a worktree moves among its siblings only.
 - A workspace is pinned from its row menu (**Pin workspace** / **Unpin workspace**, first in the
@@ -1549,7 +1551,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   pushed to the button's side. It draws, at `--fs-xs`: the model pill and the uploading
   or reconnecting sentence in `--text-dim`. The background-task chip is a button in the left controls;
   its count is repeated here as `.visually-hidden` text, so a change is still announced. The agent's written name, its separator, the state words
-  `READY` / `RUN` / `INPUT` / `DONE` / `BG` and the sentence `Reasoning high` stay in it for assistive tech only
+  `READY` / `RUN` / `INPUT` / `DONE` / `BACKGROUND` and the sentence `Reasoning high` stay in it for assistive tech only
   (`.visually-hidden`): the header names the pane, and the state is told by Stop, the live row
   and the prompt card. No state word is drawn in the chat composer.
 - The model pill (`.composer-pill`) holds the agent mark, the model, the reasoning level and the
@@ -1565,6 +1567,11 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   sentence; behind a name the id is also repeated as `.visually-hidden` text, since a touch
   cannot reach a title. A pane that names no model draws no pill: the mark and the ring stand
   alone, with a dim `Model —` and the level between them if the pane records only a level.
+- At rest the row draws only the agent mark and the context ring, with no pill surface: the model's
+  name and its level return while the composer holds the focus or a pointer rests on it, and step
+  back out with it. They stay in the document, clipped the way `data-model="out"` clips them (never
+  `display: none`), so assistive tech always reads them; the row is measured with everything drawn
+  (`data-measuring`), so a name hidden at rest never reads as clipped and steps out for good.
 - The model is drawn by name only where its id is one `modelLabel` (`src/lib/modelName.ts`) can
   name for certain, from the vendor's own regular naming and matched whole:
   `claude-<family>-<major>[-<minor>]`, also behind `anthropic/`, is `<Family> <major>.<minor>`
@@ -1738,7 +1745,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   New workspace, pane operations and plugin actions keep the selected PC's context and are not
   retargeted by hovering or searching another PC's panes.
 - Status chips (`.palette-filter`, a `radiogroup`) sit between the search and the list: All, then
-  INPUT, RUN, READY, DONE, BG in `STATUS_WORD`'s words with counts over all connected PCs. The
+  INPUT, RUN, READY, DONE, BACKGROUND in `STATUS_WORD`'s words with counts over all connected PCs. The
   checked chip takes its badge's tint and text (All and READY the neutral hover fill); a chip no
   pane answers to keeps a dashed edge. A chip is `--control-h` minus `--space-2` tall, and on a
   coarse pointer `--control-h` minus 2px with a `--touch-target` hit area. The row scrolls sideways
@@ -1941,6 +1948,11 @@ The values are the ones in `src/styles.css`.
 ### Rules
 - Only state changes move: hover/press, the drawer, a phone's sheets, settings switches, working and
   reconnecting.
+- Two transitions animate `width`, each because the width is the quantity being read: the chat
+  minimap's tick grows from `--space-2` to `--space-3` on hover and under `aria-current` (a 4px
+  line inset from the rail, nothing around it reflows), and the bridge update bar's fill follows
+  the reported percent (inline width, `0.3s ease`) as an install reports its step. Both are state
+  changes of a small inset element, never a text box or a container other content lays out around.
 - From `641px` dialogs and their scrims snap open and closed; they have no entrance or exit
   animation. At `<=640px` they are bottom sheets and move as an iPhone's do (Modal, above): what a
   finger drags follows the finger, and the rest rises and drops.
