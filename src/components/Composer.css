@@ -272,6 +272,29 @@
   display: contents;
 }
 
+/* At rest the row is the mark and the context ring, nothing to read: the model's name and its
+   level return while the composer holds the focus or a pointer rests on it, and the pill's surface
+   goes with them. They stay in the document, clipped as data-model="out" clips them, so assistive
+   tech always reads them. The row is measured with everything drawn (data-measuring, fitStatus):
+   a name hidden here must never be measured as clipped and step out for good. */
+.composer-surface:not(:focus-within):not(:hover) .composer-status:not([data-measuring]) .composer-model,
+.composer-surface:not(:focus-within):not(:hover) .composer-status:not([data-measuring]) .composer-reasoning {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.composer-surface:not(:focus-within):not(:hover) .composer-status:not([data-measuring]) .composer-pill {
+  padding: 0;
+  background: transparent;
+}
+
 /* a readable name in the UI face */
 .composer-model {
   flex: 0 1 auto;

@@ -444,6 +444,9 @@ export function Composer({
       status.removeAttribute("data-model");
       status.removeAttribute("data-hint-alone");
       status.removeAttribute("data-meta-empty");
+      // the resting row draws only the mark and the ring; measure it with the name and the level
+      // drawn, so a quiet label is never read as a clipped one and stepped out for good
+      status.setAttribute("data-measuring", "");
       const clipped = (selector: string): boolean => {
         const item = status.querySelector<HTMLElement>(selector);
         return item !== null && item.scrollWidth > item.clientWidth;
@@ -472,6 +475,7 @@ export function Composer({
       const beside = meta !== undefined && meta.width > 1 && meta.bottom > line.top && meta.top < line.top + line.height / 2 && meta.right <= line.left + 1;
       if (!beside) status.setAttribute("data-hint-alone", "");
     } finally {
+      status.removeAttribute("data-measuring");
       if (surface) surface.style.gridTemplateRows = rows;
     }
   }, []);
