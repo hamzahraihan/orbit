@@ -121,17 +121,15 @@
   gap: var(--space-1);
 }
 
-/* the user's turn is a raised neutral card, not a colored one: yellow stays reserved for
-   wayfinding (selection and the send action), so a long thread does not turn into a wall of
-   color. The lower edge is the one sign mark, as a tab's active underline: your own turn is a
-   stop on the route. --bubble-border is the palette's call: no edge where the fill alone
-   parts it from the page */
+/* the user's turn is a raised neutral card, not a colored one: the accent stays reserved for
+   the action, so a long thread does not turn into a wall of color. It is one quiet rounded
+   surface, parted from the page by its fill and a hairline (--bubble-border is the palette's
+   call: no edge where the fill alone parts it from the page) */
 .chat-bubble {
   max-width: 80%;
   padding: var(--space-3) var(--space-4);
   border: var(--hairline) solid var(--bubble-border);
-  border-bottom: calc(3 * var(--hairline)) solid var(--accent);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   background: var(--bg-elevated);
   color: var(--text-strong);
   font-size: var(--chat-fs-body);
@@ -1045,6 +1043,8 @@
 }
 
 .chat-empty {
+  /* an empty thread is a landing, not a blank: one mark, one large calm line, centered */
+
   flex: 1 1 auto;
   min-height: calc(var(--row-h) * 4);
   display: grid;

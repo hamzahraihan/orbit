@@ -232,7 +232,7 @@ function shownBy(entry: SettingsLevel | null): { page: SettingsPage | null; keyB
 
 /** What each theme is called: the color words are translated, the brand names stay as their projects write them. */
 const THEME_NAMES: Record<ThemeId, string> = {
-  amber: "Wayfinding",
+  amber: "Plum",
   charcoal: "Charcoal",
   codex: "Codex",
   catppuccin: "Catppuccin",

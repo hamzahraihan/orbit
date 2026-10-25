@@ -21,50 +21,50 @@
 :root {
   color-scheme: dark;
 
-  /* surfaces (tonal steps, darkest to lightest): midnight enamel ground, cool not warm */
-  --bg: #0d1117;
-  --bg-panel: #161b22;
-  --bg-elevated: #1f2630;
-  --bg-hover: #252d3a;
-  --bg-input: #121820;
-  --border: #2d3644;
-  --border-strong: #3d4a5c;
+  /* surfaces (tonal steps, darkest to lightest): near-black plum ground, flat panels */
+  --bg: #0b0a0e;
+  --bg-panel: #121016;
+  --bg-elevated: #1a1720;
+  --bg-hover: #231f29;
+  --bg-input: #14121a;
+  --border: #2a2532;
+  --border-strong: #3b3446;
   /* the chat's user bubble: surfaces sit close on this ground, so it keeps an edge */
   --bubble-border: var(--border);
 
   /* text */
-  --text: #e6eaf0;
-  --text-dim: #a3aec0;
-  --text-strong: #f6f8fa;
+  --text: #ecebf1;
+  --text-dim: #9a93a6;
+  --text-strong: #f8f7fb;
 
-  /* the saturated colors: ONE wayfinding yellow (focus, chosen lens, cursor, primary action)
-     and the four agent states, none of them yellow */
-  --accent: #f4c430;
-  --accent-tint: rgba(244, 196, 48, 0.12);
-  --primary: #f4c430;
-  --primary-hover: #ffd65a;
-  --primary-text: #0a0a0a;
-  --primary-tint: rgba(244, 196, 48, 0.16);
-  --status-idle: #a3aec0;
-  --status-working: #6cb8d6;
+  /* the saturated colors: ONE muted rose (focus, chosen lens, cursor, primary action)
+     and the four agent states, none of them rose */
+  --accent: #d9a7ba;
+  --accent-tint: rgba(217, 167, 186, 0.12);
+  --primary: #6a2740;
+  --primary-hover: #85324f;
+  --primary-text: #fdf3f7;
+  --primary-tint: rgba(106, 39, 64, 0.28);
+  --status-idle: #9a93a6;
+  --status-working: #7fc4de;
   --status-blocked: #ff9a92;
-  --status-done: #93c36b;
-  --status-working-tint: rgba(108, 184, 214, 0.14);
+  --status-done: #8fd07a;
+  --status-working-tint: rgba(127, 196, 222, 0.14);
   --status-blocked-tint: rgba(255, 154, 146, 0.1);
-  --status-done-tint: rgba(147, 195, 107, 0.14);
+  --status-done-tint: rgba(143, 208, 122, 0.14);
   --danger-tint: rgba(248, 81, 73, 0.12);
   --danger-text: #ffd9d4;
-  /* herdr's TUI state colors, tuned to the navy ground */
-  --indicator-working: #f4c430;
+  /* herdr's TUI state colors, tuned to the plum ground */
+  --indicator-working: #d9a7ba;
   --indicator-blocked: #f85149;
   --indicator-done: #3fb950;
-  --indicator-idle: #8b96a8;
+  --indicator-idle: #8b8494;
   --indicator-unknown: #6c7086;
-  /* a note that the view is partial (a file cut short, code left plain): warning yellow */
-  --notice: #f4c430;
+  /* a note that the view is partial (a file cut short, code left plain): muted rose */
+  --notice: #d9a7ba;
 
   /* overlays */
-  --scrim: rgba(8, 12, 20, 0.6);
+  --scrim: rgba(6, 4, 8, 0.64);
   /* glass: a phone's header over the chat and the input card over the transcript's end */
   --bar-bg: color-mix(in srgb, var(--bg-panel) 72%, transparent);
   --card-glass: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
@@ -76,10 +76,10 @@
   --pdf-page: #ffffff;
 
   /* terminal theme: copied into src/lib/themes.generated.ts by `bun run generate:themes` */
-  --term-bg: #161b22;
-  --term-fg: #e6eaf0;
-  --term-cursor: #f4c430;
-  --term-selection: #2a3a52;
+  --term-bg: #121016;
+  --term-fg: #ecebf1;
+  --term-cursor: #d9a7ba;
+  --term-selection: #3a2433;
 
   /* syntax highlighting */
   --line-number: var(--text-dim);
@@ -87,11 +87,11 @@
   --syntax-function: var(--accent);
   --syntax-inserted: var(--status-done);
   --syntax-deleted: var(--status-blocked);
-  --syntax-keyword: #ff7b72;
-  --syntax-string: #7ee787;
+  --syntax-keyword: #ff8fa8;
+  --syntax-string: #a8d48a;
   --syntax-number: #d2a8ff;
   --syntax-type: #79c0ff;
-  --syntax-variable: #ffa657;
+  --syntax-variable: #ffb86b;
   --syntax-meta: #b49dd6;
 
   /* type (comfortable density; compact overrides below) */
@@ -147,7 +147,7 @@
   --header-h: 52px;
   /* the header from 769px, in either density: one line beside the sidebar's own top row */
   --header-h-wide: 46px;
-  --sidebar-w: 320px;
+  --sidebar-w: 264px;
   --control-h: 34px;
   /* what the segmented track takes from --control-h above and below an option: its padding and
      hairline, both sides. An option is --control-h less this, and its touch expander grows from that */
@@ -228,24 +228,24 @@
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #f0f2f5;
+  --bg: #faf5fa;
   --bg-panel: #ffffff;
-  --bg-elevated: #e8ecf2;
-  --bg-hover: #dde2ea;
+  --bg-elevated: #f3ebf1;
+  --bg-hover: #ece1e9;
   --bg-input: #ffffff;
-  --border: #c8d0dc;
-  --border-strong: #a8b4c4;
+  --border: #e4d8e0;
+  --border-strong: #cbbcc7;
   --bubble-border: var(--border);
-  --text: #1a2028;
-  --text-dim: #5a6578;
-  --text-strong: #0a0f18;
-  --accent: #6f5200;
-  --accent-tint: rgba(111, 82, 0, 0.1);
-  --primary: #b8860b;
-  --primary-hover: #d4a017;
-  --primary-text: #0a0a0a;
-  --primary-tint: rgba(184, 134, 11, 0.14);
-  --status-idle: #5a6578;
+  --text: #501854;
+  --text-dim: #7a5570;
+  --text-strong: #2e0d31;
+  --accent: #a84370;
+  --accent-tint: rgba(168, 67, 112, 0.1);
+  --primary: #a84370;
+  --primary-hover: #c25081;
+  --primary-text: #fff7fa;
+  --primary-tint: rgba(168, 67, 112, 0.14);
+  --status-idle: #7a5570;
   --status-working: #155a72;
   --status-blocked: #a82323;
   --status-done: #2f6317;
@@ -253,21 +253,21 @@
   --status-blocked-tint: rgba(168, 35, 35, 0.12);
   --status-done-tint: rgba(47, 99, 23, 0.12);
   --danger-tint: rgba(168, 35, 35, 0.1);
-  --indicator-working: #b8860b;
+  --indicator-working: #a84370;
   --indicator-blocked: #cf222e;
   --indicator-done: #1a7f37;
-  --indicator-idle: #5a6578;
+  --indicator-idle: #7a5570;
   --indicator-unknown: #9ca0b0;
   --danger-text: #8f1d1d;
-  --notice: #6f5200;
-  --scrim: rgba(40, 48, 60, 0.35);
+  --notice: #a84370;
+  --scrim: rgba(60, 30, 50, 0.32);
   --shadow-drawer: 0 0 40px rgba(40, 48, 60, 0.22);
   --shadow-pop: 0 16px 48px rgba(40, 48, 60, 0.16), 0 0 0 1px var(--border);
   --shadow-card: 0 4px 16px rgba(40, 48, 60, 0.07);
   --term-bg: #ffffff;
-  --term-fg: #1a2028;
-  --term-cursor: #9a7200;
-  --term-selection: #f0e0a0;
+  --term-fg: #501854;
+  --term-cursor: #a84370;
+  --term-selection: #f2dbe6;
   --term-black: #1a1c1f;
   --term-red: #b3261e;
   --term-green: #22743a;
@@ -1446,7 +1446,7 @@
   --fs-pairing: calc(26px * var(--ui-scale));
   --lh-base: 1.45;
   --header-h: 46px;
-  --sidebar-w: 300px;
+  --sidebar-w: 264px;
   --control-h: 32px;
   --row-h: 44px;
   --chip-h: 18px;
@@ -1601,9 +1601,9 @@ button {
   height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
   padding: env(safe-area-inset-top, 0px) calc(var(--space-3) + env(safe-area-inset-right, 0px)) 0
     calc(var(--space-3) + env(safe-area-inset-left, 0px));
-  background: var(--bg-panel);
-  /* the sign band's lower edge: wayfinding yellow, one rule across the top of the app */
-  border-bottom: calc(2 * var(--hairline)) solid var(--primary);
+  background: var(--bg);
+  /* a flat top: the content below is the page, the header only names it */
+  border-bottom: none;
   /* Keep the header's painted background at the top of the app. The home-screen
      status-bar layout is controlled by index.html; see docs/ios-home-screen-testing.md. */
   position: sticky;
@@ -1632,6 +1632,48 @@ button {
 .app.sidebar-collapsed .sidebar {
   display: none;
 }
+/* a full-width New workspace button, then a search row: the two things a rail offers first */
+.sidebar-new {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+  min-height: var(--control-h);
+  margin: var(--space-2) var(--space-2) var(--space-1);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--primary-text);
+  font: inherit;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+.sidebar-new:hover { background: var(--primary-hover); }
+.sidebar-new svg { width: var(--icon-size); height: var(--icon-size); }
+
+.sidebar-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+  min-height: var(--control-h);
+  margin: 0 var(--space-2) var(--space-2);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.sidebar-search:hover { background: var(--bg-hover); color: var(--text); }
+.sidebar-search svg { width: var(--icon-size); height: var(--icon-size); flex: 0 0 auto; }
+.sidebar-search span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 
 .app.sidebar-collapsed {
   --sidebar-shown-w: 0px;
@@ -1798,11 +1840,8 @@ button {
   font-weight: var(--fw-bold);
   letter-spacing: var(--tracking-tight);
   line-height: var(--lh-tight);
-  /* the one sign plate in the chrome: saturated yellow, black lettering, no rounding */
-  background: var(--primary);
-  color: var(--primary-text);
-  padding: 1px var(--space-2) 1px var(--space-1);
-  border-radius: var(--radius-sm);
+  color: var(--text-strong);
+  padding: 0;
   white-space: nowrap;
 }
 

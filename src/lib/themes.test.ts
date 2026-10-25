@@ -26,7 +26,7 @@ describe("theme lookups", () => {
       expect(themeColor(entry.id, entry.mode)).toBe(entry.bgPanel);
       expect(terminalColors(entry.id, entry.mode)).toEqual(entry.terminal);
     }
-    expect(themeColor("amber", "dark")).toBe("#161b22");
+    expect(themeColor("amber", "dark")).toBe("#121016");
     expect(terminalColors("catppuccin", "light").background).toBe("#eff1f5");
   });
 });

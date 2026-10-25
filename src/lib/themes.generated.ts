@@ -9,14 +9,14 @@ export const SUPPORTED_ENTRIES = [
     id: "amber",
     mode: "dark",
     roles: ["bg", "bg-panel", "bg-elevated", "bg-hover", "bg-input", "border", "border-strong", "text", "text-dim", "text-strong", "accent", "accent-tint", "primary", "primary-hover", "primary-text", "primary-tint", "status-idle", "status-working", "status-blocked", "status-done", "status-working-tint", "status-blocked-tint", "status-done-tint", "danger-tint", "notice", "danger-text", "scrim", "term-bg", "term-fg", "term-cursor", "term-selection", "line-number", "syntax-function", "syntax-keyword", "syntax-string", "syntax-number", "syntax-type", "syntax-variable", "syntax-meta", "bubble-border", "shadow-drawer", "shadow-pop", "shadow-card"],
-    terminal: { background: "#161b22", foreground: "#e6eaf0", cursor: "#f4c430", selectionBackground: "#2a3a52" },
-    bgPanel: "#161b22",
+    terminal: { background: "#121016", foreground: "#ecebf1", cursor: "#d9a7ba", selectionBackground: "#3a2433" },
+    bgPanel: "#121016",
   },
   {
     id: "amber",
     mode: "light",
     roles: ["bg", "bg-panel", "bg-elevated", "bg-hover", "bg-input", "border", "border-strong", "text", "text-dim", "text-strong", "accent", "accent-tint", "primary", "primary-hover", "primary-text", "primary-tint", "status-idle", "status-working", "status-blocked", "status-done", "status-working-tint", "status-blocked-tint", "status-done-tint", "danger-tint", "notice", "danger-text", "scrim", "term-bg", "term-fg", "term-cursor", "term-selection", "syntax-keyword", "syntax-string", "syntax-number", "syntax-type", "syntax-variable", "syntax-meta", "bubble-border", "shadow-drawer", "shadow-pop", "shadow-card", "term-black", "term-red", "term-green", "term-yellow", "term-blue", "term-magenta", "term-cyan", "term-white", "term-bright-black", "term-bright-red", "term-bright-green", "term-bright-yellow", "term-bright-blue", "term-bright-magenta", "term-bright-cyan", "term-bright-white"],
-    terminal: { background: "#ffffff", foreground: "#1a2028", cursor: "#9a7200", selectionBackground: "#f0e0a0", black: "#1a1c1f", red: "#b3261e", green: "#22743a", yellow: "#8a5300", blue: "#0b6e8a", magenta: "#6f42c1", cyan: "#0f6f74", white: "#5f5b56", brightBlack: "#4e4b47", brightRed: "#c92d24", brightGreen: "#277d3f", brightYellow: "#9f6100", brightBlue: "#1a7391", brightMagenta: "#7f52d1", brightCyan: "#13767e", brightWhite: "#0d0d0d" },
+    terminal: { background: "#ffffff", foreground: "#501854", cursor: "#a84370", selectionBackground: "#f2dbe6", black: "#1a1c1f", red: "#b3261e", green: "#22743a", yellow: "#8a5300", blue: "#0b6e8a", magenta: "#6f42c1", cyan: "#0f6f74", white: "#5f5b56", brightBlack: "#4e4b47", brightRed: "#c92d24", brightGreen: "#277d3f", brightYellow: "#9f6100", brightBlue: "#1a7391", brightMagenta: "#7f52d1", brightCyan: "#13767e", brightWhite: "#0d0d0d" },
     bgPanel: "#ffffff",
   },
   {
