@@ -168,10 +168,15 @@ export const JA: Record<string, string> = {
   "Background tasks running: {count}": "実行中のバックグラウンドタスク: {count}",
   "INPUT": "入力待ち",
   "DONE": "完了",
-  "BG": "BG待ち",
+  "BACKGROUND": "バックグラウンド",
+  "Agent ready": "エージェントは待機中です",
+  "Agent running": "エージェントは実行中です",
+  "Agent needs input": "エージェントが入力を待っています",
+  "Agent finished": "エージェントは完了しました",
   "Agent waiting on background work": "エージェントがバックグラウンドの作業を待っています",
+  "Agent state unknown": "エージェントの状態は不明です",
   "—": "—",
-  "Agent {status}": "エージェント {status}",
+  "Every state": "すべての状態",
 
   // ---- app header and shell ----
   "Opening link…": "リンクを開いています…",

@@ -62,6 +62,7 @@ function labelMapKeys(): string[] {
   const value = /^\s+\w+: "([^"]*)",?$/gm;
   return [
     ...grab("lib/status.ts", "STATUS_WORD", value),
+    ...grab("lib/status.ts", "STATUS_SENTENCE", value),
     ...grab("components/MachineSidebar.tsx", "STATE_WORD", value),
     ...grab("components/Composer.tsx", "SOURCE_LABEL", value),
     ...grab("components/DevicesPanel.tsx", "VIA", value),

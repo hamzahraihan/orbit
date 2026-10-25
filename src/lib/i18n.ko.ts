@@ -166,10 +166,15 @@ export const KO: Record<string, string> = {
   "Background tasks running: {count}": "실행 중인 백그라운드 작업: {count}",
   "INPUT": "입력",
   "DONE": "완료",
-  "BG": "백그라운드",
+  "BACKGROUND": "백그라운드",
+  "Agent ready": "에이전트가 대기 중입니다",
+  "Agent running": "에이전트가 실행 중입니다",
+  "Agent needs input": "에이전트가 입력을 기다리고 있습니다",
+  "Agent finished": "에이전트가 완료했습니다",
   "Agent waiting on background work": "에이전트가 백그라운드 작업을 기다리는 중",
+  "Agent state unknown": "에이전트 상태를 알 수 없습니다",
   "—": "—",
-  "Agent {status}": "에이전트 {status}",
+  "Every state": "모든 상태",
 
   // ---- app header and shell ----
   "Opening link…": "링크 여는 중…",

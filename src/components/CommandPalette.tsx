@@ -7,7 +7,7 @@ import "./CommandPalette.css";
 import type { DirectoryListing, HerdrPane, PluginActions, SessionSnapshot, TabInfo } from "../../shared/protocol.ts";
 import type { Machine } from "../../shared/machines.ts";
 import { ApiError } from "../lib/api.ts";
-import { paneStatus, STATUS_WORD } from "../lib/status.ts";
+import { paneStatus, STATUS_SENTENCE, STATUS_WORD } from "../lib/status.ts";
 import { zoomMode } from "../lib/layoutMap.ts";
 import type { AppActions, PaneView } from "../lib/actions.ts";
 import { FILTER_KEYS, offeredPluginActions, parseQuery, STATUS_FILTERS, statusCounts, type OfferedPluginAction, type PaletteStatusFilter } from "../lib/paletteSearch.ts";
@@ -620,7 +620,7 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
         {!actionsOnly && folder === null && (
           <div className="palette-filters" role="radiogroup" aria-label={t("Filter panes by status")} onKeyDown={onChipsKeyDown}>
             {STATUS_FILTERS.map((status) => (
-              <button key={status} type="button" role="radio" className="palette-filter" data-status={status} aria-checked={filter === status} tabIndex={filter === status ? 0 : -1} data-empty={counts[status] === 0 || undefined} onClick={(event) => onChipClick(event, status)}>
+              <button key={status} type="button" role="radio" className="palette-filter" data-status={status} aria-checked={filter === status} tabIndex={filter === status ? 0 : -1} data-empty={counts[status] === 0 || undefined} title={status === "all" ? t("Every state") : t(STATUS_SENTENCE[status])} onClick={(event) => onChipClick(event, status)}>
                 <span className="palette-filter-word">{status === "all" ? t("All") : t(STATUS_WORD[status])}</span>
                 <span className="palette-filter-count">{counts[status]}</span>
               </button>

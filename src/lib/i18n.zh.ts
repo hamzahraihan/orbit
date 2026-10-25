@@ -170,10 +170,15 @@ export const ZH: Record<string, string> = {
   "Background tasks running: {count}": "正在运行的后台任务：{count}",
   "INPUT": "输入",
   "DONE": "完成",
-  "BG": "后台",
+  "BACKGROUND": "后台",
+  "Agent ready": "Agent 已就绪",
+  "Agent running": "Agent 正在运行",
+  "Agent needs input": "Agent 需要输入",
+  "Agent finished": "Agent 已完成",
   "Agent waiting on background work": "Agent 正在等待后台工作",
+  "Agent state unknown": "Agent 状态未知",
   "—": "—",
-  "Agent {status}": "Agent 状态：{status}",
+  "Every state": "所有状态",
 
   // ---- app header and shell ----
   "Opening link…": "正在打开链接…",

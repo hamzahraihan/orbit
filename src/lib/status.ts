@@ -8,8 +8,22 @@ export const STATUS_WORD: Readonly<Record<KnownStatus, string>> = {
   working: "RUN",
   blocked: "INPUT",
   done: "DONE",
-  waiting: "BG",
+  waiting: "BACKGROUND",
   unknown: "—",
+};
+
+/**
+ * The sentence a state's tooltip and accessible name carry: the word alone cannot say what the
+ * agent is doing, and a compact glyph cannot say anything. One sentence per state, never a
+ * composed "Agent {word}". Translated at the display site.
+ */
+export const STATUS_SENTENCE: Readonly<Record<KnownStatus, string>> = {
+  idle: "Agent ready",
+  working: "Agent running",
+  blocked: "Agent needs input",
+  done: "Agent finished",
+  waiting: "Agent waiting on background work",
+  unknown: "Agent state unknown",
 };
 
 /** herdr's two status indicator sets, its `[ui] status_indicators` ("dots" is herdr's default). */
