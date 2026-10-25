@@ -21,84 +21,77 @@
 :root {
   color-scheme: dark;
 
-  /* surfaces (tonal steps, darkest to lightest): lamp-lit graphite, warm not tinted */
-  --bg: #12100e;
-  --bg-panel: #181613;
-  --bg-elevated: #211e1a;
-  --bg-hover: #2a2621;
-  --bg-input: #1c1916;
-  --border: #2d2924;
-  --border-strong: #3e3830;
-  /* the chat's user bubble: no edge where --bg-elevated alone parts it from --bg (the dark
-     amber and charcoal palettes), --border where the two surfaces sit close */
-  --bubble-border: transparent;
+  /* surfaces (tonal steps, darkest to lightest): midnight enamel ground, cool not warm */
+  --bg: #0d1117;
+  --bg-panel: #161b22;
+  --bg-elevated: #1f2630;
+  --bg-hover: #252d3a;
+  --bg-input: #121820;
+  --border: #2d3644;
+  --border-strong: #3d4a5c;
+  /* the chat's user bubble: surfaces sit close on this ground, so it keeps an edge */
+  --bubble-border: var(--border);
 
   /* text */
-  --text: #d8d0c3;
-  --text-dim: #9b9183;
-  --text-strong: #f2ebdf;
+  --text: #e6eaf0;
+  --text-dim: #a3aec0;
+  --text-strong: #f6f8fa;
 
-  /* the saturated colors: ONE amber (selection, focus, cursor and the user's own
-     action - an amber-phosphor terminal) and the four agent states, none of them amber */
-  --accent: #f0a830;
-  --accent-tint: rgba(240, 168, 48, 0.13);
-  --primary: #f0a830;
-  --primary-hover: #f6bb55;
-  --primary-text: #1b1407;
-  --primary-tint: rgba(240, 168, 48, 0.16);
-  --status-idle: #9b9183;
+  /* the saturated colors: ONE wayfinding yellow (focus, chosen lens, cursor, primary action)
+     and the four agent states, none of them yellow */
+  --accent: #f4c430;
+  --accent-tint: rgba(244, 196, 48, 0.12);
+  --primary: #f4c430;
+  --primary-hover: #ffd65a;
+  --primary-text: #0a0a0a;
+  --primary-tint: rgba(244, 196, 48, 0.16);
+  --status-idle: #a3aec0;
   --status-working: #6cb8d6;
-  --status-blocked: #ff7b70;
+  --status-blocked: #ff9a92;
   --status-done: #93c36b;
   --status-working-tint: rgba(108, 184, 214, 0.14);
-  --status-blocked-tint: rgba(255, 123, 112, 0.14);
+  --status-blocked-tint: rgba(255, 154, 146, 0.1);
   --status-done-tint: rgba(147, 195, 107, 0.14);
-  --danger-tint: rgba(255, 123, 112, 0.12);
+  --danger-tint: rgba(248, 81, 73, 0.12);
   --danger-text: #ffd9d4;
-  /* herdr's TUI state colors, from its default theme (Catppuccin Mocha; Latte in light) */
-  --indicator-working: #f9e2af;
-  --indicator-blocked: #f38ba8;
-  --indicator-done: #94e2d5;
-  --indicator-idle: #a6e3a1;
+  /* herdr's TUI state colors, tuned to the navy ground */
+  --indicator-working: #f4c430;
+  --indicator-blocked: #f85149;
+  --indicator-done: #3fb950;
+  --indicator-idle: #8b96a8;
   --indicator-unknown: #6c7086;
   /* a note that the view is partial (a file cut short, code left plain): warning yellow */
-  --notice: #e8c55c;
+  --notice: #f4c430;
 
   /* overlays */
-  --scrim: rgba(8, 6, 4, 0.55);
-  /* glass: a phone's header over the chat and the input card over the transcript's end, as an
-     iPhone's bars are. Mixed from the theme's own surfaces, so every theme and palette has them */
+  --scrim: rgba(8, 12, 20, 0.6);
+  /* glass: a phone's header over the chat and the input card over the transcript's end */
   --bar-bg: color-mix(in srgb, var(--bg-panel) 72%, transparent);
   --card-glass: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
   --glass-blur: saturate(180%) blur(20px);
-  --shadow-drawer: 0 0 40px rgba(0, 0, 0, 0.6);
-  --shadow-pop: 0 16px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--border);
-  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-drawer: 0 0 40px rgba(0, 0, 0, 0.7);
+  --shadow-pop: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.45);
 
-  /* document surfaces: NOT theme-driven. A PDF page is paper, not UI — it is white in either
-     theme, so it is named here and never overridden by the theme blocks below
-     (FileViewer's .file-viewer-pdf) */
   --pdf-page: #ffffff;
 
-  /* terminal theme: copied into src/lib/themes.generated.ts by `bun run generate:themes` for xterm */
-  --term-bg: #181613;
-  --term-fg: #d8d0c3;
-  --term-cursor: #f0a830;
-  --term-selection: #4a3d26;
+  /* terminal theme: copied into src/lib/themes.generated.ts by `bun run generate:themes` */
+  --term-bg: #161b22;
+  --term-fg: #e6eaf0;
+  --term-cursor: #f4c430;
+  --term-selection: #2a3a52;
 
-  /* syntax highlighting (components/HighlightedCode.css): the four derived roles follow the
-     palette because they are resolved on <html>, where data-theme and data-palette sit */
-  /* the file viewer's line numbers: tertiary text, quieter than the code beside them */
+  /* syntax highlighting */
   --line-number: var(--text-dim);
   --syntax-comment: var(--text-dim);
   --syntax-function: var(--accent);
   --syntax-inserted: var(--status-done);
   --syntax-deleted: var(--status-blocked);
-  --syntax-keyword: #e8875f;
-  --syntax-string: #a8c17c;
-  --syntax-number: #d6a0c9;
-  --syntax-type: #6cb8d6;
-  --syntax-variable: #e0c08f;
+  --syntax-keyword: #ff7b72;
+  --syntax-string: #7ee787;
+  --syntax-number: #d2a8ff;
+  --syntax-type: #79c0ff;
+  --syntax-variable: #ffa657;
   --syntax-meta: #b49dd6;
 
   /* type (comfortable density; compact overrides below) */
@@ -203,7 +196,7 @@
   /* one breath of the sidebar's working dot: held full, dimmed, held, back (Sidebar.css) */
   --dur-breathe: 2000ms;
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
-  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);
   /* the pulse jumps between its two looks: a smooth one has the browser draw a new frame at
      every display refresh for as long as an agent works (60+ a second), which stutters a
      video playing beside the app; two steps draw about one frame a second */
@@ -235,24 +228,24 @@
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #eeeae2;
-  --bg-panel: #faf8f3;
-  --bg-elevated: #f2eee6;
-  --bg-hover: #e8e2d6;
-  --bg-input: #fffdf9;
-  --border: #dcd4c6;
-  --border-strong: #c5baa8;
+  --bg: #f0f2f5;
+  --bg-panel: #ffffff;
+  --bg-elevated: #e8ecf2;
+  --bg-hover: #dde2ea;
+  --bg-input: #ffffff;
+  --border: #c8d0dc;
+  --border-strong: #a8b4c4;
   --bubble-border: var(--border);
-  --text: #2a251f;
-  --text-dim: #685e52;
-  --text-strong: #16120d;
-  --accent: #8c5000;
-  --accent-tint: rgba(140, 80, 0, 0.1);
-  --primary: #c57d12;
-  --primary-hover: #d48c1f;
-  --primary-text: #1b1407;
-  --primary-tint: rgba(197, 125, 18, 0.14);
-  --status-idle: #685e52;
+  --text: #1a2028;
+  --text-dim: #5a6578;
+  --text-strong: #0a0f18;
+  --accent: #6f5200;
+  --accent-tint: rgba(111, 82, 0, 0.1);
+  --primary: #b8860b;
+  --primary-hover: #d4a017;
+  --primary-text: #0a0a0a;
+  --primary-tint: rgba(184, 134, 11, 0.14);
+  --status-idle: #5a6578;
   --status-working: #155a72;
   --status-blocked: #a82323;
   --status-done: #2f6317;
@@ -260,37 +253,37 @@
   --status-blocked-tint: rgba(168, 35, 35, 0.12);
   --status-done-tint: rgba(47, 99, 23, 0.12);
   --danger-tint: rgba(168, 35, 35, 0.1);
-  --indicator-working: #df8e1d;
-  --indicator-blocked: #d20f39;
-  --indicator-done: #179299;
-  --indicator-idle: #40a02b;
+  --indicator-working: #b8860b;
+  --indicator-blocked: #cf222e;
+  --indicator-done: #1a7f37;
+  --indicator-idle: #5a6578;
   --indicator-unknown: #9ca0b0;
   --danger-text: #8f1d1d;
-  --notice: #7a5a00;
-  --scrim: rgba(40, 32, 22, 0.35);
-  --shadow-drawer: 0 0 40px rgba(40, 32, 22, 0.22);
-  --shadow-pop: 0 16px 48px rgba(40, 32, 22, 0.16), 0 0 0 1px var(--border);
-  --shadow-card: 0 4px 16px rgba(40, 32, 22, 0.07);
-  --term-bg: #faf8f3;
-  --term-fg: #2a251f;
-  --term-cursor: #8c5000;
-  --term-selection: #f0d9ae;
-  --term-black: #2a251f;
-  --term-red: #a82323;
-  --term-green: #2f6317;
-  --term-yellow: #8c5000;
-  --term-blue: #155a72;
-  --term-magenta: #8a3f7a;
-  --term-cyan: #0f6b6f;
-  --term-white: #685e52;
-  --term-bright-black: #5a5045;
-  --term-bright-red: #c42b2b;
-  --term-bright-green: #3b741c;
-  --term-bright-yellow: #9d5a00;
-  --term-bright-blue: #1d6f8c;
-  --term-bright-magenta: #a24b90;
-  --term-bright-cyan: #117676;
-  --term-bright-white: #16120d;
+  --notice: #6f5200;
+  --scrim: rgba(40, 48, 60, 0.35);
+  --shadow-drawer: 0 0 40px rgba(40, 48, 60, 0.22);
+  --shadow-pop: 0 16px 48px rgba(40, 48, 60, 0.16), 0 0 0 1px var(--border);
+  --shadow-card: 0 4px 16px rgba(40, 48, 60, 0.07);
+  --term-bg: #ffffff;
+  --term-fg: #1a2028;
+  --term-cursor: #9a7200;
+  --term-selection: #f0e0a0;
+  --term-black: #1a1c1f;
+  --term-red: #b3261e;
+  --term-green: #22743a;
+  --term-yellow: #8a5300;
+  --term-blue: #0b6e8a;
+  --term-magenta: #6f42c1;
+  --term-cyan: #0f6f74;
+  --term-white: #5f5b56;
+  --term-bright-black: #4e4b47;
+  --term-bright-red: #c92d24;
+  --term-bright-green: #277d3f;
+  --term-bright-yellow: #9f6100;
+  --term-bright-blue: #1a7391;
+  --term-bright-magenta: #7f52d1;
+  --term-bright-cyan: #13767e;
+  --term-bright-white: #0d0d0d;
   --syntax-keyword: #a33a17;
   --syntax-string: #4b6b18;
   --syntax-number: #8a3f7a;
@@ -1609,7 +1602,8 @@ button {
   padding: env(safe-area-inset-top, 0px) calc(var(--space-3) + env(safe-area-inset-right, 0px)) 0
     calc(var(--space-3) + env(safe-area-inset-left, 0px));
   background: var(--bg-panel);
-  border-bottom: var(--hairline) solid var(--border);
+  /* the sign band's lower edge: wayfinding yellow, one rule across the top of the app */
+  border-bottom: calc(2 * var(--hairline)) solid var(--primary);
   /* Keep the header's painted background at the top of the app. The home-screen
      status-bar layout is controlled by index.html; see docs/ios-home-screen-testing.md. */
   position: sticky;
@@ -1804,7 +1798,11 @@ button {
   font-weight: var(--fw-bold);
   letter-spacing: var(--tracking-tight);
   line-height: var(--lh-tight);
-  color: var(--text-strong);
+  /* the one sign plate in the chrome: saturated yellow, black lettering, no rounding */
+  background: var(--primary);
+  color: var(--primary-text);
+  padding: 1px var(--space-2) 1px var(--space-1);
+  border-radius: var(--radius-sm);
   white-space: nowrap;
 }
 
@@ -2280,6 +2278,9 @@ button {
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
+  /* a gate plate: figures align in their cell, the edge drawn from the state's own ink */
+  font-variant-numeric: tabular-nums;
+  border-color: color-mix(in srgb, currentColor 30%, transparent);
   white-space: nowrap;
 }
 
@@ -2465,7 +2466,7 @@ button {
   }
 
   .modal-scrim > * {
-    animation: sheet-in var(--dur-sheet) var(--ease-spring);
+    animation: sheet-in var(--dur-sheet) var(--ease-settle);
   }
 
   /* A stroke on a sheet or its scrim is the sheet's: it pans nothing behind it, the chat

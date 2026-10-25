@@ -16,7 +16,7 @@ describe("themeFor", () => {
     const settings = sanitizeSettings({ theme: "system", palette: "charcoal" });
     expect(settings.lightTheme).toBe("charcoal");
     expect(settings.darkTheme).toBe("charcoal");
-    expect(DEFAULT_SETTINGS.lightTheme).toBe("codex");
+    expect(DEFAULT_SETTINGS.lightTheme).toBe("amber");
   });
 
   test("fixed mode ignores its stale active pair, preserving the other valid entry (c)", () => {
@@ -45,6 +45,6 @@ describe("themeFor", () => {
     const dracula = themeFor(sanitizeSettings({ theme: "light", lightTheme: "dracula" }), "light");
     expect(dracula).toBe(rowFor("dracula", "dark"));
     expect(terminalTheme(dracula.mode, dracula.id)).toEqual(rowFor("dracula", "dark").terminal);
-    expect(themeFor(sanitizeSettings({ theme: "light", lightTheme: "nope" }), "light")).toBe(rowFor("codex", "light"));
+    expect(themeFor(sanitizeSettings({ theme: "light", lightTheme: "nope" }), "light")).toBe(rowFor("amber", "light"));
   });
 });

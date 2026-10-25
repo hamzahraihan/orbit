@@ -18,10 +18,10 @@ export function isThemeId(value: unknown): value is ThemeId {
   return typeof value === "string" && (THEME_IDS as readonly string[]).includes(value);
 }
 
-/** The theme either side starts from, and falls back to for an unknown id. */
-export const DEFAULT_THEME: ThemeId = "codex";
-/** The default before codex (#1267 added it, then it became the default): a side still on it was never chosen either. */
-const FORMER_DEFAULT: ThemeId = "amber";
+/** The theme either side starts from, and falls back to for an unknown id: the wayfinding base. */
+export const DEFAULT_THEME: ThemeId = "amber";
+/** The default before the wayfinding redesign (codex): a side still on it was never chosen either. */
+const FORMER_DEFAULT: ThemeId = "codex";
 
 const DEFAULT_ROWS: Record<Mode, ThemeEntry> = {
   dark: SUPPORTED_ENTRIES.find((entry) => entry.id === DEFAULT_THEME && entry.mode === "dark")!,
