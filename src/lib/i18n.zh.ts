@@ -63,7 +63,7 @@ export const ZH: Record<string, string> = {
   "Shown in light mode": "在浅色模式下显示",
   "Charcoal": "炭灰",
   "Codex": "Codex",
-  "Amber": "琥珀",
+  "Wayfinding": "导视",
   "Catppuccin": "Catppuccin",
   "Catppuccin Latte": "Catppuccin Latte",
   "Tokyo Night": "Tokyo Night",
