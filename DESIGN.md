@@ -6,27 +6,29 @@ value. When a component needs a value that is not here, add it to both first.
 
 ## 1. Atmosphere & Identity
 
-The herdr look (amber) is a warm terminal: an amber-phosphor console on lamp-lit graphite (dark) or ledger paper (light),
-with chat-app clarity. Tonal surfaces and hairlines keep the chrome out of the way. There is ONE
-chrome color, amber: focus, the chosen lens, the terminal cursor and the user's own action (Send, primary
-buttons). Agent states carry the remaining saturated colors and none of them is amber. The user's
-chat turns are neutral raised cards, so a long thread never turns into a wall of color. Dark is the
-default, light follows the same hierarchy, and comfortable or compact density changes scale without
-changing information architecture. A new browser starts on the Codex theme (dark and light), which
-draws this hierarchy in Codex's neutral surfaces and blue accent; amber, charcoal, Catppuccin and
-herdr's built-in themes are picked in Settings → Appearance → Dark theme and Light theme. Amber
-stays the base every theme block overrides, the look before settings load, and the look a browser
-keeps when it saved a theme while amber was the default. Settings are saved on a user's first
-change, so a browser that never changed one moves to Codex with everyone new.
+The base world is Terminal Wayfinding: a signal system, not a chat app. Midnight enamel ground
+(dark) or concourse white (light), porcelain text, and ONE saturated wayfinding yellow reserved
+for the route: focus, the chosen lens, the terminal cursor, the header's sign edge, the chosen
+sidebar/agent row, and the user's own action (Send, primary buttons). Agent states carry the
+remaining saturated colors and none of them is yellow. The user's chat turns stay neutral raised
+cards, so a long thread never turns into a wall of color. Yellow marks wayfinding alone; it never
+becomes a status or a decorative wash. Dark is the default, light follows the same hierarchy, and
+comfortable or compact density changes scale without changing information architecture. A new
+browser starts on the Codex theme (dark and light), which draws this hierarchy in Codex's neutral
+surfaces and blue accent; the wayfinding base, charcoal, Catppuccin and herdr's built-in themes are
+picked in Settings → Appearance → Dark theme and Light theme. The wayfinding base stays the look
+before settings load and the theme block every other palette overrides. Settings are saved on a
+user's first change, so a browser that never changed one moves to Codex with everyone new.
 
 The sidebar is one grid: a leading cell that says who or what a row is (the coding agent's brand
 mark, else the place's own glyph), a title, and a trailing cell that says how it is. Workspaces
 and Agents are independent lists, as in herdr's Spaces and Agents panels; tab and pane navigation
 stays over the terminal and in the palette. Sections are parted by space and a dim head, never by
 a rule; the Agents list's workspace cards are an edge around rows, not a line between sections.
-Hover and selection are one neutral fill at two strengths. Brand marks are the only color
-there that is not a state, and a ready row draws no state at all. Amber connects focus, the chosen
-lens glyph and the terminal cursor.
+Hover and selection share one neutral fill; the chosen workspace or agent row also carries a
+wayfinding-yellow edge, the one place selection is marked by color. Brand marks are the only other
+color there, and a ready row draws no state at all. Yellow connects focus, the chosen lens glyph,
+the chosen row and the terminal cursor.
 
 Messages say only what the person needs now, not everything the app knows:
 - Something to do: one sentence and the control that does it ("Couldn't attach [Try again]").
@@ -46,52 +48,52 @@ Only tokens overridden by `[data-theme="light"]` have a light value. Both column
 <!-- BEGIN GENERATED THEMES -->
 | Role | Token | Dark | Light |
 |------|-------|------|-------|
-| Surface/base | `--bg` | `#12100e` | `#eeeae2` |
-| Surface/panel | `--bg-panel` | `#181613` | `#faf8f3` |
-| Surface/elevated | `--bg-elevated` | `#211e1a` | `#f2eee6` |
-| Surface/hover | `--bg-hover` | `#2a2621` | `#e8e2d6` |
-| Surface/input | `--bg-input` | `#1c1916` | `#fffdf9` |
-| Border | `--border` | `#2d2924` | `#dcd4c6` |
-| Border/strong | `--border-strong` | `#3e3830` | `#c5baa8` |
-| Chat bubble edge | `--bubble-border` | `transparent` | `var(--border)` |
-| Text/primary | `--text` | `#d8d0c3` | `#2a251f` |
-| Text/dim | `--text-dim` | `#9b9183` | `#685e52` |
-| Text/strong | `--text-strong` | `#f2ebdf` | `#16120d` |
-| Accent | `--accent` | `#f0a830` | `#8c5000` |
-| Accent/tint | `--accent-tint` | `rgba(240, 168, 48, 0.13)` | `rgba(140, 80, 0, 0.1)` |
-| Primary | `--primary` | `#f0a830` | `#c57d12` |
-| Primary/hover | `--primary-hover` | `#f6bb55` | `#d48c1f` |
-| Primary/text | `--primary-text` | `#1b1407` | `#1b1407` |
-| Primary/tint | `--primary-tint` | `rgba(240, 168, 48, 0.16)` | `rgba(197, 125, 18, 0.14)` |
-| Status/idle | `--status-idle` | `#9b9183` | `#685e52` |
+| Surface/base | `--bg` | `#0d1117` | `#f0f2f5` |
+| Surface/panel | `--bg-panel` | `#161b22` | `#ffffff` |
+| Surface/elevated | `--bg-elevated` | `#1f2630` | `#e8ecf2` |
+| Surface/hover | `--bg-hover` | `#252d3a` | `#dde2ea` |
+| Surface/input | `--bg-input` | `#121820` | `#ffffff` |
+| Border | `--border` | `#2d3644` | `#c8d0dc` |
+| Border/strong | `--border-strong` | `#3d4a5c` | `#a8b4c4` |
+| Chat bubble edge | `--bubble-border` | `var(--border)` | `var(--border)` |
+| Text/primary | `--text` | `#e6eaf0` | `#1a2028` |
+| Text/dim | `--text-dim` | `#a3aec0` | `#5a6578` |
+| Text/strong | `--text-strong` | `#f6f8fa` | `#0a0f18` |
+| Accent | `--accent` | `#f4c430` | `#6f5200` |
+| Accent/tint | `--accent-tint` | `rgba(244, 196, 48, 0.12)` | `rgba(111, 82, 0, 0.1)` |
+| Primary | `--primary` | `#f4c430` | `#b8860b` |
+| Primary/hover | `--primary-hover` | `#ffd65a` | `#d4a017` |
+| Primary/text | `--primary-text` | `#0a0a0a` | `#0a0a0a` |
+| Primary/tint | `--primary-tint` | `rgba(244, 196, 48, 0.16)` | `rgba(184, 134, 11, 0.14)` |
+| Status/idle | `--status-idle` | `#a3aec0` | `#5a6578` |
 | Status/working | `--status-working` | `#6cb8d6` | `#155a72` |
-| Status/blocked | `--status-blocked` | `#ff7b70` | `#a82323` |
+| Status/blocked | `--status-blocked` | `#ff9a92` | `#a82323` |
 | Status/done | `--status-done` | `#93c36b` | `#2f6317` |
 | Working/tint | `--status-working-tint` | `rgba(108, 184, 214, 0.14)` | `rgba(21, 90, 114, 0.12)` |
-| Blocked/tint | `--status-blocked-tint` | `rgba(255, 123, 112, 0.14)` | `rgba(168, 35, 35, 0.12)` |
+| Blocked/tint | `--status-blocked-tint` | `rgba(255, 154, 146, 0.1)` | `rgba(168, 35, 35, 0.12)` |
 | Done/tint | `--status-done-tint` | `rgba(147, 195, 107, 0.14)` | `rgba(47, 99, 23, 0.12)` |
-| Indicator/working | `--indicator-working` | `#f9e2af` | `#df8e1d` |
-| Indicator/blocked | `--indicator-blocked` | `#f38ba8` | `#d20f39` |
-| Indicator/done | `--indicator-done` | `#94e2d5` | `#179299` |
-| Indicator/idle | `--indicator-idle` | `#a6e3a1` | `#40a02b` |
+| Indicator/working | `--indicator-working` | `#f4c430` | `#b8860b` |
+| Indicator/blocked | `--indicator-blocked` | `#f85149` | `#cf222e` |
+| Indicator/done | `--indicator-done` | `#3fb950` | `#1a7f37` |
+| Indicator/idle | `--indicator-idle` | `#8b96a8` | `#5a6578` |
 | Indicator/unknown | `--indicator-unknown` | `#6c7086` | `#9ca0b0` |
-| Danger/tint | `--danger-tint` | `rgba(255, 123, 112, 0.12)` | `rgba(168, 35, 35, 0.1)` |
+| Danger/tint | `--danger-tint` | `rgba(248, 81, 73, 0.12)` | `rgba(168, 35, 35, 0.1)` |
 | Danger/text | `--danger-text` | `#ffd9d4` | `#8f1d1d` |
-| Notice | `--notice` | `#e8c55c` | `#7a5a00` |
-| Overlay/scrim | `--scrim` | `rgba(8, 6, 4, 0.55)` | `rgba(40, 32, 22, 0.35)` |
-| Drawer shadow | `--shadow-drawer` | `0 0 40px rgba(0, 0, 0, 0.6)` | `0 0 40px rgba(40, 32, 22, 0.22)` |
-| Popover shadow | `--shadow-pop` | `0 16px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--border)` | `0 16px 48px rgba(40, 32, 22, 0.16), 0 0 0 1px var(--border)` |
-| Card shadow | `--shadow-card` | `0 4px 16px rgba(0, 0, 0, 0.35)` | `0 4px 16px rgba(40, 32, 22, 0.07)` |
+| Notice | `--notice` | `#f4c430` | `#6f5200` |
+| Overlay/scrim | `--scrim` | `rgba(8, 12, 20, 0.6)` | `rgba(40, 48, 60, 0.35)` |
+| Drawer shadow | `--shadow-drawer` | `0 0 40px rgba(0, 0, 0, 0.7)` | `0 0 40px rgba(40, 48, 60, 0.22)` |
+| Popover shadow | `--shadow-pop` | `0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border)` | `0 16px 48px rgba(40, 48, 60, 0.16), 0 0 0 1px var(--border)` |
+| Card shadow | `--shadow-card` | `0 4px 16px rgba(0, 0, 0, 0.45)` | `0 4px 16px rgba(40, 48, 60, 0.07)` |
 | Document surface | `--pdf-page` | `#ffffff` | `#ffffff` |
-| Terminal/background | `--term-bg` | `#181613` | `#faf8f3` |
-| Terminal/foreground | `--term-fg` | `#d8d0c3` | `#2a251f` |
-| Terminal/cursor | `--term-cursor` | `#f0a830` | `#8c5000` |
-| Terminal/selection | `--term-selection` | `#4a3d26` | `#f0d9ae` |
-| Syntax/keyword | `--syntax-keyword` | `#e8875f` | `#a33a17` |
-| Syntax/string | `--syntax-string` | `#a8c17c` | `#4b6b18` |
-| Syntax/number | `--syntax-number` | `#d6a0c9` | `#8a3f7a` |
-| Syntax/type | `--syntax-type` | `#6cb8d6` | `#155a72` |
-| Syntax/variable | `--syntax-variable` | `#e0c08f` | `#7a5418` |
+| Terminal/background | `--term-bg` | `#161b22` | `#ffffff` |
+| Terminal/foreground | `--term-fg` | `#e6eaf0` | `#1a2028` |
+| Terminal/cursor | `--term-cursor` | `#f4c430` | `#9a7200` |
+| Terminal/selection | `--term-selection` | `#2a3a52` | `#f0e0a0` |
+| Syntax/keyword | `--syntax-keyword` | `#ff7b72` | `#a33a17` |
+| Syntax/string | `--syntax-string` | `#7ee787` | `#4b6b18` |
+| Syntax/number | `--syntax-number` | `#d2a8ff` | `#8a3f7a` |
+| Syntax/type | `--syntax-type` | `#79c0ff` | `#155a72` |
+| Syntax/variable | `--syntax-variable` | `#ffa657` | `#7a5418` |
 | Syntax/meta | `--syntax-meta` | `#b49dd6` | `#5d4791` |
 | Alert/background | `--droplet-bg` | `#000` | `#000` |
 | Alert/text | `--droplet-text` | `#f5f5f7` | `#f5f5f7` |
@@ -109,22 +111,22 @@ Normal and bright slots may share a colour to preserve the palette while keeping
 
 | ANSI | xterm key | amber | charcoal | codex | catppuccin | catppuccin-latte | tokyo-night-day | gruvbox-light | one-light | solarized-light | kanagawa-lotus | rose-pine-dawn |
 |------|-----------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|
-| 0 | `black` | `#2a251f` | `#242424` | `#1a1c1f` | `#4c4f69` | `#4c4f69` | `#3760bf` | `#3c3836` | `#383a42` | `#556a72` | `#545464` | `#464261` |
-| 1 | `red` | `#a82323` | `#b3261e` | `#b3261e` | `#ac0c2f` | `#ac0c2f` | `#90001b` | `#9d0006` | `#a51110` | `#b60006` | `#95002b` | `#873a52` |
-| 2 | `green` | `#2f6317` | `#22743a` | `#22743a` | `#28651b` | `#28651b` | `#405b1f` | `#676200` | `#287c2a` | `#5d6e00` | `#4a6228` | `#286983` |
-| 3 | `yellow` | `#8c5000` | `#8a5300` | `#8a5300` | `#8a5710` | `#8a5710` | `#6c4d1f` | `#8e5100` | `#995f00` | `#8a5f00` | `#625b2a` | `#9e5600` |
-| 4 | `blue` | `#155a72` | `#0b6e8a` | `#0b6e8a` | `#1750bf` | `#1750bf` | `#004db6` | `#076678` | `#2f64dd` | `#006baf` | `#4d699b` | `#286983` |
-| 5 | `magenta` | `#8a3f7a` | `#6f42c1` | `#6f42c1` | `#712fc6` | `#712fc6` | `#7847bd` | `#8f3f71` | `#a626a4` | `#c12073` | `#624c83` | `#755f8d` |
-| 6 | `cyan` | `#0f6b6f` | `#0f6f74` | `#0f6f74` | `#0e6b70` | `#0e6b70` | `#005f4a` | `#316b48` | `#0072a9` | `#00746d` | `#216276` | `#33717c` |
-| 7 | `white` | `#685e52` | `#5f5b56` | `#5f5b56` | `#5c5f77` | `#5c5f77` | `#41508a` | `#504945` | `#686b77` | `#5a6a6c` | `#43436c` | `#605b78` |
-| 8 | `brightBlack` | `#5a5045` | `#4e4b47` | `#4e4b47` | `#64677d` | `#64677d` | `#41508a` | `#504945` | `#686b77` | `#586e75` | `#43436c` | `#605b78` |
-| 9 | `brightRed` | `#c42b2b` | `#c92d24` | `#c92d24` | `#c41545` | `#c41545` | `#90001b` | `#9d0006` | `#a51110` | `#b60006` | `#95002b` | `#873a52` |
-| 10 | `brightGreen` | `#3b741c` | `#277d3f` | `#277d3f` | `#2f7620` | `#2f7620` | `#405b1f` | `#676200` | `#287c2a` | `#5d6e00` | `#4a6228` | `#286983` |
-| 11 | `brightYellow` | `#9d5a00` | `#9f6100` | `#9f6100` | `#905c13` | `#905c13` | `#6c4d1f` | `#8e5100` | `#995f00` | `#8a5f00` | `#625b2a` | `#9e5600` |
-| 12 | `brightBlue` | `#1d6f8c` | `#1a7391` | `#1a7391` | `#0b59f4` | `#0b59f4` | `#004db6` | `#076678` | `#2f64dd` | `#006baf` | `#4d699b` | `#286983` |
-| 13 | `brightMagenta` | `#a24b90` | `#7f52d1` | `#7f52d1` | `#8839ef` | `#8839ef` | `#7847bd` | `#8f3f71` | `#a626a4` | `#c12073` | `#624c83` | `#755f8d` |
-| 14 | `brightCyan` | `#117676` | `#13767e` | `#13767e` | `#13737a` | `#13737a` | `#005f4a` | `#316b48` | `#0072a9` | `#00746d` | `#216276` | `#33717c` |
-| 15 | `brightWhite` | `#16120d` | `#111111` | `#0d0d0d` | `#4c4f69` | `#4c4f69` | `#3760bf` | `#3c3836` | `#383a42` | `#556a72` | `#545464` | `#464261` |
+| 0 | `black` | `#1a1c1f` | `#242424` | `#1a1c1f` | `#4c4f69` | `#4c4f69` | `#3760bf` | `#3c3836` | `#383a42` | `#556a72` | `#545464` | `#464261` |
+| 1 | `red` | `#b3261e` | `#b3261e` | `#b3261e` | `#ac0c2f` | `#ac0c2f` | `#90001b` | `#9d0006` | `#a51110` | `#b60006` | `#95002b` | `#873a52` |
+| 2 | `green` | `#22743a` | `#22743a` | `#22743a` | `#28651b` | `#28651b` | `#405b1f` | `#676200` | `#287c2a` | `#5d6e00` | `#4a6228` | `#286983` |
+| 3 | `yellow` | `#8a5300` | `#8a5300` | `#8a5300` | `#8a5710` | `#8a5710` | `#6c4d1f` | `#8e5100` | `#995f00` | `#8a5f00` | `#625b2a` | `#9e5600` |
+| 4 | `blue` | `#0b6e8a` | `#0b6e8a` | `#0b6e8a` | `#1750bf` | `#1750bf` | `#004db6` | `#076678` | `#2f64dd` | `#006baf` | `#4d699b` | `#286983` |
+| 5 | `magenta` | `#6f42c1` | `#6f42c1` | `#6f42c1` | `#712fc6` | `#712fc6` | `#7847bd` | `#8f3f71` | `#a626a4` | `#c12073` | `#624c83` | `#755f8d` |
+| 6 | `cyan` | `#0f6f74` | `#0f6f74` | `#0f6f74` | `#0e6b70` | `#0e6b70` | `#005f4a` | `#316b48` | `#0072a9` | `#00746d` | `#216276` | `#33717c` |
+| 7 | `white` | `#5f5b56` | `#5f5b56` | `#5f5b56` | `#5c5f77` | `#5c5f77` | `#41508a` | `#504945` | `#686b77` | `#5a6a6c` | `#43436c` | `#605b78` |
+| 8 | `brightBlack` | `#4e4b47` | `#4e4b47` | `#4e4b47` | `#64677d` | `#64677d` | `#41508a` | `#504945` | `#686b77` | `#586e75` | `#43436c` | `#605b78` |
+| 9 | `brightRed` | `#c92d24` | `#c92d24` | `#c92d24` | `#c41545` | `#c41545` | `#90001b` | `#9d0006` | `#a51110` | `#b60006` | `#95002b` | `#873a52` |
+| 10 | `brightGreen` | `#277d3f` | `#277d3f` | `#277d3f` | `#2f7620` | `#2f7620` | `#405b1f` | `#676200` | `#287c2a` | `#5d6e00` | `#4a6228` | `#286983` |
+| 11 | `brightYellow` | `#9f6100` | `#9f6100` | `#9f6100` | `#905c13` | `#905c13` | `#6c4d1f` | `#8e5100` | `#995f00` | `#8a5f00` | `#625b2a` | `#9e5600` |
+| 12 | `brightBlue` | `#1a7391` | `#1a7391` | `#1a7391` | `#0b59f4` | `#0b59f4` | `#004db6` | `#076678` | `#2f64dd` | `#006baf` | `#4d699b` | `#286983` |
+| 13 | `brightMagenta` | `#7f52d1` | `#7f52d1` | `#7f52d1` | `#8839ef` | `#8839ef` | `#7847bd` | `#8f3f71` | `#a626a4` | `#c12073` | `#624c83` | `#755f8d` |
+| 14 | `brightCyan` | `#13767e` | `#13767e` | `#13767e` | `#13737a` | `#13737a` | `#005f4a` | `#316b48` | `#0072a9` | `#00746d` | `#216276` | `#33717c` |
+| 15 | `brightWhite` | `#0d0d0d` | `#111111` | `#0d0d0d` | `#4c4f69` | `#4c4f69` | `#3760bf` | `#3c3836` | `#383a42` | `#556a72` | `#545464` | `#464261` |
 <!-- END GENERATED THEMES -->
 
 The glass tokens are expressions over the palette above, not colors of their own:
@@ -141,37 +143,38 @@ paper, not UI, and the viewer (`.file-viewer-pdf`) must not tint it for the them
 
 ### Themes
 
-`settings.darkTheme` and `settings.lightTheme` (both `codex` by default) name the theme each mode
-draws. The resolved entry is written as `data-theme` (its mode) and `data-palette` (its id). Any
-theme can be picked on either side. Picking one half of a herdr pair also sets the other side to
-its sibling, but only while that side still holds `codex` (the default, even if picked by hand),
-`amber` (the default before it) or the sibling of the previous pick; any other value is kept. A
-dark theme picked for light mode still draws dark.
-The themes are amber, charcoal, codex and catppuccin plus herdr's built-ins; herdr's `terminal` theme is
-not offered. The tables above are amber, the base blocks; every other theme overrides them in a
-`[data-theme][data-palette]` block of `src/styles.css`.
+`settings.darkTheme` and `settings.lightTheme` (both `amber`, the wayfinding base, by default) name
+the theme each mode draws. The resolved entry is written as `data-theme` (its mode) and
+`data-palette` (its id). Any theme can be picked on either side. Picking one half of a herdr pair
+also sets the other side to its sibling, but only while that side still holds `amber` (the default,
+even if picked by hand), `codex` (the default before it) or the sibling of the previous pick; any
+other value is kept. A dark theme picked for light mode still draws dark.
+The themes are the wayfinding base (`amber`), charcoal, codex and catppuccin plus herdr's
+built-ins; herdr's `terminal` theme is not offered. The tables above are the base blocks; every
+other theme overrides them in a `[data-theme][data-palette]` block of `src/styles.css`.
 
 The theme blocks of `src/styles.css` are the theme table and the one place a theme color is
-edited: `:root` is dark amber, `[data-theme="light"]` is light amber and
+edited: `:root` is the dark wayfinding base, `[data-theme="light"]` is the light base and
 `[data-theme="<mode>"][data-palette="<id>"]` is every other entry. `bun run generate:themes`
 (`scripts/generate-themes.ts`) reads them and writes the copies: `src/lib/themes.generated.ts`
-(the supported entries with their roles, xterm colors and panel color), the amber table above
+(the supported entries with their roles, xterm colors and panel color), the base table above
 between its `GENERATED THEMES` markers, the `theme-color` tag in `index.html` and the manifest's
 `theme_color` and `background_color`. Never edit those copies by hand; `--check` fails when one
-is stale. The tables list amber's UI roles and every light row's terminal ANSI colours; read
+is stale. The tables list the base's UI roles and every light row's terminal ANSI colours; read
 another theme's UI values in its block. A herdr theme
 starts from `bun scripts/herdr-theme-proposal.ts`. Every role whose value differs from the raw
 herdr mapping (`mapTheme`), including repairs the proposal tool already made, is listed in
 `scripts/herdr-theme-overrides.ts` with its dE and reason; every entry passes AA on its
 committed hex.
 
-`--bubble-border` is the edge of the chat's user bubble. It is `transparent` where `--bg-elevated`
-alone parts the bubble from `--bg`: dark amber and dark charcoal. It is `var(--border)`
-where the two surfaces sit close: every light theme (the `[data-theme="light"]` block sets it for
-all palettes) and dark Catppuccin, whose elevated surface is darker than its canvas.
+`--bubble-border` is the edge of the chat's user bubble (which also carries a 3px `--accent` lower
+edge, the one sign mark on a neutral card). It is `transparent` where `--bg-elevated` alone parts
+the bubble from `--bg`: dark charcoal. It is `var(--border)` where the two surfaces sit close:
+the dark and light wayfinding base blocks and every light theme (the `[data-theme="light"]` block
+sets it for all palettes), and dark Catppuccin, whose elevated surface is darker than its canvas.
 
 - **Charcoal** is a neutral Ghostty-style dark: near-black canvas, a slightly lighter panel and
-  terminal, a near-white accent and primary, and muted agent states. It keeps amber's rounded
+  terminal, a near-white accent and primary, and muted agent states. It keeps the base's rounded
   corners and card shadow. In light it's plain paper with an ink accent and cursor.
 - **Codex** copies the Codex desktop app's default theme export: surface `#ffffff` / `#181818`,
   ink `#1a1c1f` / `#ffffff` and accent `#3a83f7`. The chrome sits one quiet step off the surface,
@@ -185,7 +188,7 @@ all palettes) and dark Catppuccin, whose elevated surface is darker than its can
   Blue / Maroon / Green (Maroon, not Red, keeps input AA on a hovered row). Light keeps Latte's
   surfaces and text, with Crust as the hover, the darkest surface Subtext1 stays AA on. Latte's
   accents are under 4.5:1 on these surfaces, so each keeps its hue and is darkened until it passes
-  AA. It keeps amber's rounded corners.
+  AA. It keeps the base's rounded corners.
 
 ### Herdr theme pair notes
 
@@ -381,7 +384,7 @@ xterm.js reads a JavaScript theme, not CSS, so `bun run generate:themes` copies 
 of every supported entry into `src/lib/themes.generated.ts`, and `terminalTheme()` hands them to
 xterm (`settings.test.ts` checks the match).
 
-The amber dark and light values are generated in the Terminal rows of the table above.
+The base dark and light values are generated in the Terminal rows of the table above.
 
 The xterm keys are `background` for `--term-bg`, `foreground` for `--term-fg`, `cursor` for
 `--term-cursor` and `selectionBackground` for `--term-selection`.
@@ -400,7 +403,7 @@ palette: `--syntax-comment` is `--text-dim`, `--syntax-function` is `--accent`,
 (each at least 4.5:1 on `--bg-panel` and `--bg-elevated`). Catppuccin follows Catppuccin's own mapping: keywords are mauve, so `--syntax-function` is
 blue there instead of `--accent`, and Latte's colors are darkened to stay readable.
 
-The amber values of `--syntax-keyword`, `--syntax-string`, `--syntax-number`, `--syntax-type`,
+The base values of `--syntax-keyword`, `--syntax-string`, `--syntax-number`, `--syntax-type`,
 `--syntax-variable` and `--syntax-meta` are generated in the Syntax rows of the table above.
 
 Charcoal and Catppuccin set their own six (and Catppuccin its `--syntax-function`) in their
@@ -424,9 +427,11 @@ blocks of `src/styles.css`.
   `src/styles.css`.
 
 ### Rules
-- Amber is the one chrome color. Accent (selected, focused, informational) and primary (the user's
-  action: Send, primary buttons) are both amber; in light, accent is the darker text-safe ochre and
-  primary the brighter fill carrying ink text. Agent states never use amber.
+- Wayfinding yellow is the one chrome color. Accent (the route: focus, the chosen lens, the chosen
+  sidebar/agent row, the header's lower edge, the composer's upper edge, your own turn's lower edge)
+  and primary (the user's action: Send, primary buttons) are both yellow; in light, accent is the
+  darker text-safe ochre and primary the brighter fill carrying ink text. Agent states never use
+  yellow.
 - Agent state has a written label as well as color. The sidebar's compact glyphs keep their labels
   in tooltips and screen-reader text; other surfaces draw the words. In the sidebar ready and
   unknown draw no glyph and keep their label for assistive tech; elsewhere unknown uses dim text
@@ -768,7 +773,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   column with header, body and footer and `--shadow-pop`.
 - At `<=640px`, it becomes a bottom sheet with top `--radius-xl` corners and safe-area padding.
   Every surface on a `.modal-scrim` (dialogs, the palette, the row sheet) rises from the bottom
-  edge as an iPhone's sheet does (`--dur-sheet` on `--ease-spring`, the scrim darkening with it),
+  edge as an iPhone's sheet does (`--dur-sheet` on `--ease-settle`, the scrim darkening with it),
   follows a finger dragged down from its head or from a list at its top, and drops
   (`--dur-sheet-out`) however it closes. Let go past `30%` of its height, or flicked down, it
   closes through the same close as its scrim; short of that it springs back. A busy dialog
@@ -988,8 +993,9 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   included. As herdr draws its tree, each indented worktree hangs from its repository's folder on
   a `--hairline` `--border-strong` branch in the indent: a tee for each but the last, an elbow for
   the last.
-  Selection uses a neutral rounded fill; workspace rows have no amber rail or separate reorder
-  gutter. Drag the row itself, or press `Alt+↑/↓` while its selector is focused, to reorder it.
+  Selection uses a neutral fill with one yellow edge under the row (the wayfinding mark of where
+  you are); workspace rows keep no separate reorder gutter. Drag the row itself, or
+  press `Alt+↑/↓` while its selector is focused, to reorder it.
   On a touch screen (`pointer: coarse`) the browser's drag is off: a long press (400ms, still
   within 8px) lifts the row (`.is-lifted`: `--bg-elevated` with `--shadow-card`), it follows
   the finger, the list scrolls near its edges, and a 2px `--accent` line (`data-drop`) shows
@@ -1700,7 +1706,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   cannot work (no HTTPS, or no key and no browser recognition). On shows it in both inputs and on a
   phone, disabled with its reason where it cannot work.
 - The recording pill shows Cancel, a **Recording** label, the level bars, a mono timer and Done.
-  Amber only; `--danger` stays for errors.
+  Wayfinding yellow only; `--danger` stays for errors.
 
 ### Command palette
 - At `<=480px` the header has no palette button: the More menu's first item, **Search panes and
@@ -1928,7 +1934,7 @@ The values are the ones in `src/styles.css`.
 | Breathe | `--dur-breathe` | `2000ms` | The sidebar's working dot: full for 40% of the cycle, six steps down to opacity 0.5, held, six steps back; every dot shares the document clock's phase, so several runs breathe together. It replaced a spinning arc that read as flicker beside the rows |
 | Easing | `--ease-out` | `cubic-bezier(0.2, 0, 0, 1)` | Finite transitions |
 | Pulse easing | `--ease-pulse` | `steps(2, jump-none)` | Endless working and reconnecting dots; avoids drawing every display refresh |
-| Spring easing | `--ease-spring` | `cubic-bezier(0.32, 0.72, 0, 1)` | Voice recording pill enter (180ms, scale 0.96->1 + opacity, from the mic button) and exit (120ms); a phone's sheet rising and springing back |
+| Settle easing | `--ease-settle` | `cubic-bezier(0.32, 0.72, 0, 1)` | Voice recording pill enter (180ms, scale 0.96->1 + opacity, from the mic button) and exit (120ms); a phone's sheet rising and springing back |
 | Sheet in | `--dur-sheet` | `360ms` | A phone's sheet rising, and springing back after a short drag |
 | Sheet out | `--dur-sheet-out` | `240ms` | A phone's sheet dropping, however it closed |
 
@@ -1991,7 +1997,7 @@ The values are the ones in `src/styles.css`.
   is not selectable and opens no link callout, while the transcript, code, files and fields are;
   page pinch zoom remains available on ordinary content, while the terminal's two-finger pinch
   sizes its font; landscape does not inflate text. A pressed button dims to `0.55` at once in place
-  of the amber `:active` box; a list row (sidebar, agent, menu, sheet, Settings page) fills instead.
+  of the wayfinding-yellow `:active` box; a list row (sidebar, agent, menu, sheet, Settings page) fills instead.
 - `prefers-reduced-motion` is honored. Lucide/inline SVG decoration is hidden from assistive tech.
 - Global shortcuts default to **Mod+Shift+key**: Mod is Command on Apple platforms and Ctrl
   elsewhere. Settings lists the global bindings and allows changing or disabling them, with
