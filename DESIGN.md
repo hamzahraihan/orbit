@@ -6,29 +6,28 @@ value. When a component needs a value that is not here, add it to both first.
 
 ## 1. Atmosphere & Identity
 
-The base world is Terminal Wayfinding: a signal system, not a chat app. Midnight enamel ground
-(dark) or concourse white (light), porcelain text, and ONE saturated wayfinding yellow reserved
-for the route: focus, the chosen lens, the terminal cursor, the header's sign edge, the chosen
-sidebar/agent row, and the user's own action (Send, primary buttons). Agent states carry the
-remaining saturated colors and none of them is yellow. The user's chat turns stay neutral raised
-cards, so a long thread never turns into a wall of color. Yellow marks wayfinding alone; it never
-becomes a status or a decorative wash. Dark is the default, light follows the same hierarchy, and
-comfortable or compact density changes scale without changing information architecture. A new
-browser starts on the Codex theme (dark and light), which draws this hierarchy in Codex's neutral
-surfaces and blue accent; the wayfinding base, charcoal, Catppuccin and herdr's built-in themes are
-picked in Settings → Appearance → Dark theme and Light theme. The wayfinding base stays the look
-before settings load and the theme block every other palette overrides. Settings are saved on a
-user's first change, so a browser that never changed one moves to Codex with everyone new.
+The base world is Quiet Slate: a chat surface first, an operations console second. Near-black
+plum ground (dark) or rose-tinted paper (light), porcelain text, and ONE muted rose reserved for
+the action: focus, the chosen lens, the terminal cursor, the chosen sidebar row, and the user's
+own action (Send, primary buttons). Agent states carry the remaining saturated colors and none of
+them is rose. The user's chat turns stay neutral raised cards, so a long thread never turns into a
+wall of color. Rose marks the live edge alone; it never becomes a status or a decorative wash.
+Dark is the default, light follows the same hierarchy, and comfortable or compact density changes
+scale without changing information architecture. A new browser starts on the Codex theme (dark and
+light), which draws this hierarchy in Codex's neutral surfaces and blue accent; the Quiet Slate
+base (`amber`), charcoal, Catppuccin and herdr's built-in themes are picked in Settings →
+Appearance → Dark theme and Light theme. The Quiet Slate base stays the look before settings load
+and the theme block every other palette overrides. Settings are saved on a user's first change, so
+a browser that never changed one moves to Codex with everyone new.
 
 The sidebar is one grid: a leading cell that says who or what a row is (the coding agent's brand
 mark, else the place's own glyph), a title, and a trailing cell that says how it is. Workspaces
 and Agents are independent lists, as in herdr's Spaces and Agents panels; tab and pane navigation
 stays over the terminal and in the palette. Sections are parted by space and a dim head, never by
 a rule; the Agents list's workspace cards are an edge around rows, not a line between sections.
-Hover and selection share one neutral fill; the chosen workspace or agent row also carries a
-wayfinding-yellow edge, the one place selection is marked by color. Brand marks are the only other
-color there, and a ready row draws no state at all. Yellow connects focus, the chosen lens glyph,
-the chosen row and the terminal cursor.
+Hover and selection share one neutral fill; the chosen workspace or agent row takes it flat, with
+no colored rail. Brand marks are the only other color there, and a ready row draws no state at all.
+Rose connects focus, the chosen lens glyph, the chosen row and the terminal cursor.
 
 Messages say only what the person needs now, not everything the app knows:
 - Something to do: one sentence and the control that does it ("Couldn't attach [Try again]").
@@ -48,52 +47,52 @@ Only tokens overridden by `[data-theme="light"]` have a light value. Both column
 <!-- BEGIN GENERATED THEMES -->
 | Role | Token | Dark | Light |
 |------|-------|------|-------|
-| Surface/base | `--bg` | `#0d1117` | `#f0f2f5` |
-| Surface/panel | `--bg-panel` | `#161b22` | `#ffffff` |
-| Surface/elevated | `--bg-elevated` | `#1f2630` | `#e8ecf2` |
-| Surface/hover | `--bg-hover` | `#252d3a` | `#dde2ea` |
-| Surface/input | `--bg-input` | `#121820` | `#ffffff` |
-| Border | `--border` | `#2d3644` | `#c8d0dc` |
-| Border/strong | `--border-strong` | `#3d4a5c` | `#a8b4c4` |
+| Surface/base | `--bg` | `#0b0a0e` | `#faf5fa` |
+| Surface/panel | `--bg-panel` | `#121016` | `#ffffff` |
+| Surface/elevated | `--bg-elevated` | `#1a1720` | `#f3ebf1` |
+| Surface/hover | `--bg-hover` | `#231f29` | `#ece1e9` |
+| Surface/input | `--bg-input` | `#14121a` | `#ffffff` |
+| Border | `--border` | `#2a2532` | `#e4d8e0` |
+| Border/strong | `--border-strong` | `#3b3446` | `#cbbcc7` |
 | Chat bubble edge | `--bubble-border` | `var(--border)` | `var(--border)` |
-| Text/primary | `--text` | `#e6eaf0` | `#1a2028` |
-| Text/dim | `--text-dim` | `#a3aec0` | `#5a6578` |
-| Text/strong | `--text-strong` | `#f6f8fa` | `#0a0f18` |
-| Accent | `--accent` | `#f4c430` | `#6f5200` |
-| Accent/tint | `--accent-tint` | `rgba(244, 196, 48, 0.12)` | `rgba(111, 82, 0, 0.1)` |
-| Primary | `--primary` | `#f4c430` | `#b8860b` |
-| Primary/hover | `--primary-hover` | `#ffd65a` | `#d4a017` |
-| Primary/text | `--primary-text` | `#0a0a0a` | `#0a0a0a` |
-| Primary/tint | `--primary-tint` | `rgba(244, 196, 48, 0.16)` | `rgba(184, 134, 11, 0.14)` |
-| Status/idle | `--status-idle` | `#a3aec0` | `#5a6578` |
-| Status/working | `--status-working` | `#6cb8d6` | `#155a72` |
+| Text/primary | `--text` | `#ecebf1` | `#501854` |
+| Text/dim | `--text-dim` | `#9a93a6` | `#7a5570` |
+| Text/strong | `--text-strong` | `#f8f7fb` | `#2e0d31` |
+| Accent | `--accent` | `#d9a7ba` | `#a84370` |
+| Accent/tint | `--accent-tint` | `rgba(217, 167, 186, 0.12)` | `rgba(168, 67, 112, 0.1)` |
+| Primary | `--primary` | `#6a2740` | `#a84370` |
+| Primary/hover | `--primary-hover` | `#85324f` | `#c25081` |
+| Primary/text | `--primary-text` | `#fdf3f7` | `#fff7fa` |
+| Primary/tint | `--primary-tint` | `rgba(106, 39, 64, 0.28)` | `rgba(168, 67, 112, 0.14)` |
+| Status/idle | `--status-idle` | `#9a93a6` | `#7a5570` |
+| Status/working | `--status-working` | `#7fc4de` | `#155a72` |
 | Status/blocked | `--status-blocked` | `#ff9a92` | `#a82323` |
-| Status/done | `--status-done` | `#93c36b` | `#2f6317` |
-| Working/tint | `--status-working-tint` | `rgba(108, 184, 214, 0.14)` | `rgba(21, 90, 114, 0.12)` |
+| Status/done | `--status-done` | `#8fd07a` | `#2f6317` |
+| Working/tint | `--status-working-tint` | `rgba(127, 196, 222, 0.14)` | `rgba(21, 90, 114, 0.12)` |
 | Blocked/tint | `--status-blocked-tint` | `rgba(255, 154, 146, 0.1)` | `rgba(168, 35, 35, 0.12)` |
-| Done/tint | `--status-done-tint` | `rgba(147, 195, 107, 0.14)` | `rgba(47, 99, 23, 0.12)` |
-| Indicator/working | `--indicator-working` | `#f4c430` | `#b8860b` |
+| Done/tint | `--status-done-tint` | `rgba(143, 208, 122, 0.14)` | `rgba(47, 99, 23, 0.12)` |
+| Indicator/working | `--indicator-working` | `#d9a7ba` | `#a84370` |
 | Indicator/blocked | `--indicator-blocked` | `#f85149` | `#cf222e` |
 | Indicator/done | `--indicator-done` | `#3fb950` | `#1a7f37` |
-| Indicator/idle | `--indicator-idle` | `#8b96a8` | `#5a6578` |
+| Indicator/idle | `--indicator-idle` | `#8b8494` | `#7a5570` |
 | Indicator/unknown | `--indicator-unknown` | `#6c7086` | `#9ca0b0` |
 | Danger/tint | `--danger-tint` | `rgba(248, 81, 73, 0.12)` | `rgba(168, 35, 35, 0.1)` |
 | Danger/text | `--danger-text` | `#ffd9d4` | `#8f1d1d` |
-| Notice | `--notice` | `#f4c430` | `#6f5200` |
-| Overlay/scrim | `--scrim` | `rgba(8, 12, 20, 0.6)` | `rgba(40, 48, 60, 0.35)` |
+| Notice | `--notice` | `#d9a7ba` | `#a84370` |
+| Overlay/scrim | `--scrim` | `rgba(6, 4, 8, 0.64)` | `rgba(60, 30, 50, 0.32)` |
 | Drawer shadow | `--shadow-drawer` | `0 0 40px rgba(0, 0, 0, 0.7)` | `0 0 40px rgba(40, 48, 60, 0.22)` |
 | Popover shadow | `--shadow-pop` | `0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border)` | `0 16px 48px rgba(40, 48, 60, 0.16), 0 0 0 1px var(--border)` |
 | Card shadow | `--shadow-card` | `0 4px 16px rgba(0, 0, 0, 0.45)` | `0 4px 16px rgba(40, 48, 60, 0.07)` |
 | Document surface | `--pdf-page` | `#ffffff` | `#ffffff` |
-| Terminal/background | `--term-bg` | `#161b22` | `#ffffff` |
-| Terminal/foreground | `--term-fg` | `#e6eaf0` | `#1a2028` |
-| Terminal/cursor | `--term-cursor` | `#f4c430` | `#9a7200` |
-| Terminal/selection | `--term-selection` | `#2a3a52` | `#f0e0a0` |
-| Syntax/keyword | `--syntax-keyword` | `#ff7b72` | `#a33a17` |
-| Syntax/string | `--syntax-string` | `#7ee787` | `#4b6b18` |
+| Terminal/background | `--term-bg` | `#121016` | `#ffffff` |
+| Terminal/foreground | `--term-fg` | `#ecebf1` | `#501854` |
+| Terminal/cursor | `--term-cursor` | `#d9a7ba` | `#a84370` |
+| Terminal/selection | `--term-selection` | `#3a2433` | `#f2dbe6` |
+| Syntax/keyword | `--syntax-keyword` | `#ff8fa8` | `#a33a17` |
+| Syntax/string | `--syntax-string` | `#a8d48a` | `#4b6b18` |
 | Syntax/number | `--syntax-number` | `#d2a8ff` | `#8a3f7a` |
 | Syntax/type | `--syntax-type` | `#79c0ff` | `#155a72` |
-| Syntax/variable | `--syntax-variable` | `#ffa657` | `#7a5418` |
+| Syntax/variable | `--syntax-variable` | `#ffb86b` | `#7a5418` |
 | Syntax/meta | `--syntax-meta` | `#b49dd6` | `#5d4791` |
 | Alert/background | `--droplet-bg` | `#000` | `#000` |
 | Alert/text | `--droplet-text` | `#f5f5f7` | `#f5f5f7` |
@@ -143,18 +142,18 @@ paper, not UI, and the viewer (`.file-viewer-pdf`) must not tint it for the them
 
 ### Themes
 
-`settings.darkTheme` and `settings.lightTheme` (both `amber`, the wayfinding base, by default) name
+`settings.darkTheme` and `settings.lightTheme` (both `amber`, the Quiet Slate base, by default) name
 the theme each mode draws. The resolved entry is written as `data-theme` (its mode) and
 `data-palette` (its id). Any theme can be picked on either side. Picking one half of a herdr pair
 also sets the other side to its sibling, but only while that side still holds `amber` (the default,
 even if picked by hand), `codex` (the default before it) or the sibling of the previous pick; any
 other value is kept. A dark theme picked for light mode still draws dark.
-The themes are the wayfinding base (`amber`), charcoal, codex and catppuccin plus herdr's
+The themes are the Quiet Slate base (`amber`), charcoal, codex and catppuccin plus herdr's
 built-ins; herdr's `terminal` theme is not offered. The tables above are the base blocks; every
 other theme overrides them in a `[data-theme][data-palette]` block of `src/styles.css`.
 
 The theme blocks of `src/styles.css` are the theme table and the one place a theme color is
-edited: `:root` is the dark wayfinding base, `[data-theme="light"]` is the light base and
+edited: `:root` is the dark Quiet Slate base, `[data-theme="light"]` is the light base and
 `[data-theme="<mode>"][data-palette="<id>"]` is every other entry. `bun run generate:themes`
 (`scripts/generate-themes.ts`) reads them and writes the copies: `src/lib/themes.generated.ts`
 (the supported entries with their roles, xterm colors and panel color), the base table above
@@ -167,10 +166,9 @@ herdr mapping (`mapTheme`), including repairs the proposal tool already made, is
 `scripts/herdr-theme-overrides.ts` with its dE and reason; every entry passes AA on its
 committed hex.
 
-`--bubble-border` is the edge of the chat's user bubble (which also carries a 3px `--accent` lower
-edge, the one sign mark on a neutral card). It is `transparent` where `--bg-elevated` alone parts
-the bubble from `--bg`: dark charcoal. It is `var(--border)` where the two surfaces sit close:
-the dark and light wayfinding base blocks and every light theme (the `[data-theme="light"]` block
+`--bubble-border` is the edge of the chat's user bubble, one quiet rounded card. It is
+`transparent` where `--bg-elevated` alone parts the bubble from `--bg`: dark charcoal. It is `var(--border)` where the two surfaces sit close:
+the dark and light Quiet Slate base blocks and every light theme (the `[data-theme="light"]` block
 sets it for all palettes), and dark Catppuccin, whose elevated surface is darker than its canvas.
 
 - **Charcoal** is a neutral Ghostty-style dark: near-black canvas, a slightly lighter panel and
@@ -413,7 +411,7 @@ blocks of `src/styles.css`.
 
 - `--notice` colors a note that the view is partial (a file cut short, code too long to color): the
   size in the header's meta line becomes `256 KB of 1.3 MB`, always beside a warning icon so the
-  color is not the only sign. It is a warning yellow, at least 4.5:1 on
+  color is not the only sign. It is the notice rose, at least 4.5:1 on
   `--bg`, `--bg-panel` and `--bg-elevated` (see `--notice` in the generated table). Charcoal and Catppuccin
   (its yellow) set theirs in their blocks of `src/styles.css`.
 - The header's meta line (size, folder) is `--fs-xs`. A file that cannot be previewed says so in
@@ -427,11 +425,10 @@ blocks of `src/styles.css`.
   `src/styles.css`.
 
 ### Rules
-- Wayfinding yellow is the one chrome color. Accent (the route: focus, the chosen lens, the chosen
-  sidebar/agent row, the header's lower edge, the composer's upper edge, your own turn's lower edge)
-  and primary (the user's action: Send, primary buttons) are both yellow; in light, accent is the
-  darker text-safe ochre and primary the brighter fill carrying ink text. Agent states never use
-  yellow.
+- Muted rose is the one chrome accent. Accent (focus, the chosen lens, the chosen sidebar/agent
+  row, the terminal cursor) and primary (the user's action: Send, primary buttons) are the same
+  family; in light, accent is the darker text-safe magenta and primary the same fill carrying
+  light text. Agent states never use rose.
 - Agent state has a written label as well as color. The sidebar's compact glyphs keep their labels
   in tooltips and screen-reader text; other surfaces draw the words. In the sidebar ready and
   unknown draw no glyph and keep their label for assistive tech; elsewhere unknown uses dim text
@@ -633,7 +630,7 @@ Comfortable values are `:root`; the final column is the complete compact overrid
 |-------|-------------|---------|-------|
 | `--header-h` | `52px` | `46px` | App header below `769px` |
 | `--header-h-wide` | `46px` | — | App header from `769px`, in either density (`--header-h` takes this value there) |
-| `--sidebar-w` | `320px` | `300px` | Sidebar/drawer; the default while the user has not dragged the sidebar's edge |
+| `--sidebar-w` | `264px` | `264px` | Sidebar/drawer; the default while the user has not dragged the sidebar's edge |
 | `--control-h` | `34px` | `32px` | Buttons and fields |
 | `--segmented-inset` | `6px` | — | What the segmented track takes from `--control-h` above and below an option (its `2px` padding and the hairline, both sides): an option is `--control-h` less this, and its touch expander grows from that height to `--touch-target` |
 | `--touch-target` | `44px` | — | Coarse-pointer minimum: every control a finger can reach is at least this in both dimensions |
@@ -871,7 +868,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   `[ui] status_indicators` draws them, for every state in mono text. Dots: `●` for working,
   blocked and done, `○` for ready, `·` for unknown. Symbols: `◐` working, `×` blocked, `✓` done,
   `○` ready, `·` unknown. Their colors are herdr's default theme's, the `--indicator-*` tokens
-  (Catppuccin Mocha, Latte in light): working yellow, blocked red, done teal, ready green, unknown
+  (Catppuccin Mocha, Latte in light): working rose, blocked red, done teal, ready green, unknown
   grey. Working breathes as the dot does; BACKGROUND, which herdr does not have, holds working's glyph still.
   A tab's mark follows the same choice, held still.
 
@@ -994,8 +991,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   included. As herdr draws its tree, each indented worktree hangs from its repository's folder on
   a `--hairline` `--border-strong` branch in the indent: a tee for each but the last, an elbow for
   the last.
-  Selection uses a neutral fill with one yellow edge under the row (the wayfinding mark of where
-  you are); workspace rows keep no separate reorder gutter. Drag the row itself, or
+  Selection uses a neutral fill alone; workspace rows keep no separate reorder gutter. Drag the row itself, or
   press `Alt+↑/↓` while its selector is focused, to reorder it.
   On a touch screen (`pointer: coarse`) the browser's drag is off: a long press (400ms, still
   within 8px) lifts the row (`.is-lifted`: `--bg-elevated` with `--shadow-card`), it follows
@@ -1713,7 +1709,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   cannot work (no HTTPS, or no key and no browser recognition). On shows it in both inputs and on a
   phone, disabled with its reason where it cannot work.
 - The recording pill shows Cancel, a **Recording** label, the level bars, a mono timer and Done.
-  Wayfinding yellow only; `--danger` stays for errors.
+  Muted rose only; `--danger` stays for errors.
 
 ### Command palette
 - At `<=480px` the header has no palette button: the More menu's first item, **Search panes and
@@ -2009,7 +2005,7 @@ The values are the ones in `src/styles.css`.
   is not selectable and opens no link callout, while the transcript, code, files and fields are;
   page pinch zoom remains available on ordinary content, while the terminal's two-finger pinch
   sizes its font; landscape does not inflate text. A pressed button dims to `0.55` at once in place
-  of the wayfinding-yellow `:active` box; a list row (sidebar, agent, menu, sheet, Settings page) fills instead.
+  of the rose `:active` box; a list row (sidebar, agent, menu, sheet, Settings page) fills instead.
 - `prefers-reduced-motion` is honored. Lucide/inline SVG decoration is hidden from assistive tech.
 - Global shortcuts default to **Mod+Shift+key**: Mod is Command on Apple platforms and Ctrl
   elsewhere. Settings lists the global bindings and allows changing or disabling them, with
