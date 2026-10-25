@@ -660,7 +660,7 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
   font-size: var(--fs-xs);
 }
 
-@media (pointer: coarse) {
+@media (pointer: coarse), (any-pointer: coarse) {
   .sidebar-shell {
     --side-row: var(--touch-target);
     --side-action: var(--touch-target);
@@ -676,7 +676,7 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
     margin-inline: calc((var(--side-box) - var(--touch-target)) / 2);
   }
 
-  /* Row menus stay visible on touch. */
+  /* Row menus stay visible on touch or any touch-capable device. */
   .workspace-actions {
     width: auto;
     overflow: visible;
@@ -722,4 +722,17 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
 
 .plan-count.is-done svg {
   color: var(--status-done);
+}
+
+/* a one-time hint: the ⋯ button pulses in the wayfinding color for a few seconds on a device
+   that has never shown it, so a first-time user sees that the row has a menu. The pulse stops
+   once the user has had a chance to notice, and never returns (localStorage flag). */
+.workspace-actions.is-hinted .row-menu-toggle,
+.row-menu-toggle.is-hinted {
+  animation: row-menu-hint 1.2s ease-in-out 3;
+  color: var(--accent);
+}
+@keyframes row-menu-hint {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.15); }
 }

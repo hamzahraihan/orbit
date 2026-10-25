@@ -182,6 +182,17 @@ export interface SidebarProps {
  * panes are navigated through the tab strip, while Agents is an independent API-backed list.
  */
 export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarProps) {
+  const [rowMenuHint, setRowMenuHint] = useState(() => {
+    try { return window.localStorage.getItem("orbit.rowMenuHintShown") !== "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    if (!rowMenuHint) return;
+    const timer = window.setTimeout(() => {
+      try { window.localStorage.setItem("orbit.rowMenuHintShown", "1"); } catch { /* ignore */ }
+      setRowMenuHint(false);
+    }, 4000);
+    return () => window.clearTimeout(timer);
+  }, [rowMenuHint]);
   const t = useT();
   const { settings } = useSettings();
   const twoLine = settings.sidebarRows === "two";
@@ -723,7 +734,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
           </span>
         </div>
         <div className="workspace-actions">
-          <button type="button" className="sidebar-row-action row-menu-toggle" aria-label={t("More for {title}", { title: rowTitle })} aria-haspopup="menu" aria-expanded={menuOpen} onClick={(event) => toggleMenu(event.currentTarget)}>
+          <button type="button" className={`sidebar-row-action row-menu-toggle${rowMenuHint ? " is-hinted" : ""}`} aria-label={t("More for {title}", { title: rowTitle })} aria-haspopup="menu" aria-expanded={menuOpen} onClick={(event) => toggleMenu(event.currentTarget)}>
             <Ellipsis aria-hidden="true" />
           </button>
         </div>
