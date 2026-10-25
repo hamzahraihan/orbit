@@ -277,8 +277,8 @@
    goes with them. They stay in the document, clipped as data-model="out" clips them, so assistive
    tech always reads them. The row is measured with everything drawn (data-measuring, fitStatus):
    a name hidden here must never be measured as clipped and step out for good. */
-.composer-surface:not(:focus-within):not(:hover) .composer-status:not([data-measuring]) .composer-model,
-.composer-surface:not(:focus-within):not(:hover) .composer-status:not([data-measuring]) .composer-reasoning {
+.composer-surface[data-quiet]:not(:focus-within):not(:hover) .composer-status:not([data-measuring]) .composer-model,
+.composer-surface[data-quiet]:not(:focus-within):not(:hover) .composer-status:not([data-measuring]) .composer-reasoning {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -290,7 +290,7 @@
   border: 0;
 }
 
-.composer-surface:not(:focus-within):not(:hover) .composer-status:not([data-measuring]) .composer-pill {
+.composer-surface[data-quiet]:not(:focus-within):not(:hover) .composer-status:not([data-measuring]) .composer-pill {
   padding: 0;
   background: transparent;
 }

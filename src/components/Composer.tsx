@@ -1084,6 +1084,7 @@ export function Composer({
         ref={surfaceRef}
         className={`composer-surface${dragging ? " is-dragging" : ""}`}
         data-compact={statusCompact ? "" : undefined}
+        data-quiet={settings.quietComposer ? "" : undefined}
         onDragEnter={(event) => {
           event.preventDefault();
           setDragging(true);

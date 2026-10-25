@@ -113,6 +113,8 @@ export interface Settings {
   suggestionChip: boolean;
   /** show the agent's folded reasoning blocks in the chat view */
   showThinking: boolean;
+  /** show the model name and reasoning level beside the agent mark at rest; off hides them until the composer is focused or hovered */
+  quietComposer: boolean;
   /** request a screen wake lock while a pane is open in this visible tab */
   keepScreenOn: boolean;
   /** UI language; `system` follows the browser (src/lib/i18n.ts) */
@@ -168,7 +170,7 @@ export type DiffStyle = (typeof DIFF_STYLES)[number];
  */
 export const SETTING_SCOPE = {
   theme: "shared", palette: "shared", darkTheme: "shared", lightTheme: "shared", language: "shared", sidebarRows: "shared", agentOrder: "shared",
-  agentMarks: "shared", autoSendQueued: "shared", showThinking: "shared", quickReplies: "shared",
+  agentMarks: "shared", autoSendQueued: "shared", showThinking: "shared", quickReplies: "shared", quietComposer: "shared",
   showQuickReplies: "shared", defaultView: "device", suggestionChip: "device",
   terminalInputMode: "device", keyBarExtras: "device", keyBarItems: "device", shortcutOverrides: "device", density: "device",
   terminalFontSize: "device",
@@ -217,6 +219,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autoSendQueued: true,
   suggestionChip: false,
   showThinking: false,
+  quietComposer: true,
   keepScreenOn: false,
   language: "system",
   alertsOn: true,
@@ -387,6 +390,7 @@ export function sanitizeSettings(raw: unknown): Settings {
     autoSendQueued: typeof record["autoSendQueued"] === "boolean" ? record["autoSendQueued"] : DEFAULT_SETTINGS.autoSendQueued,
     suggestionChip: typeof record["suggestionChip"] === "boolean" ? record["suggestionChip"] : DEFAULT_SETTINGS.suggestionChip,
     showThinking: typeof record["showThinking"] === "boolean" ? record["showThinking"] : DEFAULT_SETTINGS.showThinking,
+    quietComposer: typeof record["quietComposer"] === "boolean" ? record["quietComposer"] : DEFAULT_SETTINGS.quietComposer,
     keepScreenOn: typeof record["keepScreenOn"] === "boolean" ? record["keepScreenOn"] : DEFAULT_SETTINGS.keepScreenOn,
     language: LANGUAGE_SETTINGS.includes(record["language"] as LanguageSetting) ? record["language"] as LanguageSetting : DEFAULT_SETTINGS.language,
     alertsOn: typeof record["alertsOn"] === "boolean" ? record["alertsOn"] : DEFAULT_SETTINGS.alertsOn,
