@@ -2509,12 +2509,11 @@ button {
   }
 
   /* A stroke on a sheet or its scrim is the sheet's: it pans nothing behind it, the chat
-     included. Its own lists still scroll, each a scroll container where touch-action starts
-     afresh, and keep their overscroll to themselves; a drag down is lib/sheets.ts's. Two
-     fingers still zoom the page, begun on a sheet as anywhere else (WCAG 1.4.4). */
+     included. Manipulation allows single-finger panning within scrollable lists and code views,
+     and two-finger pinch-zoom (WCAG 1.4.4), while a drag down is lib/sheets.ts's. */
   .modal-scrim,
   .modal-scrim > * {
-    touch-action: pinch-zoom;
+    touch-action: manipulation;
   }
 
   .modal-scrim * {
