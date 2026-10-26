@@ -172,9 +172,9 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   overflow: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   padding: var(--space-3);
   background: var(--bg);
 }
@@ -225,9 +225,7 @@
   align-self: stretch;
   margin: 0;
   padding: var(--space-3);
-  overflow-x: auto;
   overflow-y: hidden;
-  overscroll-behavior-y: auto;
   color: var(--text);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
