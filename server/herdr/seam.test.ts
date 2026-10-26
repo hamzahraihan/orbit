@@ -2,7 +2,7 @@ import { afterEach, expect, it } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { agentGet, herdrRpc, paneProcessInfo } from "./client.ts";
+import { agentGet, herdrRpc, paneProcessInfo, socketAddress } from "./client.ts";
 
 // The typed herdr seam (server/herdr/methods.ts). `bun run typecheck` checks the lines marked
 // with ts-expect-error below: each must stay a compile error. They hold for a call without an explicit
@@ -34,7 +34,7 @@ async function typeOnly(): Promise<void> {
 }
 void typeOnly;
 
-// A stand-in herdr on a Unix socket: it records each request and answers with `result`.
+// A stand-in herdr socket: it records each request and answers with `result`.
 let dir = "";
 let listener: ReturnType<typeof Bun.listen> | null = null;
 afterEach(() => {
@@ -48,7 +48,7 @@ function standIn(result: unknown): { path: string; written: { method: string; pa
   const path = join(dir, "herdr.sock");
   const written: { method: string; params: unknown }[] = [];
   listener = Bun.listen({
-    unix: path,
+    unix: socketAddress(path),
     socket: {
       data(sock, chunk) {
         const request = JSON.parse(chunk.toString()) as { id: string; method: string; params: unknown };

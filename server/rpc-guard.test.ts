@@ -2,9 +2,9 @@ import { afterEach, expect, it } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { HerdrError, herdrRpc } from "./herdr/client.ts";
+import { HerdrError, herdrRpc, socketAddress } from "./herdr/client.ts";
 
-// A stand-in herdr on a Unix socket: it records what was written and answers each line.
+// A stand-in herdr socket: it records what was written and answers each line.
 let dir = "";
 let listener: ReturnType<typeof Bun.listen> | null = null;
 afterEach(() => {
@@ -18,7 +18,7 @@ function standIn(): { path: string; written: string[] } {
   const path = join(dir, "herdr.sock");
   const written: string[] = [];
   listener = Bun.listen({
-    unix: path,
+    unix: socketAddress(path),
     socket: {
       data(sock, chunk) {
         const line = chunk.toString();
