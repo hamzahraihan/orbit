@@ -226,6 +226,7 @@
   margin: 0;
   padding: var(--space-3);
   overflow: auto;
+  overscroll-behavior-y: auto;
   color: var(--text);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
