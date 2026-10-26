@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { remoteBundleAssetName } from "../shared/machines.ts";
 const windows = process.platform === "win32";
 // macOS's per-user TMPDIR is long enough to push herdr's socket names past the 104-byte sun_path limit
 const root = realpathSync(mkdtempSync(join(process.platform === "darwin" ? "/tmp" : tmpdir(), "herdr-bundle-smoke-")));
@@ -25,7 +26,7 @@ const env = { ...process.env, ...(windows ? {} : { SHELL: "/bin/sh" }), PATH: pa
 if (!windows) assert.equal(Bun.which("node", { PATH: path }), null, "the smoke runs with no Node on PATH");
 let child: ReturnType<typeof Bun.spawn> | undefined;
 try {
-  const archive = resolve(`remote-bundles/herdr-web-ui-${process.platform}-${process.arch}.tgz`);
+  const archive = resolve("remote-bundles", remoteBundleAssetName(`${process.platform}-${process.arch}`));
   assert.equal(Bun.spawnSync(["tar", "xzf", archive, "-C", bundle]).exitCode, 0);
   child = Bun.spawn([bun, join(bundle, "server/remote-entry.ts")], { env, stdout: "inherit", stderr: "inherit" });
   const { createHash } = await import("node:crypto");
