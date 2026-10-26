@@ -51,9 +51,11 @@ const media = (query: string): MediaQueryList | null => (typeof window === "unde
 
 /** How far what lies under the finger, up to the sheet, is scrolled from its top. */
 function scrolledUnder(target: EventTarget | null, surface: HTMLElement): number {
-  for (let node = target instanceof Element ? target : null; node; node = node.parentElement) {
-    if (node.scrollTop > 0) return node.scrollTop;
+  const path = target instanceof Element ? target.composedPath() : [];
+  for (const node of path) {
+    if (!(node instanceof HTMLElement)) continue;
     if (node === surface) break;
+    if (node.scrollTop > 0) return node.scrollTop;
   }
   return 0;
 }
@@ -64,14 +66,18 @@ function scrolledUnder(target: EventTarget | null, surface: HTMLElement): number
  * inside the sheet: the sheet itself takes no pan of the browser's either (styles.css).
  */
 function ownsStroke(target: EventTarget | null, surface: HTMLElement): boolean {
-  for (let node = target instanceof HTMLElement ? target : null; node && node !== surface; node = node.parentElement) {
+  const path = target instanceof Element ? target.composedPath() : [];
+  for (const node of path) {
+    if (!(node instanceof HTMLElement)) continue;
+    if (node === surface) break;
     if (node.isContentEditable || /^(?:INPUT|TEXTAREA|SELECT)$/.test(node.tagName)) return true;
     const style = getComputedStyle(node);
     if (style.touchAction === "none" || style.position === "fixed") return true;
     // A scroll container owns its own stroke: the sheet must not intercept it, or single-finger
     // panning (scrolling) is swallowed by the drag-to-dismiss logic. The .hl-code (overflow-x:
     // auto) and .file-viewer-text (overflow: auto) are also scroll containers; detect them by
-    // their computed overflow rather than by class name.
+    // their computed overflow rather than by class name. Use composedPath() so shadow-DOM
+    // children (e.g. the virtualizer's rows) are traversed, not just light-DOM ancestors.
     const overflowY = style.overflowY;
     const overflowX = style.overflowX;
     const isScrollContainer =
