@@ -6,7 +6,7 @@
 import { createHash } from "node:crypto";
 import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { REMOTE_BUNDLE_VERSION } from "../shared/machines.ts";
+import { REMOTE_BUNDLE_VERSION, remoteBundleAssetName } from "../shared/machines.ts";
 
 const root = resolve(import.meta.dir, "..");
 const hostPlatform = `${process.platform}-${process.arch}`;
@@ -68,7 +68,7 @@ function command(argv: string[], cwd = root): void {
   if (result.exitCode !== 0) throw new Error(`${argv[0]} failed: ${result.stderr.toString()}`);
 }
 async function archive(): Promise<void> {
-  const filename = `herdr-web-ui-${platform}.tgz`;
+  const filename = remoteBundleAssetName(platform);
   const archive = join(output, filename);
   const temporaryArchive = archive + ".tmp";
   const tar = Bun.spawn(["tar", "czf", temporaryArchive, "-C", stage, "."], { stdout: "inherit", stderr: "inherit" });

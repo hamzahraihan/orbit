@@ -4,7 +4,9 @@ import type { HealthAuth, ServerMessage, SessionSnapshot } from "./protocol.ts";
 
 export const LOCAL_MACHINE = "local";
 export const BRIDGE_PROTOCOL = 1;
-export const REMOTE_BUNDLE_VERSION = "31";
+export const REMOTE_BUNDLE_VERSION = "32";
+/** The archive a `remote-v<REMOTE_BUNDLE_VERSION>` release publishes; its manifest carries this name. */
+export function remoteBundleAssetName(platform: string): string { return `orbit-${platform}.tgz`; }
 export interface PaneTarget { machine_id: string; pane_id: string }
 export type MachineState = "connecting" | "connected" | "reconnecting" | "disconnected" | "error";
 export interface SshTarget {
