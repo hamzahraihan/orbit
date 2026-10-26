@@ -68,6 +68,19 @@ function ownsStroke(target: EventTarget | null, surface: HTMLElement): boolean {
     if (node.isContentEditable || /^(?:INPUT|TEXTAREA|SELECT)$/.test(node.tagName)) return true;
     const style = getComputedStyle(node);
     if (style.touchAction === "none" || style.position === "fixed") return true;
+    // A scroll container owns its own stroke: the sheet must not intercept it, or single-finger
+    // panning (scrolling) is swallowed by the drag-to-dismiss logic. The .hl-code (overflow-x:
+    // auto) and .file-viewer-text (overflow: auto) are also scroll containers; detect them by
+    // their computed overflow rather than by class name.
+    const overflowY = style.overflowY;
+    const overflowX = style.overflowX;
+    const isScrollContainer =
+      (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") &&
+      node.scrollHeight > node.clientHeight;
+    const isHorizontalScrollContainer =
+      (overflowX === "auto" || overflowX === "scroll" || overflowX === "overlay") &&
+      node.scrollWidth > node.clientWidth;
+    if (isScrollContainer || isHorizontalScrollContainer) return true;
   }
   return false;
 }
