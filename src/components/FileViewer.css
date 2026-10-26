@@ -225,7 +225,8 @@
   align-self: stretch;
   margin: 0;
   padding: var(--space-3);
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-y: auto;
   color: var(--text);
   font-family: var(--font-mono);
