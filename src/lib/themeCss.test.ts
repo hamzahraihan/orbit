@@ -7,6 +7,7 @@ import baseline from "./themes.legacy-baseline.json";
 
 const css = readFileSync(join(import.meta.dir, "..", "styles.css"), "utf8");
 const blocks = parseThemeBlocks(css);
+const amberDarkBg = resolveEntry(blocks, "amber", "dark").declared["--bg"]!;
 
 it("spells a theme value one way: collapsed spaces, lowercase hex, rgba() with spaced arguments and no trailing zeros", () => {
   expect(normalizeThemeValue("  #DCD4C6 ")).toBe("#dcd4c6");
@@ -36,9 +37,10 @@ describe("CSS theme table", () => {
   });
 
   it("preserves transparent and inherited or aliased bubble borders", () => {
-    expect(blocks["amber/dark"]?.declared["--bubble-border"]).toBe("transparent");
+    expect(blocks["codex/dark"]?.declared["--bubble-border"]).toBe("transparent");
+    expect(resolveEntry(css, "codex", "dark").resolved["--bubble-border"]).toBe("transparent");
     expect(blocks["charcoal/dark"]?.declared["--bubble-border"]).toBeUndefined();
-    expect(resolveEntry(css, "charcoal", "dark").resolved["--bubble-border"]).toBe("transparent");
+    expect(resolveEntry(css, "charcoal", "dark").resolved["--bubble-border"]).toBe(resolveEntry(css, "charcoal", "dark").resolved["--border"]);
     for (const [id, mode] of [["amber", "light"], ["catppuccin", "dark"]] as const) {
       const { declared, resolved } = resolveEntry(css, id, mode);
       expect(declared["--bubble-border"]).toBe("var(--border)");
@@ -79,7 +81,7 @@ describe("CSS theme table", () => {
   });
 
   it("rejects a malformed color in a known role", () => {
-    expect(() => parseThemeBlocks(css.replace("--bg: #12100e", "--bg: hsl(1 2 3)"))).toThrow("amber/dark bg: unreadable value hsl(1 2 3)");
+    expect(() => parseThemeBlocks(css.replace(`--bg: ${amberDarkBg}`, "--bg: hsl(1 2 3)"))).toThrow("amber/dark bg: unreadable value hsl(1 2 3)");
   });
 
   it("rejects missing base blocks and duplicate entries", () => {
@@ -90,15 +92,15 @@ describe("CSS theme table", () => {
 
   it("rejects unclosed blocks and duplicate declarations", () => {
     expect(() => parseThemeBlocks(":root { --bg: #123456;")).toThrow(ThemeValueError);
-    expect(() => parseThemeBlocks(css.replace("--bg: #12100e;", "--bg: #12100e; --bg: #123456;"))).toThrow("amber/dark bg: duplicate declaration");
+    expect(() => parseThemeBlocks(css.replace(`--bg: ${amberDarkBg};`, `--bg: ${amberDarkBg}; --bg: #123456;`))).toThrow("amber/dark bg: duplicate declaration");
   });
 
   it.each(["var(--absent)", "var(--bg)"])("rejects missing and cyclic alias targets %s", (value) => {
-    expect(() => resolveEntry(css.replace("--bg: #12100e", `--bg: ${value}`), "amber", "dark")).toThrow(ThemeValueError);
+    expect(() => resolveEntry(css.replace(`--bg: ${amberDarkBg}`, `--bg: ${value}`), "amber", "dark")).toThrow(ThemeValueError);
   });
 
   it("rejects a color alias whose target is not a color", () => {
-    expect(() => resolveEntry(css.replace("--bg: #12100e", "--bg: var(--space-1)"), "amber", "dark")).toThrow("amber/dark bg: unreadable value var(--space-1)");
+    expect(() => resolveEntry(css.replace(`--bg: ${amberDarkBg}`, "--bg: var(--space-1)"), "amber", "dark")).toThrow("amber/dark bg: unreadable value var(--space-1)");
   });
 
   it("ignores theme-shaped selectors nested in media rules", () => {

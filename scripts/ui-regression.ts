@@ -443,7 +443,7 @@ try {
   }
   console.log("PASS Agents excludes shells, survives PC folds, selects its machine target and disables offline rows");
 
-  // a turn that ended on work still running in the background reads BG, not DONE: drawn in the sidebar, and read in the composer
+  // a turn that ended on work still running in the background reads BACKGROUND, not DONE: drawn in the sidebar, and read in the composer
   let backgroundPeer: "working" | "done" | "blocked" | "idle" | null = null;
   const unrouteBackground = await routeDrained(page, "**/api/machines", async (route) => {
     const response = await route.fetch();
@@ -464,14 +464,14 @@ try {
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   const waitingBadge = agentRow(paneA).locator(".badge[data-status=waiting]");
   await waitingBadge.waitFor();
-  assert.equal((await waitingBadge.textContent())?.trim(), "BG");
+  assert.equal((await waitingBadge.textContent())?.trim(), "BACKGROUND");
   assert.equal(await waitingBadge.getAttribute("title"), "Agent waiting on background work");
-  // BG is a still ring in the working colour; RUN is a dot of it that breathes (Sidebar.css)
-  assert.equal(await waitingBadge.locator("svg").count(), 0, "BG draws no arc any more");
+  // BACKGROUND is a still ring in the working colour; RUN is a dot of it that breathes (Sidebar.css)
+  assert.equal(await waitingBadge.locator("svg").count(), 0, "BACKGROUND draws no arc any more");
   const ring = waitingBadge.locator(".sidebar-status-dot");
-  assert.equal(await ring.count(), 1, "BG draws a ring");
+  assert.equal(await ring.count(), 1, "BACKGROUND draws a ring");
   assert.deepEqual(await ring.evaluate((dot) => { const style = getComputedStyle(dot); return { hollow: style.backgroundColor === "rgba(0, 0, 0, 0)", bordered: parseFloat(style.borderTopWidth) > 0, animation: style.animationName }; }), { hollow: true, bordered: true, animation: "none" }, "the ring is hollow, bordered and still");
-  await page.locator('.composer-status[data-status="waiting"] strong.visually-hidden', { hasText: "BG" }).waitFor();
+  await page.locator('.composer-status[data-status="waiting"] strong.visually-hidden', { hasText: "BACKGROUND" }).waitFor();
   for (const peer of ["working", "done", "blocked", "idle"] as const) {
     backgroundPeer = peer;
     await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
@@ -504,7 +504,7 @@ try {
   await unrouteBackground();
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await waitingBadge.waitFor({ state: "detached" });
-  console.log("PASS a pane whose turn ended on its background work reads BG in the sidebar and the composer, and its status again once it does not");
+  console.log("PASS a pane whose turn ended on its background work reads BACKGROUND in the sidebar and the composer, and its status again once it does not");
   // A pane's plan: the composer's chip (the one the background tasks have) says how far it got and
   // opens its steps in order, the running one with what it does now; the sidebar row carries the
   // same count. Reading it is the server's (server/session-plan.ts): its summary and steps are given here.

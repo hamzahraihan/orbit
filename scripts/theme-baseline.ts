@@ -4,9 +4,11 @@ import { normalizeThemeValue } from "../src/lib/themeCss.ts";
 import { terminalTheme, themeColor } from "../src/lib/settings.ts";
 
 // Freezes the six legacy palette-modes (amber, charcoal, catppuccin in dark and light) as
-// src/lib/themes.legacy-baseline.json, the permanent parity oracle src/lib/themes.parity.test.ts
-// checks the current src/styles.css against. One shot: it ran once on the pre-refactor tree and
-// refuses to overwrite the baseline, which is never regenerated.
+// src/lib/themes.legacy-baseline.json, the parity oracle src/lib/themes.parity.test.ts checks the
+// current src/styles.css against. Frozen before the theme-table refactor, then re-frozen at
+// 62db0b75 for the Quiet Slate world, which changed the base palette and shared status colours on
+// purpose. Accidental drift is what the oracle catches: re-freeze only with an intentional,
+// reviewed design change - move the file away, run this script and review the diff.
 
 export type LegacyMode = "dark" | "light";
 export type LegacyPalette = "amber" | "charcoal" | "catppuccin";
@@ -68,7 +70,7 @@ const sorted = (value: unknown): unknown =>
 export const BASELINE_PATH = join(import.meta.dir, "..", "src", "lib", "themes.legacy-baseline.json");
 
 if (import.meta.main) {
-  if (existsSync(BASELINE_PATH)) throw new Error(`${BASELINE_PATH} is frozen: the legacy baseline is never regenerated`);
+  if (existsSync(BASELINE_PATH)) throw new Error(`${BASELINE_PATH} exists: move it away only for an intentional design change, then review the diff`);
   const git = (...args: string[]): string => {
     const run = Bun.spawnSync(["git", ...args], { cwd: join(import.meta.dir, "..") });
     if (run.exitCode !== 0) throw new Error(`git ${args.join(" ")}: ${run.stderr.toString()}`);

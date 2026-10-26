@@ -122,8 +122,9 @@ try {
           };
           await openNew();
           const dialog = page.getByRole("dialog");
-          const chip = dialog.getByRole("button", { name: `${project} 폴더 사용`, exact: true });
-          await chip.waitFor();
+          // the dialog narrows with the sidebar (NewSessionDialog.css), so the newest folder can be
+          // behind "+N"; wait for the row, then let offered() enumerate both places
+          await dialog.locator('[role="group"] .new-session-folder-chip').first().waitFor();
           await dialog.locator(".agent-picker-trigger", { hasText: "Codex" }).waitFor();
           const chips = dialog.locator('[role="group"] .new-session-folder-chip:not(.new-session-folder-more)');
           const more = dialog.locator('[role="group"] .new-session-folder-more');
@@ -164,12 +165,11 @@ try {
 
           const request = page.waitForRequest((request) => request.url().endsWith("/api/workspace/create"));
           const response = page.waitForResponse((response) => response.url().endsWith("/api/workspace/create"));
-          await chip.click();
+          await pickFolder(project);
           assert.equal(await dialog.locator("#new-session-cwd").inputValue(), project);
           assert.equal(requests, 0, "a chip fills Directory and starts nothing");
           await submit.click();
           assert.deepEqual((await request).postDataJSON(), { cwd: project, label: null, agent: { kind: "codex" } });
-          assert.equal(await chip.isDisabled(), true);
           assert.equal(await dialog.locator('[role="group"] .new-session-folder-chip:not(:disabled)').count(), 0);
           await page.keyboard.press("Escape");
           assert.equal(await dialog.isVisible(), true);
@@ -190,7 +190,7 @@ try {
           await page.reload();
           await betaRow.waitFor({ state: "attached" });
           await openNew();
-          await chip.waitFor();
+          await dialog.locator('[role="group"] .new-session-folder-chip').first().waitFor();
           // the folder a workspace was started in is first now; a worktree and a temporary folder are left out
           assert.deepEqual(await offered(), [project, "/older/one", other, "/older/two"]);
           if (width !== 390) assert.equal(new Set(await chips.evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().top))).size, 1, "a wider screen keeps one row too, the rest under +N");

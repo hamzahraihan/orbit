@@ -2,12 +2,19 @@ import { afterEach, describe, expect, it } from "bun:test";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { DESIGN_BEGIN, DESIGN_END, OUTPUTS, renderAll, renderDesign, renderIndex, renderManifest, renderModule, SOURCE } from "./generate-themes.ts";
+import { DEFAULT_ID, DESIGN_BEGIN, DESIGN_END, OUTPUTS, renderAll, renderDesign, renderIndex, renderManifest, renderModule, SOURCE } from "./generate-themes.ts";
+import { parseThemeBlocks, resolveEntry } from "../src/lib/themeCss.ts";
 
 const ROOT = join(import.meta.dir, "..");
 const GENERATOR = join(ROOT, "scripts", "generate-themes.ts");
 const read = (root: string, file: string): string => readFileSync(join(root, file), "utf8");
 const css = read(ROOT, SOURCE);
+const blocks = parseThemeBlocks(css);
+const defaultPanel = resolveEntry(blocks, DEFAULT_ID, "dark").declared["--bg-panel"]!;
+const defaultBg = resolveEntry(blocks, DEFAULT_ID, "dark").declared["--bg"]!;
+const defaultTermBg = resolveEntry(blocks, DEFAULT_ID, "dark").declared["--term-bg"]!;
+const defaultThemeColor = resolveEntry(blocks, DEFAULT_ID, "dark").resolved["--bg-panel"]!;
+const lightTermBlack = resolveEntry(blocks, DEFAULT_ID, "light").declared["--term-black"]!;
 
 const copies: string[] = [];
 afterEach(() => {
@@ -42,7 +49,7 @@ describe("generate-themes", () => {
   });
 
   it("rejects missing light ANSI declarations and any dark ANSI declarations", () => {
-    expect(() => renderModule(css.replace("--term-black: #2a251f;", ""))).toThrow("amber/light must declare --term-black");
+    expect(() => renderModule(css.replace(`--term-black: ${lightTermBlack};`, ""))).toThrow("amber/light must declare --term-black");
     expect(() => renderModule(css.replace(":root {", ":root { --term-black: #123456;"))).toThrow("amber/dark must not declare --term-black");
   });
 
@@ -106,7 +113,7 @@ describe("generate-themes", () => {
     for (const lookalike of ['"x_theme_color": "#abcdef",', '"note": "\\"theme_color\\": \\"#abcdef\\"",', '"extra": { "theme_color": "#abcdef" },', '"list": [{ "background_color": "#abcdef" }],']) {
       const rendered = renderManifest(css, manifest.replace('"theme_color": ', `${lookalike}\n  "theme_color": `));
       expect(rendered, lookalike).toContain(lookalike);
-      expect(JSON.parse(rendered).theme_color).toBe("#1f1f1f");
+      expect(JSON.parse(rendered).theme_color).toBe(defaultThemeColor);
     }
     expect(() => renderManifest(css, manifest.replace('"theme_color"', '"x_theme_color"'))).toThrow('"theme_color" found 0 times');
 
@@ -144,8 +151,9 @@ describe("generate-themes", () => {
 
   it("writes every copy from src/styles.css and never writes the CSS", async () => {
     const root = copyRoot();
-    // amber's panel feeds the module and DESIGN.md; the default theme's dark panel (codex) the page and manifest
-    const source = read(root, SOURCE).replace("--bg-panel: #181613;", "--bg-panel: #1a1714;").replace("--bg-panel: #1f1f1f;", "--bg-panel: #202020;");
+    // the default theme's dark panel feeds the module, DESIGN.md, index.html and the manifest;
+    // its ground feeds background_color
+    const source = read(root, SOURCE).replace(`--bg-panel: ${defaultPanel};`, "--bg-panel: #1a1714;").replace(`--bg: ${defaultBg};`, "--bg: #020304;");
     expect(source).not.toBe(css);
     writeFileSync(join(root, SOURCE), source);
 
@@ -158,8 +166,10 @@ describe("generate-themes", () => {
     expect(read(root, SOURCE)).toBe(source);
     expect(read(root, OUTPUTS.module)).toContain('bgPanel: "#1a1714"');
     expect(read(root, OUTPUTS.design)).toContain("| Surface/panel | `--bg-panel` | `#1a1714` |");
-    expect(read(root, OUTPUTS.index)).toContain('<meta name="theme-color" content="#202020" />');
-    expect(JSON.parse(read(root, OUTPUTS.manifest)).theme_color).toBe("#202020");
+    expect(read(root, OUTPUTS.index)).toContain('<meta name="theme-color" content="#1a1714" />');
+    const manifest = JSON.parse(read(root, OUTPUTS.manifest)) as { theme_color: string; background_color: string };
+    expect(manifest.theme_color).toBe("#1a1714");
+    expect(manifest.background_color).toBe("#020304");
 
     const fresh = await run(["--check", "--root", root]);
     expect([fresh.exitCode, fresh.output.trim()]).toEqual([0, "generated themes are up to date"]);
@@ -175,7 +185,7 @@ describe("generate-themes", () => {
 
   it("generates terminal rows from CSS and detects a stale terminal copy", async () => {
     const root = copyRoot();
-    const source = read(root, SOURCE).replace("--term-bg: #181613;", "--term-bg: #1a1714;");
+    const source = read(root, SOURCE).replace(`--term-bg: ${defaultTermBg};`, "--term-bg: #1a1714;");
     expect(source).not.toBe(css);
     writeFileSync(join(root, SOURCE), source);
 
