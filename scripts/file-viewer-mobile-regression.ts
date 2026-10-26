@@ -13,6 +13,7 @@ async function checkLayout(): Promise<void> {
   const repo = join(import.meta.dir, "..");
   const sharedCss = readFileSync(join(repo, "src/styles.css"), "utf8");
   const viewerCss = readFileSync(process.env.FILE_VIEWER_CSS ?? join(repo, "src/components/FileViewer.css"), "utf8");
+  const codeCss = readFileSync(join(repo, "src/components/HighlightedCode.css"), "utf8");
   const entry = join(fixture, "entry.ts");
   // Render the actual component, with only its HTTP file data supplied by the fixture.
   writeFileSync(entry, `
@@ -56,7 +57,7 @@ async function checkLayout(): Promise<void> {
           : url.searchParams.get("safe") === "landscape"
             ? { top: 0, right: 59, bottom: 21, left: 59 }
             : { top: 0, right: 0, bottom: 0, left: 0 };
-        const css = `${sharedCss}\n${viewerCss}`.replace(/env\(safe-area-inset-(top|right|bottom|left),\s*0px\)/g,
+        const css = `${sharedCss}\n${viewerCss}\n${codeCss}`.replace(/env\(safe-area-inset-(top|right|bottom|left),\s*0px\)/g,
           (_, side: keyof typeof insets) => `${insets[side]}px`);
         return new Response(css, { headers: { "content-type": "text/css" } });
       }
@@ -66,7 +67,9 @@ async function checkLayout(): Promise<void> {
         return Response.json({ path, name: path.split("/").pop(), kind: "image", mime: "image/svg+xml", size: 2048 });
       }
       if (url.pathname === "/api/fs/file") {
-        if (new URL(request.headers.get("referer")!).searchParams.get("kind") === "text") return new Response("const x = 1;\n".repeat(50), { headers: { "content-type": "text/plain" } });
+        if (new URL(request.headers.get("referer")!).searchParams.get("kind") === "text") {
+          return new Response(("const x = 1; // " + "long code line ".repeat(15) + "\n").repeat(60), { headers: { "content-type": "text/plain" } });
+        }
         const wide = new URL(request.headers.get("referer")!).searchParams.get("image") === "wide";
         const [width, height] = wide ? [6000, 400] : [400, 6000];
         return new Response(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="teal"/></svg>`,
@@ -197,10 +200,22 @@ async function checkLayout(): Promise<void> {
         assert.ok(box.x >= title.x + title.width - 1 && box.x + box.width <= close.x + 1, `text: button ${index} between the name and Close`);
       }
       assert.ok((await page.locator(".file-viewer-title .modal-title").innerText()).endsWith(".ts"), "text: the extension stays in the title");
+      assert.equal(await page.locator(".modal.file-viewer").evaluate((el) => getComputedStyle(el).touchAction), "manipulation");
+      assert.equal(await page.locator(".modal-scrim").evaluate((el) => getComputedStyle(el).touchAction), "manipulation");
+      // Vertical wheel scrolling on code lines chains up to scroll the body.
+      await page.mouse.move(200, 300);
+      await page.mouse.wheel(0, 300);
+      const scrolledY = await page.locator(".file-viewer-body").evaluate((el) => el.scrollTop);
+      assert.ok(scrolledY > 0, "text: vertical wheel over code lines scrolls the body");
+      // Horizontal wheel scrolling scrolls the code text container.
+      await page.mouse.wheel(200, 0);
+      const scrolledX = await page.locator(".file-viewer-text").evaluate((el) => el.scrollLeft);
+      assert.ok(scrolledX > 0, "text: horizontal wheel over code lines scrolls the text");
+
       await page.getByRole("button", { name: "More", exact: true }).tap();
       assert.deepEqual((await page.getByRole("menuitem").allTextContents()).map((item) => item.trim()), ["Open in a new tab", "Download"], "text: More holds new tab and download");
       assert.deepEqual(errors, []);
-      console.log("PASS text: the name, Copy, More and Close on one row at 390px; new tab and download in More");
+      console.log("PASS text: the name, Copy, More and Close on one row at 390px; vertical and horizontal scroll; new tab and download in More");
     } finally { await phone.close(); }
   } finally {
     await browser?.close();
