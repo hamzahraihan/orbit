@@ -410,8 +410,10 @@ try {
         await page.locator(".composer-stop").waitFor();
       });
       // Typography is applied by SettingsProvider after the render. At this fixed card width,
-      // the larger interface font must step effort out without needing a viewport resize.
-      await withCard(browser, 1075, { agent: "codex", model: LONG_MODEL }, async (page) => {
+      // the largest interface font must step effort out without needing a viewport resize.
+      // The Quiet Slate sidebar is 56px narrower, which widens the card at the same viewport:
+      // 1019 keeps the card near its pre-redesign width.
+      await withCard(browser, 1019, { agent: "codex", model: LONG_MODEL }, async (page) => {
         const before = await measure(page);
         assert.equal(before.draw, "full");
         assert.equal(before.model?.clipped, false);
