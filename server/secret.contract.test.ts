@@ -6,13 +6,13 @@ import { join } from "node:path";
 import type { Socket } from "bun";
 import { PtySession } from "./pty/session.ts";
 import { createServer } from "./index.ts";
-import { herdrRpc, herdrSocketPath, paneRead, paneSendText, workspaceClose, workspaceCreate } from "./herdr/client.ts";
+import { herdrRpc, herdrSocketPath, paneRead, paneSendText, socketAddress, workspaceClose, workspaceCreate } from "./herdr/client.ts";
 
 interface ProxiedRequest { method: string; params: unknown; answered: boolean }
 interface Leg { up: Socket<undefined> | null; held: Buffer[]; entry: ProxiedRequest | null }
 
 /**
- * A unix socket in front of the test herdr, for what a mirrored pane is sent: herdr's own
+ * A listening socket in front of the test herdr, for what a mirrored pane is sent: herdr's own
  * socket cannot be asked what it received or made to refuse. One upstream connection per
  * client connection, bytes passed on as they come (a subscription stays open), each
  * request's method and params kept in order. `refuse` answers pane.send_text, and only
@@ -46,7 +46,7 @@ function herdrProxy(path: string, upstream: string) {
     if (waiting.end) to.end();
   };
   const listener = Bun.listen<Leg>({
-    unix: path,
+    unix: socketAddress(path),
     socket: {
       open(down) { down.data = { up: null, held: [], entry: null }; },
       data(down, chunk) {
@@ -78,7 +78,7 @@ function herdrProxy(path: string, upstream: string) {
           return;
         }
         void Bun.connect<undefined>({
-          unix: upstream,
+          unix: socketAddress(upstream),
           socket: {
             open(up) { leg.up = up; push(up, Buffer.concat(leg.held)); leg.held = []; },
             data(_up, answer) { if (answer.includes(10)) entry.answered = true; push(down, Buffer.from(answer)); },

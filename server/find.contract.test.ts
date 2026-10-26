@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ApiError, PaneFindResponse } from "../shared/protocol.ts";
 import { createServer } from "./index.ts";
-import { HerdrError, herdrRpc, herdrSocketPath, paneRead, paneScroll, paneScrollInfo, workspaceClose, workspaceCreate } from "./herdr/client.ts";
+import { HerdrError, herdrRpc, herdrSocketPath, paneRead, paneScroll, paneScrollInfo, socketAddress, workspaceClose, workspaceCreate } from "./herdr/client.ts";
 
 describe("POST /api/pane/find", () => {
   let server: ReturnType<typeof createServer>;
@@ -188,7 +188,7 @@ describe("POST /api/pane/find", () => {
     let moved = false;
     let searchRevision: number | undefined;
     const proxy = Bun.listen({
-      unix: proxyPath,
+      unix: socketAddress(proxyPath),
       data: "",
       socket: {
         data(connection, chunk) {
@@ -246,7 +246,7 @@ describe("POST /api/pane/find", () => {
     // revision check. The native guard and shared scroll remain real, without sleeps.
     let changed = false;
     const proxy = Bun.listen({
-      unix: proxyPath,
+      unix: socketAddress(proxyPath),
       socket: {
         data(connection, chunk) {
           connection.data += new TextDecoder().decode(chunk);

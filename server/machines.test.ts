@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, win32 } from "node:path";
+import { delimiter, join, win32 } from "node:path";
 import { describeProgress } from "../src/lib/bridgeProgress.ts";
 import type { SetupJob } from "../shared/machines.ts";
 import { paneNotificationTag } from "../shared/notify-policy.ts";
@@ -185,13 +185,16 @@ describe("SSH output during setup", () => {
   function waitingSsh(script: string): MachineManager {
     const root = mkdtempSync(join(tmpdir(), "herdr-ssh-output-"));
     const bin = join(root, "bin");
-    Bun.spawnSync(["mkdir", bin]);
-    writeFileSync(join(bin, "ssh"), `#!/bin/sh\n${script}\n`);
-    chmodSync(join(bin, "ssh"), 0o755);
+    mkdirSync(bin);
+    // Windows starts ssh through PATHEXT, from a .cmd; a POSIX shell script needs sh
+    const windows = process.platform === "win32";
+    const executable = join(bin, windows ? "ssh.cmd" : "ssh");
+    writeFileSync(executable, windows ? `@echo off\r\n${script}\r\n` : `#!/bin/sh\n${script}\n`);
+    if (!windows) chmodSync(executable, 0o755);
     const path = process.env["PATH"];
-    process.env["PATH"] = `${bin}:${path}`;
+    process.env["PATH"] = `${bin}${delimiter}${path ?? ""}`;
     const manager = new MachineManager(join(root, "state"), {} as PushService, new CompletionTracker(null));
-    // stop() cancels the job, which kills the fake ssh (it `exec`s sleep, so there is no orphan)
+    // stop() cancels the job, which kills the fake ssh (a lone sleep on POSIX, the ping under cmd.exe)
     cleanups.push(() => { manager.stop(); process.env["PATH"] = path; rmSync(root, { recursive: true, force: true }); });
     return manager;
   }
@@ -201,7 +204,9 @@ describe("SSH output during setup", () => {
   }
 
   it("shows what ssh printed while it is still waiting, and drops it once the setup is cancelled", async () => {
-    const manager = waitingSsh(`echo "To authenticate, visit: https://login.tailscale.com/a/check123" >&2\nexec sleep 30`);
+    const manager = waitingSsh(process.platform === "win32"
+      ? "echo To authenticate, visit: https://login.tailscale.com/a/check123 1>&2\r\nping -n 31 127.0.0.1 >nul"
+      : `echo "To authenticate, visit: https://login.tailscale.com/a/check123" >&2\nexec sleep 30`);
     const started = manager.setup({ destination: "check-pc" });
     expect(started.ssh_output).toBeNull();
     const job = await until(() => manager.job(started.id)?.ssh_output ? manager.job(started.id) : null);
@@ -448,7 +453,16 @@ describe("terminal attach capability", () => {
     expect(sidecarAvailable({ node: () => true, pty: () => false })).toBe(false);
   });
 
-  it("takes a node for Node only when it answers in time and is not Bun", () => {
+  it("takes only a real Node for Node, never Bun or a missing executable", () => {
+    const dir = mkdtempSync(join(tmpdir(), "herdr-sidecar-absent-"));
+    try {
+      expect(isRealNode(process.execPath)).toBe(false);
+      expect(isRealNode(join(dir, "absent"))).toBe(false);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  // The probe's stand-ins are POSIX shell scripts, which native Windows cannot start.
+  it.skipIf(process.platform === "win32")("tells a node's answer from Bun's, a failure or a hang", () => {
     const dir = mkdtempSync(join(tmpdir(), "herdr-sidecar-probe-"));
     const stand = (name: string, body: string) => {
       const path = join(dir, name);
@@ -460,9 +474,21 @@ describe("terminal attach capability", () => {
       expect(isRealNode(stand("node", "echo"))).toBe(true);
       expect(isRealNode(stand("bun-as-node", "echo 1.4.2"))).toBe(false);
       expect(isRealNode(stand("broken", "exit 1"))).toBe(false);
-      expect(isRealNode(join(dir, "absent"))).toBe(false);
       // a node that never answers is given up on, not waited for
       expect(isRealNode(stand("hung", "exec sleep 30"), process.env, 200)).toBe(false);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  const nodeOnPath = Bun.which("node");
+  it.skipIf(nodeOnPath === null)("accepts the Node on the PATH, and gives up on one that never answers", () => {
+    const dir = mkdtempSync(join(tmpdir(), "herdr-sidecar-node-"));
+    const blocker = join(dir, "block.cjs");
+    writeFileSync(blocker, "setInterval(() => {}, 1_000);\n");
+    try {
+      expect(isRealNode(nodeOnPath!)).toBe(true);
+      const started = Date.now();
+      expect(isRealNode(nodeOnPath!, { ...process.env, NODE_OPTIONS: `--require ${JSON.stringify(blocker.replaceAll("\\", "/"))}` }, 200)).toBe(false);
+      expect(Date.now() - started).toBeGreaterThanOrEqual(150);
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 });

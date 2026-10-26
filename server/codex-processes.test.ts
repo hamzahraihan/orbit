@@ -4,6 +4,7 @@ import { appendFileSync, closeSync, mkdirSync, mkdtempSync, openSync, rmSync, st
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { codexOpenRollout, codexTranscriptPath } from "./codex.ts";
+import { socketAddress } from "./herdr/client.ts";
 import { processStartedAt, processStartUpperBound } from "./process-start.ts";
 
 // Native stores and the real RPC client; only herdr's foreground metadata is synthetic.
@@ -40,7 +41,7 @@ beforeEach(() => {
   const socket = join(root, "herdr.sock");
   process.env["HERDR_SOCKET"] = socket;
   listener = Bun.listen<{ buffer: string }>({
-    unix: socket,
+    unix: socketAddress(socket),
     socket: {
       open(socket) { socket.data = { buffer: "" }; },
       data(socket, chunk) {

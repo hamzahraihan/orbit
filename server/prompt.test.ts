@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { InteractivePrompt } from "../shared/protocol.ts";
 
+import { socketAddress } from "./herdr/client.ts";
 import { answerKeys, hermesInputDraft, claudeClearableDraft, claudeInputBoxText, claudeInputDraft, claudeInputEmpty, viewportShowsLive, removedInvisible, noteSubmitted, codexQuestionsCollapsed, codexQueuedPrompt, handlePromptRequest, modelListWaits, openOmoAsks, parseClaudeSuggestion, parseFallbackPrompt, parseInteractivePrompt, pendingOmoAsk, promptWaitEnded, claudeRestoredDraft, lastChatSubmitted } from "./prompt.ts";
 
 const labels = (prompt: InteractivePrompt | null) => prompt?.options.map((option) => option.label);
@@ -2797,7 +2798,7 @@ describe("Claude's suggestion on a prompt poll", () => {
         if (request.params.format === "text") answer({ read: { text: "Done.\n\n────────\n❯ \n────────\n" } });
       });
     });
-    await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(path, resolve); });
+    await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(socketAddress(path), resolve); });
     const previous = process.env["HERDR_SOCKET"];
     process.env["HERDR_SOCKET"] = path;
     try { await run(reads); } finally {
@@ -2878,7 +2879,7 @@ Claude has written up a plan and is ready to execute. Would you like to proceed?
         answer({ read: { text: SCREEN } });
       });
     });
-    await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(path, resolve); });
+    await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(socketAddress(path), resolve); });
     const previous = process.env["HERDR_SOCKET"];
     process.env["HERDR_SOCKET"] = path;
     try { await run(transcript, planFile); } finally {
@@ -3825,7 +3826,7 @@ describe("an answer and the menu it was made for", () => {
         answer({});
       });
     });
-    await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(path, resolve); });
+    await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(socketAddress(path), resolve); });
     const previous = process.env["HERDR_SOCKET"];
     process.env["HERDR_SOCKET"] = path;
     try { await run(pane); } finally {
