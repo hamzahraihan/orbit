@@ -125,7 +125,7 @@ export function filesNamed(cwd: string, name: string, limit = 10, anyForm = fals
   const scan = (): string[] => [...new Set([...gitFilesNow(cwd) ?? [], ...walkFiles(cwd)])];
   let hit = walked.get(cwd);
   const fresh = !hit || hit.expires <= Date.now();
-  if (fresh) {
+  if (fresh || !hit) {
     hit = { expires: Date.now() + CACHE_MS, files: scan() };
     walked.set(cwd, hit);
     if (walked.size > 16) walked.delete(walked.keys().next().value!);
