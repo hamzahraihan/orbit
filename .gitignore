@@ -26,3 +26,5 @@ scripts/*.tmp.ts
 
 # the PowerShell module analysis cache, dropped in the checkout by the Windows install test
 Microsoft/
+
+graphify-out/
