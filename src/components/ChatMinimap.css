@@ -28,18 +28,18 @@
   left: 0;
   width: var(--space-2);
   height: 1px;
-  background: var(--border-strong);
+  background: var(--text-muted);
   transition: width var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
 }
 
 .chat-minimap-tick:hover::before {
   width: var(--space-3);
-  background: var(--text-dim);
+  background: var(--text);
 }
 
 .chat-minimap-tick[aria-current="true"]::before {
   width: var(--space-3);
-  background: var(--text-strong);
+  background: var(--accent);
 }
 
 .chat-minimap-tick:focus-visible {
