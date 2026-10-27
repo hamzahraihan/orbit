@@ -4,8 +4,8 @@
      buttons above the list. Aliases of existing tokens only. */
   --side-gutter: var(--space-3);
   --side-box: var(--control-h);
-  --side-row: var(--control-h);
-  --side-row-2: calc(var(--control-h) + var(--space-3));
+  --side-row: 32px;
+  --side-row-2: 32px;
   --side-action: var(--space-6);
   --side-hover: color-mix(in srgb, var(--bg-hover) 50%, var(--bg-panel));
   --side-selected: var(--bg-hover);
@@ -13,7 +13,7 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  background: var(--bg-panel);
+  background: var(--bg-sidebar);
 }
 
 .sidebar-list {
@@ -30,10 +30,10 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--text-dim);
+  color: var(--accent-text);
   font: inherit;
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-regular);
+  font-size: 12px;
+  font-weight: var(--fw-medium);
   border-radius: var(--radius-md);
   line-height: var(--lh-tight);
   text-align: left;
@@ -92,9 +92,11 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
   gap: var(--space-3);
   margin: var(--space-2) 0;
   padding: var(--space-4);
-  border: var(--hairline) dashed var(--border);
+  border: 0;
   border-radius: var(--radius-md);
   text-align: center;
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .tree-state-empty .tree-state { padding: 0; }
@@ -174,7 +176,7 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
   display: flex;
   align-items: center;
   min-width: 0;
-  min-height: var(--side-row);
+  min-height: 32px;
   padding-right: var(--side-box);
   border-radius: var(--radius-md);
   transition: background-color var(--dur-fast) var(--ease-out);
@@ -198,7 +200,7 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
 /* One indent level. A linked worktree keeps herdr's repository workspace as its parent and sits
    under that row's mark, clear of the folder column. The fill stays as wide as the list and the
    row's content moves. */
-.worktree-children .workspace-header { padding-left: var(--side-box); }
+.worktree-children .workspace-header { padding-left: var(--space-4); }
 
 /* herdr's tree: a worktree hangs from its repository's folder on a dim branch, a tee for each
    but the last and an elbow for the last, drawn in the indent and never in the way of a click */
@@ -308,7 +310,7 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
   min-width: 0;
   overflow: hidden;
   color: var(--text);
-  font-size: var(--fs-md);
+  font-size: 13px;
   font-weight: var(--fw-regular);
   line-height: var(--lh-tight);
   text-overflow: ellipsis;
@@ -466,9 +468,13 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
   }
 }
 
-/* as the tab strip's (TabStrip.css): no "..." button where there is a mouse and room for a right-click */
+/* on desktop with fine pointer, show actions on hover (right-click still works) */
 @media (pointer: fine) and (min-width: 769px) {
-  .workspace-actions { display: none; }
+  .workspace-header:hover > .workspace-actions {
+    width: auto;
+    overflow: visible;
+    opacity: 1;
+  }
 }
 
 /* The status cell belongs to the selector (a click or a drag on it is the row's) and is drawn at
