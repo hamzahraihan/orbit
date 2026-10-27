@@ -139,11 +139,11 @@ export async function freeClaudeBox(paneId: string, working: boolean, authorize:
   if (claudeInputDraft(...await claudeBoxReads(paneId))) throw new HerdrError("input_draft", CLAUDE_INPUT_DRAFT_MESSAGE);
 }
 
-export function createSubmitText({ options, lastTyped, attachments, terminalAttach, SUBMIT_DEADLINE_MS, TYPED_SETTLE_MS, DRAFT_CLEAR_WAIT_MS, DRAFT_CLEAR_POLL_MS, SUBMIT_DELAY_MS }: {
+export function createSubmitText({ options, lastTyped, attachments, paneMirrored, SUBMIT_DEADLINE_MS, TYPED_SETTLE_MS, DRAFT_CLEAR_WAIT_MS, DRAFT_CLEAR_POLL_MS, SUBMIT_DELAY_MS }: {
   options: { submitDeadlineMs?: number; submitDelayMs?: number };
   lastTyped: Map<string, number>;
   attachments: ReadonlyMap<string, { cols: number }>;
-  terminalAttach: () => Promise<boolean>;
+  paneMirrored: (paneId: string) => boolean;
   SUBMIT_DEADLINE_MS: number;
   TYPED_SETTLE_MS: number;
   DRAFT_CLEAR_WAIT_MS: number;
@@ -305,7 +305,7 @@ export function createSubmitText({ options, lastTyped, attachments, terminalAtta
       // a mirrored pane's browser never learned the program's paste mode, so `payload` came as bare
       // lines: several of them are shaped here as the same block typed into the mirror is. herdr is
       // asked only for such a block, so a one-line message never waits on it.
-      const shaped = await mirrorInput(closeMention(payload), async () => await terminalAttach() ? null : (await paneContext(paneId)).agent);
+      const shaped = await mirrorInput(closeMention(payload), async () => paneMirrored(paneId) ? (await paneContext(paneId)).agent : null);
       inTime();
       await paneSendText(paneId, shaped);
       // fixed wait: a TUI busy with the paste takes an Enter in the same chunk for a newline (SUBMIT_DELAY_MS)
