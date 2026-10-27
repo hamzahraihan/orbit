@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
-const CACHE_MS = 5_000;
+const CACHE_MS = 1_000;
 const MAX_ENTRIES = 5_000;
 /** git lists paths cheaply, so a tracked data set of thousands of files does not hide the rest */
 const MAX_GIT_ENTRIES = 100_000;
@@ -61,12 +61,13 @@ function walkFiles(cwd: string): string[] {
   return files;
 }
 
-async function inventory(cwd: string): Promise<string[]> {
+async function inventory(cwd: string, refresh = false): Promise<string[]> {
   const hit = cache.get(cwd);
-  if (hit && hit.expires > Date.now()) return hit.files;
+  if (!refresh && hit && hit.expires > Date.now()) return hit.files;
   const files = (await gitFiles(cwd)) ?? walkFiles(cwd);
   files.sort();
   cache.set(cwd, { expires: Date.now() + CACHE_MS, files });
+  if (cache.size > 16) cache.delete(cache.keys().next().value!);
   return files;
 }
 
@@ -93,10 +94,10 @@ function scoreLower(lower: string, query: string): number {
   return -1;
 }
 
-export async function paneFiles(cwd: string, query = "", limit = 20): Promise<string[]> {
+export async function paneFiles(cwd: string, query = "", limit = 20, refresh = false): Promise<string[]> {
   const normalized = query.trim().toLowerCase();
   const boundedLimit = Math.min(100, Math.max(1, Math.trunc(limit) || 20));
-  return (await inventory(cwd))
+  return (await inventory(cwd, refresh))
     .map((path) => ({ path, score: score(path, normalized) }))
     .filter((item) => item.score >= 0)
     .sort((left, right) => right.score - left.score || left.path.localeCompare(right.path))
@@ -121,19 +122,36 @@ function gitFilesNow(cwd: string): string[] | null {
  */
 export function filesNamed(cwd: string, name: string, limit = 10, anyForm = false): string[] {
   const suffix = anyForm ? name.replace(/^\.\//, "").normalize("NFC") : name.replace(/^\.\//, "");
+  const scan = (): string[] => [...new Set([...gitFilesNow(cwd) ?? [], ...walkFiles(cwd)])];
   let hit = walked.get(cwd);
-  if (!hit || hit.expires <= Date.now()) {
-    hit = { expires: Date.now() + CACHE_MS, files: [...new Set([...gitFilesNow(cwd) ?? [], ...walkFiles(cwd)])] };
+  const fresh = !hit || hit.expires <= Date.now();
+  if (fresh) {
+    hit = { expires: Date.now() + CACHE_MS, files: scan() };
     walked.set(cwd, hit);
     if (walked.size > 16) walked.delete(walked.keys().next().value!);
   }
-  return hit.files.filter((path) => {
+  const match = (list: string[]) => list.filter((path) => {
     const compared = anyForm ? path.normalize("NFC") : path;
     return compared === suffix || compared.endsWith(`/${suffix}`);
-  }).sort().slice(0, limit);
+  });
+  let found = match(hit.files);
+  // a file written since the last walk: if the cached walk had no match, re-probe before saying none
+  if (found.length === 0 && !fresh) {
+    hit = { expires: Date.now() + CACHE_MS, files: scan() };
+    walked.set(cwd, hit);
+    if (walked.size > 16) walked.delete(walked.keys().next().value!);
+    found = match(hit.files);
+  }
+  return found.sort().slice(0, limit);
 }
 
-export function clearFileCache(): void {
-  cache.clear();
-  walked.clear();
+/** Forget cached directory inventories, for tests or after known writes. When `cwd` is given, drops only that folder. */
+export function clearFileCache(cwd?: string): void {
+  if (cwd) {
+    cache.delete(cwd);
+    walked.delete(cwd);
+  } else {
+    cache.clear();
+    walked.clear();
+  }
 }
