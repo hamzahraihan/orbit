@@ -470,12 +470,12 @@
     "attachments attachments attachments"
     "text text text"
     "left status right";
-  background: var(--bg-elevated);
-  border: var(--hairline) solid var(--border);
+  background: var(--bg-composer);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   /* the input card: one rounded surface, no scored edge. Resting surfaces carry no shadow
      beyond this one card */
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   transition:
     border-color var(--dur-fast) var(--ease-out),
     box-shadow var(--dur-fast) var(--ease-out);
@@ -484,8 +484,8 @@
 /* focus is the surface's: the accent border on the rounded box, not a rectangle on the
    textarea inside it (the global :focus-visible ring is suppressed below) */
 .composer-surface:focus-within {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-card), 0 0 0 var(--hairline) var(--accent-tint);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .composer-surface.is-dragging {
@@ -497,9 +497,9 @@
   grid-area: text;
   width: 100%;
   min-width: 0;
-  min-height: calc(1lh + var(--space-5));
+  min-height: calc(1lh + var(--space-6));
   max-height: 10lh;
-  padding: var(--space-4) var(--space-4) var(--space-1);
+  padding: var(--space-4) var(--space-5) var(--space-2);
   resize: none;
   overflow-x: hidden;
   overflow-y: auto;
@@ -510,12 +510,16 @@
   background: transparent;
   border: 0;
   outline: 0;
-  color: var(--text-strong);
+  color: var(--text);
   font-family: var(--font-ui);
   /* never under --fs-input, the smallest size iOS does not zoom the page for; a larger
      Settings → Chat font size grows it with the transcript */
   font-size: max(var(--fs-input), calc(var(--fs-chat) * var(--chat-scale, 1)));
-  line-height: var(--lh-base);
+  line-height: 1.6;
+}
+
+.composer-text::placeholder {
+  color: var(--text-muted);
 }
 
 /* with a mouse the message is typed at the size the transcript is read at: --fs-chat scaled
@@ -587,11 +591,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--space-8);
-  height: var(--space-8);
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--primary-text);
 }
@@ -625,7 +629,12 @@
 }
 
 .composer-send {
-  --composer-action-fill: var(--primary);
+  --composer-action-fill: var(--accent-strong);
+  background: linear-gradient(180deg, var(--accent-strong) 0%, #7a1648 100%);
+  opacity: 1;
+}
+.composer-send:disabled {
+  opacity: 0.4;
 }
 
 /* the one round button: Stop is Send's circle in the text colour, in the same place at the same
