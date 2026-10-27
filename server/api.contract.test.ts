@@ -3149,6 +3149,26 @@ describe("terminal lens of a bridge without the PTY sidecar", () => {
     expect(herdr).not.toHaveProperty("terminal_mirror");
     expect(await told(true)).toEqual({ health: herdr, bridge: herdr });
   });
+
+  it("tells a sidecar gained mid-life without a restart", async () => {
+    const herdr = await ping();
+    expect(herdr.terminal_attach).toBe(true);
+    const dir = mkdtempSync(join(tmpdir(), "herdr-web-ui-sidecar-late-"));
+    let sidecar = false;
+    const bridge = createServer({ port: 0, stateDir: dir, token: TOKEN, machines: false, sidecar: () => sidecar });
+    const get = async (path: string) => {
+      const response = await fetch(`http://localhost:${bridge.port}${path}`, { headers: { authorization: `Bearer ${TOKEN}` } });
+      expect(response.status).toBe(200);
+      return (await response.json()) as { herdr: unknown };
+    };
+    try {
+      expect((await get("/api/health")).herdr).toEqual({ ...herdr, terminal_attach: false, terminal_mirror: true });
+      expect((await get("/api/bridge")).herdr).toEqual({ ...herdr, terminal_attach: false, terminal_mirror: true });
+      sidecar = true;
+      expect((await get("/api/health")).herdr).toEqual(herdr);
+      expect((await get("/api/bridge")).herdr).toEqual(herdr);
+    } finally { bridge.stop(); rmSync(dir, { recursive: true, force: true }); }
+  });
 });
 
 it("refuses cross-origin changes while allowing same-origin and CLI requests", async () => {

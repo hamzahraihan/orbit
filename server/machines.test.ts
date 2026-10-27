@@ -14,7 +14,7 @@ import { MachineManager } from "./machines.ts";
 import { detectHost, psQuote, UNSUPPORTED_HOST, windowsBridgeFiles, windowsHost } from "./remote-host.ts";
 import { decodeClixml, SshConnection } from "./ssh.ts";
 import { terminalAttachSupported } from "./herdr/client.ts";
-import { attachableIdentity, isRealNode, sidecarAvailable } from "./pty/sidecar.ts";
+import { attachableIdentity, createSidecarProbe, isRealNode } from "./pty/sidecar.ts";
 import { CompletionTracker } from "./completion.ts";
 import type { PushService } from "./push.ts";
 import { recentSshOutput } from "./ssh.ts";
@@ -448,9 +448,32 @@ describe("terminal attach capability", () => {
   });
 
   it("counts the sidecar as runnable only with both node and node-pty", () => {
-    expect(sidecarAvailable({ node: () => true, pty: () => true })).toBe(true);
-    expect(sidecarAvailable({ node: () => false, pty: () => true })).toBe(false);
-    expect(sidecarAvailable({ node: () => true, pty: () => false })).toBe(false);
+    const runnable = (node: boolean, pty: boolean) => createSidecarProbe({ node: () => node, pty: () => pty })();
+    expect(runnable(true, true)).toBe(true);
+    expect(runnable(false, true)).toBe(false);
+    expect(runnable(true, false)).toBe(false);
+  });
+
+  it("looks for a missing sidecar again, so one installed mid-life counts without a restart", () => {
+    let node = false;
+    let probes = 0;
+    let clock = 1_000;
+    const probe = createSidecarProbe({ node: () => { probes++; return node; }, pty: () => true }, () => clock);
+    expect(probe()).toBe(false);
+    // a missing sidecar is not re-spawned on every caller's question
+    expect(probe()).toBe(false);
+    expect(probes).toBe(1);
+    node = true;
+    clock += 9_999;
+    expect(probe()).toBe(false);
+    clock += 1;
+    expect(probe()).toBe(true);
+    expect(probes).toBe(2);
+    // one that runs is not probed again
+    node = false;
+    clock += 60_000;
+    expect(probe()).toBe(true);
+    expect(probes).toBe(2);
   });
 
   it("takes only a real Node for Node, never Bun or a missing executable", () => {

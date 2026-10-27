@@ -49,14 +49,28 @@ const here: SidecarRuntime = {
   },
 };
 
-let known: boolean | null = null;
+/** How long a missing sidecar is trusted before it is looked for again: a Node or node-pty installed mid-life counts without a restart. */
+const MISSING_RETRY_MS = 10_000;
 
-/** This runtime's answer is taken once: every caller (attach, /api/health, /api/bridge) gets the same one. */
-export function sidecarAvailable(runtime?: SidecarRuntime): boolean {
-  if (runtime) return runtime.pty() && runtime.node();
-  if (known === null) known = here.pty() && here.node();
-  return known;
+/**
+ * A probe whose answer is cached. A sidecar that runs stays the answer (each probe spawns Node
+ * for nothing), while a missing one is looked for again after MISSING_RETRY_MS, so installing
+ * Node or node-pty later, or a PATH change, is reflected.
+ */
+export function createSidecarProbe(runtime: SidecarRuntime, now: () => number = Date.now): () => boolean {
+  let known: boolean | null = null;
+  let knownAt = 0;
+  return () => {
+    if (known === true) return true;
+    if (known === false && now() - knownAt < MISSING_RETRY_MS) return false;
+    known = runtime.pty() && runtime.node();
+    knownAt = now();
+    return known;
+  };
 }
+
+/** Whether this runtime can run the PTY sidecar: every caller (attach, /api/health, /api/bridge) asks at the moment it answers. */
+export const sidecarAvailable = createSidecarProbe(here);
 
 /** herdr's identity as this bridge can serve it: without the sidecar, told the way a herdr that cannot attach tells it. */
 export function attachableIdentity(identity: HerdrIdentity, sidecar: boolean): HerdrIdentity {

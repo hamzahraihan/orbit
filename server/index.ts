@@ -304,20 +304,29 @@ export function createServer(
     attachHoldMs?: number;
     /** whether herdr can `terminal attach`; unset, its ping says, and this runtime's PTY sidecar has to be runnable. Tests give a Windows herdr's answer, at once or as late as a ping's. */
     terminalAttach?: boolean | (() => Promise<boolean>);
-    /** whether this runtime can run the PTY sidecar; unset, server/pty/sidecar.ts says. Tests give a runtime without Node or node-pty, while herdr keeps its own answer. */
-    sidecar?: boolean;
+    /** whether this runtime can run the PTY sidecar; unset, server/pty/sidecar.ts says. Tests give a runtime without Node or node-pty, or one that gains it mid-life, while herdr keeps its own answer. */
+    sidecar?: boolean | (() => boolean);
   } = {},
 ): ServerInstance {
   const attachments = new Map<string, PaneAttachment>();
-  /** whether this bridge can `terminal attach`: herdr is asked once, and the PTY sidecar has to be runnable here (server/pty/sidecar.ts) */
-  /** whether the sidecar can run, settled as the server starts so that attach, /api/health and /api/bridge tell one answer; a forced answer (tests) stands in for it */
-  const sidecar = options.sidecar ?? (options.terminalAttach === undefined ? sidecarAvailable() : options.terminalAttach !== false);
+  /** a forced sidecar answer (tests), else the runtime's own, which a missing one is re-probed for (server/pty/sidecar.ts) */
+  const forcedSidecar = options.sidecar ?? (options.terminalAttach === undefined ? undefined : options.terminalAttach !== false);
+  const sidecar = (): boolean => typeof forcedSidecar === "function" ? forcedSidecar() : forcedSidecar ?? sidecarAvailable();
+  /** whether herdr can `terminal attach`: herdr is asked once, the sidecar at each call, since one installed mid-life counts */
+  let herdrAttach: boolean | null = typeof options.terminalAttach === "boolean" ? options.terminalAttach : null;
+  /** the answer last settled, for the input path that must not wait on a ping */
   let terminalAttachKnown: boolean | null = typeof options.terminalAttach === "boolean" ? options.terminalAttach : null;
   const terminalAttach = async (): Promise<boolean> => {
-    if (terminalAttachKnown === null) {
-      terminalAttachKnown = typeof options.terminalAttach === "function" ? await options.terminalAttach() : attachableIdentity(await ping(), sidecar).terminal_attach !== false;
+    if (herdrAttach === null) {
+      herdrAttach = typeof options.terminalAttach === "function" ? await options.terminalAttach() : (await ping()).terminal_attach !== false;
     }
+    terminalAttachKnown = herdrAttach && sidecar();
     return terminalAttachKnown;
+  };
+  /** a pane's own screen kind: a mirrored attachment has no pty, and a pane with none yet goes by what this bridge could attach */
+  const paneMirrored = (paneId: string): boolean => {
+    const attachment = attachments.get(paneId);
+    return attachment ? attachment.mirror !== undefined : terminalAttachKnown !== true;
   };
   const retryFor = options.attachRetryForMs ?? ATTACH_RETRY_FOR_MS;
   const heldRetry = options.attachHeldRetryMs ?? ATTACH_HELD_RETRY_MS;
@@ -377,7 +386,7 @@ export function createServer(
   identityOf(false, null);
   const serveOnly = options.tailscaleServeOnly ?? process.env["HERDR_WEB_TAILSCALE_SERVE_ONLY"] === "1";
 
-  const submitText = createSubmitText({ options, lastTyped, attachments, terminalAttach, SUBMIT_DEADLINE_MS, TYPED_SETTLE_MS, DRAFT_CLEAR_WAIT_MS, DRAFT_CLEAR_POLL_MS, SUBMIT_DELAY_MS });
+  const submitText = createSubmitText({ options, lastTyped, attachments, paneMirrored, SUBMIT_DEADLINE_MS, TYPED_SETTLE_MS, DRAFT_CLEAR_WAIT_MS, DRAFT_CLEAR_POLL_MS, SUBMIT_DELAY_MS });
 
   const { mayType, authorizeSocket, admit, setRole, watchPane, unwatchPane, killWatches, end } = createConnections({ clients, present, pending, devices, detachClaimed, dropClaims });
 
@@ -1167,7 +1176,7 @@ export function createServer(
 
       if (pathname === "/api/bridge") {
         if (token === "" && !bridgeAuthorized) return unauthorizedJson();
-        try { return jsonResponse(await bridgeIdentity(sidecar)); } catch (error) { return errorResponse(error); }
+        try { return jsonResponse(await bridgeIdentity(sidecar())); } catch (error) { return errorResponse(error); }
       }
       if (pathname === "/api/machines" || pathname.startsWith("/api/machines/")) {
         if (!machines) return jsonResponse({ error: { code: "bridge_only", message: "Manage PCs on the connection server" } }, 404);
@@ -1267,7 +1276,7 @@ export function createServer(
         try {
           const info = await ping();
           // a forced answer (tests) and a runtime without the PTY sidecar are told the way a Windows herdr's own would be
-          const herdr = attachableIdentity(info, sidecar);
+          const herdr = attachableIdentity(info, sidecar());
           return jsonResponse({ ok: true, herdr, auth, ...(lan_exposure ? { lan_exposure } : {}),
             web_ui: { boot_id: process.env["HERDR_WEB_BOOT_ID"] ?? null, revision: process.env["HERDR_WEB_REVISION"] ?? null } });
         } catch (error) {
@@ -1681,7 +1690,7 @@ export function createServer(
               // Stop and arrows go through herdr itself, each in its turn behind a message in flight.
               // The turn is taken before herdr is asked what it can do: a message sent while
               // that answer is on its way must not overtake the typing.
-              if (terminalAttachKnown === false || (!attachment && terminalAttachKnown === null)) {
+              if (paneMirrored(message.pane_id)) {
                 // an attach this client is not a member of owns this pane's screen, and typing
                 // here would reach past it — the same refusal the pty branch below makes. A
                 // pane with no attachment at all is left as it was: that is the key bar, and
@@ -1700,8 +1709,9 @@ export function createServer(
                 const allowed = () => mayType(client) && connectionOf(client).roles === roles && client.data.attached.get(message.pane_id) === claim
                   && sameAttachment(origin, attachments.get(message.pane_id), client);
                 void serialize(message.pane_id, async () => {
-                  // a herdr that attaches: typing reaches an attached pane only
-                  if (await terminalAttach()) { inputFailed(); return; }
+                  // a herdr that attaches: typing into a pane with no attachment waits for one.
+                  // A mirrored pane takes the text here, whatever this bridge can attach now.
+                  if (!origin && await terminalAttach()) { inputFailed(); return; }
                   // a pasted block asks herdr what the pane runs, so it is shaped before the checks below
                   const shaped = await mirrorInput(text, async () => (await paneContext(message.pane_id)).agent);
                   if (client.data.attached.get(message.pane_id) !== claim
