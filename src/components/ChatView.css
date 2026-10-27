@@ -128,10 +128,10 @@
 .chat-bubble {
   max-width: 80%;
   padding: var(--space-3) var(--space-4);
-  border: var(--hairline) solid var(--bubble-border);
-  border-radius: var(--radius-lg);
-  background: var(--bg-elevated);
-  color: var(--text-strong);
+  border: var(--hairline) solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: var(--bg-composer);
+  color: var(--text);
   font-size: var(--chat-fs-body);
   line-height: var(--lh-prose);
   overflow-wrap: anywhere;
@@ -225,6 +225,16 @@
   align-items: flex-start;
   gap: var(--space-3);
   color: var(--text);
+}
+
+/* assistant messages: no bubble, plain text on panel background */
+.chat-turn-agent > .markdown,
+.chat-turn-agent > .chat-bubble {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  max-width: 100%;
+  padding: 0;
 }
 
 .chat-agent-meta {
