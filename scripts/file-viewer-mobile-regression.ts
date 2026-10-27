@@ -196,7 +196,7 @@ async function checkLayout(): Promise<void> {
       for (let index = 0; index < 2; index++) {
         const box = await buttons.nth(index).boundingBox();
         assert.ok(box, `text: button ${index} is laid out`);
-        assert.ok(Math.abs(middle(box) - middle(title)) < 4, `text: button ${index} shares the name's row`);
+        assert.ok(Math.abs(box.y + box.height / 2 - (title.y + title.height / 2)) < 4, `text: button ${index} shares the name's row`);
         assert.ok(box.x >= title.x + title.width - 1 && box.x + box.width <= close.x + 1, `text: button ${index} between the name and Close`);
       }
       assert.ok((await page.locator(".file-viewer-title .modal-title").innerText()).endsWith(".ts"), "text: the extension stays in the title");
@@ -205,11 +205,15 @@ async function checkLayout(): Promise<void> {
       // Vertical wheel scrolling on code lines chains up to scroll the body.
       await page.mouse.move(200, 300);
       await page.mouse.wheel(0, 300);
-      const scrolledY = await page.locator(".file-viewer-body").evaluate((el) => el.scrollTop);
+      const scrolledY = await page.waitForFunction(() => (document.querySelector(".file-viewer-body")?.scrollTop ?? 0) > 0, undefined, { timeout: 1_000 })
+        .then(() => page.locator(".file-viewer-body").evaluate((el) => el.scrollTop))
+        .catch(() => page.locator(".file-viewer-body").evaluate((el) => el.scrollTop));
       assert.ok(scrolledY > 0, "text: vertical wheel over code lines scrolls the body");
       // Horizontal wheel scrolling scrolls the code text container.
       await page.mouse.wheel(200, 0);
-      const scrolledX = await page.locator(".file-viewer-text").evaluate((el) => el.scrollLeft);
+      const scrolledX = await page.waitForFunction(() => (document.querySelector(".file-viewer-text")?.scrollLeft ?? 0) > 0, undefined, { timeout: 1_000 })
+        .then(() => page.locator(".file-viewer-text").evaluate((el) => el.scrollLeft))
+        .catch(() => page.locator(".file-viewer-text").evaluate((el) => el.scrollLeft));
       assert.ok(scrolledX > 0, "text: horizontal wheel over code lines scrolls the text");
 
       await page.getByRole("button", { name: "More", exact: true }).tap();
