@@ -22,29 +22,41 @@
   color-scheme: dark;
 
   /* surfaces (tonal steps, darkest to lightest): near-black plum ground, flat panels */
-  --bg: #0b0a0e;
-  --bg-panel: #121016;
-  --bg-elevated: #1a1720;
-  --bg-hover: #231f29;
-  --bg-input: #14121a;
-  --border: #2a2532;
-  --border-strong: #3b3446;
+  /* t3.chat dark theme tokens (aubergine + raspberry) */
+  --bg-sidebar: #14080f;
+  --bg-main: #221d27;
+  --bg-composer: rgba(42, 36, 48, 0.8);
+  --bg-chip: rgba(255, 255, 255, 0.05);
+  --accent: #a3185a;
+  --accent-strong: #8f1a52;
+  --accent-text: #d9558f;
+  --text: #f2eef5;
+  --text-muted: #9a90a3;
+  --border: rgba(255, 255, 255, 0.06);
+  /* mapped Orbit tokens */
+  --bg: #221d27;
+  --bg-panel: #221d27;
+  --bg-elevated: #2a2430;
+  --bg-hover: rgba(255, 255, 255, 0.06);
+  --bg-input: rgba(42, 36, 48, 0.8);
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
   /* the chat's user bubble: surfaces sit close on this ground, so it keeps an edge */
   --bubble-border: var(--border);
 
   /* text */
-  --text: #ecebf1;
-  --text-dim: #9a93a6;
-  --text-strong: #f8f7fb;
+  --text: #f2eef5;
+  --text-dim: #9a90a3;
+  --text-strong: #f2eef5;
 
   /* the saturated colors: ONE muted rose (focus, chosen lens, cursor, primary action)
      and the four agent states, none of them rose */
-  --accent: #d9a7ba;
-  --accent-tint: rgba(217, 167, 186, 0.12);
-  --primary: #6a2740;
-  --primary-hover: #85324f;
-  --primary-text: #fdf3f7;
-  --primary-tint: rgba(106, 39, 64, 0.28);
+  --accent: #a3185a;
+  --accent-tint: rgba(163, 24, 90, 0.12);
+  --primary: #8f1a52;
+  --primary-hover: #a3185a;
+  --primary-text: #f2eef5;
+  --primary-tint: rgba(143, 26, 82, 0.28);
   --status-idle: #9a93a6;
   --status-working: #7fc4de;
   --status-blocked: #ff9a92;
@@ -55,10 +67,10 @@
   --danger-tint: rgba(248, 81, 73, 0.12);
   --danger-text: #ffd9d4;
   /* herdr's TUI state colors, tuned to the plum ground */
-  --indicator-working: #d9a7ba;
+  --indicator-working: #a3185a;
   --indicator-blocked: #f85149;
   --indicator-done: #3fb950;
-  --indicator-idle: #8b8494;
+  --indicator-idle: #9a90a3;
   --indicator-unknown: #6c7086;
   /* a note that the view is partial (a file cut short, code left plain): muted rose */
   --notice: #d9a7ba;
@@ -78,7 +90,7 @@
   /* terminal theme: copied into src/lib/themes.generated.ts by `bun run generate:themes` */
   --term-bg: #121016;
   --term-fg: #ecebf1;
-  --term-cursor: #d9a7ba;
+  --term-cursor: #a3185a;
   --term-selection: #3a2433;
 
   /* syntax highlighting */
@@ -1601,7 +1613,7 @@ button {
   height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
   padding: env(safe-area-inset-top, 0px) calc(var(--space-3) + env(safe-area-inset-right, 0px)) 0
     calc(var(--space-3) + env(safe-area-inset-left, 0px));
-  background: var(--bg);
+  background: var(--bg-main);
   /* a flat top: the content below is the page, the header only names it */
   border-bottom: none;
   /* Keep the header's painted background at the top of the app. The home-screen
@@ -1624,8 +1636,8 @@ button {
   width: var(--sidebar-shown-w);
   flex: 0 0 var(--sidebar-shown-w);
   min-height: 0;
-  background: var(--bg-panel);
-  border-right: var(--hairline) solid var(--border);
+  background: var(--bg-sidebar);
+  border-right: none;
   padding-left: env(safe-area-inset-left, 0px);
 }
 
@@ -1639,18 +1651,19 @@ button {
   justify-content: center;
   gap: var(--space-2);
   flex: 0 0 auto;
-  min-height: var(--control-h);
+  min-height: 36px;
   margin: var(--space-2) var(--space-2) var(--space-1);
   padding: 0 var(--space-3);
   border: 0;
-  border-radius: var(--radius-sm);
-  background: var(--primary);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--accent-strong) 0%, #7a1648 100%);
   color: var(--primary-text);
   font: inherit;
-  font-weight: var(--fw-semibold);
+  font-size: 13px;
+  font-weight: var(--fw-bold);
   cursor: pointer;
 }
-.sidebar-new:hover { background: var(--primary-hover); }
+.sidebar-new:hover { background: var(--accent); }
 .sidebar-new svg { width: var(--icon-size); height: var(--icon-size); }
 
 .sidebar-search {
@@ -1660,17 +1673,18 @@ button {
   flex: 0 0 auto;
   min-height: var(--control-h);
   margin: 0 var(--space-2) var(--space-2);
-  padding: 0 var(--space-2);
+  padding: var(--space-2) 0;
   border: 0;
-  border-radius: var(--radius-sm);
+  border-bottom: var(--hairline) solid var(--border);
+  border-radius: 0;
   background: transparent;
-  color: var(--text-dim);
+  color: var(--text-muted);
   font: inherit;
   font-size: var(--fs-sm);
   text-align: left;
   cursor: pointer;
 }
-.sidebar-search:hover { background: var(--bg-hover); color: var(--text); }
+.sidebar-search:hover { color: var(--text); }
 .sidebar-search svg { width: var(--icon-size); height: var(--icon-size); flex: 0 0 auto; }
 .sidebar-search span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -1918,6 +1932,10 @@ button {
 /* the switch keeps its size; the pane title (.context) is the header's one flexible item */
 .view-switch {
   flex: 0 0 auto;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  gap: var(--space-1);
 }
 
 /* From 769px the lens switch is its two words and nothing around them: no track, no glyphs, the
@@ -1926,12 +1944,42 @@ button {
   .app-header .view-switch {
     padding: 0;
     background: transparent;
-    border-color: transparent;
+    border: 0;
   }
 
   .app-header .view-switch > button svg {
     display: none;
   }
+}
+
+/* view-switch buttons: ghost style, text-only, accent underline on active */
+.view-switch > button {
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: var(--fw-medium);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  position: relative;
+}
+.view-switch > button:hover {
+  color: var(--text);
+  background: var(--bg-chip);
+}
+.view-switch > button[aria-pressed="true"] {
+  color: var(--text);
+  background: transparent;
+}
+.view-switch > button[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  left: var(--space-2);
+  right: var(--space-2);
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
 }
 
 .header-divider {
@@ -1950,9 +1998,12 @@ button {
 .header-meta {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
   flex: 0 0 auto;
   margin-left: auto;
+  padding: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--bg-chip);
   font-size: var(--fs-xs);
 }
 
@@ -2126,13 +2177,17 @@ button {
   height: var(--control-h);
   padding: 0;
   background: transparent;
-  border: var(--hairline) solid transparent;
-  border-radius: var(--radius-md);
-  color: var(--text);
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
   cursor: pointer;
   transition:
     background-color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out);
+}
+.icon-button:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--bg-chip);
 }
 
 .icon-button.is-outlined {
