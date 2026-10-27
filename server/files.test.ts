@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { clearFileCache, paneFiles } from "./files.ts";
+import { clearFileCache, filesNamed, paneFiles } from "./files.ts";
 
 const roots: string[] = [];
 afterEach(() => {
@@ -47,7 +47,7 @@ describe("paneFiles", () => {
     expect(await paneFiles(root, "", 1)).toHaveLength(1);
   });
 
-  it("preserves Unicode and newline filenames returned by git", async () => {
+  it.skipIf(process.platform === "win32")("preserves Unicode and newline filenames returned by git", async () => {
     const root = fixture();
     expect(Bun.spawnSync(["git", "init", "-q", root]).exitCode).toBe(0);
     for (const name of ["설계 문서.md", "line\nbreak.txt"]) writeFileSync(join(root, name), "fixture");
@@ -119,5 +119,35 @@ describe("paneFiles", () => {
     writeFileSync(join(root, "docs", "design", "11_two-version-design.md"), "# design");
     expect(Bun.spawnSync(["git", "init", "-q", root]).exitCode).toBe(0);
     expect(await paneFiles(root, "two-version", 20)).toEqual(["docs/design/11_two-version-design.md"]);
+  });
+
+  it("bypasses a fresh cache when refresh is requested", async () => {
+    const root = fixture();
+    expect(await paneFiles(root, "fresh-item")).toEqual([]);
+    writeFileSync(join(root, "fresh-item.txt"), "hello");
+    // within the TTL, a normal query still gets the cached inventory
+    expect(await paneFiles(root, "fresh-item")).toEqual([]);
+    // with refresh: true, the inventory is re-read immediately
+    expect(await paneFiles(root, "fresh-item", 20, true)).toEqual(["fresh-item.txt"]);
+  });
+
+  it("drops only the named directory when clearFileCache is given a path", async () => {
+    const rootA = fixture();
+    const rootB = fixture();
+    expect(await paneFiles(rootA, "test-a")).toEqual([]);
+    expect(await paneFiles(rootB, "test-b")).toEqual([]);
+    writeFileSync(join(rootA, "test-a.txt"), "a");
+    writeFileSync(join(rootB, "test-b.txt"), "b");
+    clearFileCache(rootA);
+    expect(await paneFiles(rootA, "test-a")).toEqual(["test-a.txt"]);
+    expect(await paneFiles(rootB, "test-b")).toEqual([]);
+  });
+
+  it("re-probes on filesNamed when a cached walk had no match", () => {
+    const root = fixture();
+    expect(filesNamed(root, "created-after.txt")).toEqual([]);
+    writeFileSync(join(root, "src", "created-after.txt"), "agent write");
+    // the cached walk misses created-after.txt, so filesNamed re-probes and finds it
+    expect(filesNamed(root, "created-after.txt")).toEqual(["src/created-after.txt"]);
   });
 });

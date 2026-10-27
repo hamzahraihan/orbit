@@ -671,9 +671,10 @@ export async function fetchPanePlan(paneId: string, machineId = "local"): Promis
 }
 
 /** GET /api/pane/files: paths under the pane's cwd matching `query`, for @-mentions. */
-export async function fetchPaneFiles(paneId: string, query: string, limit = 20, machineId = "local"): Promise<string[]> {
-  const params = new URLSearchParams({ pane_id: paneId, q: query, limit: String(limit) });
-  return (await getJson<{ files: string[] }>(machinePath(machineId, `pane/files?${params.toString()}`))).files;
+export async function fetchPaneFiles(paneId: string, query: string, limit = 20, machineId = "local", refresh = false): Promise<string[]> {
+  const params = new URLSearchParams({ pane_id: paneId, q: query, limit: String(limit), ...(refresh ? { refresh: "1" } : {}) });
+  const body = await getJson<{ files: string[] }>(machinePath(machineId, `pane/files?${params.toString()}`));
+  return body.files;
 }
 
 /** GET /api/pane/prompt: the agent's interactive menu currently on screen, or null. */

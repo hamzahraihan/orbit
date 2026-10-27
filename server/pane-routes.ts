@@ -6,7 +6,7 @@
  */
 import type { AgentRenameRequest, PaneDirection, PaneResized, PaneSplit, PaneSwapped, PaneZoomed, ReadFormat, ReadSource } from "../shared/protocol.ts";
 import { paneCommands } from "./commands.ts";
-import { paneFiles } from "./files.ts";
+import { clearFileCache, paneFiles } from "./files.ts";
 import { badRequest, conflictResponse, errorResponse, isCount, isJsonObject, jsonResponse, readJsonObject } from "./http.ts";
 import { conversationImage, ConversationUnavailable, forgetPaneTranscriptState, HistoryChanged, paneConversation, paneProcessRoots, toolOutput } from "./conversation.ts";
 import { OPENCODE_TOOL_REF } from "./opencode.ts";
@@ -24,10 +24,19 @@ const isPaneDirection = (value: unknown): value is PaneDirection => value === "l
 const READ_SOURCES = new Set<ReadSource>(["detection", "recent", "recent_unwrapped", "visible"]);
 const READ_FORMATS = new Set<ReadFormat>(["ansi", "text"]);
 
+const observedCwds = new Map<string, string>();
+
 export async function paneContext(paneId: string): Promise<{ agent: string | null; cwd: string }> {
   const pane = await paneGet(paneId);
   const cwd = pane.foreground_cwd ?? pane.cwd;
   if (!cwd) throw new HerdrError("cwd_not_found", `pane ${paneId} has no working directory`);
+  const previous = observedCwds.get(paneId);
+  if (previous !== undefined && previous !== cwd) {
+    clearFileCache(previous);
+    clearFileCache(cwd);
+  }
+  observedCwds.set(paneId, cwd);
+  if (observedCwds.size > 128) observedCwds.delete(observedCwds.keys().next().value!);
   return { agent: pane.agent ?? pane.agent_session?.agent ?? null, cwd };
 }
 
@@ -76,7 +85,8 @@ export async function handlePaneRequest(request: Request, url: URL, pathname: st
       const limitRaw = url.searchParams.get("limit");
       const limit = limitRaw === null ? 20 : Number(limitRaw);
       if (!Number.isInteger(limit) || limit < 1) return badRequest("invalid_limit", "limit must be a positive integer");
-      return jsonResponse({ files: await paneFiles(context.cwd, url.searchParams.get("q") ?? "", Math.min(limit, 100)) });
+      const refresh = url.searchParams.get("refresh") === "1" || url.searchParams.get("refresh") === "true";
+      return jsonResponse({ files: await paneFiles(context.cwd, url.searchParams.get("q") ?? "", Math.min(limit, 100), refresh) });
     } catch (error) {
       return errorResponse(error);
     }

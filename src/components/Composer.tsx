@@ -361,8 +361,9 @@ export function Composer({
       setFilesFailed(false);
       return;
     }
+    const refresh = trigger.query === "";
     const timer = window.setTimeout(() => {
-      void fetchPaneFiles(paneId, trigger.query, 20)
+      void fetchPaneFiles(paneId, trigger.query, 20, refresh)
         .then((next) => {
           if (request === fileRequest.current) { setFiles(next); setFilesFailed(false); }
         })

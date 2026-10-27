@@ -6,6 +6,7 @@
  */
 import type { HerdrPane } from "../../shared/protocol.ts";
 import { secretPrompt } from "../../shared/secret-prompt.ts";
+import { clearFileCache } from "../files.ts";
 import { agentPrompt, HerdrError, paneGet, paneRead, paneScrollInfo, paneSendKeys, paneSendText } from "../herdr/client.ts";
 import { mirrorInput } from "../mirror-input.ts";
 import { paneContext } from "../pane-routes.ts";
@@ -293,6 +294,7 @@ export function createSubmitText({ options, lastTyped, attachments, paneMirrored
         try {
           await agentPrompt(paneId, closeMention(text));
           noteSubmitted(paneId, text);
+          clearFileCache();
           return;
         } catch (error) {
           if (!(error instanceof HerdrError)) throw error;
@@ -313,6 +315,7 @@ export function createSubmitText({ options, lastTyped, attachments, paneMirrored
       authorize();
       await paneSendKeys(paneId, ["Enter"]);
       noteSubmitted(paneId, text);
+      clearFileCache();
     } catch (error) {
       if (clearedDraft) {
         throw new HerdrError("submit_partial", "Claude Code's terminal draft was cleared or may have changed, but sending was not confirmed. Your chat text stayed here. Check the terminal before sending again.");

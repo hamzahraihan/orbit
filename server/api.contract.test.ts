@@ -915,6 +915,10 @@ describe("workspace and discovery endpoints", () => {
     const files = await fetch(`${base()}/api/pane/files?pane_id=${encodeURIComponent(paneId)}&q=${encodeURIComponent(fileName)}&limit=5`);
     expect(files.status).toBe(200);
     expect(((await files.json()) as { files: string[] }).files).toContain(fileName);
+    const refreshed = await fetch(`${base()}/api/pane/files?pane_id=${encodeURIComponent(paneId)}&q=${encodeURIComponent(fileName)}&limit=5&refresh=1`);
+    expect(refreshed.status).toBe(200);
+    const refreshedBody = (await refreshed.json()) as { files: string[] };
+    expect(refreshedBody.files).toContain(fileName);
 
     const prompt = await fetch(`${base()}/api/pane/prompt?pane_id=${encodeURIComponent(paneId)}`);
     expect(prompt.status).toBe(200);
