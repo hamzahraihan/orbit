@@ -226,9 +226,6 @@
   margin: 0;
   padding: var(--space-3);
   overflow-y: hidden;
-  /* .modal-scrim * sets overscroll-behavior: contain (mobile), which stops vertical scroll
-     chaining from this horizontal scroll container to .file-viewer-body. Allow Y chaining. */
-  overscroll-behavior-y: auto;
   color: var(--text);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);

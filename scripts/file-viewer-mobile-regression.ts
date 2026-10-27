@@ -196,7 +196,7 @@ async function checkLayout(): Promise<void> {
       for (let index = 0; index < 2; index++) {
         const box = await buttons.nth(index).boundingBox();
         assert.ok(box, `text: button ${index} is laid out`);
-        assert.ok(Math.abs(box.y + box.height / 2 - (title.y + title.height / 2)) < 4, `text: button ${index} shares the name's row`);
+        assert.ok(Math.abs(middle(box) - middle(title)) < 4, `text: button ${index} shares the name's row`);
         assert.ok(box.x >= title.x + title.width - 1 && box.x + box.width <= close.x + 1, `text: button ${index} between the name and Close`);
       }
       assert.ok((await page.locator(".file-viewer-title .modal-title").innerText()).endsWith(".ts"), "text: the extension stays in the title");
