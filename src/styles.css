@@ -2514,9 +2514,6 @@ button {
   .modal-scrim,
   .modal-scrim > * {
     touch-action: manipulation;
-  }
-
-  .modal-scrim * {
     overscroll-behavior: contain;
   }
 
