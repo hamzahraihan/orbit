@@ -405,11 +405,15 @@
   gap: var(--space-2);
 }
 .theme-swatch {
-  width: var(--space-4);
-  height: var(--space-4);
+  display: inline-flex;
   border-radius: var(--radius-sm);
   border: var(--hairline) solid var(--border);
+  overflow: hidden;
   flex: none;
+}
+.theme-swatch-chip {
+  width: var(--space-3);
+  height: var(--space-5);
 }
 
 @media (max-width: 640px) {

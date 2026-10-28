@@ -269,10 +269,13 @@ function ThemeSelect({ side }: { side: Mode }) {
   const { settings, update } = useSettings();
   const t = useT();
   const selected = side === "dark" ? settings.darkTheme : settings.lightTheme;
-  const swatch = rowFor(selected, side).bgPanel;
+  const entry = rowFor(selected, side);
+  const swatchColors = [entry.bgPanel, entry.terminal.foreground, entry.terminal.cursor];
   return (
     <span className="theme-select-wrap">
-      <span className="theme-swatch" aria-hidden="true" style={{ background: swatch }} />
+      <span className="theme-swatch" aria-hidden="true" title={t(THEME_NAMES[selected])}>
+        {swatchColors.map((color, index) => <span key={index} className="theme-swatch-chip" style={{ background: color }} />)}
+      </span>
       <select id={`settings-theme-${side}`} className="select settings-select" value={selected} onChange={(event) => update(pickTheme(settings, side, event.target.value as ThemeId))}>
         {themeGroups(side).map(({ kind, ids }) => (
           <optgroup key={kind} label={kind === "dark" ? t("Dark") : t("Light")}>
