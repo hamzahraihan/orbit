@@ -14,6 +14,8 @@ import { Check, type LucideIcon } from "lucide-react";
 
 import "./RowMenu.css";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
+
 import { useT } from "../lib/i18n.ts";
 import { useMediaQuery } from "../lib/useMediaQuery.ts";
 import { SHEET_QUERY, useSheetSwipe } from "../lib/sheets.ts";
@@ -204,7 +206,7 @@ export function RowMenu({ anchor, point, restoreFocusTo, title, subtitle, detail
               </button>
             ))}
           </div>
-          <button type="button" className="btn row-sheet-cancel" onMouseDown={keepFocus} onClick={onClose}>{t("Cancel")}</button>
+          <Button type="button" variant="secondary" className="row-sheet-cancel" onMouseDown={keepFocus} onClick={onClose}>{t("Cancel")}</Button>
         </div>
       </div>,
       document.body,
