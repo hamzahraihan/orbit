@@ -3,6 +3,8 @@ import { useHerdrUpdate } from "../lib/herdrUpdate.ts";
 import { runningHerdrVersion } from "../lib/runningVersion.ts";
 import { lazyChunkFailed, onLazyChunkFailure } from "../lib/lazyChunk.ts";
 import "./UpdateControls.css";
+
+import { Button } from "../lib/heroui/orbit-components.tsx";
 import { useT } from "../lib/i18n.ts";
 
 /**
@@ -51,6 +53,6 @@ export function ChunkFailureNotice() {
   if (!failed) return null;
   return <div className="update-notice is-line is-warning" role="status">
     <span>{t("Part of the app could not load. Save unsent drafts, then reload.")}</span>
-    <button type="button" className="btn" onClick={() => window.location.reload()}>{t("Reload app")}</button>
+    <Button type="button" variant="secondary" onClick={() => window.location.reload()}>{t("Reload app")}</Button>
   </div>;
 }
