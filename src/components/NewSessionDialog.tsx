@@ -3,6 +3,8 @@ import { FolderOpen, X } from "lucide-react";
 
 import "./NewSessionDialog.css";
 
+import { Button, Input } from "../lib/heroui/orbit-components.tsx";
+
 import type { AgentKind } from "../../shared/protocol.ts";
 import { MAX_LABEL_CHARS } from "../../shared/labels.ts";
 import { ApiError } from "../lib/api.ts";
@@ -213,11 +215,11 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
             <div className="field">
               <label className="field-label" htmlFor="new-session-cwd">{t("Directory")}</label>
               <div className="new-session-cwd">
-                <input ref={cwdField} id="new-session-cwd" className="input" value={cwd} placeholder="~/projects/app" disabled={fieldsDisabled} autoComplete="off" onChange={(event) => setCwd(event.target.value)} onBlur={showPathEnd} />
-                <button type="button" className="btn" aria-expanded={browsing} disabled={fieldsDisabled} onClick={() => setBrowsing((open) => !open)}>
+                <Input ref={cwdField} id="new-session-cwd" value={cwd} placeholder="~/projects/app" disabled={fieldsDisabled} autoComplete="off" onChange={(event) => setCwd(event.target.value)} onBlur={showPathEnd} />
+                <Button variant="secondary" aria-expanded={browsing} disabled={fieldsDisabled} onClick={() => setBrowsing((open) => !open)}>
                   <FolderOpen aria-hidden="true" />
                   {t("Browse")}
-                </button>
+                </Button>
               </div>
               {/* Browse updates Directory as you open folders, so Start uses what the path bar shows
                   even when Use this folder was never pressed (issue #1162); a folder under home
@@ -233,8 +235,7 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
           </div>}
           <label className="field">
             <span className="field-label">{t("Name")}</span>
-            <input
-              className="input"
+            <Input
               value={name}
               maxLength={MAX_LABEL_CHARS}
               disabled={fieldsDisabled}
@@ -248,8 +249,8 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
           {error && <p className="field-hint new-session-error" role="alert">{error.message}{error.detail !== null && <><br /><code>{error.detail}</code></>}</p>}
         </div>
         <footer className="modal-footer">
-          <button type="button" className="btn btn-ghost" disabled={pending} onClick={onClose}>{t("Cancel")}</button>
-          <button type="submit" className="btn btn-primary" disabled={pending}>{t(pending ? "Starting…" : createdPaneId !== null ? "Open" : "Start")}</button>
+          <Button variant="ghost" disabled={pending} onClick={onClose}>{t("Cancel")}</Button>
+          <Button type="submit" variant="primary" disabled={pending}>{t(pending ? "Starting…" : createdPaneId !== null ? "Open" : "Start")}</Button>
         </footer>
       </form>
     </div>
