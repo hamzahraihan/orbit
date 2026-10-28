@@ -2,6 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { Braces, Check, Code, Copy, Download, Ellipsis, ExternalLink, Link2, Maximize2, PanelRight, TriangleAlert, X } from "lucide-react";
 
 import "./FileViewer.css";
+
+import { Button } from "../lib/heroui/orbit-components.tsx";
 import { DirectoryBrowser } from "./DirectoryBrowser.tsx";
 import { FileGlyph } from "./FileGlyph.tsx";
 import { useHighlightedLines } from "./HighlightedCode.tsx";
@@ -393,7 +395,7 @@ export function FileViewer({ path: asked, paneId, onClose, onOpen, keyboardActiv
     if (error !== null) return <p className="file-viewer-note" role="alert">{error === "missing" ? t("No readable file at this path.") : t("The file could not be opened.")}</p>;
     if (candidates !== null) return <div className="file-viewer-choices">
       <p className="file-viewer-note">{t("Several files are named {name}:", { name: target.path.split("/").pop() ?? target.path })}</p>
-      <ul>{candidates.map((candidate) => <li key={candidate}><button type="button" className="btn btn-ghost" onClick={() => setPath(candidate + path.slice(target.path.length))}>{candidate}</button></li>)}</ul>
+      <ul>{candidates.map((candidate) => <li key={candidate}><Button type="button" variant="ghost" onClick={() => setPath(candidate + path.slice(target.path.length))}>{candidate}</Button></li>)}</ul>
     </div>;
     if (info === null) return null;
     switch (info.kind) {
@@ -421,7 +423,7 @@ export function FileViewer({ path: asked, paneId, onClose, onOpen, keyboardActiv
           : <RenderBoundary key={view} resetKey={loaded} fallback={() => view === "markdown"
             ? <div className="file-viewer-note" role="alert">
               <p>{t("This preview can't be shown.")}</p>
-              <button type="button" className="btn btn-ghost" onClick={() => setChosen({ path, mode: "code" })}>{t("Show source")}</button>
+              <Button type="button" variant="ghost" onClick={() => setChosen({ path, mode: "code" })}>{t("Show source")}</Button>
             </div>
             : <p className="file-viewer-note" role="alert">{t("The file could not be opened.")}</p>}>
             <MarkdownImageContext.Provider value={imagePreview}><TextFileView path={info.path} blocks={view === "markdown" && preview.status === "ready" ? preview.blocks : null} lines={code.lines} virtual={virtual} selectable={selectable} onOpen={onOpen ?? setPath} sourceRef={sourceRef} markedLine={request?.kind === "shown" ? request.line : null} /></MarkdownImageContext.Provider>
