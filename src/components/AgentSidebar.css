@@ -36,7 +36,7 @@
   bottom: 0;
   display: block;
   height: var(--space-4);
-  background: linear-gradient(transparent, var(--bg-panel));
+  background: transparent;
   pointer-events: none;
 }
 
