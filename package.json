@@ -28,6 +28,8 @@
     "clean:processes": "bun scripts/clean-processes.ts"
   },
   "dependencies": {
+    "@heroui/react": "^3.2.6",
+    "@heroui/styles": "^3.2.6",
     "@legendapp/list": "3.3.5",
     "@lydell/node-pty": "1.1.0",
     "@pierre/diffs": "1.5.2",
@@ -45,6 +47,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@types/bun": "^1.1.14",
     "@types/katex": "^0.16.8",
     "@types/react": "^19.3.0",
@@ -54,6 +57,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "playwright-core": "^1.49.1",
     "react-test-renderer": "19.3.0",
+    "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "typescript-api": "npm:typescript@^6.0.3",
     "vite": "^8.3.4"
