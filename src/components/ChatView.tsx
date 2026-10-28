@@ -749,10 +749,12 @@ const Turn = memo(function Turn({ paneId, turn, live, waiting, showThinking, ski
   const answerText = answer.map((part) => part.text).join("\n\n");
   const goal = turnGoal(turn.parts);
   return <article className="chat-turn chat-turn-agent">
-    <SkillActivityList parts={turn.parts} />
-    {goal !== null && <GoalActivity goal={goal} />}
-    {/* the pending head stands only above no answer: one above words would leave a gap when the turn ends */}
-    {(work.length > 0 || (live && answer.length === 0)) && <WorkBlockView paneId={paneId} parts={work} duration={formatWorkDuration(turn.ts, turn.end_ts ?? null)} live={live} waiting={waiting} defaultOpen={workStartsOpen(live, turn.parts)} showThinking={showThinking} pendingHead={answer.length === 0} />}
+    <div className="chat-turn-activity">
+      <SkillActivityList parts={turn.parts} />
+      {goal !== null && <GoalActivity goal={goal} />}
+      {/* the pending head stands only above no answer: one above words would leave a gap when the turn ends */}
+      {(work.length > 0 || (live && answer.length === 0)) && <WorkBlockView paneId={paneId} parts={work} duration={formatWorkDuration(turn.ts, turn.end_ts ?? null)} live={live} waiting={waiting} defaultOpen={workStartsOpen(live, turn.parts)} showThinking={showThinking} pendingHead={answer.length === 0} />}
+    </div>
     {answer.map((part, index) => <Markdown key={index} skills={skills}>{part.text}</Markdown>)}
     {answerText.length > 0 && <div className="chat-turn-meta chat-agent-meta">
       {/* a mouse reads one copy glyph and the words "Plain text"; touch reads the two formats */}
