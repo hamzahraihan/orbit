@@ -7,6 +7,8 @@ import { sshOutputParts } from "../lib/sshOutput.ts";
 import { useAnnouncedText } from "../lib/useAnnouncedText.ts";
 import { BridgeUpdateProgress } from "./MachineSidebar.tsx";
 import "./Machines.css";
+
+import { Button } from "../lib/heroui/orbit-components.tsx";
 import { useT } from "../lib/i18n.ts";
 
 export function MachineDialog({ machine, updateRemote = false, onClose, onConnected }: { machine?: Machine; updateRemote?: boolean; onClose(): void; onConnected(id: string): void }) {
@@ -94,16 +96,16 @@ export function MachineDialog({ machine, updateRemote = false, onClose, onConnec
       {job?.challenge && <div className="machine-challenge">{job.challenge.kind === "host_key" ? <HostKeyQuestion prompt={job.challenge.prompt} host={job.target.destination} sshOutput={job.ssh_output} /> : <><pre>{job.challenge.prompt}</pre><form onSubmit={(e) => { e.preventDefault(); void act({ action: "answer", challenge_id: job.challenge!.id, answer: secret }); }}>
         <label className="field"><span className="field-label">{t("Password or key passphrase")}</span><input autoFocus className="input" type="password" autoComplete="off" value={secret} disabled={!secretAllowed || pending} onChange={(e) => setSecret(e.target.value)} /></label>
         {!secretAllowed && <p className="field-hint">{t("Open this app over HTTPS or localhost to enter a password.")}</p>}
-        <button type="submit" className="btn btn-primary" disabled={!secretAllowed || pending || !secret}>{t("Continue")}</button>
+        <Button type="submit" variant="primary" disabled={!secretAllowed || pending || !secret}>{t("Continue")}</Button>
       </form></>}</div>}
       {error && <p className="machine-error" role="alert">{error}</p>}
     </div>
     <footer className="modal-footer">
-      {job && !finished && <button className="btn" disabled={pending} onClick={() => void act({ action: "cancel" })}>{t(running ? "Cancel install" : "Cancel connection")}</button>}
-      {running && <button className="btn btn-primary" onClick={onClose}>{t("Continue in background")}</button>}
-      {job?.challenge?.kind === "host_key" && <><button className="btn" disabled={pending} onClick={() => void act({ action: "answer", challenge_id: job.challenge!.id, answer: "no" })}>{t("Reject")}</button><button className="btn btn-primary" disabled={pending} onClick={() => void act({ action: "answer", challenge_id: job.challenge!.id, answer: "yes" })}>{t("Trust fingerprint")}</button></>}
-      {job?.phase === "approval" && <button className="btn btn-primary" disabled={pending} onClick={() => void act({ action: "approve" })}>{t("Install and connect")}</button>}
-      {job?.phase === "connected" ? <button className="btn btn-primary" onClick={() => onConnected(job.machine_id)}>{t("Open PC")}</button> : (!job || finished) && <button className="btn btn-primary" form="machine-connect-form" type="submit" disabled={pending}>{t(pending ? "Connecting…" : needsBridgeUpdate ? "Update bridge and connect" : job ? "Retry connection" : "Connect")}</button>}
+      {job && !finished && <Button variant="secondary" disabled={pending} onClick={() => void act({ action: "cancel" })}>{t(running ? "Cancel install" : "Cancel connection")}</Button>}
+      {running && <Button variant="primary" onClick={onClose}>{t("Continue in background")}</Button>}
+      {job?.challenge?.kind === "host_key" && <><Button variant="secondary" disabled={pending} onClick={() => void act({ action: "answer", challenge_id: job.challenge!.id, answer: "no" })}>{t("Reject")}</Button><Button variant="primary" disabled={pending} onClick={() => void act({ action: "answer", challenge_id: job.challenge!.id, answer: "yes" })}>{t("Trust fingerprint")}</Button></>}
+      {job?.phase === "approval" && <Button variant="primary" disabled={pending} onClick={() => void act({ action: "approve" })}>{t("Install and connect")}</Button>}
+      {job?.phase === "connected" ? <Button variant="primary" onClick={() => onConnected(job.machine_id)}>{t("Open PC")}</Button> : (!job || finished) && <Button type="submit" variant="primary" form="machine-connect-form" disabled={pending}>{t(pending ? "Connecting…" : needsBridgeUpdate ? "Update bridge and connect" : job ? "Retry connection" : "Connect")}</Button>}
     </footer>
   </dialog>;
 }
