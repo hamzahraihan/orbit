@@ -443,7 +443,6 @@ export function Composer({
     if (surface) surface.style.gridTemplateRows = getComputedStyle(surface).gridTemplateRows;
     try {
       status.removeAttribute("data-model");
-      status.removeAttribute("data-hint-alone");
       status.removeAttribute("data-meta-empty");
       // the resting row draws only the mark and the ring; measure it with the name and the level
       // drawn, so a quiet label is never read as a clipped one and stepped out for good
@@ -468,13 +467,11 @@ export function Composer({
       if (draw !== first) status.setAttribute("data-model", draw);
       const hint = hintRef.current;
       if (!hint) return;
-      // with the label stepped out and no ring, the row beside the sentence draws nothing: it gives
-      // up its box, or it would keep an empty line over the sentence
+      // the hint now always takes its own line (see data-hint-alone on .composer-status), so only the
+      // meta-empty case still needs measuring: when the label has stepped out entirely, the row
+      // beside the sentence draws nothing and must give up its box
       const meta = status.querySelector<HTMLElement>(".composer-status-meta")?.getBoundingClientRect();
       if (!meta || meta.width <= 1) status.setAttribute("data-meta-empty", "");
-      const line = hint.getBoundingClientRect();
-      const beside = meta !== undefined && meta.width > 1 && meta.bottom > line.top && meta.top < line.top + line.height / 2 && meta.right <= line.left + 1;
-      if (!beside) status.setAttribute("data-hint-alone", "");
     } finally {
       status.removeAttribute("data-measuring");
       if (surface) surface.style.gridTemplateRows = rows;
@@ -1295,7 +1292,7 @@ export function Composer({
             the prompt card say the state. All state words stay available to assistive tech only.
             Where the model label does not fit, it steps out and is still read (fitStatus marks data-model) */}
         <div ref={statusRef} className="composer-status" role="status" data-status={shownStatus}
-          data-offline={connected ? undefined : ""} data-hint={hint ?? undefined}>
+          data-offline={connected ? undefined : ""} data-hint={hint ?? undefined} data-hint-alone={hintText !== null ? "" : undefined}>
           {/* everything but the sentence: one row that never wraps, also where the sentence takes a line of its own */}
           <span className="composer-status-meta">
             <span className="composer-agent-label visually-hidden">{agentLabel}</span>
