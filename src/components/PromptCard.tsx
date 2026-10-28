@@ -3,6 +3,8 @@ import { Check, ChevronDown, ChevronUp, FileText, Send } from "lucide-react";
 
 import "./PromptCard.css";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
+
 import { ApiError } from "../lib/api.ts";
 import { useMachineApi } from "../lib/machineContext.tsx";
 import type { InteractivePrompt, PromptAnswer } from "../../shared/protocol.ts";
@@ -137,9 +139,9 @@ export function PromptCard({ paneId, prompt, onPromptChanged, onAnswered, typedA
         <h2>{prompt.title}</h2>
         {/* the card shows a plan in its short box; the file viewer draws the whole of it as Markdown */}
         {planFile && openFile && (
-          <button type="button" className="btn btn-ghost prompt-card-plan-file" onClick={() => openFile(planFile)}>
+          <Button type="button" variant="ghost" className="prompt-card-plan-file" onClick={() => openFile(planFile)}>
             <FileText aria-hidden="true" />{t("View plan")}
-          </button>
+          </Button>
         )}
         {/* a typed answer waiting for Confirm keeps the card open, so the fold has nothing to do then */}
         <button type="button" className="prompt-card-fold" disabled={typedAnswer?.option_index !== undefined} aria-expanded={!folded} aria-label={t(folded ? "Expand question" : "Collapse question")} title={t(folded ? "Expand question" : "Collapse question")} onClick={() => setFoldedByUser(!folded)}>
@@ -244,8 +246,8 @@ export function PromptCard({ paneId, prompt, onPromptChanged, onAnswered, typedA
               of it and scrolls in itself, and the two buttons stay whole, on one line */}
           <span className="prompt-card-confirm-text">{t("Send {answer}?", { answer: `${typedAnswer.option_index + 1}. ${prompt.options[typedAnswer.option_index]?.label ?? ""}` })}</span>
           <span className="prompt-card-confirm-actions">
-            <button type="button" className="btn btn-primary" disabled={pending} onClick={(event) => void answer(typedAnswer, event).then((current) => { if (current) onTypedAnswerDone?.(); })}>{t("Confirm")}</button>
-            <button type="button" className="btn" disabled={pending} onClick={() => onTypedAnswerDone?.()}>{t("Cancel")}</button>
+            <Button type="button" variant="primary" disabled={pending} onClick={(event) => void answer(typedAnswer, event).then((current) => { if (current) onTypedAnswerDone?.(); })}>{t("Confirm")}</Button>
+            <Button type="button" variant="secondary" disabled={pending} onClick={() => onTypedAnswerDone?.()}>{t("Cancel")}</Button>
           </span>
         </div>
       )}
