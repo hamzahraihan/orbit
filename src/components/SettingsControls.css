@@ -1,4 +1,4 @@
-/* Settings is built from these: a group (caption + card), a row, and the four controls. */
+/* Settings is built from these: a group (caption + card), a row, and the Hero UI controls. */
 
 .settings-section {
   display: flex;
@@ -95,28 +95,6 @@
   color: var(--text);
 }
 
-/* one sentence at rest; its conditions and exceptions open under it (DESIGN.md: messages say
-   only what the person needs now). The toggle word stands in for the marker. */
-.settings-details {
-  margin: 0;
-}
-
-.settings-details > summary {
-  width: fit-content;
-  color: var(--text-dim);
-  font-size: var(--fs-xs);
-  list-style: none;
-  cursor: pointer;
-}
-
-.settings-details > summary::-webkit-details-marker {
-  display: none;
-}
-
-.settings-details-toggle {
-  color: var(--accent);
-}
-
 /* no-break spaces: the dot and the word stay with the sentence's last word */
 .settings-details-toggle::before {
   content: "\00a0\00b7\00a0";
@@ -127,70 +105,17 @@
   margin-bottom: var(--space-1);
 }
 
-/* fingers: the line keeps its height; an invisible expander reaches the target's height, as the
-   segmented options do (styles.css). The opened text is positioned so its link stays on top. */
-@media (pointer: coarse) {
-  .settings-details > summary {
-    position: relative;
-  }
-
-  .settings-details > summary::after {
-    content: "";
-    position: absolute;
-    inset: calc((var(--fs-xs) * var(--lh-base) - var(--touch-target)) / 2) 0;
-  }
-
-  .settings-details > summary + * {
-    position: relative;
-  }
-}
-
 .settings-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
 }
 
-/* the controls sit in wells of the input color, so a card reads as one surface with holes */
-.settings-segmented {
-  background: var(--bg-input);
-}
-
-.settings-stepper {
-  display: inline-flex;
-  align-items: center;
-  background: var(--bg-input);
-  border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.settings-stepper output {
-  min-width: 3.5em;
-  color: var(--text-strong);
-  font-family: var(--font-mono);
-  font-size: var(--fs-sm);
-  text-align: center;
-}
-
-.settings-select {
-  max-width: 100%;
-}
-
-/* fingers: a select is a finger-sized target, like the file viewer's controls */
-@media (pointer: coarse) {
-  .settings-select {
-    height: max(44px, var(--touch-target));
-  }
-}
-
-.settings-font-input {
-  flex: 0 1 16rem;
-  min-width: 0;
-}
-
-/* the switch keeps a finger-sized box; the negative margin keeps that box from growing its row */
+/* Hero UI Switch: track + thumb inside SwitchContent, replacing the hand-rolled button switch. */
 .settings-toggle {
   position: relative;
+  display: inline-flex;
+  align-items: center;
   width: calc(var(--touch-target) + var(--space-2));
   height: var(--touch-target);
   margin-block: calc(var(--space-1) * -1);
@@ -200,17 +125,23 @@
   cursor: pointer;
 }
 
-.settings-toggle::before {
+.settings-toggle-content {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+}
+
+.settings-toggle-track {
   position: absolute;
   inset: var(--space-3) var(--space-1);
-  content: "";
   background: var(--bg-input);
   border: var(--hairline) solid var(--border-strong);
   border-radius: var(--radius-pill);
   transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
-/* the thumb sits 2px inside the track's edge, off and on */
 .settings-toggle-thumb {
   position: absolute;
   top: calc(var(--space-3) + 2px);
@@ -222,14 +153,162 @@
   transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
 
-.settings-toggle[aria-checked="true"]::before {
+.settings-toggle[data-selected="true"] .settings-toggle-track {
   background: var(--primary-tint);
   border-color: var(--primary);
 }
 
-.settings-toggle[aria-checked="true"] .settings-toggle-thumb {
+.settings-toggle[data-selected="true"] .settings-toggle-thumb {
   background: var(--primary);
   transform: translateX(var(--space-6));
+}
+
+/* Toggle hover state: lift the track slightly when hovered. */
+.settings-toggle-content[data-hovered] .settings-toggle-track {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+/* Toggle disabled state: gray out track and thumb, no interaction. */
+.settings-toggle-content[data-disabled] .settings-toggle-track {
+  background: var(--bg-input);
+  border-color: var(--border);
+  opacity: 0.5;
+}
+
+.settings-toggle-content[data-disabled] .settings-toggle-thumb {
+  background: var(--text-dim);
+  cursor: not-allowed;
+}
+
+/* Toggle focus-visible: ring around the toggle when keyboard-focused. */
+.settings-toggle-content[data-focus-visible] .settings-toggle-track {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* Mobile: give the toggle a finger-sized touch target. */
+@media (pointer: coarse) {
+  .settings-toggle {
+    width: var(--touch-target);
+    height: var(--touch-target);
+    margin-block: 0;
+    padding: var(--space-2);
+  }
+
+  .settings-toggle-content {
+    width: var(--touch-target);
+    height: var(--touch-target);
+  }
+}
+
+/* Hero UI ToggleButtonGroup: replaces the hand-rolled segmented control. Hero UI sets
+   data-selected on the selected button, data-pressed while it is being clicked. */
+.settings-segmented {
+  display: inline-flex;
+  background: var(--bg-input);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.settings-segmented-button {
+  position: relative;
+  min-height: var(--control-h);
+  padding: 0 var(--space-3);
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+}
+
+.settings-segmented-button[data-selected="true"] {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+}
+
+.settings-segmented-button[data-pressed="true"] {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.settings-segmented-button:disabled {
+  color: var(--text-dim);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.settings-segmented-button + .settings-segmented-button {
+  border-inline-start: var(--hairline) solid var(--border);
+}
+
+@media (hover: hover) {
+  .settings-segmented-button:hover:not([data-selected="true"]):not([data-pressed="true"]) {
+    background: var(--bg-elevated);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-toggle-track,
+  .settings-toggle-thumb,
+  .settings-segmented-button {
+    transition: none;
+  }
+}
+
+/* Hero UI NumberField: replaces the hand-rolled stepper. */
+.settings-stepper {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.settings-stepper-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+.settings-stepper-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.settings-stepper-button:disabled {
+  color: var(--text-dim);
+  cursor: not-allowed;
+}
+
+.settings-stepper-button svg {
+  width: var(--icon-size);
+  height: var(--icon-size);
+}
+
+.settings-stepper-output {
+  min-width: 3.5em;
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  text-align: center;
+  border-inline: var(--hairline) solid var(--border);
+  padding: 0 var(--space-2);
+}
+
+@media (pointer: coarse) {
+  .settings-stepper-button {
+    height: max(44px, var(--touch-target));
+    width: max(44px, var(--touch-target));
+  }
 }
 
 @media (max-width: 640px) {
@@ -244,20 +323,9 @@
     display: flex;
   }
 
-  .settings-row.is-wide > .settings-segmented > button {
+  .settings-row.is-wide > .settings-segmented > .settings-segmented-button {
     flex: 1 1 0;
     justify-content: center;
     min-width: 0;
-  }
-
-  .settings-row.is-wide > .settings-font-input {
-    flex: 0 0 auto;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .settings-toggle::before,
-  .settings-toggle-thumb {
-    transition: none;
   }
 }
