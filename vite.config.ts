@@ -3,10 +3,10 @@ import { compressedAssets } from "./scripts/compressed-assets.ts";
 import { serviceWorkerBuild } from "./scripts/service-worker-build.ts";
 import { defineConfig, normalizePath, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
-import { fileURLToPath } from "node:url";
+import tailwind from "@tailwindcss/vite";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-
+import { fileURLToPath } from "node:url";
 const xtermSource = normalizePath(buildXtermSource(fileURLToPath(new URL(".", import.meta.url))));
 
 let revision: string | null = null;
@@ -30,7 +30,7 @@ const buildRevision: Plugin = {
 };
 
 export default defineConfig({
-  plugins: [react(), thirdPartyNotices, buildRevision, compressedAssets(), serviceWorkerBuild()],
+  plugins: [react(), tailwind(), thirdPartyNotices, buildRevision, compressedAssets(), serviceWorkerBuild()],
   define: {
     __APP_REVISION__: JSON.stringify(revision),
     __APP_VERSION__: JSON.stringify((JSON.parse(readFileSync("package.json", "utf8")) as { version: string }).version),
