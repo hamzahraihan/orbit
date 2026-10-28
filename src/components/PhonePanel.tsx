@@ -3,6 +3,8 @@ import { RefreshCw } from "lucide-react";
 
 import "./PhonePanel.css";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
+
 import { copyText } from "../lib/clipboard.ts";
 import type { PhonePlan } from "../lib/phone.ts";
 import { QrCode } from "./QrCode.tsx";
@@ -26,7 +28,7 @@ export function PhonePanel({ plan, loading, onRefresh }: PhonePanelProps) {
 
 function Plan({ plan, loading, onRefresh }: PhonePanelProps) {
   const t = useT();
-  const checkAgain = <button type="button" className="btn" onClick={onRefresh} disabled={loading}><RefreshCw aria-hidden="true" />{t("Check again")}</button>;
+  const checkAgain = <Button type="button" variant="secondary" onClick={onRefresh} disabled={loading}><RefreshCw aria-hidden="true" />{t("Check again")}</Button>;
   switch (plan.kind) {
     case "here":
     case "served":
@@ -96,7 +98,7 @@ function Command({ command }: { command: string }) {
   return (
     <div className="phone-command">
       <code ref={codeRef}>{command}</code>
-      <button type="button" className="btn" onClick={() => void copy()}>{t(copied ? "Copied" : "Copy")}</button>
+      <Button type="button" variant="secondary" onClick={() => void copy()}>{t(copied ? "Copied" : "Copy")}</Button>
     </div>
   );
 }
