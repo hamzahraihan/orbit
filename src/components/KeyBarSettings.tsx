@@ -3,6 +3,8 @@ import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 
 import "./KeyBarSettings.css";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
+
 import { DEFAULT_KEY_BAR_ITEMS, KEY_BAR_ITEMS_MAX, KEY_BAR_KEYS, keyBarInputSequence, keyBarItemId, keyBarItemLabel, type KeyBarItem } from "../lib/keyBar.ts";
 import { NO_STICKY_MODIFIERS, type StickyModifiers } from "../lib/keys.ts";
 import { useSettings } from "../lib/settings.ts";
@@ -77,7 +79,7 @@ export function KeyBarSettings() {
             {available.map((key) => <option value={key} key={key}>{keyBarItemLabel({ type: "key", key })}</option>)}
           </select>
         </label>
-        <button type="button" className="btn" disabled={full || chosenKey === ""} onClick={() => add({ type: "key", key: chosenKey })}><Plus aria-hidden="true" />{t("Add key")}</button>
+        <Button type="button" variant="secondary" disabled={full || chosenKey === ""} onClick={() => add({ type: "key", key: chosenKey })}><Plus aria-hidden="true" />{t("Add key")}</Button>
       </div>
       <div className="key-bar-settings-modifiers" role="group" aria-label={t("Held modifiers")}>
         <span className="settings-label key-bar-settings-modifier-label">{t("Held modifiers")}</span>
@@ -108,11 +110,11 @@ export function KeyBarSettings() {
         </div>
         <div className="key-bar-settings-combo-actions">
           <span className="key-bar-settings-preview" aria-live="polite">{characterValid ? keyBarItemLabel(combo) : t("Enter one character.")}</span>
-          <button type="button" className="btn" disabled={full || !characterValid || base === "" || comboExists} onClick={() => add(combo)}><Plus aria-hidden="true" />{t("Add combination")}</button>
+          <Button type="button" variant="secondary" disabled={full || !characterValid || base === "" || comboExists} onClick={() => add(combo)}><Plus aria-hidden="true" />{t("Add combination")}</Button>
         </div>
         {comboExists && <p className="settings-hint">{t("Already added")}</p>}
       </div>
-      <button type="button" className="btn btn-ghost key-bar-settings-restore" onClick={() => update({ keyBarItems: [...DEFAULT_KEY_BAR_ITEMS] })}>{t("Restore defaults")}</button>
+      <Button type="button" variant="ghost" className="key-bar-settings-restore" onClick={() => update({ keyBarItems: [...DEFAULT_KEY_BAR_ITEMS] })}>{t("Restore defaults")}</Button>
     </div>
   );
 }
