@@ -249,6 +249,7 @@ export const JA: Record<string, string> = {
   "Agents: {names}": "エージェント: {names}",
   "Loading workspaces…": "ワークスペースを読み込んでいます…",
   "No workspaces yet": "ワークスペースはまだありません",
+  "A workspace holds the tabs and panes for one project. Create one to get started.": "ワークスペースには1つのプロジェクトのタブとペインが含まれます。始めるには作成してください。",
   "Workspace name": "ワークスペース名",
   "Reorder workspace {name}": "ワークスペース {name} を並べ替え",
   "Expand {name}": "{name} を展開",

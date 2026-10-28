@@ -247,6 +247,7 @@ export const KO: Record<string, string> = {
   "Agents: {names}": "에이전트: {names}",
   "Loading workspaces…": "워크스페이스 불러오는 중…",
   "No workspaces yet": "아직 워크스페이스가 없습니다",
+  "A workspace holds the tabs and panes for one project. Create one to get started.": "워크스페이스는 하나의 프로젝트에 대한 탭과 창을 담습니다. 시작하려면 하나를 만드세요.",
   "Workspace name": "워크스페이스 이름",
   "Reorder workspace {name}": "워크스페이스 {name} 순서 바꾸기",
   "Expand {name}": "{name} 펼치기",

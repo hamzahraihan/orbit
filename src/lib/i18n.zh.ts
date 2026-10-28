@@ -251,6 +251,7 @@ export const ZH: Record<string, string> = {
   "Agents: {names}": "代理：{names}",
   "Loading workspaces…": "正在加载工作区…",
   "No workspaces yet": "暂无工作区",
+  "A workspace holds the tabs and panes for one project. Create one to get started.": "一个工作区包含一个项目的所有标签页和窗格。创建一个以开始使用。",
   "Workspace name": "工作区名称",
   "Reorder workspace {name}": "调整工作区 {name} 的顺序",
   "Expand {name}": "展开 {name}",

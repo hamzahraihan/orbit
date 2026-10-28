@@ -101,6 +101,7 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
 }
 
 .tree-state-empty .tree-state { padding: 0; }
+.tree-state-hint { margin: 0; color: var(--text-dim); font-size: var(--fs-xs); max-width: 24ch; }
 
 .workspace-list {
   margin: 0;

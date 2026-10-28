@@ -771,6 +771,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
           {snapshot && snapshot.workspaces.length === 0 && (
             <div className="tree-state-empty">
               <p className="tree-state" role="status">{t("No workspaces yet")}</p>
+              <p className="tree-state-hint">{t("A workspace holds the tabs and panes for one project. Create one to get started.")}</p>
               <Button type="button" variant="secondary" onClick={actions.openNewSession}><Plus aria-hidden="true" />{t("New workspace")}</Button>
             </div>
           )}
