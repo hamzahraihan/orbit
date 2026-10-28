@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Folder, FolderOpen, GitBranch, RefreshCw } from "lucide-react";
 
 import "./RepoChanges.css";
+
+import { Button } from "../lib/heroui/orbit-components.tsx";
 import { FileGlyph } from "./FileGlyph.tsx";
 import { Skeleton } from "./Skeleton.tsx";
 
@@ -152,7 +154,7 @@ export function RepoChanges({ paneId, directory, onOpenDiff }: RepoChangesProps)
             <span className="field-label">{t("To commit")}</span>
             <input className="input" value={head} onChange={(event) => setHead(event.target.value)} placeholder="HEAD" autoComplete="off" spellCheck={false} />
           </label>
-          <button type="submit" className="btn btn-primary" disabled={base.trim() === ""}>{t("Compare")}</button>
+          <Button type="submit" variant="primary" disabled={base.trim() === ""}>{t("Compare")}</Button>
         </form>
       )}
       {repository !== null && (
