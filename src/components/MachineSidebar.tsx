@@ -11,6 +11,8 @@ import { Sidebar } from "./Sidebar.tsx";
 import { AgentSidebar } from "./AgentSidebar.tsx";
 import { SidebarActivityProvider, useSidebarActivityState } from "../lib/sidebarActivity.tsx";
 import "./Machines.css";
+
+import { Button, Input } from "../lib/heroui/orbit-components.tsx";
 import { useT } from "../lib/i18n.ts";
 import { useAnnouncedText } from "../lib/useAnnouncedText.ts";
 import { saysHerdrAway } from "../lib/userError.ts";
@@ -43,10 +45,10 @@ export function MachineSidebar(props: Props) {
     <AgentSidebar machines={props.machines} selectedMachineId={props.selectedMachineId} selectedPaneId={props.selectedPaneId} stateWord={(machine) => t(STATE_WORD[machine.state])} onSelect={props.onSelect} />
     <footer className="sidebar-footer">
       {/* browsers without an install prompt (iOS, plain HTTP) get the steps instead */}
-      {!installed && <button className="btn btn-ghost sidebar-footer-action" aria-expanded={canInstall ? undefined : installHelpOpen} onClick={() => { if (canInstall) void install(); else setInstallHelpOpen(!installHelpOpen); }}><Download aria-hidden="true" />{t("Install app")}</button>}
+      {!installed && <Button variant="ghost" className="sidebar-footer-action" aria-expanded={canInstall ? undefined : installHelpOpen} onClick={() => { if (canInstall) void install(); else setInstallHelpOpen(!installHelpOpen); }}><Download aria-hidden="true" />{t("Install app")}</Button>}
       {!installed && !canInstall && installHelpOpen && <p className="sidebar-install-help" role="status">{help}</p>}
       <div className="sidebar-footer-row">
-        <button className="btn btn-ghost sidebar-footer-action sidebar-footer-settings" aria-label={t("Settings")} title={t("Settings (⌘⇧,)")} onClick={props.actions.openSettings}><Settings aria-hidden="true" /></button>
+        <Button variant="ghost" className="sidebar-footer-action sidebar-footer-settings" aria-label={t("Settings")} title={t("Settings (⌘⇧,)")} onClick={props.actions.openSettings}><Settings aria-hidden="true" /></Button>
       </div>
     </footer>
   </div></SidebarActivityProvider>;
@@ -115,13 +117,13 @@ function MachineGroup({ machine, ...props }: Props & { machine: Machine }) {
       {nextStep !== null && <span className="machine-state-next">{nextStep}</span>}
     </p>
     {editing && <div className="machine-controls">
-      {machine.herdr_profile_id ? <p className="field-hint">{t("Managed by herdr. Rename, disable or remove it there.")}</p> : <form onSubmit={(e) => { e.preventDefault(); void mutate("PATCH", { name }); }}><label className="field"><span className="field-label">{t("PC name")}</span><input className="input" value={name} maxLength={100} onChange={(e) => setName(e.target.value)} /></label><button className="btn" type="submit" disabled={busy}>{t("Rename")}</button></form>}
+      {machine.herdr_profile_id ? <p className="field-hint">{t("Managed by herdr. Rename, disable or remove it there.")}</p> : <form onSubmit={(e) => { e.preventDefault(); void mutate("PATCH", { name }); }}><label className="field"><span className="field-label">{t("PC name")}</span><Input className="input" value={name} maxLength={100} onChange={(e) => setName(e.target.value)} /></label><Button type="submit" variant="secondary" disabled={busy}>{t("Rename")}</Button></form>}
       {/* The first removal click only arms the action; the second is destructive. */}
       <div className="machine-control-buttons">
-        {!machine.herdr_profile_id && <button className="btn" disabled={busy} onClick={() => void mutate("PATCH", { enabled: !machine.enabled })}>{t(machine.enabled ? "Disconnect" : "Connect")}</button>}
-        {!["setup", "connect"].includes(machine.action_required ?? "") && <button className="btn" disabled={!machine.enabled || !machine.target} onClick={() => props.onSetup(machine)}>{t("Reconnect / setup")}</button>}
-        {machine.action_required !== "connect" && <button className="btn" disabled={!machine.enabled || !machine.target} onClick={() => props.onSetup(machine, true)}>{t("Update bridge…")}</button>}
-        {!machine.herdr_profile_id && <button className={confirmDelete ? "btn btn-danger" : "btn btn-ghost"} disabled={busy} onClick={() => { if (confirmDelete) void mutate("DELETE"); else setConfirmDelete(true); }}>{t(confirmDelete ? "Confirm remove PC" : "Remove PC")}</button>}
+        {!machine.herdr_profile_id && <Button type="button" variant="secondary" disabled={busy} onClick={() => void mutate("PATCH", { enabled: !machine.enabled })}>{t(machine.enabled ? "Disconnect" : "Connect")}</Button>}
+        {!["setup", "connect"].includes(machine.action_required ?? "") && <Button type="button" variant="secondary" disabled={!machine.enabled || !machine.target} onClick={() => props.onSetup(machine)}>{t("Reconnect / setup")}</Button>}
+        {machine.action_required !== "connect" && <Button type="button" variant="secondary" disabled={!machine.enabled || !machine.target} onClick={() => props.onSetup(machine, true)}>{t("Update bridge…")}</Button>}
+        {!machine.herdr_profile_id && <Button type="button" variant={confirmDelete ? "danger" : "ghost"} disabled={busy} onClick={() => { if (confirmDelete) void mutate("DELETE"); else setConfirmDelete(true); }}>{t(confirmDelete ? "Confirm remove PC" : "Remove PC")}</Button>}
       </div>
       {confirmDelete && <p className="field-hint">{t("Removes this registration. Remote sessions keep running.")}</p>}
     </div>}
@@ -170,19 +172,19 @@ function MachineActionNotice({ machine, onSetup }: { machine: Machine; onSetup(m
     return <div className="machine-action is-updating" role="status">
       <p className="machine-action-text"><strong>{t("Updating the bridge")}</strong><span>{t("You can keep using the app; this PC reconnects when it is done.")}</span></p>
       <BridgeUpdateProgress update={updating} />
-      <button type="button" className="btn" disabled={busy} onClick={() => void run(() => answerMachineSetup(updating.job_id, { action: "cancel" }))}>{t("Cancel update")}</button>
+      <Button type="button" variant="secondary" disabled={busy} onClick={() => void run(() => answerMachineSetup(updating.job_id, { action: "cancel" }))}>{t("Cancel update")}</Button>
       {error && <p className="machine-error" role="alert">{error}</p>}
     </div>;
   }
   if (machine.action_required === "connect") return <div className="machine-action is-setup" role="status">
     <p className="machine-action-text"><strong>{t("Saved in herdr")}</strong><span>{t("Connect once to enable automatic reconnection. Installation and startup need separate approval.")}</span></p>
-    <button type="button" className="btn btn-primary" onClick={() => onSetup(machine, false)}>{t("Connect")}</button>
+    <Button type="button" variant="primary" onClick={() => onSetup(machine, false)}>{t("Connect")}</Button>
   </div>;
   // another app's bridge runs on this PC: neither an update from here nor an approval fixes that,
   // so it is named as what it is, with the server's reason and a plain reconnect
   if (machine.action_required === "bridge_conflict") return <div className="machine-action" role="alert">
     <p className="machine-action-text"><strong>{t("Bridge connection conflict")}</strong><span>{t("Update the apps connected to this PC to the same version, or disconnect the other app, then reconnect here. Sessions keep running.")}</span>{machine.error && <span className="machine-action-reason">{machine.error}</span>}</p>
-    <button type="button" className="btn btn-primary" onClick={() => onSetup(machine, false)}>{t("Reconnect")}</button>
+    <Button type="button" variant="primary" onClick={() => onSetup(machine, false)}>{t("Reconnect")}</Button>
   </div>;
   const update = machine.action_required === "update_bridge";
   return <div className={`machine-action${update ? "" : " is-setup"}`} role={update ? "alert" : "status"}>
@@ -194,10 +196,10 @@ function MachineActionNotice({ machine, onSetup }: { machine: Machine; onSetup(m
     </p>
     {update ? <div className="machine-action-buttons">
       {/* a PC saved in herdr that has not connected yet is refused a direct update: its dialog connects first */}
-      <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void run(() => machineRequest(`/${encodeURIComponent(machine.id)}/update-bridge`, "POST").catch((e) => { if (!machine.herdr_profile_id) throw e; onSetup(machine, true); }))}>{t("Update bridge")}</button>
+      <Button type="button" variant="primary" disabled={busy} onClick={() => void run(() => machineRequest(`/${encodeURIComponent(machine.id)}/update-bridge`, "POST").catch((e) => { if (!machine.herdr_profile_id) throw e; onSetup(machine, true); }))}>{t("Update bridge")}</Button>
       {/* a PC that needs a password or a new host key goes through its dialog */}
-      <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => onSetup(machine, true)}>{t("Sign in and update…")}</button>
-    </div> : <button type="button" className="btn btn-primary" onClick={() => onSetup(machine, false)}>{t("Set up web access")}</button>}
+      <Button type="button" variant="ghost" disabled={busy} onClick={() => onSetup(machine, true)}>{t("Sign in and update…")}</Button>
+    </div> : <Button type="button" variant="primary" onClick={() => onSetup(machine, false)}>{t("Set up web access")}</Button>}
     {error && <p className="machine-error" role="alert">{error}</p>}
   </div>;
 }
@@ -227,7 +229,7 @@ export function MachineActionBanner({ machines, onSetup }: { machines: Machine[]
   const others = waiting.length > 1 ? t(" (+{n} more)", { n: waiting.length - 1 }) : "";
   return <div className="update-notice" role="status">
     <span>{t(conflict ? "{name} has a bridge connection conflict{others}." : update ? "{name} needs a bridge update to reconnect{others}." : "{name} needs web access setup{others}.", { name: first.name, others })}</span>
-    <button type="button" className="btn" onClick={() => update ? void machineRequest(`/${encodeURIComponent(first.id)}/update-bridge`, "POST").catch(() => onSetup(first, true)) : onSetup(first, false)}>{t(conflict ? "Reconnect" : update ? "Update bridge" : "Set up web access")}</button>
+    <Button type="button" variant="secondary" onClick={() => update ? void machineRequest(`/${encodeURIComponent(first.id)}/update-bridge`, "POST").catch(() => onSetup(first, true)) : onSetup(first, false)}>{t(conflict ? "Reconnect" : update ? "Update bridge" : "Set up web access")}</Button>
     <button type="button" className="icon-button update-notice-dismiss" aria-label={t("Dismiss")} title={t("Dismiss")} onClick={() => { const next = [...dismissed, ...waiting.map(noticeKey)]; setDismissed(next); writeDismissed(next); }}><X /></button>
   </div>;
 }
