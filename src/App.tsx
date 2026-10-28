@@ -85,6 +85,8 @@ import { SplitDropPreview } from "./components/SplitDropPreview.tsx";
 import { CrashProbe, RegionCrash } from "./components/AppCrash.tsx";
 import { RenderBoundary } from "./components/RenderBoundary.tsx";
 
+import { Button } from "./lib/heroui/orbit-components.tsx";
+
 const APP_TITLE = "Orbit";
 /** how soon after a key press a focus counts as the user's own (lastKeyAtRef) */
 const KEY_FOCUS_MS = 1000;
@@ -1620,7 +1622,7 @@ export function App() {
           <button type="button" className="sidebar-search" aria-label={t("Search panes and actions")} onClick={() => openPalette()}>
             <Search aria-hidden="true" /><span>{t("Search panes and actions…")}</span>
           </button>
-          {error && <div className="error-state" role="alert"><p>{error}</p><button className="btn" onClick={() => void load()}>{t("Retry")}</button></div>}
+          {error && <div className="error-state" role="alert"><p>{error}</p><Button variant="secondary" onClick={() => void load()}>{t("Retry")}</Button></div>}
           {/* a sidebar that cannot be drawn leaves the panes working */}
           <RenderBoundary resetKey={null} fallback={(retry) => <RegionCrash message={t("The sidebar can't be shown.")} retry={retry} />}>
             <CrashProbe region="sidebar" />
