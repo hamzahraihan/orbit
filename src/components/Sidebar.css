@@ -545,6 +545,12 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
   background: currentColor;
 }
 
+/* a ready row keeps a quiet dot so it does not read as empty; it stays low-contrast so it does not
+   compete with the states that ask for a look (working, blocked, done, waiting). */
+.sidebar-status-dot--quiet {
+  opacity: 0.35;
+}
+
 /* Settings -> Status indicators, Dots or Symbols: herdr's TUI glyph for every state
    (lib/status.ts indicatorGlyph) in the color herdr gives it (the --indicator-* tokens): yellow
    runs, red asks for an answer, teal has finished, green is ready, grey is unknown. BG, which herdr

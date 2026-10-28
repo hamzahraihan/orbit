@@ -88,13 +88,16 @@ export function StatusBadge({ status, compact = false }: { status?: AgentStatus;
   const value = knownStatus(status);
   const label = t(STATUS_WORD[value]);
   const description = t(STATUS_SENTENCE[value]);
-  // classic (the default): a compact cell draws only the states that ask for a look: a red question
+  // classic (the default): a compact cell draws the states that ask for a look: a red question
   // mark while the agent waits for an answer, a green dot once it has finished and was not looked
   // at, a working-coloured dot that breathes while it runs, a working-coloured ring held still while
-  // its turn waits on background work. Ready and unknown keep the cell, its label and its tooltip.
+  // its turn waits on background work. Ready now keeps a quiet dot so a scanning eye can tell it
+  // apart from unknown/loading, which still draws nothing (dashed edge). Unknown keeps the cell,
+  // its label and its tooltip.
   // Dots or Symbols: herdr's TUI glyph for every state, in herdr's color (lib/status.ts, Sidebar.css)
   const indicators = settings.statusIndicators;
-  const dot = value === "working" || value === "done" || value === "waiting";
+  const dot = value === "working" || value === "done" || value === "waiting" || value === "idle";
+  const quiet = value === "idle";
   return (
     <span
       className={`badge badge-${value}${compact ? " sidebar-status" : ""}`}
@@ -105,7 +108,7 @@ export function StatusBadge({ status, compact = false }: { status?: AgentStatus;
     >
       {compact && indicators !== "classic" && <span className="sidebar-status-glyph" aria-hidden="true" onAnimationStart={value === "working" ? alignBreath : undefined}>{indicatorGlyph(value, indicators)}</span>}
       {compact && indicators === "classic" && value === "blocked" && <span className="sidebar-status-mark" aria-hidden="true">?</span>}
-      {compact && indicators === "classic" && dot && <span className="sidebar-status-dot" aria-hidden="true" onAnimationStart={value === "working" ? alignBreath : undefined} />}
+      {compact && indicators === "classic" && dot && <span className={`sidebar-status-dot${quiet ? " sidebar-status-dot--quiet" : ""}`} aria-hidden="true" onAnimationStart={value === "working" ? alignBreath : undefined} />}
       <span className={compact ? "visually-hidden" : undefined}>{label}</span>
     </span>
   );
