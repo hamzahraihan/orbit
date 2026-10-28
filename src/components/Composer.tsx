@@ -253,6 +253,7 @@ export function Composer({
   const hintRef = useRef<HTMLSpanElement | null>(null);
   /** the card's own width: a narrow one shows the task chip's count */
   const [cardWidth, setCardWidth] = useState(0);
+  const [quickExpanded, setQuickExpanded] = useState(false);
   const [contextShown, setContextShown] = useState(false);
   const composingRef = useRef(false);
   // the chat lens's input surface takes the keyboard when it appears (a pane switch remounts
@@ -1041,7 +1042,19 @@ export function Composer({
       )}
 
       {quickOpen && quickReplies.length > 0 && (
+        mobile && !quickExpanded ? (
+          <div className="composer-quick" role="group" aria-label={t("Quick replies")}>
+            <button type="button" className="composer-quick-reply composer-quick-toggle" onClick={() => setQuickExpanded(true)}>
+              {t("Quick replies ({n})", { n: quickReplies.length })}
+            </button>
+          </div>
+        ) : (
         <div className="composer-quick" role="group" aria-label={t("Quick replies")}>
+          {mobile && (
+            <button type="button" className="composer-quick-reply composer-quick-toggle" onClick={() => setQuickExpanded(false)}>
+              {t("Hide")}
+            </button>
+          )}
           {quickReplies.map((reply, index) => (
             <button
               key={`${index}:${reply}`}
@@ -1055,6 +1068,7 @@ export function Composer({
             </button>
           ))}
         </div>
+        )
       )}
 
       {/* why the message in the box did not go: on the box's top edge, read with it, its one way on beside it */}

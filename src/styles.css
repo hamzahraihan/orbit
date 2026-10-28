@@ -29,7 +29,7 @@
   --bg-chip: rgba(255, 255, 255, 0.05);
   --accent: #a3185a;
   --accent-strong: #8f1a52;
-  --accent-text: #d9558f;
+  --accent-text: #e06a9f;
   --text: #f2eef5;
   --text-muted: #9a90a3;
   --border: rgba(255, 255, 255, 0.06);
@@ -1655,12 +1655,12 @@ button {
   margin: var(--space-2) var(--space-2) var(--space-1);
   padding: 0 var(--space-3);
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: linear-gradient(180deg, var(--accent-strong) 0%, #7a1648 100%);
   color: var(--primary-text);
   font: inherit;
   font-size: 13px;
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-semibold);
   cursor: pointer;
 }
 .sidebar-new:hover { background: var(--accent); }
@@ -2308,6 +2308,11 @@ button {
     height: var(--touch-target);
   }
 
+  /* Hero UI Button: ensure touch targets reach finger size on coarse pointers, but not chips or compact controls */
+  [data-slot="button"]:not(.new-session-folder-chip):not(.settings-segmented-button):not(.settings-stepper-button) {
+    min-height: var(--touch-target);
+  }
+
   /* the segmented track keeps its height; each option is a finger's width, so neighbours never
      share a tap, and reaches the target's height through an invisible expander, as the palette's
      filter chips do (CommandPalette.css) */
@@ -2323,8 +2328,44 @@ button {
   }
 }
 
+/* borders off: the setting makes the chrome hairline borders transparent. Using the
+   token keeps layout (border width) stable and lets focus rings (which key on
+   --ring, not --border) survive; it also scopes the effect to token-based borders
+   instead of stripping every element's border with !important. */
+[data-border="off"],
+.border-off {
+  --border: transparent;
+  --border-strong: transparent;
+}
+
+
+/* first-run onboarding sheet */
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(var(--glass-blur));
+}
+.onboarding-card {
+  max-width: 28rem;
+  width: 100%;
+  padding: var(--space-5);
+  background: var(--bg-elevated);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+}
+.onboarding-card h2 { margin: 0 0 var(--space-2); font-size: var(--fs-lg); font-weight: var(--fw-semibold); color: var(--text-strong); }
+.onboarding-card p { margin: 0 0 var(--space-3); color: var(--text-dim); font-size: var(--fs-sm); }
+.onboarding-card ul { margin: 0 0 var(--space-4); padding-left: var(--space-4); color: var(--text); font-size: var(--fs-sm); }
+.onboarding-card li { margin-bottom: var(--space-1); }
+
 .pill {
-  display: inline-flex;
   align-items: center;
   height: var(--chip-h);
   padding: 0 var(--space-2);

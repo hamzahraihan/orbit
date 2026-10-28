@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Folder, Fold
 import "./RepoChanges.css";
 
 import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Segmented } from "./SettingsControls.tsx";
 import { FileGlyph } from "./FileGlyph.tsx";
 import { Skeleton } from "./Skeleton.tsx";
 
@@ -130,11 +131,11 @@ export function RepoChanges({ paneId, directory, onOpenDiff }: RepoChangesProps)
   return (
     <div className="repo-changes" role="group" aria-label={t("Changes")} aria-busy={load.status === "pending"}>
       <div className="repo-changes-bar">
-        <div className="segmented repo-changes-scopes" role="group" aria-label={t("Compare")}>
-          <button type="button" aria-pressed={scope === "workspace"} onClick={() => choose("workspace")}>{t("Working tree")}</button>
-          <button type="button" aria-pressed={scope === "staged"} onClick={() => choose("staged")}>{t("Staged")}</button>
-          <button type="button" aria-pressed={scope === "commit"} onClick={() => choose("commit")}>{t("Commits")}</button>
-        </div>
+        <Segmented label={t("Compare")} value={scope} options={[
+          { value: "workspace", label: t("Working tree") },
+          { value: "staged", label: t("Staged") },
+          { value: "commit", label: t("Commits") },
+        ]} onChange={choose} />
         <div className="repo-changes-tools">
           <button type="button" className="icon-button" aria-label={allOpen ? t("Collapse all folders") : t("Expand all folders")} title={allOpen ? t("Collapse all folders") : t("Expand all folders")} disabled={folders.length === 0} onClick={() => setFolded(allOpen ? new Set(folders) : new Set())}>
             {allOpen ? <ChevronsDownUp aria-hidden="true" /> : <ChevronsUpDown aria-hidden="true" />}

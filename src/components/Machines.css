@@ -18,14 +18,14 @@
   flex: 0 1 auto;
 }
 
-/* a list that is cut fades out at its lower edge */
+/* spacer at the bottom of the machine list: a subtle fade signals scroll continuation */
 .machine-list::after {
   content: "";
   position: sticky;
   bottom: 0;
   display: block;
   height: var(--space-4);
-  background: linear-gradient(transparent, var(--bg-panel));
+  background: linear-gradient(to bottom, transparent, var(--bg-sidebar));
   pointer-events: none;
 }
 

@@ -152,6 +152,8 @@ export interface Settings {
   fileOpen: FilePresentation;
   /** where a click on a web address opens it: a new tab, or the panel beside the pane (lib/webPanel.ts); Shift opens the other one */
   webLinks: WebLinkTarget;
+  /** chrome borders on cards, rows, buttons and inputs: on draws them, off removes them */
+  border: "on" | "off";
   /** the mode a Claude Code started from the new workspace, tab and worktree dialogs runs in (lib/agentLaunchMode.ts); default adds no flag */
   claudeLaunchMode: ClaudeLaunchMode;
   /** the same for Codex: a sandbox and approval preset */
@@ -181,6 +183,7 @@ export const SETTING_SCOPE = {
   voiceInput: "device", voiceLanguage: "device", voicePolishChat: "device", voicePolishTerminal: "device",
   // Viewer layout follows this screen, as chatWidth does.
   wrapCode: "device", markdownWidth: "device", diffStyle: "device", fileOpen: "device", webLinks: "device",
+  border: "device",
   // a new agent starts the same way whichever device opened it
   claudeLaunchMode: "shared", codexLaunchMode: "shared",
 } as const satisfies Record<keyof Settings, "shared" | "device">;
@@ -239,6 +242,7 @@ export const DEFAULT_SETTINGS: Settings = {
   diffStyle: "unified",
   fileOpen: "popup",
   webLinks: "tab",
+  border: "on",
   claudeLaunchMode: "default",
   codexLaunchMode: "default",
 };
@@ -413,6 +417,7 @@ export function sanitizeSettings(raw: unknown): Settings {
     diffStyle: DIFF_STYLES.find((style) => style === record["diffStyle"]) ?? DEFAULT_SETTINGS.diffStyle,
     fileOpen: FILE_OPEN_TARGETS.find((target) => target === record["fileOpen"]) ?? DEFAULT_SETTINGS.fileOpen,
     webLinks: WEB_LINK_TARGETS.find((target) => target === record["webLinks"]) ?? DEFAULT_SETTINGS.webLinks,
+    border: record["border"] === "on" || record["border"] === "off" ? record["border"] : DEFAULT_SETTINGS.border,
     claudeLaunchMode: CLAUDE_LAUNCH_MODES.find((mode) => mode === record["claudeLaunchMode"]) ?? DEFAULT_SETTINGS.claudeLaunchMode,
     codexLaunchMode: CODEX_LAUNCH_MODES.find((mode) => mode === record["codexLaunchMode"]) ?? DEFAULT_SETTINGS.codexLaunchMode,
   };
@@ -474,6 +479,8 @@ export function applyToDocument(settings: Settings, entry: ThemeEntry, language:
   root.dataset["density"] = settings.density;
   root.dataset["palette"] = entry.id;
   root.dataset["chatWidth"] = settings.chatWidth;
+  root.dataset["border"] = settings.border;
+  if (root.classList) root.classList.toggle("border-off", settings.border === "off");
   // src/components/AgentMark.css keys the mono logos on it
   root.dataset["marks"] = settings.agentMarks;
   // src/styles.css multiplies every --fs-* token but --fs-input by this: the interface's body size over the density's

@@ -88,7 +88,9 @@
   position: relative;
   display: flex;
   align-items: center;
+  padding-top: var(--space-1);
   padding-right: var(--side-box);
+  padding-bottom: var(--space-1);
   border-radius: var(--radius-md);
   transition: background-color var(--dur-fast) var(--ease-out);
 }
