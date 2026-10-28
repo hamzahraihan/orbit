@@ -9,6 +9,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
 import "./ConfirmDialog.css";
 
 import { ApiError } from "../lib/api.ts";
@@ -79,8 +80,8 @@ export function ConfirmDialog({ title, body, confirmLabel, onConfirm, escalation
           {error && <p className="confirm-error" role="alert">{error}</p>}
         </div>
         <footer className="modal-footer">
-          <button ref={cancel} type="button" className="btn" disabled={pending} onClick={onClose}>{t("Cancel")}</button>
-          <button ref={action} type="button" className="btn btn-danger" disabled={pending} onClick={() => void confirm()}>{escalated && escalation ? escalation.label : confirmLabel}</button>
+          <Button ref={cancel} variant="ghost" disabled={pending} onClick={onClose}>{t("Cancel")}</Button>
+          <Button ref={action} variant="danger" disabled={pending} onClick={() => void confirm()}>{escalated && escalation ? escalation.label : confirmLabel}</Button>
         </footer>
       </div>
     </div>,
