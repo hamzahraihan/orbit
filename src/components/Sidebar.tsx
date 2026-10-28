@@ -3,6 +3,8 @@ import { ChevronDown, ChevronRight, Ellipsis, Folder, FolderOpen, GitBranch, Lay
 
 import "./Sidebar.css";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
+
 import type { AgentStatus, PaneInfo, PlanSummary, SessionSnapshot, WorkspaceInfo } from "../../shared/protocol.ts";
 import { paneTitle } from "../../shared/notify-policy.ts";
 import { MAX_LABEL_CHARS } from "../../shared/labels.ts";
@@ -769,7 +771,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
           {snapshot && snapshot.workspaces.length === 0 && (
             <div className="tree-state-empty">
               <p className="tree-state" role="status">{t("No workspaces yet")}</p>
-              <button type="button" className="btn" onClick={actions.openNewSession}><Plus aria-hidden="true" />{t("New workspace")}</button>
+              <Button type="button" variant="secondary" onClick={actions.openNewSession}><Plus aria-hidden="true" />{t("New workspace")}</Button>
             </div>
           )}
           {shownGroups.pinned.some(({ workspace }) => roster.some((pane) => pane.workspace_id === workspace.workspace_id)) && <>
