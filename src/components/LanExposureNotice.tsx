@@ -2,6 +2,8 @@ import { useT } from "../lib/i18n.ts";
 
 import "./LanExposureNotice.css";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
+
 /**
  * The server is answering on an address beyond this PC with no access token set and no device
  * paired, so anything that can reach that address is let in. It says so and does nothing about
@@ -16,7 +18,7 @@ export function LanExposureNotice({ host, onOpen }: { host: string; onOpen: () =
   return (
     <div className="update-notice is-exposed" role="status" data-testid="lan-exposure-notice">
       <span>{t("Anyone who can reach {host} on your network can type into every pane: no access token is set and no device is paired yet.", { host })}</span>
-      <button type="button" className="btn" onClick={onOpen}>{t("Phone & devices")}</button>
+      <Button type="button" variant="secondary" onClick={onOpen}>{t("Phone & devices")}</Button>
     </div>
   );
 }
