@@ -4,6 +4,8 @@ import { Bell, Columns2, CornerLeftUp, Folder, FolderOpen, FolderSearch, History
 
 import "./CommandPalette.css";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
+
 import type { DirectoryListing, HerdrPane, PluginActions, SessionSnapshot, TabInfo } from "../../shared/protocol.ts";
 import type { Machine } from "../../shared/machines.ts";
 import { ApiError } from "../lib/api.ts";
@@ -685,11 +687,11 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
           {(itemCount === 0 || listingFailed) && <p className="palette-empty" role="status">{emptyText}</p>}
           {listingFailed && (
             <p className="palette-empty">
-              <button type="button" className="btn" onClick={(event) => {
+              <Button variant="secondary" onClick={(event) => {
                 setBrowseAttempt((attempt) => attempt + 1);
                 // the button goes while the listing is asked again: a key or a mouse goes back to the search, a finger keeps its keyboard down
                 if (event.detail === 0 || !touch) inputRef.current?.focus();
-              }}>{t("Try again")}</button>
+              }}>{t("Try again")}</Button>
             </p>
           )}
         </div>
