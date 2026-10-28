@@ -12,6 +12,8 @@ import { GitBranch, X } from "lucide-react";
 
 import "./WorktreeDialog.css";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
+
 import type { AgentKind, WorkspaceInfo, WorktreeEntry, WorktreeOpened } from "../../shared/protocol.ts";
 import { MAX_LABEL_CHARS } from "../../shared/labels.ts";
 import { ApiError } from "../lib/api.ts";
@@ -218,8 +220,8 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
           {error && <p className="field-hint worktree-error" role="alert">{error}</p>}
         </div>
         <footer className="modal-footer">
-          <button type="button" className="btn btn-ghost" disabled={pending !== null} onClick={onClose}>{t("Cancel")}</button>
-          {mode === "create" && <button type="submit" className="btn btn-primary" disabled={pending !== null || (!made && !branch.trim())}>{t(made ? "Open" : "Create worktree")}</button>}
+          <Button variant="ghost" disabled={pending !== null} onClick={onClose}>{t("Cancel")}</Button>
+          {mode === "create" && <Button type="submit" variant="primary" disabled={pending !== null || (!made && !branch.trim())}>{t(made ? "Open" : "Create worktree")}</Button>}
         </footer>
       </form>
     </div>,
