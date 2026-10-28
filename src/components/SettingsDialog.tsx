@@ -129,6 +129,7 @@ function FontFamilyInput({ value, label, onCommit, fixedWidthFor = null }: { val
       <div className="settings-font-line">
         <input
           className="input settings-font-input"
+          name="font-family"
           value={draft}
           placeholder={FONT_FAMILY_PLACEHOLDER}
           maxLength={FONT_FAMILY_MAX_CHARS}
@@ -158,6 +159,7 @@ function FontFamilyInput({ value, label, onCommit, fixedWidthFor = null }: { val
           <input
             className="input settings-font-search"
             type="search"
+            name="font-search"
             value={query}
             placeholder={t("Search fonts")}
             aria-label={t("Search fonts")}
@@ -271,13 +273,20 @@ function ThemeSelect({ side }: { side: Mode }) {
   const selected = side === "dark" ? settings.darkTheme : settings.lightTheme;
   const entry = rowFor(selected, side);
   const swatchColors = [entry.bgPanel, entry.terminal.foreground, entry.terminal.cursor];
+  const [query, setQuery] = useState("");
+  const groups = themeGroups(side).map((group) => ({
+    ...group,
+    ids: group.ids.filter((id) => t(THEME_NAMES[id]).toLowerCase().includes(query.trim().toLowerCase())),
+  }));
   return (
     <span className="theme-select-wrap">
       <span className="theme-swatch" aria-hidden="true" title={t(THEME_NAMES[selected])}>
         {swatchColors.map((color, index) => <span key={index} className="theme-swatch-chip" style={{ background: color }} />)}
       </span>
+      <input type="search" className="input settings-theme-search" value={query} onChange={(event) => setQuery(event.target.value)}
+        placeholder={t("Search themes")} aria-label={t("Search themes")} spellCheck={false} autoComplete="off" />
       <select id={`settings-theme-${side}`} className="select settings-select" value={selected} onChange={(event) => update(pickTheme(settings, side, event.target.value as ThemeId))}>
-        {themeGroups(side).map(({ kind, ids }) => (
+        {groups.map(({ kind, ids }) => ids.length === 0 ? null : (
           <optgroup key={kind} label={kind === "dark" ? t("Dark") : t("Light")}>
             {ids.map((id) => <option key={id} value={id}>{t(THEME_NAMES[id])}</option>)}
           </optgroup>
@@ -321,6 +330,9 @@ function AppearancePage() {
       </SettingsRow>
       <SettingsRow label={t("Status indicators")} description={t("Classic marks only the states that ask for a look; Dots and Symbols draw every state as herdr's TUI does")} wide>
         <Segmented label={t("Status indicators")} value={settings.statusIndicators} onChange={(statusIndicators) => update({ statusIndicators })} options={[{ value: "classic", label: t("Classic") }, { value: "dots", label: t("Dots") }, { value: "symbols", label: t("Symbols") }]} />
+      </SettingsRow>
+      <SettingsRow label={t("Component borders")} description={t("Draw hairline borders on cards, rows, buttons, inputs and other surfaces. Off removes all borders for a cleaner look.")} wide>
+        <Segmented label={t("Component borders")} value={settings.border} onChange={(border) => update({ border })} options={[{ value: "on", label: t("On") }, { value: "off", label: t("Off") }]} />
       </SettingsRow>
     </SettingsGroup>
 
@@ -389,6 +401,7 @@ function ChatPage() {
               <li key={index}>
                 <input
                   className="input"
+                  name="quick-reply"
                   value={reply}
                   maxLength={QUICK_REPLY_MAX_CHARS}
                   aria-label={t("Quick reply {number}", { number: index + 1 })}
@@ -582,6 +595,7 @@ function VoicePage() {
               <input
                 className="input voice-key-input"
                 type="password"
+                name="openai-api-key"
                 value={voiceKey}
                 placeholder="sk-..."
                 aria-label={t("OpenAI API key")}
@@ -719,6 +733,7 @@ function ShortcutsPage() {
   const [recording, setRecording] = useState<{ id: ShortcutId; problem: string | null } | null>(null);
   // a recorded chord the terminal or the browser also uses waits here for Save anyway or Cancel
   const [pending, setPending] = useState<{ id: ShortcutId; value: string; risk: "terminal" | "browser" } | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
   // Save anyway and Cancel leave with the prompt: focus goes back to the row's Record button
   const recordButtons = useRef(new Map<ShortcutId, HTMLButtonElement>());
   const settlePending = (id: ShortcutId): void => {
@@ -766,6 +781,7 @@ function ShortcutsPage() {
       <input
         type="search"
         className="input settings-shortcut-search"
+        name="shortcut-search"
         value={query}
         placeholder={t("Search shortcuts")}
         aria-label={t("Search shortcuts")}
@@ -798,8 +814,8 @@ function ShortcutsPage() {
                     settlePending(confirming.id);
                     update({ shortcutOverrides: { ...settings.shortcutOverrides, [confirming.id]: confirming.value } });
                   }}>{t("Save anyway")}</Button>
-                  <Button type="button" onClick={() => settlePending(confirming.id)}>{t("Cancel")}</Button>
-                </> : <select className="select settings-select settings-shortcut-select" aria-label={t(shortcut.label)} value={Object.hasOwn(settings.shortcutOverrides, shortcut.id) ? settings.shortcutOverrides[shortcut.id] ?? (unbound ? "default" : "off") : "default"} onChange={(event) => {
+                  <Button type="button" variant="secondary" onClick={() => settlePending(confirming.id)}>{t("Cancel")}</Button>
+                </> : <select className="select settings-select settings-shortcut-select" name="shortcut-binding" aria-label={t(shortcut.label)} value={Object.hasOwn(settings.shortcutOverrides, shortcut.id) ? settings.shortcutOverrides[shortcut.id] ?? (unbound ? "default" : "off") : "default"} onChange={(event) => {
                   const next = { ...settings.shortcutOverrides };
                   if (event.target.value === "default") delete next[shortcut.id];
                   else next[shortcut.id] = event.target.value === "off" ? null : event.target.value;
@@ -822,11 +838,13 @@ function ShortcutsPage() {
         })}
       </SettingsGroup>
       <div className="settings-actions">
-        <Button type="button" onClick={() => {
-          setPending(null);
-          setRecording(null);
-          update({ shortcutOverrides: {} });
-        }}>{t("Reset shortcuts")}</Button>
+        <Button type="button" variant="secondary" onClick={() => setConfirmReset(true)}>{t("Reset shortcuts")}</Button>
+        {confirmReset && (
+          <ConfirmDialog title={t("Reset all shortcut overrides?")}
+            body={t("Every shortcut returns to its default binding. This cannot be undone.")}
+            confirmLabel={t("Reset")} onClose={() => setConfirmReset(false)}
+            onConfirm={async () => { setPending(null); setRecording(null); update({ shortcutOverrides: {} }); setConfirmReset(false); }} />
+        )}
       </div>
     </>
   );

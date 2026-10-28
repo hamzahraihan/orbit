@@ -239,6 +239,13 @@
   opacity: 0.5;
 }
 
+/* Segmented focus-visible: ring around the button when keyboard-focused. */
+.settings-segmented-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent);
+  z-index: 1;
+}
+
 .settings-segmented-button + .settings-segmented-button {
   border-inline-start: var(--hairline) solid var(--border);
 }
@@ -287,6 +294,7 @@
 .settings-stepper-button:disabled {
   color: var(--text-dim);
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .settings-stepper-button svg {

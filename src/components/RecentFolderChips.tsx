@@ -79,8 +79,8 @@ export function RecentFolderChips({ folders, disabled, labelledBy, basename, onP
         box the size of the row, so the long row they make never scrolls the dialog sideways */}
     {!swipe && <div className="new-session-folder-measure-clip" aria-hidden="true">
       <div ref={measure} className="new-session-folder-measure">
-        {folders.map((path) => <span key={path} className="btn new-session-folder-chip"><FolderOpen aria-hidden="true" /><span>{basename(path)}</span></span>)}
-        <span className="btn new-session-folder-chip new-session-folder-more">+{folders.length}</span>
+        {folders.map((path) => <Button key={path} type="button" variant="secondary" className="new-session-folder-chip" disabled={disabled}><FolderOpen aria-hidden="true" /><span>{basename(path)}</span></Button>)}
+        <Button type="button" variant="secondary" className="new-session-folder-chip new-session-folder-more" disabled={disabled}>+{folders.length > 1 ? folders.length - 1 : 1}</Button>
       </div>
     </div>}
     {menu && rest.length > 0 && <RowMenu anchor={menu} title={t("Recent folders")} variant="paths" onClose={() => setMenu(null)}

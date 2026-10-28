@@ -65,6 +65,7 @@ export interface SegmentedOption<T extends string> { value: T; label: string }
 /** One of a few short choices, all in sight. Five or more go in a select instead. Hero UI's
  *  ToggleButtonGroup under the hood. */
 export function Segmented<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: readonly SegmentedOption<T>[]; onChange: (value: T) => void }) {
+  if (options.length > 4) console.warn(`Segmented "${label}" has ${options.length} options; five or more go in a select instead.`);
   const selectedKeys = new Set([value]);
   return (
     <ToggleButtonGroupRoot selectionMode="single" selectedKeys={selectedKeys} onSelectionChange={(keys) => onChange(Array.from(keys)[0] as T)} aria-label={label} className="settings-segmented">

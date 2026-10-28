@@ -31,7 +31,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--accent-text);
+  color: var(--text-dim);
   font: inherit;
   font-size: 12px;
   font-weight: var(--fw-medium);

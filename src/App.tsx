@@ -482,6 +482,12 @@ export function App() {
   }, [openFile, selectedPaneId, selectedMachineId, filePanelAvailable, settings.fileOpen]);
   // a link to Settings opens it on its page, for that first opening alone
   const [settingsOpen, setSettingsOpen] = useState(() => initialLink?.settings != null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("herdr-web-ui:onboarded") !== "1") setShowOnboarding(true);
+    } catch { /* storage denied: skip onboarding */ }
+  }, []);
   const [settingsLinkPage, setSettingsLinkPage] = useState<string | null>(() => initialLink?.settings ?? null);
   // the group on that page a link named: in the address while that page is shown
   const [settingsLinkSection, setSettingsLinkSection] = useState<string | null>(() => initialLink?.section ?? null);
@@ -1827,6 +1833,20 @@ export function App() {
         <FileViewer key={viewing.path} path={viewing.path} paneId={viewing.paneId} onClose={closeFile} onOpen={(path) => openFile({ ...viewing, path, presentation })} onKind={reportFileKind} onTogglePresentation={toggleFilePresentation} keyboardActive={!settingsOpen} />
       </MachineContext.Provider>}
       <CommandPalette key={selectedMachineId} machines={machines} onSelect={selectTarget} open={paletteOpen} initialQuery={paletteQuery} onClose={() => setPaletteOpen(false)} snapshot={snapshot} online={selectedMachine?.state === "connected"} selectedPaneId={selectedPaneId} view={view} actions={actions} />
+      {showOnboarding && (
+        <div className="onboarding-overlay" role="dialog" aria-modal="true" aria-label={t("Welcome to Orbit")}>
+          <div className="onboarding-card">
+            <h2>{t("Welcome to Orbit")}</h2>
+            <p>{t("A browser companion for herdr. A few tips to get started:")}</p>
+            <ul>
+              <li>{t("Pair this device from Settings → Phone & devices to reach your PCs.")}</li>
+              <li>{t("Enable push alerts to be notified when an agent needs input or finishes.")}</li>
+              <li>{t("Switch any pane to Terminal to type directly; use the key bar on a phone.")}</li>
+            </ul>
+            <Button variant="primary" onClick={() => { try { window.localStorage.setItem("herdr-web-ui:onboarded", "1"); } catch {} setShowOnboarding(false); }}>{t("Got it")}</Button>
+          </div>
+        </div>
+      )}
     </div></MachineContext.Provider></MachineSessionsProvider>
   );
 }
