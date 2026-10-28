@@ -20,6 +20,8 @@ import { RowMenu, type RowMenuItem } from "./RowMenu.tsx";
 import { ConfirmDialog } from "./ConfirmDialog.tsx";
 import "./PaneCanvas.css";
 
+import { Button, Input } from "../lib/heroui/orbit-components.tsx";
+
 type PaneLayoutSplit = PaneLayoutSnapshot["splits"][number];
 
 interface Props {
@@ -355,8 +357,8 @@ function PaneRename({ pane, onClose, onSave }: { pane: HerdrPane; onClose: () =>
     <div ref={surface} className="modal" role="dialog" aria-modal="true" aria-label={t("Rename pane")}>
       <form className="pane-rename-form" onSubmit={(event) => { event.preventDefault(); if (busy) return; setBusy(true); void onSave(value.trim()).then(onClose, (reason) => { setError(userErrorMessage(reason)); setBusy(false); }); }}>
         <header className="modal-header"><h2 className="modal-title">{t("Rename pane")}</h2></header>
-        <div className="modal-body"><label>{t("Pane name")}<input ref={input} className="input" value={value} disabled={busy} maxLength={80} onFocus={(event) => event.currentTarget.select()} onChange={(event) => setValue(event.target.value)} /></label>{error && <p role="alert">{error.message}{error.detail !== null && <><br /><code>{error.detail}</code></>}</p>}</div>
-        <footer className="modal-footer"><button type="button" className="btn" disabled={busy} onClick={onClose}>{t("Cancel")}</button><button className="btn btn-primary" disabled={busy}>{t("Save")}</button></footer>
+        <div className="modal-body"><label>{t("Pane name")}<Input ref={input} value={value} disabled={busy} maxLength={80} onFocus={(event) => event.currentTarget.select()} onChange={(event) => setValue(event.target.value)} /></label>{error && <p role="alert">{error.message}{error.detail !== null && <><br /><code>{error.detail}</code></>}</p>}</div>
+        <footer className="modal-footer"><Button variant="secondary" disabled={busy} onClick={onClose}>{t("Cancel")}</Button><Button variant="primary" disabled={busy}>{t("Save")}</Button></footer>
       </form>
     </div>
   </div>, document.body);
