@@ -6,6 +6,8 @@ import { ArrowUp, ChevronRight, ClipboardCheck, Clock, Eye, Quote, SendHorizonta
 import "@xterm/xterm/css/xterm.css";
 import "./PaneTerminal.css";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
+
 import { HerdrSocket, type SubmitDelivery, type SubmitResult } from "../lib/ws.ts";
 import { MachineSession } from "../lib/machineSession.ts";
 import { useMachineSessions } from "../lib/machineSessionContext.tsx";
@@ -2824,7 +2826,7 @@ export function PaneTerminal({
           <div className="terminal-banner terminal-banner-warning" role="status">
             <span>{t("Another app has this pane open. It connects here as soon as that app lets go.")}</span>
             {!observing && socketRef.current?.canTakeOver() && (
-              <button type="button" className="btn terminal-banner-action" title={t("Take this pane from another web app or terminal attach. That connection will close.")} onClick={() => { if (paneId !== null) socketRef.current?.takeOver(paneId); }}>{t("Open here")}</button>
+              <Button type="button" variant="secondary" className="terminal-banner-action" title={t("Take this pane from another web app or terminal attach. That connection will close.")} onClick={() => { if (paneId !== null) socketRef.current?.takeOver(paneId); }}>{t("Open here")}</Button>
             )}
           </div>
         )}
@@ -2836,10 +2838,10 @@ export function PaneTerminal({
         {paneId !== null && outputError && !noticesDocked && (
           <div className="terminal-banner terminal-banner-warning terminal-banner-output-error" role="status">
             <span>{outputError}</span>
-            <button type="button" className="btn" onClick={() => reattachRef.current()}>{t("Reconnect")}</button>
+            <Button type="button" variant="secondary" onClick={() => reattachRef.current()}>{t("Reconnect")}</Button>
           </div>
         )}
-        {!chatView && inputError && <div className="terminal-banner" role="status">{inputError}<button type="button" className="btn terminal-banner-action" onClick={() => setInputError(null)}>{t("Dismiss")}</button></div>}
+        {!chatView && inputError && <div className="terminal-banner" role="status">{inputError}<Button type="button" variant="secondary" className="terminal-banner-action" onClick={() => setInputError(null)}>{t("Dismiss")}</Button></div>}
         <div className={waitingWords === null ? "visually-hidden" : "terminal-banner"} role="status">{waitingWords}</div>
         {paneId !== null && !chatView && released && <div className="terminal-banner" role="status">{t(watching ? "View only while you use another window · click to type" : "Paused while you use another window")}</div>}
         {/* the chat lens says these itself (ChatView), inline; the pills are the grid's */}
@@ -2925,7 +2927,7 @@ export function PaneTerminal({
           <RenderBoundary resetKey={paneId} fallback={(retry) => (
             <div className="chat-view"><div className="chat-empty" role="alert">
               <p>{t("The chat can't be shown. The terminal still works.")}</p>
-              <button type="button" className="btn" onClick={retry}>{t("Try again")}</button>
+              <Button type="button" variant="secondary" onClick={retry}>{t("Try again")}</Button>
             </div></div>
           )}>
           {/* a pane's chat never commits another pane's turns: a new pane is a new ChatView.
