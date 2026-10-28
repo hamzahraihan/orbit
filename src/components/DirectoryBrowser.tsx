@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUp, FolderPlus, House } from "lucide-react";
 
 import "./DirectoryBrowser.css";
+
+import { Button } from "../lib/heroui/orbit-components.tsx";
 import { FileGlyph } from "./FileGlyph.tsx";
 
 import type { DirectoryListing } from "../../shared/protocol.ts";
@@ -233,9 +235,9 @@ export function DirectoryBrowser({ start, onPick, onOpenFile, onFolder }: Direct
           <input type="checkbox" checked={hidden} disabled={loading && listing === null} onChange={(event) => { setHidden(event.target.checked); if (listing) void open(listing.path, event.target.checked, false); }} />
           {t("Show hidden")}
         </label>
-        {onPick && <button type="button" className="btn btn-primary" disabled={listing === null || loading} onClick={() => listing && onPick(homeRelative(listing.path, listing.home))}>
+        {onPick && <Button type="button" variant="primary" disabled={listing === null || loading} onClick={() => listing && onPick(homeRelative(listing.path, listing.home))}>
           {t("Use this folder")}
-        </button>}
+        </Button>}
       </div>
     </div>
   );
