@@ -268,14 +268,19 @@ function themeGroups(side: Mode): { kind: Mode; ids: ThemeId[] }[] {
 function ThemeSelect({ side }: { side: Mode }) {
   const { settings, update } = useSettings();
   const t = useT();
+  const selected = side === "dark" ? settings.darkTheme : settings.lightTheme;
+  const swatch = rowFor(selected, side).bgPanel;
   return (
-    <select id={`settings-theme-${side}`} className="select settings-select" value={side === "dark" ? settings.darkTheme : settings.lightTheme} onChange={(event) => update(pickTheme(settings, side, event.target.value as ThemeId))}>
-      {themeGroups(side).map(({ kind, ids }) => (
-        <optgroup key={kind} label={kind === "dark" ? t("Dark") : t("Light")}>
-          {ids.map((id) => <option key={id} value={id}>{t(THEME_NAMES[id])}</option>)}
-        </optgroup>
-      ))}
-    </select>
+    <span className="theme-select-wrap">
+      <span className="theme-swatch" aria-hidden="true" style={{ background: swatch }} />
+      <select id={`settings-theme-${side}`} className="select settings-select" value={selected} onChange={(event) => update(pickTheme(settings, side, event.target.value as ThemeId))}>
+        {themeGroups(side).map(({ kind, ids }) => (
+          <optgroup key={kind} label={kind === "dark" ? t("Dark") : t("Light")}>
+            {ids.map((id) => <option key={id} value={id}>{t(THEME_NAMES[id])}</option>)}
+          </optgroup>
+        ))}
+      </select>
+    </span>
   );
 }
 

@@ -399,6 +399,19 @@
   list-style: none;
 }
 
+.theme-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.theme-swatch {
+  width: var(--space-4);
+  height: var(--space-4);
+  border-radius: var(--radius-sm);
+  border: var(--hairline) solid var(--border);
+  flex: none;
+}
+
 @media (max-width: 640px) {
   .settings-row.is-wide > .settings-font-field {
     flex: 0 0 auto;
