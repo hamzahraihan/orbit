@@ -7,6 +7,7 @@ import type { ViewportIntentGate } from "../lib/viewportIntent.ts";
 import { ApiError } from "../lib/api.ts";
 import { useT } from "../lib/i18n.ts";
 import { PAGE_OVERLAP_ROWS, pageScrollDistance } from "../lib/pageScroll.ts";
+import { Button } from "../lib/heroui/orbit-components.tsx";
 import { scrollPollDelay, validScroll, visibleFindRects, type FindCellRect } from "../lib/terminalViewport.ts";
 import "./TerminalViewportTools.css";
 
@@ -260,8 +261,8 @@ export function TerminalViewportTools({ viewportIntent, terminal, paneId, pageSc
   return <div ref={layer} className="terminal-viewport-tools" aria-hidden={!enabled || undefined}>
     {enabled && search && box && hits.map((hit, index) => <span key={index} className={`terminal-find-hit${hit.current ? " is-current" : ""}`} aria-hidden="true"
       style={{ left: box.left + hit.col * box.width / box.cols, top: box.top + hit.row * box.height / box.rows, width: hit.width * box.width / box.cols, height: box.height / box.rows }} />)}
-    {enabled && interactive && box && validScroll(scroll) && scroll.offset_from_bottom > 0 && <button type="button" className="btn terminal-jump-bottom"
+    {enabled && interactive && box && validScroll(scroll) && scroll.offset_from_bottom > 0 && <Button type="button" variant="secondary" className="terminal-jump-bottom"
       aria-label={t("Jump to bottom")} title={t("Jump to bottom")} style={{ left: box.anchorX, top: box.anchorY }}
-      onPointerDown={(event) => event.preventDefault()} onClick={() => writeRef.current(0)}><ArrowDown aria-hidden="true" /></button>}
+      onPointerDown={(event) => event.preventDefault()} onClick={() => writeRef.current(0)}><ArrowDown aria-hidden="true" /></Button>}
   </div>;
 }
