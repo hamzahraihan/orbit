@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from "react";
 import { ArrowLeft, Bell, Check, ChevronRight, Info, Keyboard, MessageSquare, Mic, Monitor, Palette, Plug, Plus, Search, Smartphone, SquareTerminal, Star, X, type LucideIcon } from "lucide-react";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
 import "./SettingsDialog.css";
-
 import type { AppActions } from "../lib/actions.ts";
 import { useInstallPrompt } from "../lib/install.ts";
 import { SHORTCUTS, bindingDisplayKeys, formatKeys, isMacPlatform, setShortcutRecording, shortcutDisplayKeys, shortcutKeys, shortcutConflict, type ShortcutId } from "../lib/shortcuts.ts";
@@ -146,10 +146,10 @@ function FontFamilyInput({ value, label, onCommit, fixedWidthFor = null }: { val
           }}
         />
         {canListInstalledFonts() && (
-          <button type="button" className="btn settings-font-browse" aria-expanded={browsing} aria-label={t("Browse installed fonts for {label}", { label })} onClick={() => void browse()}>
+          <Button variant="secondary" className="settings-font-browse" aria-expanded={browsing} aria-label={t("Browse installed fonts for {label}", { label })} onClick={() => void browse()}>
             <Search aria-hidden="true" />
             {t("Browse")}
-          </button>
+          </Button>
         )}
       </div>
       {unavailable && <p className="settings-font-note" role="status">{t("Installed fonts could not be listed. Type the name instead.")}</p>}
@@ -396,8 +396,8 @@ function ChatPage() {
             ))}
           </ol>
           <div className="settings-actions">
-            <button type="button" className="btn" disabled={settings.quickReplies.length >= QUICK_REPLIES_MAX} onClick={() => update({ quickReplies: [...settings.quickReplies, ""] })}><Plus aria-hidden="true" />{t("Add reply")}</button>
-            <button type="button" className="btn btn-ghost" onClick={() => update({ quickReplies: [...DEFAULT_SETTINGS.quickReplies] })}>{t("Restore defaults")}</button>
+            <Button variant="secondary" disabled={settings.quickReplies.length >= QUICK_REPLIES_MAX} onClick={() => update({ quickReplies: [...settings.quickReplies, ""] })}><Plus aria-hidden="true" />{t("Add reply")}</Button>
+            <Button variant="ghost" onClick={() => update({ quickReplies: [...DEFAULT_SETTINGS.quickReplies] })}>{t("Restore defaults")}</Button>
           </div>
         </div>
       </SettingsGroup>
@@ -445,7 +445,7 @@ function TerminalPage({ keyBarButtonRef, onEditKeyBar }: { keyBarButtonRef: RefO
         </select>
       </SettingsRow>
       <SettingsRow label={t("Key bar")} description={t("Keys, order and custom combinations for the terminal.")}>
-        <button type="button" ref={keyBarButtonRef} className="btn" onClick={onEditKeyBar}>{t("Edit key bar")}</button>
+        <Button ref={keyBarButtonRef} variant="secondary" onClick={onEditKeyBar}>{t("Edit key bar")}</Button>
       </SettingsRow>
       <SettingsRow label={t("Clipboard from a pane")} description={t("A program in a pane that copies (vim, tmux, Claude Code) puts its text on this device's clipboard, as a copy you made yourself would. Turn it off if a pane runs output you do not trust: it could replace what you paste next.")}>
         <Toggle label={t("Clipboard from a pane")} checked={settings.paneClipboard} onChange={(paneClipboard) => update({ paneClipboard })} />
@@ -583,8 +583,8 @@ function VoicePage() {
                 autoCorrect="off"
                 onChange={(event) => setVoiceKey(event.target.value)}
               />
-              <button type="submit" className="btn voice-key-save" disabled={voiceBusy || !voiceKey.trim()}>{t("Save key")}</button>
-              <button type="button" className="btn btn-ghost voice-key-remove" disabled={voiceBusy || !voice.configured} onClick={() => void changeVoiceKey(null)}>{t("Remove key")}</button>
+              <Button type="submit" variant="primary" className="voice-key-save" disabled={voiceBusy || !voiceKey.trim()}>{t("Save key")}</Button>
+              <Button variant="ghost" className="voice-key-remove" disabled={voiceBusy || !voice.configured} onClick={() => void changeVoiceKey(null)}>{t("Remove key")}</Button>
             </form>
           )}
           {voiceError && <p className="settings-hint voice-error" role="alert">{voiceError}</p>}
@@ -698,7 +698,7 @@ function IntegrationRow({ integration }: { integration: AgentIntegration }) {
   const state = integration.state === "outdated" ? t("Installed, but older than this herdr: run this to update it") : t("Not installed");
   return (
     <SettingsRow label={name} description={<>{state}<code ref={commandRef} className="settings-integration-command">{command}</code></>}>
-      <button type="button" className="btn" aria-label={t("Copy the command for {name}", { name })} onClick={() => void copy()}>{t(copied ? "Copied" : "Copy")}</button>
+      <Button type="button" variant="secondary" aria-label={t("Copy the command for {name}", { name })} onClick={() => void copy()}>{t(copied ? "Copied" : "Copy")}</Button>
     </SettingsRow>
   );
 }
@@ -784,13 +784,13 @@ function ShortcutsPage() {
             <SettingsRow key={shortcut.id} label={t(shortcut.label)} wide={shortcut.id !== "voice"} description={rowText === undefined ? undefined : <span role="status">{rowText}</span>}>
               {shortcut.id === "voice" ? <span className="settings-keys">{formatKeys(shortcut.keys).map((key) => <kbd className="kbd" key={key}>{key}</kbd>)}</span> : (
                 <span className="settings-shortcut-control">
-                <button type="button" className="btn settings-shortcut-record" ref={(button) => { if (button) recordButtons.current.set(shortcut.id, button); else recordButtons.current.delete(shortcut.id); }} aria-pressed={recording?.id === shortcut.id} aria-label={t("Record shortcut for {name}", { name: t(shortcut.label) })} onClick={() => { setPending(null); setRecording(recording?.id === shortcut.id ? null : { id: shortcut.id, problem: null }); }}>{recording?.id === shortcut.id ? t("Press keys…") : t("Record")}</button>
+                <Button variant="secondary" className="settings-shortcut-record" ref={(button) => { if (button) recordButtons.current.set(shortcut.id, button); else recordButtons.current.delete(shortcut.id); }} aria-pressed={recording?.id === shortcut.id} aria-label={t("Record shortcut for {name}", { name: t(shortcut.label) })} onClick={() => { setPending(null); setRecording(recording?.id === shortcut.id ? null : { id: shortcut.id, problem: null }); }}>{recording?.id === shortcut.id ? t("Press keys…") : t("Record")}</Button>
                 {confirming ? <>
-                  <button type="button" className="btn settings-shortcut-confirm" onClick={() => {
+                  <Button variant="secondary" className="settings-shortcut-confirm" onClick={() => {
                     settlePending(confirming.id);
                     update({ shortcutOverrides: { ...settings.shortcutOverrides, [confirming.id]: confirming.value } });
-                  }}>{t("Save anyway")}</button>
-                  <button type="button" className="btn" onClick={() => settlePending(confirming.id)}>{t("Cancel")}</button>
+                  }}>{t("Save anyway")}</Button>
+                  <Button type="button" onClick={() => settlePending(confirming.id)}>{t("Cancel")}</Button>
                 </> : <select className="select settings-select settings-shortcut-select" aria-label={t(shortcut.label)} value={Object.hasOwn(settings.shortcutOverrides, shortcut.id) ? settings.shortcutOverrides[shortcut.id] ?? (unbound ? "default" : "off") : "default"} onChange={(event) => {
                   const next = { ...settings.shortcutOverrides };
                   if (event.target.value === "default") delete next[shortcut.id];
@@ -814,11 +814,11 @@ function ShortcutsPage() {
         })}
       </SettingsGroup>
       <div className="settings-actions">
-        <button type="button" className="btn" onClick={() => {
+        <Button type="button" onClick={() => {
           setPending(null);
           setRecording(null);
           update({ shortcutOverrides: {} });
-        }}>{t("Reset shortcuts")}</button>
+        }}>{t("Reset shortcuts")}</Button>
       </div>
     </>
   );
@@ -849,7 +849,7 @@ function DevicesPage({ auth, onSignOut }: { auth: HealthAuth | null; onSignOut: 
           <Toggle label={t("Keep screen on")} checked={settings.keepScreenOn} onChange={(keepScreenOn) => update({ keepScreenOn })} />
         </SettingsRow>
         <SettingsRow label={t("Install")} description={installPrompt.installed ? t("Installed") : installPrompt.canInstall ? undefined : installPrompt.help}>
-          {!installPrompt.installed && installPrompt.canInstall && <button type="button" className="btn btn-primary" onClick={() => void installPrompt.install()}>{t("Install app")}</button>}
+          {!installPrompt.installed && installPrompt.canInstall && <Button variant="primary" onClick={() => void installPrompt.install()}>{t("Install app")}</Button>}
         </SettingsRow>
       </SettingsGroup>
 
@@ -857,7 +857,7 @@ function DevicesPage({ auth, onSignOut }: { auth: HealthAuth | null; onSignOut: 
         <div className="settings-item"><DevicesPanel pairUrl={pairUrl} auth={auth} /></div>
         {onSignOut && (
           <SettingsRow label={t("Sign out")} description={t("Forget this browser's sign-in. Getting back in takes the access token or a pairing code.")}>
-            <button type="button" className="btn" onClick={() => setConfirmSignOut(true)}>{t("Sign out")}</button>
+            <Button type="button" onClick={() => setConfirmSignOut(true)}>{t("Sign out")}</Button>
           </SettingsRow>
         )}
         {onSignOut && confirmSignOut && (
@@ -875,7 +875,7 @@ function RemotePcsPage({ actions, pcSettings, pcSettingsError, onPcSettings }: {
   return (
     <SettingsGroup>
       <SettingsRow label={t("Add PC")} description={t("Connect another PC over an SSH alias or user@host. Its workspaces join the sidebar.")}>
-        <button type="button" className="btn" onClick={actions.openAddPc}><Monitor aria-hidden="true" />{t("Add PC")}</button>
+        <Button type="button" onClick={actions.openAddPc}><Monitor aria-hidden="true" />{t("Add PC")}</Button>
       </SettingsRow>
       {/* the switch is the server's and waits for its answer; Add PC never does */}
       {pcSettings && (
@@ -1109,9 +1109,9 @@ function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClo
       {/* named Settings on every page: the page's own name is the visible title */}
       <section ref={surface} className="modal settings-dialog" role="dialog" aria-modal="true" aria-label={keyBarOpen ? t("Key bar") : t("Settings")} tabIndex={-1}>
         <header className="modal-header settings-header">
-          {(keyBarOpen || (narrow && page !== null)) && <button type="button" ref={backRef} className="icon-button" aria-label={t("Back to settings")} onClick={goBack}><ArrowLeft aria-hidden="true" /></button>}
-          <h2 className="modal-title">{keyBarOpen ? t("Key bar") : page === null ? t("Settings") : label(page)}</h2>
-          <button type="button" className="icon-button" aria-label={t("Close settings")} onClick={onClose}><X aria-hidden="true" /></button>
+          {(keyBarOpen || (narrow && page !== null)) && <button type="button" ref={backRef} className="icon-button settings-back" aria-label={t("Back to settings")} onClick={goBack}><ArrowLeft aria-hidden="true" /></button>}
+          <h2 className="modal-title settings-title">{keyBarOpen ? t("Key bar") : page === null ? t("Settings") : label(page)}</h2>
+          <button type="button" className="icon-button settings-close" aria-label={t("Close settings")} onClick={onClose}><X aria-hidden="true" /></button>
         </header>
         {listShown && (
           <nav className="settings-nav" aria-label={t("Settings")}>
