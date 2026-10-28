@@ -5,6 +5,11 @@ import { createRoot } from "react-dom/client";
 // (.btn, .input, .menu…) that component stylesheets override, and Vite emits CSS in import order
 import "./fonts/fonts.css";
 import "./styles.css";
+// HeroUI reads its theme variables from CSS custom properties; this bridge maps
+// them onto Orbit's tokens in src/styles.css so palettes stay single-sourced.
+import "./lib/heroui-theme.css";
+import "./tailwind-orbit.css";
+
 import { App } from "./App.tsx";
 import { AppCrash, CrashProbe } from "./components/AppCrash.tsx";
 import { FileReader } from "./components/FileReader.tsx";
