@@ -1457,8 +1457,8 @@
 .chat-skills {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
 }
 .chat-skill {
   max-width: 100%;
@@ -1471,8 +1471,8 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  padding: var(--space-2);
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
   cursor: pointer;
 }
 .chat-skill > summary > svg { width: 14px; height: 14px; flex-shrink: 0; }
