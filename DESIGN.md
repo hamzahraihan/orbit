@@ -1741,7 +1741,9 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   New workspace, pane operations and plugin actions keep the selected PC's context and are not
   retargeted by hovering or searching another PC's panes.
 - Status chips (`.palette-filter`, a `radiogroup`) sit between the search and the list: All, then
-  INPUT, RUN, READY, DONE, BACKGROUND in `STATUS_WORD`'s words with counts over all connected PCs. The
+  INPUT, RUN, READY in `STATUS_WORD`'s words with counts over all connected PCs. Done and background
+  panes stay reachable by search; they no longer get their own chip, so the row stays within
+  working-memory limits (<=4). The
   checked chip takes its badge's tint and text (All and READY the neutral hover fill); a chip no
   pane answers to keeps a dashed edge. A chip is `--control-h` minus `--space-2` tall, and on a
   coarse pointer `--control-h` minus 2px with a `--touch-target` hit area. The row scrolls sideways

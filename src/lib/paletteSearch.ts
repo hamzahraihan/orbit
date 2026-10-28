@@ -5,14 +5,15 @@ import { tabLabel } from "./tabName.ts";
 
 export type PaletteStatusFilter = "all" | Exclude<KnownStatus, "unknown">;
 
-export const STATUS_FILTERS: readonly PaletteStatusFilter[] = ["all", "blocked", "working", "idle", "done", "waiting"];
+export const STATUS_FILTERS: readonly PaletteStatusFilter[] = ["all", "blocked", "working", "idle"];
 
 /**
- * herdr's picker keys as they are: b blocked, w working, i idle, d done, a all. The palette
- * listens for them only while the focus is outside its search field, so a query never loses a
- * letter to them. BG has no key in herdr and gets none here.
+ * herdr's picker keys as they are: b blocked, w working, i idle, a all. The palette listens for
+ * them only while the focus is outside its search field, so a query never loses a letter to them.
+ * Done and background panes stay reachable by search; they no longer get their own chip, so the
+ * filter row stays within working-memory limits (<=4).
  */
-export const FILTER_KEYS: Readonly<Record<string, PaletteStatusFilter>> = { a: "all", b: "blocked", w: "working", i: "idle", d: "done" };
+export const FILTER_KEYS: Readonly<Record<string, PaletteStatusFilter>> = { a: "all", b: "blocked", w: "working", i: "idle" };
 
 export interface PaletteQuery {
   actionsOnly: boolean;
