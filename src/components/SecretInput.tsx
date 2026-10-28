@@ -5,6 +5,8 @@ import { useT } from "../lib/i18n.ts";
 import type { SubmitResult } from "../lib/ws.ts";
 import "./SecretInput.css";
 
+import { Button } from "../lib/heroui/orbit-components.tsx";
+
 /** A DOM-only value: no drafts, queue, React state or retry copy of the secret. */
 export function SecretInput({ prompt, active = true, onSend, onCancel }: {
   prompt: string;
@@ -50,8 +52,8 @@ export function SecretInput({ prompt, active = true, onSend, onCancel }: {
     </label>
     <p className="secret-input-note">{t("Sent directly to this terminal. Never saved as a draft or queued.")}</p>
     <div className="secret-input-actions">
-      <button type="submit" className="btn btn-primary" disabled={pending}><Send size={14} aria-hidden="true" /> {t("Send")}</button>
-      <button type="button" className="btn" disabled={pending} onClick={() => { if (input.current) input.current.value = ""; onCancel(); }}>{t("Cancel")}</button>
+      <Button type="submit" variant="primary" disabled={pending}><Send size={14} aria-hidden="true" /> {t("Send")}</Button>
+      <Button type="button" variant="secondary" disabled={pending} onClick={() => { if (input.current) input.current.value = ""; onCancel(); }}>{t("Cancel")}</Button>
     </div>
     {error && <p className="secret-input-error" role="status">{error}</p>}
   </form>;
