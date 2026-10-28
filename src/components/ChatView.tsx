@@ -8,6 +8,8 @@ import {
 import "./ChatView.css";
 // the timeline's styles stay in the entry: its chunk loads apart (chatTimelineLoader.ts), but
 // .chat-frame and the loading state are drawn before it arrives
+
+import { Button } from "../lib/heroui/orbit-components.tsx";
 import "./ChatTimeline.css";
 
 import { AgentMark } from "./AgentMark.tsx";
@@ -92,7 +94,7 @@ function FailureLine({ action, failure, onRetry }: { action: string; failure: Us
   const line = slow ? t("The PC isn't responding") : failure.cause === null ? action : `${action} · ${failure.cause}`;
   return <div className="chat-inline-error chat-failure" role="alert">
     <span className="chat-failure-line">{line}</span>
-    {offersRetry(failure) && <button type="button" className="btn chat-failure-retry" onClick={onRetry}>{t("Try again")}</button>}
+    {offersRetry(failure) && <Button type="button" variant="secondary" className="chat-failure-retry" onClick={onRetry}>{t("Try again")}</Button>}
     {(failure.advice !== null || failure.detail !== null) && <details className="chat-failure-details">
       <summary>{t("Details")}</summary>
       {failure.advice !== null && <p>{failure.advice}</p>}
@@ -431,9 +433,9 @@ function WorkRow({ paneId, part, stateKey }: { paneId: string; part: ToolPartTyp
       {part.error && (narration || verb !== null) && <>{" "}<span className="work-row-failed">{t("failed")}</span></>}
     </button>
     {open && <div className="work-row-detail">{verb !== null && <p className="work-row-tool">{part.name}</p>}<ToolInputView part={part} /><ToolImages paneId={paneId} part={part} />{output.length > 0 && <section className="chat-tool-output"><h4>{t(part.error ? "Error" : "Output")}</h4><pre className={`chat-tool-io${whole.text !== null ? " is-whole" : ""}`}>{linkFilePaths(output, openFile)}</pre>
-      {part.output_ref !== undefined && whole.text === null && <button type="button" className="btn btn-ghost chat-tool-more" disabled={whole.state === "loading"} onClick={whole.load}>
+      {part.output_ref !== undefined && whole.text === null && <Button type="button" variant="ghost" className="chat-tool-more" disabled={whole.state === "loading"} onClick={whole.load}>
         {t(whole.state === "loading" ? "Loading the whole output…" : whole.state === "failed" ? "Couldn't load the whole output — retry" : "Show the whole output ({size} characters)", { size: formatTokens(part.output_size ?? 0) })}
-      </button>}</section>}</div>}
+      </Button>}</section>}</div>}
   </div>;
 }
 
@@ -1468,9 +1470,9 @@ export const ChatView = memo(function ChatView({ paneId, active = true, visible:
       )}
       {/* one button in every state: swapping it for a status line of another height would shift the reader */}
       {state.source === "conversation" && typeof olderCursor === "string" && (
-        <button type="button" className="btn btn-ghost chat-older" disabled={olderState === "loading"} onClick={() => void loadOlder()}>
+        <Button type="button" variant="ghost" className="chat-older" disabled={olderState === "loading"} onClick={() => void loadOlder()}>
           {t(olderState === "loading" ? "Loading earlier messages…" : olderState === "failed" ? "Couldn't load earlier messages — retry" : "Earlier messages")}
-        </button>
+        </Button>
       )}
       {state.source === "conversation" && olderCursor === null && older.length > 0 && <p className="chat-endcap">{t("beginning of conversation")}</p>}
   </>;
@@ -1502,8 +1504,8 @@ export const ChatView = memo(function ChatView({ paneId, active = true, visible:
       {loaded && empty && error === null && prompt === null && activity === "idle" && !(greeted && blank) && <div className="chat-empty"><AgentMark agent={agent ?? "agent"} size={32} /><p>{t("No conversation yet — say something below")}</p></div>}
       {ended && <p className="chat-endcap">{t("terminal ended")}</p>}
   </>;
-  const jump = newMessages ? <button type="button" className="btn chat-new-messages chat-virtual-jump" onClick={scrollToBottom}>{t("New messages")} <ArrowDown aria-hidden="true" /></button>
-    : away && <button type="button" className="btn chat-new-messages chat-virtual-jump is-icon" aria-label={t("Jump to latest")} title={t("Jump to latest")} onClick={scrollToBottom}><ArrowDown aria-hidden="true" /></button>;
+  const jump = newMessages ? <Button type="button" variant="secondary" className="chat-new-messages chat-virtual-jump" onClick={scrollToBottom}>{t("New messages")} <ArrowDown aria-hidden="true" /></Button>
+    : away && <Button type="button" variant="secondary" className="chat-new-messages chat-virtual-jump is-icon" aria-label={t("Jump to latest")} title={t("Jump to latest")} onClick={scrollToBottom}><ArrowDown aria-hidden="true" /></Button>;
   return <ChatPaneContext.Provider value={paneId}><ChatHistoryContext.Provider value={historyId ?? ""}><ImageViewerContext.Provider value={openViewer}>
     <div className="chat-frame">
     <div className="chat-frame-body">
