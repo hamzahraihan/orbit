@@ -1,6 +1,20 @@
 import type { ReactNode } from "react";
 import { Minus, Plus } from "lucide-react";
 
+import {
+  NumberFieldDecrementButton,
+  NumberFieldGroup,
+  NumberFieldIncrementButton,
+  NumberFieldInput,
+  NumberFieldRoot,
+  SwitchContent,
+  SwitchControl,
+  SwitchRoot,
+  SwitchThumb,
+  ToggleButtonGroupRoot,
+  ToggleButtonRoot,
+} from "@heroui/react";
+
 import "./SettingsControls.css";
 
 /**
@@ -34,34 +48,45 @@ export function SettingsRow({ label, description, htmlFor, wide = false, childre
   );
 }
 
+/** An on/off switch, Hero UI's Switch under the hood. */
 export function Toggle({ checked, label, onChange, disabled }: { checked: boolean; label: string; onChange: (checked: boolean) => void; disabled?: boolean }) {
   return (
-    <button type="button" className="settings-toggle" role="switch" aria-checked={checked} aria-label={label} disabled={disabled} onClick={() => onChange(!checked)}>
-      <span className="settings-toggle-thumb" />
-    </button>
+    <SwitchRoot isSelected={checked} isDisabled={disabled} onChange={(isSelected) => onChange(isSelected)} aria-label={label} className="settings-toggle">
+      <SwitchContent className="settings-toggle-content">
+        <SwitchControl className="settings-toggle-track" />
+        <SwitchThumb className="settings-toggle-thumb" />
+      </SwitchContent>
+    </SwitchRoot>
   );
 }
 
 export interface SegmentedOption<T extends string> { value: T; label: string }
 
-/** One of a few short choices, all in sight. Five or more go in a select instead. */
+/** One of a few short choices, all in sight. Five or more go in a select instead. Hero UI's
+ *  ToggleButtonGroup under the hood. */
 export function Segmented<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: readonly SegmentedOption<T>[]; onChange: (value: T) => void }) {
+  const selectedKeys = new Set([value]);
   return (
-    <div className="segmented settings-segmented" role="group" aria-label={label}>
+    <ToggleButtonGroupRoot selectionMode="single" selectedKeys={selectedKeys} onSelectionChange={(keys) => onChange(Array.from(keys)[0] as T)} aria-label={label} className="settings-segmented">
       {options.map((option) => (
-        <button key={option.value} type="button" aria-pressed={value === option.value} onClick={() => onChange(option.value)}>{option.label}</button>
+        <ToggleButtonRoot key={option.value} id={option.value} className="settings-segmented-button">
+          {option.label}
+        </ToggleButtonRoot>
       ))}
-    </div>
+    </ToggleButtonGroupRoot>
   );
 }
 
-/** A number moved one step at a time between its limits, shown as `text`. */
+/** A number moved one step at a time between its limits, shown as `text`. Hero UI's NumberField
+ *  under the hood. */
 export function Stepper({ label, value, text, min, max, decreaseLabel, increaseLabel, onChange }: { label: string; value: number; text: string; min: number; max: number; decreaseLabel: string; increaseLabel: string; onChange: (value: number) => void }) {
   return (
-    <div className="settings-stepper" role="group" aria-label={label}>
-      <button type="button" className="icon-button" aria-label={decreaseLabel} disabled={value <= min} onClick={() => onChange(value - 1)}><Minus aria-hidden="true" /></button>
-      <output aria-live="polite">{text}</output>
-      <button type="button" className="icon-button" aria-label={increaseLabel} disabled={value >= max} onClick={() => onChange(value + 1)}><Plus aria-hidden="true" /></button>
-    </div>
+    <NumberFieldRoot value={value} minValue={min} maxValue={max} onChange={(next) => onChange(next)} aria-label={label} className="settings-stepper">
+      <NumberFieldGroup className="settings-stepper-group">
+        <NumberFieldDecrementButton aria-label={decreaseLabel} isDisabled={value <= min} className="settings-stepper-button"><Minus aria-hidden="true" /></NumberFieldDecrementButton>
+        <NumberFieldInput readOnly className="settings-stepper-output" />
+        <NumberFieldIncrementButton aria-label={increaseLabel} isDisabled={value >= max} className="settings-stepper-button"><Plus aria-hidden="true" /></NumberFieldIncrementButton>
+      </NumberFieldGroup>
+    </NumberFieldRoot>
   );
 }
