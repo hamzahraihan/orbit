@@ -71,7 +71,7 @@ export function RecentFolderChips({ folders, disabled, labelledBy, basename, onP
       {shown.map(chip)}
       {rest.length > 0 && <Button type="button" variant="secondary" className="new-session-folder-chip new-session-folder-more" disabled={disabled}
         aria-haspopup="menu" aria-expanded={menu !== null} aria-label={t("{n} more recent folders", { n: rest.length })}
-        onClick={(event) => { const anchor = event.currentTarget; setMenu((open) => open ? null : anchor); }}>
+        onClick={(event) => { const anchor = event.currentTarget as HTMLElement; setMenu((open) => open ? null : anchor); }}>
         +{rest.length}
       </Button>}
     </div>
