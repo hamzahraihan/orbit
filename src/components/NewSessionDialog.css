@@ -32,7 +32,7 @@
   min-width: 0;
 }
 
-.new-session-cwd .btn {
+.new-session-cwd .button {
   flex: none;
 }
 
@@ -132,8 +132,8 @@
 
 @media (pointer: coarse) {
   .new-session-modal .input,
-  .new-session-modal .select,
-  .new-session-modal .btn {
+  .new-session-modal .orbit-select,
+  .new-session-modal .button {
     height: var(--touch-target);
   }
 }
@@ -194,23 +194,23 @@
 
 /* aria-selected is the chosen agent (bold); the keyboard/pointer row is data-active and carries
    the highlight, which the shared menu gives aria-selected elsewhere */
-.agent-picker-menu .menu-item[aria-selected="true"] {
+.agent-picker-menu .orbit-menu-item[aria-selected="true"] {
   background: transparent;
   color: var(--text);
 }
 
-.agent-picker-menu .menu-item[data-active] {
+.agent-picker-menu .orbit-menu-item[data-active] {
   background: var(--bg-hover);
   color: var(--text-strong);
 }
 
-.agent-picker-menu .menu-item[aria-selected="true"] .menu-item-main {
+.agent-picker-menu .orbit-menu-item[aria-selected="true"] .menu-item-main {
   font-weight: 600;
 }
 
 @media (pointer: coarse) {
   .new-session-modal .agent-picker-trigger,
-  .agent-picker-menu .menu-item {
+  .agent-picker-menu .orbit-menu-item {
     height: var(--touch-target);
   }
 }
