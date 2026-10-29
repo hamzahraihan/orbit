@@ -1,59 +1,24 @@
 /*
  * Tailwind v4 entry for Orbit.
  *
- * Declares HeroUI's theme variables as references to Orbit's CSS tokens, which
- * are defined in src/styles.css (`:root`, `[data-theme="light"]`,
- * `[data-palette=*]`). A palette change touches only src/styles.css; this file
- * only names the variables HeroUI expects.
+ * HeroUI owns component anatomy, sizing and states; Orbit's colors and interface
+ * scale come from src/styles.css. The token bridge lives in lib/heroui-theme.css.
+ *
+ * Import order matters: Tailwind first, HeroUI's styles second.
  */
 
 @import "tailwindcss";
-@theme {
-  /* Orbit's single source of truth for colors is the :root token block below;
-     HeroUI and any Tailwind utility read these same custom properties, so a
-     palette change touches only src/styles.css. */
-  --color-orbit-bg: var(--bg);
-  --color-orbit-panel: var(--bg-panel);
-  --color-orbit-elevated: var(--bg-elevated);
-  --color-orbit-hover: var(--bg-hover);
-  --color-orbit-input: var(--bg-input);
-  --color-orbit-border: var(--border);
-  --color-orbit-border-strong: var(--border-strong);
-  --color-orbit-text: var(--text);
-  --color-orbit-text-dim: var(--text-dim);
-  --color-orbit-text-strong: var(--text-strong);
-  --color-orbit-accent: var(--accent);
-  --color-orbit-accent-tint: var(--accent-tint);
-  --color-orbit-primary: var(--primary);
-  --color-orbit-primary-hover: var(--primary-hover);
-  --color-orbit-primary-text: var(--primary-text);
-  --color-orbit-primary-tint: var(--primary-tint);
-  --color-orbit-status-idle: var(--status-idle);
-  --color-orbit-status-working: var(--status-working);
-  --color-orbit-status-blocked: var(--status-blocked);
-  --color-orbit-status-done: var(--status-done);
-  --color-orbit-status-working-tint: var(--status-working-tint);
-  --color-orbit-status-blocked-tint: var(--status-blocked-tint);
-  --color-orbit-status-done-tint: var(--status-done-tint);
-  --color-orbit-danger-tint: var(--danger-tint);
-  --color-orbit-danger-text: var(--danger-text);
-  --color-orbit-notice: var(--notice);
-  --color-orbit-indicator-working: var(--indicator-working);
-  --color-orbit-indicator-blocked: var(--indicator-blocked);
-  --color-orbit-indicator-done: var(--indicator-done);
-  --color-orbit-indicator-idle: var(--indicator-idle);
-  --color-orbit-indicator-unknown: var(--indicator-unknown);
-  --radius-orbit-sm: var(--radius-sm);
-  --radius-orbit-md: var(--radius-md);
-  --radius-orbit-lg: var(--radius-lg);
-  --radius-orbit-xl: var(--radius-xl);
-  --radius-orbit-2xl: var(--radius-2xl);
-  --radius-orbit-pill: var(--radius-pill);
-  --space-orbit-1: var(--space-1);
-  --space-orbit-2: var(--space-2);
-  --space-orbit-3: var(--space-3);
-  --space-orbit-4: var(--space-4);
-  --space-orbit-5: var(--space-5);
-  --space-orbit-6: var(--space-6);
-  --space-orbit-8: var(--space-8);
+@import "@heroui/styles";
+
+/*
+ * HeroUI's components are written with Tailwind's text-* utilities. Point those
+ * at Orbit's interface scale so Settings → Appearance → Interface font size
+ * still reaches buttons, fields, switches and segmented controls.
+ */
+@theme inline {
+  --text-xs: var(--fs-xs);
+  --text-sm: var(--fs-sm);
+  --text-base: var(--fs-md);
+  --text-lg: var(--fs-lg);
+  --text-xl: var(--fs-xl);
 }
