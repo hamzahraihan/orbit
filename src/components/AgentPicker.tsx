@@ -146,7 +146,7 @@ export const AgentPicker = forwardRef<HTMLButtonElement, AgentPickerProps>(funct
       <button
         ref={ref}
         type="button"
-        className="select agent-picker-trigger"
+        className="orbit-select agent-picker-trigger"
         role="combobox"
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -162,12 +162,12 @@ export const AgentPicker = forwardRef<HTMLButtonElement, AgentPickerProps>(funct
         <ChevronDown className="agent-picker-chevron" aria-hidden="true" />
       </button>
       {open && (
-        <div id={listId} className="menu agent-picker-menu" role="listbox" aria-labelledby={labelledBy} style={place}>
+        <div id={listId} className="orbit-menu agent-picker-menu" role="listbox" aria-labelledby={labelledBy} style={place}>
           {options.map((option, index) => (
             <div
               id={`${listId}-${index}`}
               key={option.kind || "shell"}
-              className="menu-item"
+              className="orbit-menu-item"
               role="option"
               aria-selected={index === selectedIndex}
               data-active={index === active || undefined}
