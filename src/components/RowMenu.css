@@ -5,7 +5,7 @@
   z-index: calc(var(--z-drawer) + 1);
   min-width: 208px;
   max-width: min(280px, calc(100vw - var(--space-4)));
-  /* the popover's max-height comes from the room the anchor leaves (RowMenu.tsx); `.menu` hides
+  /* the popover's max-height comes from the room the anchor leaves (RowMenu.tsx); `.orbit-menu` hides
      its overflow, so the scroll box is here */
   overflow-y: auto;
 }
@@ -34,24 +34,24 @@
   z-index: calc(var(--z-modal) + 1);
 }
 
-.row-menu .menu-item:focus-visible {
+.row-menu .orbit-menu-item:focus-visible {
   outline: none;
   background: var(--bg-hover);
   color: var(--text-strong);
 }
 
-.row-menu .menu-item.is-danger,
+.row-menu .orbit-menu-item.is-danger,
 .row-sheet-item.is-danger {
   color: var(--status-blocked);
 }
 
-.row-menu .menu-item.is-danger svg,
+.row-menu .orbit-menu-item.is-danger svg,
 .row-sheet-item.is-danger svg {
   color: currentColor;
 }
 
 /* a picker's item that is what is open now: named in the strong colour, with its mark unfaded */
-.row-menu .menu-item[aria-current="true"],
+.row-menu .orbit-menu-item[aria-current="true"],
 .row-sheet-item[aria-current="true"] {
   color: var(--text-strong);
   font-weight: var(--fw-semibold);
