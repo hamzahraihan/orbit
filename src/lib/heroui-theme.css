@@ -7,10 +7,16 @@
  * This file maps HeroUI's expected variable names onto Orbit's tokens so a
  * palette change touches only src/styles.css — never this file.
  *
- * Imported once in src/main.tsx, after src/styles.css.
+ * `--accent` and `--border` are deliberately NOT declared here. Orbit already
+ * owns those names, and `--accent: var(--accent)` is a custom-property cycle
+ * that computes to an empty value. HeroUI reads Orbit's values through the
+ * shared names; its own defaults sit in a cascade layer and lose to this
+ * unlayered block.
+ *
+ * One block covers both modes: every value points at an Orbit token, and those
+ * tokens change under `[data-theme]` / `[data-palette]`.
  */
 
-/* Dark (Orbit's default) — HeroUI variables → Orbit tokens */
 :root {
   /* Base */
   --background: var(--bg-panel);
@@ -34,24 +40,23 @@
   --overlay-foreground: var(--text);
 
   /* Accent / primary action — Orbit's ONE muted rose */
-  --accent: var(--accent);
   --accent-foreground: var(--primary-text);
   --accent-hover: var(--primary-hover);
   --accent-soft: var(--accent-tint);
   --accent-soft-foreground: var(--accent);
-  --accent-soft-hover: var(--primary-hover);
+  --accent-soft-hover: color-mix(in srgb, var(--accent) 20%, transparent);
 
   /* Segmented / selected */
   --segment: var(--accent);
   --segment-foreground: var(--primary-text);
 
-  /* Borders */
-  --border: var(--border);
+  /* Borders (the base --border is Orbit's own) */
   --border-secondary: var(--border);
   --border-tertiary: var(--border);
   --separator: var(--border);
   --separator-secondary: var(--border);
   --separator-tertiary: var(--border);
+  --border-width: var(--hairline);
 
   /* Focus */
   --focus: var(--accent);
@@ -60,42 +65,43 @@
   --default: var(--bg-hover);
   --default-foreground: var(--text);
   --default-hover: var(--bg-input);
-  --default-soft: var(--accent-tint);
-  --default-soft-foreground: var(--accent);
-  --default-soft-hover: var(--primary-hover);
+  --default-soft: color-mix(in srgb, var(--text) 6%, transparent);
+  --default-soft-foreground: var(--text);
+  --default-soft-hover: color-mix(in srgb, var(--text) 10%, transparent);
 
   /* Status — agent states keep their own colors, never rose */
   --success: var(--status-done);
   --success-foreground: var(--primary-text);
-  --success-hover: var(--status-done);
+  --success-hover: color-mix(in srgb, var(--status-done) 90%, var(--text) 10%);
   --success-soft: var(--status-done-tint);
   --success-soft-foreground: var(--status-done);
-  --success-soft-hover: var(--status-done);
+  --success-soft-hover: color-mix(in srgb, var(--status-done) 20%, transparent);
 
   --warning: var(--status-working);
   --warning-foreground: var(--primary-text);
-  --warning-hover: var(--status-working);
+  --warning-hover: color-mix(in srgb, var(--status-working) 90%, var(--text) 10%);
   --warning-soft: var(--status-working-tint);
   --warning-soft-foreground: var(--status-working);
-  --warning-soft-hover: var(--status-working);
+  --warning-soft-hover: color-mix(in srgb, var(--status-working) 20%, transparent);
 
   --danger: var(--status-blocked);
   --danger-foreground: var(--primary-text);
-  --danger-hover: var(--status-blocked);
+  --danger-hover: color-mix(in srgb, var(--status-blocked) 90%, var(--text) 10%);
   --danger-soft: var(--status-blocked-tint);
-  --danger-soft-foreground: var(--status-blocked);
-  --danger-soft-hover: var(--status-blocked);
+  --danger-soft-foreground: var(--danger-text);
+  --danger-soft-hover: color-mix(in srgb, var(--status-blocked) 20%, transparent);
 
   /* Form fields */
   --field-background: var(--bg-input);
-  --field-foreground: var(--text);
+  --field-foreground: var(--text-strong);
   --field-placeholder: var(--text-dim);
   --field-border: var(--border);
   --field-hover: var(--bg-hover);
-  --field-focus: var(--accent);
+  /* HeroUI uses --field-focus as the field's focus *surface*, not its border. */
+  --field-focus: var(--bg-input);
   --field-border-hover: var(--border-strong);
   --field-border-focus: var(--accent);
-  --field-radius: var(--radius-md);
+  --field-radius: var(--radius-lg);
   --field-border-width: var(--hairline);
 
   /* Shadows */
@@ -108,89 +114,7 @@
 
   /* Radius scale (HeroUI derives xs..4xl from --radius) */
   --radius: var(--radius-md);
-}
 
-/* Light theme — overrides only the color group, like Orbit's own block */
-[data-theme="light"] {
-  --background: var(--bg-panel);
-  --background-secondary: var(--bg-elevated);
-  --background-tertiary: var(--bg-hover);
-  --background-inverse: var(--text);
-  --foreground: var(--text);
-  --muted: var(--text-dim);
-
-  --surface: var(--bg-panel);
-  --surface-foreground: var(--text);
-  --surface-hover: var(--bg-hover);
-  --surface-secondary: var(--bg-elevated);
-  --surface-secondary-foreground: var(--text);
-  --surface-tertiary: var(--bg-input);
-  --surface-tertiary-foreground: var(--text);
-
-  --overlay: var(--bg-panel);
-  --overlay-foreground: var(--text);
-
-  --accent: var(--accent);
-  --accent-foreground: var(--primary-text);
-  --accent-hover: var(--primary-hover);
-  --accent-soft: var(--accent-tint);
-  --accent-soft-foreground: var(--accent);
-  --accent-soft-hover: var(--primary-hover);
-
-  --segment: var(--accent);
-  --segment-foreground: var(--primary-text);
-
-  --border: var(--border);
-  --border-secondary: var(--border);
-  --border-tertiary: var(--border);
-  --separator: var(--border);
-  --separator-secondary: var(--border);
-  --separator-tertiary: var(--border);
-
-  --focus: var(--accent);
-
-  --default: var(--bg-hover);
-  --default-foreground: var(--text);
-  --default-hover: var(--bg-input);
-  --default-soft: var(--accent-tint);
-  --default-soft-foreground: var(--accent);
-  --default-soft-hover: var(--primary-hover);
-
-  --success: var(--status-done);
-  --success-foreground: var(--primary-text);
-  --success-hover: var(--status-done);
-  --success-soft: var(--status-done-tint);
-  --success-soft-foreground: var(--status-done);
-  --success-soft-hover: var(--status-done);
-
-  --warning: var(--status-working);
-  --warning-foreground: var(--primary-text);
-  --warning-hover: var(--status-working);
-  --warning-soft: var(--status-working-tint);
-  --warning-soft-foreground: var(--status-working);
-  --warning-soft-hover: var(--status-working);
-
-  --danger: var(--status-blocked);
-  --danger-foreground: var(--primary-text);
-  --danger-hover: var(--status-blocked);
-  --danger-soft: var(--status-blocked-tint);
-  --danger-soft-foreground: var(--status-blocked);
-  --danger-soft-hover: var(--status-blocked);
-
-  --field-background: var(--bg-input);
-  --field-foreground: var(--text);
-  --field-placeholder: var(--text-dim);
-  --field-border: var(--border);
-  --field-hover: var(--bg-hover);
-  --field-focus: var(--accent);
-  --field-border-hover: var(--border-strong);
-  --field-border-focus: var(--accent);
-  --field-radius: var(--radius-md);
-  --field-border-width: var(--hairline);
-
-  --surface-shadow: var(--shadow-card);
-  --overlay-shadow: var(--shadow-pop);
-  --field-shadow: none;
-  --backdrop: var(--scrim);
-  --radius: var(--radius-md);
+  /* Links */
+  --link: var(--accent-text);
 }
