@@ -285,7 +285,7 @@ function ThemeSelect({ side }: { side: Mode }) {
       </span>
       <input type="search" className="input settings-theme-search" value={query} onChange={(event) => setQuery(event.target.value)}
         placeholder={t("Search themes")} aria-label={t("Search themes")} spellCheck={false} autoComplete="off" />
-      <select id={`settings-theme-${side}`} className="select settings-select" value={selected} onChange={(event) => update(pickTheme(settings, side, event.target.value as ThemeId))}>
+      <select id={`settings-theme-${side}`} className="orbit-select settings-select" value={selected} onChange={(event) => update(pickTheme(settings, side, event.target.value as ThemeId))}>
         {groups.map(({ kind, ids }) => ids.length === 0 ? null : (
           <optgroup key={kind} label={kind === "dark" ? t("Dark") : t("Light")}>
             {ids.map((id) => <option key={id} value={id}>{t(THEME_NAMES[id])}</option>)}
@@ -315,7 +315,7 @@ function AppearancePage() {
         <Segmented label={t("Density")} value={settings.density} onChange={(density) => update({ density })} options={[{ value: "comfortable", label: t("Comfortable") }, { value: "compact", label: t("Compact") }]} />
       </SettingsRow>
       <SettingsRow label={t("Language")} description={t("Follows the browser unless you choose one")} htmlFor="settings-language">
-        <select id="settings-language" className="select settings-select" value={settings.language} onChange={(event) => update({ language: event.target.value as typeof settings.language })}>
+        <select id="settings-language" className="orbit-select settings-select" value={settings.language} onChange={(event) => update({ language: event.target.value as typeof settings.language })}>
           {LANGUAGE_SETTINGS.map((language) => <option key={language} value={language}>{language === "system" ? t("System") : LANGUAGE_NAMES[language]}</option>)}
         </select>
       </SettingsRow>
@@ -461,7 +461,7 @@ function TerminalPage({ keyBarButtonRef, onEditKeyBar }: { keyBarButtonRef: RefO
       </SettingsRow>
       <SettingsRow label={t("Terminal input mode")} htmlFor="terminal-input-mode">
         {/* "auto", the stored default, types straight into the grid on every device: it reads as Direct typing */}
-        <select id="terminal-input-mode" className="select settings-select" value={settings.terminalInputMode === "line" ? "line" : "direct"} onChange={(event) => update({ terminalInputMode: event.target.value as "line" | "direct" })}>
+        <select id="terminal-input-mode" className="orbit-select settings-select" value={settings.terminalInputMode === "line" ? "line" : "direct"} onChange={(event) => update({ terminalInputMode: event.target.value as "line" | "direct" })}>
           <option value="direct">{t("Direct typing")}</option><option value="line">{t("Input line")}</option>
         </select>
       </SettingsRow>
@@ -521,7 +521,7 @@ function DictationLanguageSelect() {
   const auto = languageName(names, dictationLocale("auto", settings.language, resolvedLanguage, navigator.languages));
   const choices = useMemo(() => DICTATION_LANGUAGES.map((tag) => ({ tag, name: languageName(names, tag) })).sort((a, b) => a.name.localeCompare(b.name, locale)), [names, locale]);
   return (
-    <select id="settings-voice-language" className="select settings-select" value={settings.voiceLanguage} onChange={(event) => update({ voiceLanguage: event.target.value as DictationLanguage })}>
+    <select id="settings-voice-language" className="orbit-select settings-select" value={settings.voiceLanguage} onChange={(event) => update({ voiceLanguage: event.target.value as DictationLanguage })}>
       <option value="auto">{t("Auto ({language})", { language: auto })}</option>
       {choices.map(({ tag, name }) => <option key={tag} value={tag}>{name}</option>)}
     </select>
@@ -649,12 +649,12 @@ function LaunchModesGroup() {
   return (
     <SettingsGroup title={t("New agents")} section="launch-modes" note={t("Applies to agents started from New workspace, New tab and New worktree. Agent default adds no flag, so the agent's own configuration decides.")}>
       <SettingsRow label="Claude Code" description={t("Permission mode")} htmlFor="settings-claude-launch-mode">
-        <select id="settings-claude-launch-mode" className="select settings-select" value={settings.claudeLaunchMode} onChange={(event) => update({ claudeLaunchMode: event.target.value as ClaudeLaunchMode })}>
+        <select id="settings-claude-launch-mode" className="orbit-select settings-select" value={settings.claudeLaunchMode} onChange={(event) => update({ claudeLaunchMode: event.target.value as ClaudeLaunchMode })}>
           {CLAUDE_LAUNCH_MODES.map((mode) => <option key={mode} value={mode}>{claudeModeName(mode, t)}</option>)}
         </select>
       </SettingsRow>
       <SettingsRow label="Codex" description={t("Sandbox and approvals")} htmlFor="settings-codex-launch-mode">
-        <select id="settings-codex-launch-mode" className="select settings-select" value={settings.codexLaunchMode} onChange={(event) => update({ codexLaunchMode: event.target.value as CodexLaunchMode })}>
+        <select id="settings-codex-launch-mode" className="orbit-select settings-select" value={settings.codexLaunchMode} onChange={(event) => update({ codexLaunchMode: event.target.value as CodexLaunchMode })}>
           {CODEX_LAUNCH_MODES.map((mode) => <option key={mode} value={mode}>{codexModeName(mode, t)}</option>)}
         </select>
       </SettingsRow>
@@ -815,7 +815,7 @@ function ShortcutsPage() {
                     update({ shortcutOverrides: { ...settings.shortcutOverrides, [confirming.id]: confirming.value } });
                   }}>{t("Save anyway")}</Button>
                   <Button type="button" variant="secondary" onClick={() => settlePending(confirming.id)}>{t("Cancel")}</Button>
-                </> : <select className="select settings-select settings-shortcut-select" name="shortcut-binding" aria-label={t(shortcut.label)} value={Object.hasOwn(settings.shortcutOverrides, shortcut.id) ? settings.shortcutOverrides[shortcut.id] ?? (unbound ? "default" : "off") : "default"} onChange={(event) => {
+                </> : <select className="orbit-select settings-select settings-shortcut-select" name="shortcut-binding" aria-label={t(shortcut.label)} value={Object.hasOwn(settings.shortcutOverrides, shortcut.id) ? settings.shortcutOverrides[shortcut.id] ?? (unbound ? "default" : "off") : "default"} onChange={(event) => {
                   const next = { ...settings.shortcutOverrides };
                   if (event.target.value === "default") delete next[shortcut.id];
                   else next[shortcut.id] = event.target.value === "off" ? null : event.target.value;
@@ -950,7 +950,7 @@ function AboutPage({ herdrVersion }: { herdrVersion: string | null }) {
           <div className="settings-row-text">
             <span className="settings-label">Orbit</span>
           </div>
-          <a className="btn" href="https://github.com/hamzahraihan/orbit" target="_blank" rel="noreferrer"><Star aria-hidden="true" />{t("Star on GitHub")}</a>
+          <a className="button button--secondary" href="https://github.com/hamzahraihan/orbit" target="_blank" rel="noreferrer"><Star aria-hidden="true" />{t("Star on GitHub")}</a>
         </div>
       </SettingsGroup>
     </>

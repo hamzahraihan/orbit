@@ -338,6 +338,7 @@
 
 .settings-font-line > .settings-font-input {
   flex: 1 1 0;
+  min-width: 0;
 }
 
 .settings-font-search {
@@ -403,6 +404,23 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+}
+
+/* on a phone the row stacks, so the search and the select share its width instead of
+   running past the card on their intrinsic widths */
+@media (max-width: 640px) {
+  .theme-select-wrap {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
+  }
+
+  .theme-select-wrap .settings-theme-search,
+  .theme-select-wrap .settings-select {
+    width: 100%;
+    min-width: 0;
+  }
 }
 .theme-swatch {
   display: inline-flex;
