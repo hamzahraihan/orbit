@@ -82,8 +82,8 @@
   gap: var(--space-2);
 }
 
-.key-bar-settings-add .btn,
-.key-bar-settings-combo-actions .btn {
+.key-bar-settings-add .button,
+.key-bar-settings-combo-actions .button {
   flex: 0 0 auto;
   min-height: var(--touch-target);
 }

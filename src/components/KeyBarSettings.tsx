@@ -74,7 +74,7 @@ export function KeyBarSettings() {
       <div className="key-bar-settings-add">
         <label className="key-bar-settings-field">
           <span className="settings-label">{t("Add key")}</span>
-          <select className="input" value={chosenKey} disabled={full || available.length === 0} onChange={(event) => setChosenKey(event.target.value)}>
+          <select className="orbit-select" value={chosenKey} disabled={full || available.length === 0} onChange={(event) => setChosenKey(event.target.value)}>
             {available.length === 0 && <option value="">{t("All keys added")}</option>}
             {available.map((key) => <option value={key} key={key}>{keyBarItemLabel({ type: "key", key })}</option>)}
           </select>
@@ -95,7 +95,7 @@ export function KeyBarSettings() {
         <div className="key-bar-settings-combo-key">
           <label className="key-bar-settings-field">
             <span className="settings-label">{t("Base key")}</span>
-            <select className="input" value={comboKey} onChange={(event) => setComboKey(event.target.value)}>
+            <select className="orbit-select" value={comboKey} onChange={(event) => setComboKey(event.target.value)}>
               {comboKeys.map((key) => <option value={key} key={key}>{keyBarItemLabel({ type: "key", key })}</option>)}
               <option value={CHARACTER_KEY}>{t("Single character")}</option>
             </select>
