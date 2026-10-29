@@ -166,7 +166,7 @@ try {
           const box = document.querySelector(".pane-frame.is-current .composer-menu")!.getBoundingClientRect();
           const stack = document.querySelector(".pane-frame.is-current .terminal-stack")!.getBoundingClientRect();
           const menu = document.querySelector(".pane-frame.is-current .composer-menu")!;
-          return { top: box.top, stack: stack.top, scrolls: menu.scrollHeight > menu.clientHeight, rows: menu.querySelectorAll(".menu-item").length };
+          return { top: box.top, stack: stack.top, scrolls: menu.scrollHeight > menu.clientHeight, rows: menu.querySelectorAll(".orbit-menu-item").length };
         });
         assert.ok(room.top >= room.stack, `the menu stays inside the pane: ${JSON.stringify(room)}`);
         assert.ok(room.rows > 3 && room.scrolls, `the menu scrolls where it has no room: ${JSON.stringify(room)}`);
