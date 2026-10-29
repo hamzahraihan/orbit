@@ -164,7 +164,7 @@ const select = async (page: Page, pane: string): Promise<void> => {
 const confirmRowOf = (page: Page): Promise<{ oneLine: boolean; height: number; over: number; text: { height: number; line: number; scrolls: boolean; whole: string } }> => page.evaluate(() => {
   const card = document.querySelector<HTMLElement>(".prompt-card")!;
   const row = card.querySelector<HTMLElement>(".prompt-card-confirm")!;
-  const [confirm, cancel] = [...row.querySelectorAll<HTMLElement>(".btn")].map((node) => node.getBoundingClientRect());
+  const [confirm, cancel] = [...row.querySelectorAll<HTMLElement>(".button")].map((node) => node.getBoundingClientRect());
   const text = row.querySelector<HTMLElement>(".prompt-card-confirm-text") ?? row.querySelector<HTMLElement>("span")!;
   return {
     oneLine: Math.abs(confirm!.top - cancel!.top) <= 1 && cancel!.left >= confirm!.right,
@@ -427,10 +427,10 @@ try {
           await page.locator(".composer-text").fill("2");
           await page.locator(".composer-text").press("Enter");
           await page.locator(".prompt-card-confirm").waitFor();
-          assert.deepEqual(await hitOf(page, ".prompt-card-confirm .btn-primary"), { hit: "self", visible: true }, `${label}: Confirm is in sight and pressable`);
+          assert.deepEqual(await hitOf(page, ".prompt-card-confirm .button--primary"), { hit: "self", visible: true }, `${label}: Confirm is in sight and pressable`);
           // the pinned row is as short as it can be: Confirm and Cancel share one line
           assert.equal((await confirmRowOf(page)).oneLine, true, `${label}: Confirm and Cancel are on one line`);
-          assert.deepEqual(await hitOf(page, ".prompt-card-confirm .btn:not(.btn-primary)"), { hit: "self", visible: true }, `${label}: Cancel is in sight and pressable`);
+          assert.deepEqual(await hitOf(page, ".prompt-card-confirm .button:not(.button--primary)"), { hit: "self", visible: true }, `${label}: Cancel is in sight and pressable`);
           await page.waitForFunction(() => document.querySelector(".prompt-card-option.is-typed")!.getAnimations().length === 0);
           await shot(`form-${label}`);
           // every option and the custom answer are reached by scrolling the card alone
@@ -441,8 +441,8 @@ try {
             await page.evaluate(() => document.querySelector("[data-reach]")!.removeAttribute("data-reach"));
           }
           assert.deepEqual(await reach(page, ".prompt-card-custom .input"), { hit: "self", visible: true }, `${label}: the custom answer is reachable`);
-          assert.deepEqual(await reach(page, ".prompt-card-custom .btn"), { hit: "self", visible: true }, `${label}: its Send is reachable`);
-          assert.deepEqual(await hitOf(page, ".prompt-card-confirm .btn-primary"), { hit: "self", visible: true }, `${label}: Confirm stays in sight while the card is scrolled`);
+          assert.deepEqual(await reach(page, ".prompt-card-custom .button"), { hit: "self", visible: true }, `${label}: its Send is reachable`);
+          assert.deepEqual(await hitOf(page, ".prompt-card-confirm .button--primary"), { hit: "self", visible: true }, `${label}: Confirm stays in sight while the card is scrolled`);
           assert.equal((await layoutOf(page)).pageScrolls, false, `${label}: only the card scrolled`);
           // Confirm sends the typed pick, once, through the answer endpoint
           await page.locator(".prompt-card-confirm").getByRole("button", { name: "Confirm" }).click();
@@ -467,8 +467,8 @@ try {
           await shot("form-held-390x500");
           assert.deepEqual(await reach(page, ".prompt-card-custom .input"), { hit: "self", visible: true });
           // the card's last row is pressed at its bottom edge
-          assert.deepEqual(await reach(page, ".prompt-card-custom .btn"), { hit: "self", visible: true });
-          assert.deepEqual(await hitOf(page, ".prompt-card-custom .btn", "bottom"), { hit: "self", visible: true });
+          assert.deepEqual(await reach(page, ".prompt-card-custom .button"), { hit: "self", visible: true });
+          assert.deepEqual(await hitOf(page, ".prompt-card-custom .button", "bottom"), { hit: "self", visible: true });
           await page.locator(".prompt-card-custom .input").fill("sqlite, one file");
           await page.locator(".prompt-card-custom").getByRole("button", { name: "Send" }).tap();
           await page.locator(".prompt-card").getByText(FORM.question).waitFor({ state: "detached" });
@@ -589,7 +589,7 @@ try {
           assert.equal(row.text.scrolls, true, `${label}: and scrolls in itself`);
           assert.equal(row.oneLine, true, `${label}: Confirm and Cancel are on one line`);
           assert.ok(row.over >= 80, `${label}: the card keeps ${row.over}px of its ${card}px over the Confirm row (the row is ${row.height}px)`);
-          for (const button of [".prompt-card-confirm .btn-primary", ".prompt-card-confirm .btn:not(.btn-primary)"]) assert.deepEqual(await hitOf(page, button), { hit: "self", visible: true }, `${label}: ${button} is in sight and pressable`);
+          for (const button of [".prompt-card-confirm .button--primary", ".prompt-card-confirm .button:not(.button--primary)"]) assert.deepEqual(await hitOf(page, button), { hit: "self", visible: true }, `${label}: ${button} is in sight and pressable`);
           await shot(label.replaceAll(" ", "-"));
           // the short options on both sides of the long one are reached whole; the long one, taller
           // than the card, is pressed at its top
@@ -605,7 +605,7 @@ try {
             const rect = long.getBoundingClientRect();
             return document.elementFromPoint(rect.left + rect.width / 2, rect.top + 12)?.closest(".prompt-card-option") === long;
           }), true, `${label}: the long option is pressable`);
-          assert.deepEqual(await hitOf(page, ".prompt-card-confirm .btn-primary"), { hit: "self", visible: true }, `${label}: Confirm stays in sight while the card is scrolled`);
+          assert.deepEqual(await hitOf(page, ".prompt-card-confirm .button--primary"), { hit: "self", visible: true }, `${label}: Confirm stays in sight while the card is scrolled`);
           assert.equal((await layoutOf(page)).pageScrolls, false, `${label}: only the card scrolled`);
           await page.locator(".prompt-card-confirm").getByRole("button", { name: "Confirm" }).click();
           await page.locator(".prompt-card").getByText(REVIEW.question).waitFor({ state: "detached" });
