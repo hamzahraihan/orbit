@@ -558,7 +558,7 @@
   list-style: none;
 }
 
-.file-viewer-choices .btn {
+.file-viewer-choices .button {
   max-width: 100%;
   height: auto;
   min-height: var(--control-h);
