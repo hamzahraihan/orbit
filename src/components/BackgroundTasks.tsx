@@ -248,7 +248,7 @@ export function BackgroundTasks({ paneId, count, omo, claude = false, plan = nul
       {plan && tasksShown && count > 0 && <span className="bg-tasks-sep" aria-hidden="true" />}
       {(!plan || count > 0) && tasksShown && <><Layers aria-hidden="true" /><span className={`bg-tasks-label${plan ? " is-secondary" : ""}`}>{tasksLabel}</span>{count > 0 && <span className="bg-tasks-count" aria-hidden="true">{count}</span>}</>}
     </button>
-    {open && <div id={id} ref={menu} className="menu bg-tasks-menu" role="dialog" aria-live="off" aria-label={planShown && tasksShown ? t("Plan and background tasks") : planShown ? t("Plan") : t("Background tasks")}>
+    {open && <div id={id} ref={menu} className="orbit-menu bg-tasks-menu" role="dialog" aria-live="off" aria-label={planShown && tasksShown ? t("Plan and background tasks") : planShown ? t("Plan") : t("Background tasks")}>
       {planShown && <>
         <div className="menu-heading">{t("Plan")}{plan && <span className="bg-plan-progress">{t("{done} of {total} done", { done: plan.done, total: plan.total })}</span>}</div>
         {steps === undefined && !planFailed && <p className="bg-tasks-note">{t("Reading the plan…")}</p>}
