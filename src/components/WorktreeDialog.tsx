@@ -67,7 +67,7 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
   }, []);
   useEffect(() => {
     window.requestAnimationFrame(() => {
-      (first.current ?? surface.current?.querySelector<HTMLElement>(".worktree-row, .btn"))?.focus();
+      (first.current ?? surface.current?.querySelector<HTMLElement>(".worktree-row, .button"))?.focus();
       // the suggested branch is selected, so typing a branch replaces it
       first.current?.select();
     });
