@@ -1108,7 +1108,7 @@ export function Composer({
         onDrop={onDrop}
       >
         {menuOpen && trigger && (
-          <div className="menu composer-menu">
+          <div className="orbit-menu composer-menu">
             {menuClose}
             <div id={menuId} className="composer-menu-list" role="listbox" aria-label={t(trigger.kind === "slash" ? "Slash commands" : "Files")}>
             {trigger.kind === "slash" ? (
@@ -1143,7 +1143,7 @@ export function Composer({
                       id={`${menuId}-${index}`}
                       key={`${command.source}:${command.name}`}
                       type="button"
-                      className="menu-item"
+                      className="orbit-menu-item"
                       role="option"
                       aria-selected={index === selectedIndex}
                       data-origin={command.origin}
@@ -1178,7 +1178,7 @@ export function Composer({
                     id={`${menuId}-${index}`}
                     key={file}
                     type="button"
-                    className="menu-item"
+                    className="orbit-menu-item"
                     role="option"
                     aria-selected={index === selectedIndex}
                     onMouseDown={(event) => event.preventDefault()}
@@ -1194,7 +1194,7 @@ export function Composer({
         )}
 
         {filesFailedShown && (
-          <div className="menu composer-menu">
+          <div className="orbit-menu composer-menu">
             {menuClose}
             <div className="composer-menu-group">
               <div className="menu-heading">{t("Files")}</div>

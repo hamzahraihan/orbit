@@ -471,11 +471,11 @@
     "text text text"
     "left status right";
   background: var(--bg-composer);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--card-border);
   /* the input card: one rounded surface, no scored edge. Resting surfaces carry no shadow
      beyond this one card */
   border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-composer);
   transition:
     border-color var(--dur-fast) var(--ease-out),
     box-shadow var(--dur-fast) var(--ease-out);
@@ -484,8 +484,8 @@
 /* focus is the surface's: the accent border on the rounded box, not a rectangle on the
    textarea inside it (the global :focus-visible ring is suppressed below) */
 .composer-surface:focus-within {
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  border-color: var(--card-border-strong);
+  box-shadow: var(--shadow-composer);
 }
 
 .composer-surface.is-dragging {
@@ -630,7 +630,7 @@
 
 .composer-send {
   --composer-action-fill: var(--accent-strong);
-  background: linear-gradient(180deg, var(--accent-strong) 0%, #7a1648 100%);
+  background: linear-gradient(180deg, var(--accent-strong) 0%, var(--accent-deep) 100%);
   opacity: 1;
 }
 .composer-send:disabled {
@@ -762,7 +762,7 @@
 
 /* The menu is a column flex container, which shrinks every row to make forty of them fit the
    height, and a shrunk row spills its own text over the next one. */
-.composer-menu .menu-item {
+.composer-menu .orbit-menu-item {
   flex-shrink: 0;
 }
 
@@ -835,11 +835,11 @@
 
 /* where a skill comes from: yours in the accent; the project's, the agent's own and a plugin's
    dimmed like any other icon */
-.composer-menu .menu-item[data-origin="user"] svg {
+.composer-menu .orbit-menu-item[data-origin="user"] svg {
   color: var(--accent);
 }
 
-.composer-menu .menu-item {
+.composer-menu .orbit-menu-item {
   width: 100%;
   text-align: left;
 }
@@ -1092,7 +1092,7 @@
 
   /* A phone fits neither half of a pi command's row, and pi writes explanations twice as long as
      the line is wide, so the description takes a line to itself and wraps onto more. */
-  .composer-menu .menu-item {
+  .composer-menu .orbit-menu-item {
     flex-wrap: wrap;
     align-items: flex-start;
     row-gap: 0;
@@ -1107,7 +1107,7 @@
   }
 
   /* under the icon, not under the row's left edge */
-  .composer-menu .menu-item[data-origin] .menu-item-hint {
+  .composer-menu .orbit-menu-item[data-origin] .menu-item-hint {
     padding-left: calc(16px + var(--space-2));
   }
 }
