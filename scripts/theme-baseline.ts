@@ -7,8 +7,9 @@ import { terminalTheme, themeColor } from "../src/lib/settings.ts";
 // src/lib/themes.legacy-baseline.json, the parity oracle src/lib/themes.parity.test.ts checks the
 // current src/styles.css against. Frozen before the theme-table refactor, then re-frozen at
 // 62db0b75 for the Quiet Slate world, which changed the base palette and shared status colours on
-// purpose. Accidental drift is what the oracle catches: re-freeze only with an intentional,
-// reviewed design change - move the file away, run this script and review the diff.
+// purpose, and again at 1b501c1d for the aubergine/raspberry world. Accidental drift is what the
+// oracle catches: re-freeze only with an intentional, reviewed design change - move the file away,
+// run this script and review the diff.
 
 export type LegacyMode = "dark" | "light";
 export type LegacyPalette = "amber" | "charcoal" | "catppuccin";
