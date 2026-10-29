@@ -14,7 +14,7 @@
  * colors. Edit a color here and regenerate; never edit those copies.
  * Component-scoped rules live beside their component (Sidebar.css,
  * PaneTerminal.css, ...); this file owns the app shell, the header and the
- * primitives (.icon-button, .btn, .pill, .badge, .segmented, .modal, .menu, .kbd)
+ * primitives (.icon-button, .pill, .orbit-badge, .segmented, .modal, .orbit-menu, .kbd)
  * that more than one component uses.
  */
 
@@ -27,22 +27,25 @@
   --bg-main: #221d27;
   --bg-composer: rgba(42, 36, 48, 0.8);
   --bg-chip: rgba(255, 255, 255, 0.05);
-  --accent: #a3185a;
   --accent-strong: #8f1a52;
+  /* the send button's gradient foot */
+  --accent-deep: #7a1648;
   --accent-text: #e06a9f;
-  --text: #f2eef5;
   --text-muted: #9a90a3;
-  --border: rgba(255, 255, 255, 0.06);
   /* mapped Orbit tokens */
   --bg: #221d27;
   --bg-panel: #221d27;
   --bg-elevated: #2a2430;
-  --bg-hover: rgba(255, 255, 255, 0.06);
-  --bg-input: rgba(42, 36, 48, 0.8);
+  --bg-hover: #2e2a33;
+  --bg-input: #28232e;
   --border: rgba(255, 255, 255, 0.06);
   --border-strong: rgba(255, 255, 255, 0.12);
   /* the chat's user bubble: surfaces sit close on this ground, so it keeps an edge */
   --bubble-border: var(--border);
+  /* the raised cards over the transcript (the user's bubble and the input card) part from it with
+     their own quiet edge, one step above --border; the focused composer takes the strong one */
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-border-strong: rgba(255, 255, 255, 0.12);
 
   /* text */
   --text: #f2eef5;
@@ -84,6 +87,8 @@
   --shadow-drawer: 0 0 40px rgba(0, 0, 0, 0.7);
   --shadow-pop: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border);
   --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.45);
+  /* the input card hangs over the transcript's end, so it pops softer than a card on the page */
+  --shadow-composer: 0 4px 16px rgba(0, 0, 0, 0.3);
 
   --pdf-page: #ffffff;
 
@@ -96,7 +101,7 @@
   /* syntax highlighting */
   --line-number: var(--text-dim);
   --syntax-comment: var(--text-dim);
-  --syntax-function: var(--accent);
+  --syntax-function: var(--accent-text);
   --syntax-inserted: var(--status-done);
   --syntax-deleted: var(--status-blocked);
   --syntax-keyword: #ff8fa8;
@@ -296,6 +301,7 @@
   --term-bright-magenta: #7f52d1;
   --term-bright-cyan: #13767e;
   --term-bright-white: #0d0d0d;
+  --syntax-function: var(--accent);
   --syntax-keyword: #a33a17;
   --syntax-string: #4b6b18;
   --syntax-number: #8a3f7a;
@@ -2225,77 +2231,6 @@ button {
   display: none;
 }
 
-/* text buttons: .btn (neutral), .btn-primary, .btn-danger, .btn-ghost */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  height: var(--control-h);
-  padding: 0 var(--space-3);
-  background: var(--bg-elevated);
-  border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text-strong);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  white-space: nowrap;
-  text-decoration: none; /* a link styled as a button (Reconnect, Star on GitHub) */
-  cursor: pointer;
-  transition:
-    background-color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    opacity var(--dur-fast) var(--ease-out);
-}
-
-.btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-@media (hover: hover) {
-  .btn:hover:not(:disabled) {
-    background: var(--bg-hover);
-    border-color: var(--border-strong);
-  }
-}
-
-.btn:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
-.btn-primary {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-text);
-}
-
-@media (hover: hover) {
-  .btn-primary:hover:not(:disabled) {
-    background: var(--primary-hover);
-    border-color: var(--primary-hover);
-  }
-}
-
-.btn-danger {
-  background: var(--danger-tint);
-  border-color: var(--status-blocked);
-  color: var(--danger-text);
-}
-
-.btn-ghost {
-  background: transparent;
-  border-color: transparent;
-  color: var(--text);
-}
-
-@media (hover: hover) {
-  .btn-ghost:hover:not(:disabled) {
-    border-color: transparent;
-  }
-}
-
 /* fingers: the header controls grow to the touch target; the header still fits them */
 @media (pointer: coarse) {
   .icon-button {
@@ -2303,13 +2238,12 @@ button {
     height: var(--touch-target);
   }
 
-  .btn,
   .error-retry {
     height: var(--touch-target);
   }
 
-  /* Hero UI Button: ensure touch targets reach finger size on coarse pointers, but not chips or compact controls */
-  [data-slot="button"]:not(.new-session-folder-chip):not(.settings-segmented-button):not(.settings-stepper-button) {
+  /* Hero UI Button: ensure touch targets reach finger size on coarse pointers, but not chips */
+  [data-slot="button"]:not(.new-session-folder-chip) {
     min-height: var(--touch-target);
   }
 
@@ -2325,6 +2259,34 @@ button {
     content: "";
     position: absolute;
     inset: calc((var(--control-h) - var(--segmented-inset) - var(--touch-target)) / 2) 0;
+  }
+}
+
+/* HeroUI controls: HeroUI owns their anatomy and states; these are the two product rules
+   that still apply on top of it. */
+@media (pointer: coarse) {
+  .input,
+  .orbit-select,
+  .toggle-button,
+  .number-field__group,
+  .switch {
+    min-height: var(--touch-target);
+  }
+
+  /* the switch root is a label: centre the track in the finger-sized target */
+  .switch {
+    justify-content: center;
+  }
+}
+
+/* iOS zooms a focused field under 16px; HeroUI's text-base is smaller on a phone. */
+.input {
+  font-size: var(--fs-input);
+}
+
+@media (min-width: 641px) {
+  .input {
+    font-size: var(--fs-sm);
   }
 }
 
@@ -2401,7 +2363,7 @@ button {
 }
 
 /* status badge: tinted background + text, the state readable as a word */
-.badge {
+.orbit-badge {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
@@ -2541,7 +2503,8 @@ button {
   width: min(100%, 560px);
   max-height: min(100%, 720px);
   background: var(--bg-panel);
-  border-radius: var(--radius-xl);
+  /* HeroUI's dialog surface: its softest overlay radius, drawn by the overlay shadow */
+  border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-pop);
   overflow: hidden;
 }
@@ -2676,13 +2639,14 @@ button {
   color: var(--text-dim);
 }
 
-.input,
-.select {
-  height: var(--control-h);
+/* A native select keeps the OS picker (long theme lists, mobile). It wears the same field
+   surface as HeroUI's Input so the control vocabulary stays one system. */
+.orbit-select {
+  height: 2.25rem;
   padding: 0 var(--space-3);
   background: var(--bg-input);
   border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   color: var(--text-strong);
   font: inherit;
   font-size: var(--fs-input);
@@ -2697,62 +2661,59 @@ button {
 }
 
 /* a bordered field shows focus on its own border; the offset ring is for controls without one */
-.input:focus,
-.select:focus,
-.input:focus-visible,
-.select:focus-visible {
+.orbit-select:focus,
+.orbit-select:focus-visible {
   border-color: var(--accent);
   outline: none;
 }
 
 @media (min-width: 641px) {
-  .input,
-  .select {
+  .orbit-select {
     font-size: var(--fs-sm);
   }
 }
 
-/* popover menu (palette rows, slash/@ completions) */
-.menu {
+/* popover menu (palette rows, slash/@ completions), on HeroUI's popover and item geometry:
+   a 24px surface with 4px of padding, and 16px rows 36px tall */
+.orbit-menu {
   display: flex;
   flex-direction: column;
   padding: var(--space-1);
   background: var(--bg-panel);
-  border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-pop);
   overflow: hidden;
 }
 
-.menu-item {
+.orbit-menu-item {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  min-height: var(--control-h);
-  padding: var(--space-1) var(--space-2);
+  gap: var(--space-3);
+  min-height: 2.25rem;
+  padding: 6px var(--space-2);
   background: transparent;
   border: 0;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
   color: var(--text);
   font-size: var(--fs-sm);
   text-align: left;
   cursor: pointer;
 }
 
-.menu-item svg {
+.orbit-menu-item svg {
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
   color: var(--text-dim);
 }
 
-.menu-item[aria-selected="true"] {
+.orbit-menu-item[aria-selected="true"] {
   background: var(--bg-hover);
   color: var(--text-strong);
 }
 
 @media (hover: hover) {
-  .menu-item:hover {
+  .orbit-menu-item:hover {
     background: var(--bg-hover);
     color: var(--text-strong);
   }
@@ -2962,7 +2923,7 @@ button {
   .sidebar,
   .tab-strip,
   .key-bar,
-  .menu,
+  .orbit-menu,
   .row-sheet,
   .modal-header,
   .modal-footer,
@@ -3014,7 +2975,7 @@ button {
     opacity: 0.55;
   }
 
-  .menu-item:active {
+  .orbit-menu-item:active {
     opacity: 1;
     background: var(--bg-hover);
   }
@@ -3024,7 +2985,6 @@ button {
   .sidebar,
   .scrim,
   .icon-button,
-  .btn,
   .error-retry {
     transition: none;
   }
