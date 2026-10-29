@@ -162,7 +162,7 @@
 }
 
 /* every row is the full menu width: the hover fill and the right-aligned badge/shortcut line up */
-.command-palette .menu-item {
+.command-palette .orbit-menu-item {
   width: 100%;
 }
 
@@ -320,7 +320,7 @@
 }
 
 @media (pointer: coarse) {
-  .command-palette .menu-item {
+  .command-palette .orbit-menu-item {
     min-height: var(--touch-target);
   }
 

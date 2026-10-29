@@ -614,7 +614,7 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
   return (
     <div className="modal-scrim palette-scrim" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       {machines.filter((machine) => machine.state === "connected").map((machine) => <MachineContext.Provider key={machine.id} value={machine.id}><PaletteBranchReader machine={machine} onChange={onInventory} /></MachineContext.Provider>)}
-      <section ref={surface} className="menu command-palette" role="dialog" aria-modal="true" aria-label={t("Command palette")} onKeyDown={onSurfaceKeyDown} onFocus={onSurfaceFocus}>
+      <section ref={surface} className="orbit-menu command-palette" role="dialog" aria-modal="true" aria-label={t("Command palette")} onKeyDown={onSurfaceKeyDown} onFocus={onSurfaceFocus}>
         <div className="palette-search">
           <input ref={inputRef} className="input" type="search" value={query} placeholder={t("Search panes and actions…")} aria-label={t("Search panes and actions")} aria-controls="palette-results" aria-activedescendant={itemCount ? `palette-item-${activeIndex}` : undefined} onKeyDown={onInputKeyDown} onChange={(event) => { setQuery(event.target.value); setSelection(NO_SELECTION); }} />
           <button type="button" className="icon-button" aria-label={t("Close command palette")} onClick={onClose}><X /></button>
@@ -647,7 +647,7 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
                   const key = pluginActionKey(offered);
                   const busy = running === key;
                   return (
-                    <button key={key} id={`palette-item-${index}`} type="button" role="option" className={busy ? "menu-item palette-plugin-action is-running" : "menu-item palette-plugin-action"} title={offered.action.description ?? undefined} aria-selected={activeIndex === index} aria-busy={busy} aria-disabled={running !== null} onFocus={() => select(index)} onMouseMove={() => select(index)} onClick={() => void runPluginAction(offered)}>
+                    <button key={key} id={`palette-item-${index}`} type="button" role="option" className={busy ? "orbit-menu-item palette-plugin-action is-running" : "orbit-menu-item palette-plugin-action"} title={offered.action.description ?? undefined} aria-selected={activeIndex === index} aria-busy={busy} aria-disabled={running !== null} onFocus={() => select(index)} onMouseMove={() => select(index)} onClick={() => void runPluginAction(offered)}>
                       {busy ? <LoaderCircle aria-hidden="true" /> : <Puzzle aria-hidden="true" />}
                       <span className="menu-item-main"><span className="palette-row-title">{offered.action.title}</span><span className="palette-row-subtitle">{busy ? t("Running…") : offered.plugin.name}</span></span>
                     </button>
@@ -656,7 +656,7 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
                 if (row.kind === "folder") {
                   const Icon = row.icon;
                   return (
-                    <button key={row.id} id={`palette-item-${index}`} type="button" role="option" className="menu-item palette-folder" title={row.path} aria-selected={activeIndex === index} onFocus={() => select(index)} onMouseMove={() => select(index)} onClick={() => browseTo(row.path)}>
+                    <button key={row.id} id={`palette-item-${index}`} type="button" role="option" className="orbit-menu-item palette-folder" title={row.path} aria-selected={activeIndex === index} onFocus={() => select(index)} onMouseMove={() => select(index)} onClick={() => browseTo(row.path)}>
                       <Icon aria-hidden="true" />
                       <span className="menu-item-main"><span className="palette-row-title">{row.label}</span>{row.detail !== null && <span className="palette-row-subtitle">{row.detail}</span>}</span>
                     </button>
@@ -664,7 +664,7 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
                 }
                 if (row.kind === "action") {
                   const Icon = row.action.icon;
-                  return <button key={row.action.id} id={`palette-item-${index}`} type="button" role="option" className="menu-item" aria-selected={activeIndex === index} onFocus={() => select(index)} onMouseMove={() => select(index)} onClick={() => runAction(row.action)}><Icon /><span className="menu-item-main">{row.action.label}</span><ShortcutHint shortcutId={row.action.shortcut} /></button>;
+                  return <button key={row.action.id} id={`palette-item-${index}`} type="button" role="option" className="orbit-menu-item" aria-selected={activeIndex === index} onFocus={() => select(index)} onMouseMove={() => select(index)} onClick={() => runAction(row.action)}><Icon /><span className="menu-item-main">{row.action.label}</span><ShortcutHint shortcutId={row.action.shortcut} /></button>;
                 }
                 const { pane } = row;
                 const workspace = row.machine.snapshot?.workspaces.find((item) => item.workspace_id === pane.workspace_id);
@@ -675,7 +675,7 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
                 const place = multiMachine && section.placeNamesWorkspace ? `${row.machine.name} › ${panePlace}` : panePlace;
                 const selected = row.machineId === machineId && pane.pane_id === selectedPaneId;
                 return (
-                  <button key={targetKey(row)} data-machine={row.machineId} data-pane={pane.pane_id} id={`palette-item-${index}`} type="button" role="option" className="menu-item palette-pane" aria-selected={activeIndex === index} aria-current={selected ? "true" : undefined} onFocus={() => select(index)} onMouseMove={() => select(index)} onClick={() => runPane(row)}>
+                  <button key={targetKey(row)} data-machine={row.machineId} data-pane={pane.pane_id} id={`palette-item-${index}`} type="button" role="option" className="orbit-menu-item palette-pane" aria-selected={activeIndex === index} aria-current={selected ? "true" : undefined} onFocus={() => select(index)} onMouseMove={() => select(index)} onClick={() => runPane(row)}>
                     <span className="palette-mark"><AgentMark agent={pane.agent ?? "shell"} /></span>
                     <span className="menu-item-main"><span className="palette-row-title">{displayPaneTitle(pane)}{selected && <span className="palette-selected">{t("Selected")}</span>}</span><span className="palette-row-subtitle">{place}</span></span>
                     <StatusBadge status={paneStatus(pane)} />
