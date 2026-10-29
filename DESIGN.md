@@ -47,23 +47,23 @@ Only tokens overridden by `[data-theme="light"]` have a light value. Both column
 <!-- BEGIN GENERATED THEMES -->
 | Role | Token | Dark | Light |
 |------|-------|------|-------|
-| Surface/base | `--bg` | `#0b0a0e` | `#faf5fa` |
-| Surface/panel | `--bg-panel` | `#121016` | `#ffffff` |
-| Surface/elevated | `--bg-elevated` | `#1a1720` | `#f3ebf1` |
-| Surface/hover | `--bg-hover` | `#231f29` | `#ece1e9` |
-| Surface/input | `--bg-input` | `#14121a` | `#ffffff` |
-| Border | `--border` | `#2a2532` | `#e4d8e0` |
-| Border/strong | `--border-strong` | `#3b3446` | `#cbbcc7` |
+| Surface/base | `--bg` | `#221d27` | `#faf5fa` |
+| Surface/panel | `--bg-panel` | `#221d27` | `#ffffff` |
+| Surface/elevated | `--bg-elevated` | `#2a2430` | `#f3ebf1` |
+| Surface/hover | `--bg-hover` | `#2e2a33` | `#ece1e9` |
+| Surface/input | `--bg-input` | `#28232e` | `#ffffff` |
+| Border | `--border` | `rgba(255, 255, 255, 0.06)` | `#e4d8e0` |
+| Border/strong | `--border-strong` | `rgba(255, 255, 255, 0.12)` | `#cbbcc7` |
 | Chat bubble edge | `--bubble-border` | `var(--border)` | `var(--border)` |
-| Text/primary | `--text` | `#ecebf1` | `#501854` |
-| Text/dim | `--text-dim` | `#9a93a6` | `#7a5570` |
-| Text/strong | `--text-strong` | `#f8f7fb` | `#2e0d31` |
-| Accent | `--accent` | `#d9a7ba` | `#a84370` |
-| Accent/tint | `--accent-tint` | `rgba(217, 167, 186, 0.12)` | `rgba(168, 67, 112, 0.1)` |
-| Primary | `--primary` | `#6a2740` | `#a84370` |
-| Primary/hover | `--primary-hover` | `#85324f` | `#c25081` |
-| Primary/text | `--primary-text` | `#fdf3f7` | `#fff7fa` |
-| Primary/tint | `--primary-tint` | `rgba(106, 39, 64, 0.28)` | `rgba(168, 67, 112, 0.14)` |
+| Text/primary | `--text` | `#f2eef5` | `#501854` |
+| Text/dim | `--text-dim` | `#9a90a3` | `#7a5570` |
+| Text/strong | `--text-strong` | `#f2eef5` | `#2e0d31` |
+| Accent | `--accent` | `#a3185a` | `#a84370` |
+| Accent/tint | `--accent-tint` | `rgba(163, 24, 90, 0.12)` | `rgba(168, 67, 112, 0.1)` |
+| Primary | `--primary` | `#8f1a52` | `#a84370` |
+| Primary/hover | `--primary-hover` | `#a3185a` | `#c25081` |
+| Primary/text | `--primary-text` | `#f2eef5` | `#fff7fa` |
+| Primary/tint | `--primary-tint` | `rgba(143, 26, 82, 0.28)` | `rgba(168, 67, 112, 0.14)` |
 | Status/idle | `--status-idle` | `#9a93a6` | `#7a5570` |
 | Status/working | `--status-working` | `#7fc4de` | `#155a72` |
 | Status/blocked | `--status-blocked` | `#ff9a92` | `#a82323` |
@@ -71,10 +71,10 @@ Only tokens overridden by `[data-theme="light"]` have a light value. Both column
 | Working/tint | `--status-working-tint` | `rgba(127, 196, 222, 0.14)` | `rgba(21, 90, 114, 0.12)` |
 | Blocked/tint | `--status-blocked-tint` | `rgba(255, 154, 146, 0.1)` | `rgba(168, 35, 35, 0.12)` |
 | Done/tint | `--status-done-tint` | `rgba(143, 208, 122, 0.14)` | `rgba(47, 99, 23, 0.12)` |
-| Indicator/working | `--indicator-working` | `#d9a7ba` | `#a84370` |
+| Indicator/working | `--indicator-working` | `#a3185a` | `#a84370` |
 | Indicator/blocked | `--indicator-blocked` | `#f85149` | `#cf222e` |
 | Indicator/done | `--indicator-done` | `#3fb950` | `#1a7f37` |
-| Indicator/idle | `--indicator-idle` | `#8b8494` | `#7a5570` |
+| Indicator/idle | `--indicator-idle` | `#9a90a3` | `#7a5570` |
 | Indicator/unknown | `--indicator-unknown` | `#6c7086` | `#9ca0b0` |
 | Danger/tint | `--danger-tint` | `rgba(248, 81, 73, 0.12)` | `rgba(168, 35, 35, 0.1)` |
 | Danger/text | `--danger-text` | `#ffd9d4` | `#8f1d1d` |
@@ -86,7 +86,7 @@ Only tokens overridden by `[data-theme="light"]` have a light value. Both column
 | Document surface | `--pdf-page` | `#ffffff` | `#ffffff` |
 | Terminal/background | `--term-bg` | `#121016` | `#ffffff` |
 | Terminal/foreground | `--term-fg` | `#ecebf1` | `#501854` |
-| Terminal/cursor | `--term-cursor` | `#d9a7ba` | `#a84370` |
+| Terminal/cursor | `--term-cursor` | `#a3185a` | `#a84370` |
 | Terminal/selection | `--term-selection` | `#3a2433` | `#f2dbe6` |
 | Syntax/keyword | `--syntax-keyword` | `#ff8fa8` | `#a33a17` |
 | Syntax/string | `--syntax-string` | `#a8d48a` | `#4b6b18` |
@@ -736,30 +736,44 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
 
 ## 5. Components
 
-### Button (`.btn`, `.icon-button`)
-- `.btn` is a medium text control. Variants: neutral, `.btn-primary`, `.btn-danger`, `.btn-ghost`.
-  Primary uses `--primary`; danger uses danger tint plus blocked border; ghost removes fill/edge.
+HeroUI v3 owns the shared controls' anatomy, sizing, states, focus and motion: its stylesheet is
+loaded in `src/tailwind-orbit.css`, and `src/lib/heroui-theme.css` points its theme variables at
+Orbit's tokens (never `--accent: var(--border)`-style self-references — Orbit owns those names),
+so every HeroUI control draws in the current palette while HeroUI's own geometry shows. Orbit
+keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `.orbit-menu`,
+`.modal`), and no component stylesheet paints over a HeroUI slot class.
+
+### Button (HeroUI `.button`, `.icon-button`)
+- Text actions are HeroUI's Button (`src/lib/heroui/orbit-components.tsx` maps Orbit's semantic
+  variants onto its own: `primary`, `secondary`, `ghost`, `outline`, `tertiary`, `danger`, plus
+  `icon` for a square icon-only action). HeroUI owns the anatomy, sizing, states and focus; the
+  pill radius, heights and hover come from its stylesheet, colored by the bridge's tokens.
   A destructive action that asks twice (Settings → Phone & devices, Revoke) is a neutral
-  `.icon-button` (the trash glyph, named "Revoke {name}") at rest and becomes `.btn-danger` with
-  its "Revoke?" label only while it asks to confirm; the same element through both steps, so focus
-  stays on it. A trust decision (the SSH host key) shows the fingerprint to compare
+  `.icon-button` (the trash glyph, named "Revoke {name}") at rest and becomes a danger button
+  with its "Revoke?" label only while it asks to confirm; the same element through both steps,
+  so focus stays on it. A trust decision (the SSH host key) shows the fingerprint to compare
   (`.machine-fingerprint`: `--font-mono`, `--fs-md`, `--text-strong`, under a dim "Fingerprint of
   {host}" label) over one sentence, "Trust it only if it matches the fingerprint shown on the PC.";
   ssh's own words wait behind a Show SSH output fold, and no status box sits above the question.
-- `.icon-button` is a square unlabeled visual control with mandatory `aria-label`; `.is-outlined`
-  adds the border. Both families use `--control-h`, `--radius-md`, focus ring, hover and disabled.
-- Coarse pointers grow controls to `--touch-target`.
+- `.icon-button` is Orbit's own square unlabeled visual control with mandatory `aria-label`;
+  `.is-outlined` adds the border. It keeps `--control-h`, `--radius-md`, focus ring, hover and
+  disabled.
+- Coarse pointers grow both families to `--touch-target`.
 
-### Segmented control (`.segmented`)
-- One `aria-pressed="true"` option receives hover fill and strong text; the group itself is an
-  elevated, bordered `--radius-md` track.
-- Used for Chat/Terminal, theme and density. It is not a generic tab list.
-- An option is `--control-h` less `--segmented-inset` tall, so the track is `--control-h`. On a coarse
-  pointer the track keeps its height; each option is at least `--touch-target` wide, so neighbours
-  never share a tap, and reaches `--touch-target` tall through an invisible `::before` expander sized
-  from that same difference, as the palette's filter chips do.
-- The header's Chat/Terminal switch from `769px` drops the track and the glyphs: two words, the
-  chosen one on the hover fill. At `<=768px` it keeps the track; at `<=560px` it is glyphs only.
+### Segmented control (HeroUI `.toggle-button-group`, Orbit `.segmented`)
+- Settings' two-to-four-choice control is HeroUI's ToggleButtonGroup (`Segmented` in
+  `components/SettingsControls.tsx`): attached buttons on one track, the chosen one filled with
+  the accent tint (`--accent-soft`), `disallowEmptySelection` so one option is always chosen.
+- It is not a generic tab list. Five or more choices go in a select.
+- Used for Chat/Terminal, theme, density, sidebar rows and the like. The header's own
+  Chat/Terminal switch (`.segmented`, `aria-pressed`) is Orbit's: from `769px` it drops the track
+  and the glyphs — two words, the chosen one on the hover fill; at `<=768px` it keeps the track,
+  and at `<=560px` it is glyphs only.
+- Orbit's `.segmented` keeps an option at `--control-h` less `--segmented-inset` tall, so its
+  track is `--control-h`. On a coarse pointer each option is at least `--touch-target` wide, so
+  neighbours never share a tap, and reaches `--touch-target` tall through an invisible `::before`
+  expander sized from that same difference, as the palette's filter chips do. HeroUI's own group
+  reaches the target through its `min-height` on a coarse pointer.
 
 ### Keyboard hint (`.kbd`)
 - An inline mono keycap: `18px` high, strong bottom edge, `--radius-sm`, `--fs-2xs`.
@@ -767,8 +781,9 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
 
 ### Modal (`.modal*`)
 - `.modal-scrim` centers an `aria-modal` dialog at `--z-modal`; `.modal` is a capped scrollable
-  column with header, body and footer and `--shadow-pop`.
-- At `<=640px`, it becomes a bottom sheet with top `--radius-xl` corners and safe-area padding.
+  column with header, body and footer and `--shadow-pop`, on HeroUI's overlay radius
+  (`--radius-2xl`).
+- At `<=640px`, it becomes a bottom sheet with top `--radius-2xl` corners and safe-area padding.
   Every surface on a `.modal-scrim` (dialogs, the palette, the row sheet) rises from the bottom
   edge as an iPhone's sheet does (`--dur-sheet` on `--ease-settle`, the scrim darkening with it),
   follows a finger dragged down from its head or from a list at its top, and drops
@@ -791,9 +806,13 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   with the refusal's words above it. Closing a repository workspace over open worktrees says so
   and closes the group, as herdr's `--group` does.
 
-### Field (`.field`, `.input`, `.select`)
-- Stacked uppercase label, optional hint and `--bg-input` field. Desktop fields use `--fs-sm`;
-  small-screen fields retain `--fs-input` to avoid focus zoom.
+### Field (`.field`, `.input`, `.orbit-select`)
+- Stacked uppercase label, optional hint and field. The text field itself is HeroUI's `.input`
+  skin (raw `<input class="input">` and the `Input` wrapper both take it): `--field-*` tokens give
+  it `--bg-input`, `--radius-lg`, the hairline border and the accent edge on focus. Desktop fields
+  use `--fs-sm`; small-screen fields retain `--fs-input` to avoid focus zoom.
+- A native `<select class="orbit-select">` keeps the OS picker (long theme lists, mobile) and wears
+  the same field surface, so the control vocabulary stays one system.
 - Focus names the edge with accent; errors use blocked/danger tokens and `role="alert"`. A failure
   leads with a plain sentence (`lib/userError.ts`); what the PC or the browser said follows on a
   second line in the interface face, selectable, never in the mono stack (which has no Hangul and
@@ -801,11 +820,12 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
 - Every placeholder is `--text-dim` at full opacity (at least 4.5:1 on every field of every
   palette), never the browser's own grey (3.8:1 on a dark field).
 
-### Menu / popover (`.menu*`)
-- Bordered `--radius-lg` surface with `--shadow-pop`; rows use `--control-h`, `--radius-md`, icon,
-  ellipsized main label and optional hint.
+### Menu / popover (`.orbit-menu*`)
+- A `--radius-2xl` surface with `--shadow-pop` (HeroUI's popover geometry); rows
+  (`.orbit-menu-item`) are 36px tall on `--radius-xl`, with an icon, ellipsized main label and
+  optional hint.
 - Hover or `aria-selected` uses `--bg-hover`. Headings are dim uppercase micro labels.
-- The sidebar's row menu (`.row-menu`) is a `.menu` drawn through a portal at fixed coordinates,
+- The sidebar's row menu (`.row-menu`) is an `.orbit-menu` drawn through a portal at fixed coordinates,
   under its `⋯` with right edges aligned, above it when the screen ends first, and over the drawer.
   Both the button and right-click offer the same native workspace actions: Rename workspace,
   Close workspace/group, New/Open worktree for repository roots, Delete worktree checkout for
@@ -847,7 +867,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   desktop as on touch. The pane's own context menu carries pane actions; it opens at the pointer
   without changing which pane is focused. The pane header's ellipsis opens the same menu on touch.
 
-### Badge (`.badge`)
+### Badge (`.orbit-badge`)
 - Agent states read **READY**, **RUN**, **INPUT**, **DONE**; unknown reads **—**. **BACKGROUND** is a pane
   whose turn ended while work it started still runs in the background (`background_wait`): it
   stands in for DONE or READY until that work's turn ends.
@@ -1049,7 +1069,7 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   the one shown and opens it, so Directory follows; Escape or leaving it empty closes the field
   without closing the dialog, and a refusal (taken name, invalid name, no permission) shows as an
   inline alert under the field.
-- Recent folders appear as neutral `.btn` chips with `--radius-pill` and `--space-2` gaps: the
+- Recent folders appear as neutral `.button` chips with `--radius-pill` and `--space-2` gaps: the
   three most recent, on one row that never wraps. Each shows the folder basename with ellipsis
   and the full path in its tooltip and accessible name. Clicking puts the folder in Directory and
   starts nothing. History is per PC in this browser and retained after panes close. Only a
@@ -1793,11 +1813,15 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   `--bg-elevated`, hairline `--border`, `--radius-lg`, its rows parted by hairlines and never
   boxed on their own. A row is a label (`--fs-sm`, `--fw-medium`, `--text-strong`) with at most
   one dim sentence under it (`--fs-xs`, no wider than `54ch`) and one control at the end of the
-  line. The controls are a switch, a segmented control for two to four short choices, a select
-  for five or more, a stepper (minus, value in `--font-mono`, plus, in one bordered well) and a
-  text field; inside a card they sit on `--bg-input`. On a phone a control that needs the line
+  line. The controls are HeroUI's Switch (`.switch`, `role="switch"`), ToggleButtonGroup
+  (`.toggle-button-group`, `.settings-segmented`) for two to four short choices, a native select
+  for five or more, NumberField (`.number-field`, `.settings-stepper`) as a stepper (minus, value,
+  plus, in one bordered well) and HeroUI's Input (`.input`); inside a card they sit on
+  `--bg-input`. On a phone a control that needs the line
   (three or more segments, a text field, or a long sentence above it) goes under its label at
-  the card's width, its segments sharing it equally; the rest stay on the label's line. A
+  the card's width, its segments sharing it equally; the rest stay on the label's line. The
+  stepper stays 8.5rem wide on a phone, and the theme search and select split a stacked row's
+  width, so no row runs past the card. A
   condition that applies right now (Keep screen on without HTTPS) is one more line under the
   sentence, in `--text` (`.settings-condition`), and absent otherwise. A block's explanation is
   one dim sentence at rest with an accent "Details" word after a middle dot (`.settings-details`,
