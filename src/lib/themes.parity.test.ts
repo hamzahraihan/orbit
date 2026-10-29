@@ -8,8 +8,9 @@ import { resolveEntry } from "./themeCss.ts";
 
 // The parity oracle (#1121): amber, charcoal and catppuccin in dark and light look as they did at
 // baseline.source.commit. Frozen before the theme table refactor, then re-frozen at 62db0b75 for
-// the Quiet Slate world, which changed the base palette and shared status colours on purpose. A
-// later accidental drift is still a failure; a new theme adds its own checks.
+// the Quiet Slate world, and at 1b501c1d for the aubergine/raspberry world; both changed the base
+// palette and shared status colours on purpose. A later accidental drift is still a failure; a
+// new theme adds its own checks.
 const frozen: Record<string, { declared: Record<string, string>; resolved: Record<string, string>; terminal: ReturnType<typeof terminalTheme>; themeColor: string }> = baseline.combos;
 const css = readFileSync(join(import.meta.dir, "..", "styles.css"), "utf8");
 
