@@ -31,7 +31,7 @@ export function HerdrUpdateControls({ enabled, herdrVersion }: { enabled: boolea
     {stale && <p className="settings-hint">{t("herdr {installed} is installed, but the running server is {running}. Updating moves your panes onto the installed version.", { installed: status.binary_version ?? "", running: status.server_version ?? "" })}</p>}
     <p className="settings-hint">{t("Installs the newest herdr on the PC this app runs on and moves its running panes onto it. Panes and agents keep running, and open terminals reconnect.")}</p>
     <div className="update-actions">
-      <button type="button" className={stale ? "btn btn-primary" : "btn"} disabled={busy} onClick={() => void request()}>{t("Update herdr")}</button>
+      <Button type="button" variant={stale ? "primary" : "secondary"} disabled={busy} onClick={() => void request()}>{t("Update herdr")}</Button>
     </div>
     {(error || busy) && <p className="settings-hint" role="status">{error ?? t("Updating herdr…")}</p>}
     {/* herdr's own words: what it installed, or why it did not */}
