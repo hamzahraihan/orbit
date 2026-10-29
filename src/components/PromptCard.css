@@ -467,7 +467,7 @@
   height: auto;
 }
 
-.prompt-card-custom .btn svg {
+.prompt-card-custom .button svg {
   width: var(--icon-size);
   height: var(--icon-size);
 }
