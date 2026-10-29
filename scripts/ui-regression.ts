@@ -317,10 +317,10 @@ try {
   await checkPaletteKeys(page, { workspaceId: workspaces[1]! });
 
   // Hold a real machines response, then deliver a newer status through herdr/SSE.
-  const badge = page.locator(".pane-item.is-selected .badge");
+  const badge = page.locator(".pane-item.is-selected .orbit-badge");
   await herdrRpc("pane.report_agent", { pane_id: paneA, source: "manual", agent: "claude", state: "blocked" });
   await until(async () => await badge.getAttribute("data-status") === "blocked", "blocked baseline");
-  await agentRow(paneA).locator('.badge[data-status="blocked"]').waitFor();
+  await agentRow(paneA).locator('.orbit-badge[data-status="blocked"]').waitFor();
   assert.equal(await agentRow(paneA).locator('.agent-select[aria-current="true"]').count(), 1,
     "Agents independently marks its selected pane");
   assert.equal(await agentRow(paneA).locator('.sidebar-status[role="status"]').count(), 1,
@@ -346,17 +346,17 @@ try {
   await until(() => pollCaptured, "held machines snapshot");
   await herdrRpc("pane.report_agent", { pane_id: paneA, source: "manual", agent: "claude", state: "working" });
   await until(async () => await badge.getAttribute("data-status") === "working", "working event before poll");
-  await agentRow(paneA).locator('.badge[data-status="working"]').waitFor();
+  await agentRow(paneA).locator('.orbit-badge[data-status="working"]').waitFor();
   // RUN is a working-coloured dot that breathes in opacity steps, no arc (Sidebar.css)
-  const runDot = agentRow(paneA).locator('.badge[data-status="working"] .sidebar-status-dot');
+  const runDot = agentRow(paneA).locator('.orbit-badge[data-status="working"] .sidebar-status-dot');
   assert.equal(await runDot.count(), 1, "RUN draws a dot");
-  assert.equal(await agentRow(paneA).locator('.badge[data-status="working"] svg').count(), 0, "RUN draws no arc");
+  assert.equal(await agentRow(paneA).locator('.orbit-badge[data-status="working"] svg').count(), 0, "RUN draws no arc");
   assert.equal(await runDot.evaluate((dot) => getComputedStyle(dot).animationName), "sidebar-breathe", "the dot breathes");
   releasePoll();
   await until(() => pollFinished, "stale machines response released");
   await page.waitForTimeout(300);
   assert.equal(await badge.getAttribute("data-status"), "working", "stale poll must not revert RUN to INPUT");
-  assert.equal(await agentRow(paneA).locator(".badge").getAttribute("data-status"), "working",
+  assert.equal(await agentRow(paneA).locator(".orbit-badge").getAttribute("data-status"), "working",
     "a stale poll must not revert the separate Agents list either");
   if (process.env.UI_EVIDENCE_DIR) {
     mkdirSync(process.env.UI_EVIDENCE_DIR, { recursive: true });
@@ -369,7 +369,7 @@ try {
   await until(async () => {
     const roster = await (await context.request.get(`${origin}/api/machines`)).json() as { machines: Machine[] };
     const settled = roster.machines.find((machine) => machine.id === "local")?.snapshot?.panes.find((pane) => pane.pane_id === paneA)?.agent_status;
-    return (settled === "idle" || settled === "done") && await agentRow(paneA).locator(".badge").getAttribute("data-status") === settled;
+    return (settled === "idle" || settled === "done") && await agentRow(paneA).locator(".orbit-badge").getAttribute("data-status") === settled;
   }, "the agent row reflects the bridge's completed-turn status");
   console.log("PASS delayed machines poll preserves newer streamed pane status");
 
@@ -462,7 +462,7 @@ try {
     await route.fulfill({ response, json: body });
   });
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
-  const waitingBadge = agentRow(paneA).locator(".badge[data-status=waiting]");
+  const waitingBadge = agentRow(paneA).locator(".orbit-badge[data-status=waiting]");
   await waitingBadge.waitFor();
   assert.equal((await waitingBadge.textContent())?.trim(), "BACKGROUND");
   assert.equal(await waitingBadge.getAttribute("title"), "Agent waiting on background work");
@@ -767,7 +767,7 @@ try {
   assert.equal(await page.locator(".workspace-copy.is-two-line").count(), 0, "rows are one line until two are chosen");
   assert.equal(await page.locator(".agents-sidebar.is-one-line").count(), 1, "agent rows follow the one-line choice");
   await page.keyboard.press("ControlOrMeta+Shift+Comma");
-  const rowsSetting = page.locator('.settings-dialog .segmented[aria-label="Sidebar rows"]');
+  const rowsSetting = page.locator('.settings-dialog .settings-segmented[aria-label="Sidebar rows"]');
   await rowsSetting.getByRole("button", { name: "Two lines", exact: true }).click();
   await page.locator(".workspace-copy.is-two-line").first().waitFor();
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("herdr-web-ui:settings") ?? "{}").sidebarRows), "two");
