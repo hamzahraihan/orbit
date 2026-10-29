@@ -110,7 +110,7 @@ async function settled(paneId: string, status: Status, start?: number): Promise<
   if (start !== undefined) await until(() => frames.slice(start).some((frame) =>
     frame.type === "pane-status" && frame.pane_id === paneId && frame.agent_status === status), `${scenario}: pushed ${status}`);
   await until(async () => (await httpSnapshot()).panes.find((item) => item.pane_id === paneId)?.agent_status === status, `${scenario}: HTTP ${status}`);
-  await until(() => agentRow(paneId).locator(`.badge[data-status="${status}"]`).isVisible(), `${scenario}: browser ${status}`);
+  await until(() => agentRow(paneId).locator(`.orbit-badge[data-status="${status}"]`).isVisible(), `${scenario}: browser ${status}`);
   await rawWorking(paneId);
 }
 async function checkpoint(name: string): Promise<void> {
@@ -123,7 +123,7 @@ async function staysDone(paneId: string, start: number): Promise<void> {
   const observedUntil = Date.now() + 2_000;
   await until(async () => {
     assert.equal((await httpSnapshot()).panes.find((item) => item.pane_id === paneId)?.agent_status, "done");
-    assert.ok(await agentRow(paneId).locator('.badge[data-status="done"]').isVisible());
+    assert.ok(await agentRow(paneId).locator('.orbit-badge[data-status="done"]').isVisible());
     assert.ok(!frames.slice(start).some((frame) => frame.type === "pane-status" && frame.pane_id === paneId && frame.agent_status !== "done"), "stale raw events must not push a native status regression");
     return Date.now() >= observedUntil;
   }, "DONE remains stable while stale raw events are processed");
