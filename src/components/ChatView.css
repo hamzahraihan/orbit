@@ -128,7 +128,7 @@
 .chat-bubble {
   max-width: 80%;
   padding: var(--space-3) var(--space-4);
-  border: var(--hairline) solid rgba(255, 255, 255, 0.08);
+  border: var(--hairline) solid var(--card-border);
   border-radius: 16px;
   background: var(--bg-composer);
   color: var(--text);
@@ -1018,7 +1018,7 @@
   margin-top: var(--space-1);
 }
 
-/* a finger's floor (the button is a .btn and grows to it in styles.css): the toggle keeps its line
+/* a finger's floor (the button grows to it in styles.css): the toggle keeps its line
    and takes the hit area, both ways, through an invisible expander around it */
 @media (pointer: coarse) {
   .chat-failure-details > summary::before {
