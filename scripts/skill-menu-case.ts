@@ -79,7 +79,7 @@ const menuGeometry = (page: Page): Promise<MenuGeometry> => page.evaluate(() => 
   const menu = document.querySelector<HTMLElement>(".composer-menu")!;
   const box = menu.getBoundingClientRect();
   const input = document.querySelector<HTMLElement>(".composer-text")!.getBoundingClientRect();
-  const rows = [...menu.querySelectorAll<HTMLElement>(".menu-item")];
+  const rows = [...menu.querySelectorAll<HTMLElement>(".orbit-menu-item")];
   const rects = rows.map((row) => row.getBoundingClientRect());
   return {
     rows: rows.length,
@@ -95,7 +95,7 @@ const menuGeometry = (page: Page): Promise<MenuGeometry> => page.evaluate(() => 
 });
 
 /** each row's description: its height in lines, the row's tooltip, origin and icon */
-const rowDescriptions = (page: Page) => page.evaluate(() => [...document.querySelectorAll<HTMLElement>(".composer-menu .menu-item")].map((row) => {
+const rowDescriptions = (page: Page) => page.evaluate(() => [...document.querySelectorAll<HTMLElement>(".composer-menu .orbit-menu-item")].map((row) => {
   const hint = row.querySelector<HTMLElement>(".menu-item-hint")!;
   return {
     name: row.querySelector<HTMLElement>(".menu-item-main")!.textContent ?? "",
