@@ -111,211 +111,35 @@
   gap: var(--space-2);
 }
 
-/* Hero UI Switch: track + thumb inside SwitchContent, replacing the hand-rolled button switch. */
-.settings-toggle {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  width: calc(var(--touch-target) + var(--space-2));
-  height: var(--touch-target);
-  margin-block: calc(var(--space-1) * -1);
-  padding: var(--space-2) var(--space-1);
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
-.settings-toggle-content {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  width: var(--touch-target);
-  height: var(--touch-target);
-}
-
-.settings-toggle-track {
-  position: absolute;
-  inset: var(--space-3) var(--space-1);
-  background: var(--bg-input);
-  border: var(--hairline) solid var(--border-strong);
-  border-radius: var(--radius-pill);
-  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
-}
-
-.settings-toggle-thumb {
-  position: absolute;
-  top: calc(var(--space-3) + 2px);
-  left: calc(var(--space-1) + 2px);
-  width: var(--space-4);
-  height: var(--space-4);
-  background: var(--text-dim);
-  border-radius: var(--radius-pill);
-  transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
-}
-
-.settings-toggle[data-selected="true"] .settings-toggle-track {
-  background: var(--primary-tint);
-  border-color: var(--primary);
-}
-
-.settings-toggle[data-selected="true"] .settings-toggle-thumb {
-  background: var(--primary);
-  transform: translateX(var(--space-6));
-}
-
-/* Toggle hover state: lift the track slightly when hovered. */
-.settings-toggle-content[data-hovered] .settings-toggle-track {
-  background: var(--bg-hover);
-  border-color: var(--border-strong);
-}
-
-/* Toggle disabled state: gray out track and thumb, no interaction. */
-.settings-toggle-content[data-disabled] .settings-toggle-track {
-  background: var(--bg-input);
-  border-color: var(--border);
-  opacity: 0.5;
-}
-
-.settings-toggle-content[data-disabled] .settings-toggle-thumb {
-  background: var(--text-dim);
-  cursor: not-allowed;
-}
-
-/* Toggle focus-visible: ring around the toggle when keyboard-focused. */
-.settings-toggle-content[data-focus-visible] .settings-toggle-track {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--accent);
-}
-
-/* Mobile: give the toggle a finger-sized touch target. */
-@media (pointer: coarse) {
-  .settings-toggle {
-    width: var(--touch-target);
-    height: var(--touch-target);
-    margin-block: 0;
-    padding: var(--space-2);
-  }
-
-  .settings-toggle-content {
-    width: var(--touch-target);
-    height: var(--touch-target);
-  }
-}
-
-/* Hero UI ToggleButtonGroup: replaces the hand-rolled segmented control. Hero UI sets
-   data-selected on the selected button, data-pressed while it is being clicked. */
-.settings-segmented {
-  display: inline-flex;
-  background: var(--bg-input);
-  border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.settings-segmented-button {
-  position: relative;
-  min-height: var(--control-h);
-  padding: 0 var(--space-3);
-  background: transparent;
-  border: 0;
-  color: var(--text);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  cursor: pointer;
-}
-
-.settings-segmented-button[data-selected="true"] {
-  background: var(--bg-hover);
-  color: var(--text-strong);
-}
-
-.settings-segmented-button[data-pressed="true"] {
-  background: var(--accent-tint);
-  color: var(--accent);
-}
-
-.settings-segmented-button:disabled {
-  color: var(--text-dim);
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-/* Segmented focus-visible: ring around the button when keyboard-focused. */
-.settings-segmented-button:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--accent);
-  z-index: 1;
-}
-
-.settings-segmented-button + .settings-segmented-button {
-  border-inline-start: var(--hairline) solid var(--border);
-}
-
-@media (hover: hover) {
-  .settings-segmented-button:hover:not([data-selected="true"]):not([data-pressed="true"]) {
-    background: var(--bg-elevated);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .settings-toggle-track,
-  .settings-toggle-thumb,
-  .settings-segmented-button {
-    transition: none;
-  }
-}
-
-/* Hero UI NumberField: replaces the hand-rolled stepper. */
+/* Hero UI's Switch, ToggleButtonGroup and NumberField carry their own skins. Orbit only
+   keeps the stepper a row-sized control and widens their hit areas on touch screens, where a
+   20px track is too small a target. */
 .settings-stepper {
-  display: inline-flex;
-  align-items: center;
-  background: var(--bg-input);
-  border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
+  flex: 0 0 auto;
+  width: 8.5rem;
 }
 
-.settings-stepper-group {
-  display: inline-flex;
-  align-items: center;
+.settings-stepper .number-field__group {
+  width: 100%;
 }
 
-.settings-stepper-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--control-h);
-  height: var(--control-h);
-  padding: 0;
-  background: transparent;
-  border: 0;
-  color: var(--text-dim);
-  cursor: pointer;
-}
-
-.settings-stepper-button:disabled {
-  color: var(--text-dim);
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.settings-stepper-button svg {
-  width: var(--icon-size);
-  height: var(--icon-size);
-}
-
-.settings-stepper-output {
-  min-width: 3.5em;
-  color: var(--text-strong);
-  font-family: var(--font-mono);
-  font-size: var(--fs-sm);
-  text-align: center;
-  border-inline: var(--hairline) solid var(--border);
-  padding: 0 var(--space-2);
+/* HeroUI fills the switch's off track with --default, which is Orbit's hover surface: on a card
+   that is one shade off the card itself, so an off switch looked like a knob with no track. The
+   track takes the border's strong step instead; checked, hover and pressed keep HeroUI's fills. */
+.settings-row .switch {
+  --switch-control-bg: var(--border-strong);
 }
 
 @media (pointer: coarse) {
-  .settings-stepper-button {
-    height: max(44px, var(--touch-target));
-    width: max(44px, var(--touch-target));
+  .settings-row .switch__content {
+    min-height: var(--touch-target);
+    align-items: center;
+  }
+
+  .settings-row .number-field__increment-button,
+  .settings-row .number-field__decrement-button {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
   }
 }
 
@@ -329,11 +153,11 @@
 
   .settings-row.is-wide > .settings-segmented {
     display: flex;
+    width: 100%;
   }
 
-  .settings-row.is-wide > .settings-segmented > .settings-segmented-button {
+  .settings-row.is-wide > .settings-segmented > .toggle-button {
     flex: 1 1 0;
-    justify-content: center;
     min-width: 0;
   }
 }

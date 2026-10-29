@@ -51,10 +51,12 @@ export function SettingsRow({ label, description, htmlFor, wide = false, childre
 /** An on/off switch, Hero UI's Switch under the hood. */
 export function Toggle({ checked, label, onChange, disabled }: { checked: boolean; label: string; onChange: (checked: boolean) => void; disabled?: boolean }) {
   return (
-    <SwitchRoot isSelected={checked} isDisabled={disabled} onChange={(isSelected) => onChange(isSelected)} aria-label={label} className="settings-toggle">
-      <SwitchContent className="settings-toggle-content">
-        <SwitchControl className="settings-toggle-track" />
-        <SwitchThumb className="settings-toggle-thumb" />
+    <SwitchRoot isSelected={checked} isDisabled={disabled} onChange={(isSelected) => onChange(isSelected)} aria-label={label}>
+      <SwitchContent>
+        {/* the thumb rides inside the track: outside it the track cannot place the knob */}
+        <SwitchControl>
+          <SwitchThumb />
+        </SwitchControl>
       </SwitchContent>
     </SwitchRoot>
   );
@@ -68,9 +70,9 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
   if (options.length > 4) console.warn(`Segmented "${label}" has ${options.length} options; five or more go in a select instead.`);
   const selectedKeys = new Set([value]);
   return (
-    <ToggleButtonGroupRoot selectionMode="single" selectedKeys={selectedKeys} onSelectionChange={(keys) => onChange(Array.from(keys)[0] as T)} aria-label={label} className="settings-segmented">
+    <ToggleButtonGroupRoot selectionMode="single" disallowEmptySelection selectedKeys={selectedKeys} onSelectionChange={(keys) => onChange(Array.from(keys)[0] as T)} aria-label={label} className="settings-segmented">
       {options.map((option) => (
-        <ToggleButtonRoot key={option.value} id={option.value} className="settings-segmented-button">
+        <ToggleButtonRoot key={option.value} id={option.value}>
           {option.label}
         </ToggleButtonRoot>
       ))}
@@ -83,10 +85,10 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
 export function Stepper({ label, value, text, min, max, decreaseLabel, increaseLabel, onChange }: { label: string; value: number; text: string; min: number; max: number; decreaseLabel: string; increaseLabel: string; onChange: (value: number) => void }) {
   return (
     <NumberFieldRoot value={value} minValue={min} maxValue={max} onChange={(next) => onChange(next)} aria-label={label} className="settings-stepper">
-      <NumberFieldGroup className="settings-stepper-group">
-        <NumberFieldDecrementButton aria-label={decreaseLabel} isDisabled={value <= min} className="settings-stepper-button"><Minus aria-hidden="true" /></NumberFieldDecrementButton>
-        <NumberFieldInput readOnly className="settings-stepper-output" />
-        <NumberFieldIncrementButton aria-label={increaseLabel} isDisabled={value >= max} className="settings-stepper-button"><Plus aria-hidden="true" /></NumberFieldIncrementButton>
+      <NumberFieldGroup>
+        <NumberFieldDecrementButton aria-label={decreaseLabel} isDisabled={value <= min}><Minus aria-hidden="true" /></NumberFieldDecrementButton>
+        <NumberFieldInput readOnly />
+        <NumberFieldIncrementButton aria-label={increaseLabel} isDisabled={value >= max}><Plus aria-hidden="true" /></NumberFieldIncrementButton>
       </NumberFieldGroup>
     </NumberFieldRoot>
   );
