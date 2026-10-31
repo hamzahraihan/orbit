@@ -148,7 +148,8 @@ export interface Settings {
   markdownWidth: MarkdownWidth;
   /** a repository diff as one column of old and new lines, or the two side by side (a phone shows one column either way) */
   diffStyle: DiffStyle;
-  /** where a file opens from the chat, terminal or Files: the popup, or beside the pane on a wide window (lib/filePresentation.ts) */
+  /** where a file opens from the chat or the terminal: the popup, or beside the pane on a wide window
+   *  (lib/filePresentation.ts); one chosen in the Files browser lands in that panel either way */
   fileOpen: FilePresentation;
   /** where a click on a web address opens it: a new tab, or the panel beside the pane (lib/webPanel.ts); Shift opens the other one */
   webLinks: WebLinkTarget;

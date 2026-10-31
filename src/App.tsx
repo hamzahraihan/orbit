@@ -60,7 +60,7 @@ import {
 import { ensurePushSubscription, pushSupported, removePushSubscription } from "./lib/push.ts";
 import { machineGone, notificationLanding, notificationTargetFromSearch, sameLink, notificationViewForPane, onNotificationTarget, type NotificationTarget } from "./lib/notificationTarget.ts";
 import { LanExposureNotice } from "./components/LanExposureNotice.tsx";
-import { FilesDialog } from "./components/FilesDialog.tsx";
+import { FilesDialog, type FilesDialogProps } from "./components/FilesDialog.tsx";
 import { folderQueryFor } from "./lib/paletteFolders.ts";
 import { FileViewer } from "./components/FileViewer.tsx";
 import { WebPanel } from "./components/WebPanel.tsx";
@@ -421,16 +421,14 @@ export function App() {
   const closeMore = useCallback(() => setMore(null), []);
   // the pane canvas's actions, for the phone's tab menu (TabStrip)
   const paneActionsRef = useRef<((target: HerdrPane) => RowMenuItem[]) | null>(null);
-  // the Files dialog, and the file open in the viewer (a path as the chat or the dialog gave it)
+  // the file browser open (beside the pane on a wide window, a dialog over it below that), and the
+  // file open in the viewer (a path as the chat or the browser gave it)
   const [filesOpen, setFilesOpen] = useState(false);
   const { viewing, openFile, closeFile, setPresentation, releaseFile } = useFileViewer();
   // a repository diff from the Files dialog's Changes tab, an entry of its own like a file
   const { viewing: diffViewing, openDiff, closeDiff, releaseDiff } = useRepoDiffViewer();
   const presentation = viewing?.presentation ?? openPresentation(viewing?.path ?? "", settings.fileOpen);
   const fileDocked = filePanelAvailable && presentation === "panel";
-  useEffect(() => {
-    if (viewing !== null && fileDocked) setFilesOpen(false);
-  }, [viewing, fileDocked]);
   // a page this PC serves, beside the pane in the file panel's place: a file docked there replaces it
   const [webPage, setWebPage] = useState<string | null>(null);
   useEffect(() => {
@@ -442,11 +440,26 @@ export function App() {
     if (url === null) return false;
     if (viewing !== null && fileDocked) closeFile();
     setWebPage(url);
+    // the page takes the column the browser had
+    setFilesOpen(false);
     return true;
   }, [settings.webLinks, viewing, fileDocked, closeFile]);
+  /**
+   * Opens the Files browser: beside the pane on a wide window, where it takes the column from a
+   * page or a docked file, and a dialog over the pane below that. The docked browser stays behind
+   * a file opened from it, so closing the file lands back on the list.
+   */
+  const openFiles = useCallback(() => {
+    setFilesOpen(true);
+    if (!filePanelAvailable) return;
+    setWebPage(null);
+    if (viewing !== null && fileDocked) closeFile();
+  }, [filePanelAvailable, viewing, fileDocked, closeFile]);
   // the panel is no dialog, so no trap gives the focus back when it closes: what opened the file
-  // (a link in the chat, a row of Files) gets it, as it does from the popup
+  // (a link in the chat, a row of Files) gets it, as it does from the popup. So does the browser
+  // in that column when it closes.
   useFocusReturn(viewing !== null && fileDocked);
+  useFocusReturn(filesOpen && filePanelAvailable && !(viewing !== null && fileDocked));
   // a collapse (below) whose two steps back have not landed: a second click on Show beside the
   // pane, or the kind correction in the same moment, must not queue two steps more and the file twice
   const collapsing = useRef(false);
@@ -475,11 +488,12 @@ export function App() {
   const toggleFilePresentation = filePanelAvailable && viewing !== null
     ? () => presentFile(fileDocked ? "popup" : "panel")
     : undefined;
+  // a file chosen in the browser lands in the column beside the pane under it, whatever Open files
+  // says (that setting keeps to the chat and the terminal); the viewer's own button still makes it
+  // a popup, and below 980px, where there is no column, it is the dialog or the phone's sheet
   const viewFile = useCallback((path: string) => {
-    // the Files dialog would cover the docked panel the file opens in
-    if (filePanelAvailable && openPresentation(path, settings.fileOpen) === "panel") setFilesOpen(false);
-    openFile({ path, paneId: selectedPaneId, machineId: selectedMachineId });
-  }, [openFile, selectedPaneId, selectedMachineId, filePanelAvailable, settings.fileOpen]);
+    openFile({ path, paneId: selectedPaneId, machineId: selectedMachineId, presentation: filePanelAvailable ? "panel" : undefined });
+  }, [openFile, selectedPaneId, selectedMachineId, filePanelAvailable]);
   // a link to Settings opens it on its page, for that first opening alone
   const [settingsOpen, setSettingsOpen] = useState(() => initialLink?.settings != null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -1388,7 +1402,7 @@ export function App() {
       lock: canSignOut ? lock : null,
       enableNotifications: bellVisible && bell.run === enableNotifications ? () => void enableNotifications() : null,
       refresh: () => void load(),
-      openFiles: selectedPaneId !== null ? () => { setDrawerOpen(false); setFilesOpen(true); } : null,
+      openFiles: selectedPaneId !== null ? () => { setDrawerOpen(false); openFiles(); } : null,
       // herdr's layout calls on the selected pane (components/TabStrip.tsx has the same for the
       // tab's own menu): the new layout reaches every client as session-changed, so only a
       // refusal is left to say, and that is logged as other background failures are
@@ -1410,7 +1424,7 @@ export function App() {
         void zoomPane(paneId, mode, machineId).then(() => void load()).catch((err) => layoutRefused("pane zoom failed", err));
       } : null,
     }),
-    [selectPane, selectedPaneId, selectedMachineId, setView, view, updateSettings, resolvedTheme, canSignOut, lock, bellVisible, bell.run, enableNotifications, load, layoutRefused, lenses],
+    [selectPane, selectedPaneId, selectedMachineId, setView, view, updateSettings, resolvedTheme, canSignOut, lock, bellVisible, bell.run, enableNotifications, load, layoutRefused, lenses, openFiles],
   );
 
   useShortcuts(actions, locked === false);
@@ -1464,7 +1478,7 @@ export function App() {
     { id: "palette", label: t("Search panes and actions"), icon: Search, ...(paletteKeys ? { hint: paletteKeys } : {}), run: () => openPalette() },
     ...(selectedPane && !selectedPane.restore_error ? [{ id: "find", label: t("Find in terminal"), icon: Search, run: actions.openFind }] : []),
     // from 769px Files has its own button beside the lens switch; a phone keeps it here
-    ...(selectedPane && !wideScreen ? [{ id: "files", label: t("Browse files"), icon: FolderOpen, run: () => setFilesOpen(true) }] : []),
+    ...(selectedPane && !wideScreen ? [{ id: "files", label: t("Browse files"), icon: FolderOpen, run: openFiles }] : []),
     // the address says where the app is (lib/deepLink.ts); a phone has no address bar to copy it from
     { id: "copy-link", label: t("Copy link"), icon: Link, run: () => void copyText(window.location.href).then((ok) => { if (ok) setHeaderNote("copied"); }) },
     ...(bellVisible ? [{ id: "alerts", label: t("Alerts"), hint: bell.state, checked: bell.on, title: bell.title, icon: Bell, run: () => void bell.run() }] : []),
@@ -1473,6 +1487,17 @@ export function App() {
   // the chat's surface is what the pane column shows: the header's pane zone and the tab strip
   // take it (from 769px). A pane herdr could not restore draws a placeholder, not the chat.
   const chatShown = showsChat(selectedPane, view);
+  // the Files browser's props: drawn as the column beside the pane where there is one, as the
+  // dialog over it below that
+  const filesBrowser: FilesDialogProps | null = selectedPane === null ? null : {
+    start: selectedPane.foreground_cwd ?? selectedPane.cwd ?? "",
+    paneId: selectedPane.pane_id,
+    viewing: (viewing !== null && !fileDocked) || diffViewing !== null,
+    onOpenFile: viewFile,
+    onOpenDiff: (comparison, file) => openDiff({ machineId: selectedMachineId, paneId: selectedPane.pane_id, directory: selectedPane.foreground_cwd ?? selectedPane.cwd ?? null, ...comparison, path: file.path, oldPath: file.old_path }),
+    onBrowseFolders: (path) => actions.openPalette(folderQueryFor(path, null)),
+    onClose: () => setFilesOpen(false),
+  };
 
   if (locked === null) {
     // the auth state is unknown until /api/health or /api/session answers (ten seconds when
@@ -1573,7 +1598,7 @@ export function App() {
           <>
             {/* opens Files, it is no third lens: set apart from the switch by a hairline */}
             <span className="header-divider" aria-hidden="true" />
-            <button type="button" className="icon-button header-files-button" aria-label={t("Browse files")} title={t("Browse files")} onClick={() => setFilesOpen(true)}>
+            <button type="button" className="icon-button header-files-button" aria-label={t("Browse files")} title={t("Browse files")} onClick={openFiles}>
               <FolderOpen />
             </button>
           </>
@@ -1785,6 +1810,9 @@ export function App() {
         </MachineContext.Provider>}
         {webPage !== null && filePanelAvailable && !(viewing !== null && fileDocked) &&
           <WebPanel key={webPage} url={webPage} onClose={() => setWebPage(null)} panelStart={<FilePanelResizer width={filePanelWidth} onResize={setFilePanelWidth} />} />}
+        {/* the file browser in the same column: a docked file opened from it stands over it */}
+        {filesOpen && filesBrowser !== null && filePanelAvailable && !(viewing !== null && fileDocked) &&
+          <FilesDialog {...filesBrowser} docked panelStart={<FilePanelResizer width={filePanelWidth} onResize={setFilePanelWidth} />} />}
       </div>
 
       <MachineContext.Provider value={newSessionMachineId}><NewSessionDialog
@@ -1813,19 +1841,14 @@ export function App() {
         selectTargetRef.current(machineId, paneId);
       }} />
       <SettingsDialog auth={auth} herdrVersion={health?.herdr?.version ?? null} open={settingsOpen} linkPage={settingsLinkPage} linkSection={settingsLinkSection} onPage={onSettingsPage} onClose={closeSettings} actions={actions} onEnableNotifications={enableNotifications} saveError={settingsSaveError} overPreview={(viewing !== null && !fileDocked) || diffViewing !== null} />
-      {filesOpen && selectedPane && (
-        <FilesDialog start={selectedPane.foreground_cwd ?? selectedPane.cwd ?? ""} paneId={selectedPane.pane_id} viewing={(viewing !== null && !fileDocked) || diffViewing !== null} onOpenFile={viewFile}
-          onOpenDiff={(comparison, file) => openDiff({ machineId: selectedMachineId, paneId: selectedPane.pane_id, directory: selectedPane.foreground_cwd ?? selectedPane.cwd ?? null, ...comparison, path: file.path, oldPath: file.old_path })}
-          onBrowseFolders={(path) => actions.openPalette(folderQueryFor(path, null))}
-          onClose={() => setFilesOpen(false)} />
+      {filesOpen && filesBrowser !== null && !filePanelAvailable && (
+        <FilesDialog {...filesBrowser} />
       )}
       {diffViewing !== null && <MachineContext.Provider value={diffViewing.machineId}>
         <RepoDiffViewer key={`${diffViewing.scope}:${diffViewing.path}`} target={diffViewing} onClose={closeDiff} onOpenFile={(path) => {
           const docked = filePanelAvailable && openPresentation(path, settings.fileOpen) === "panel";
-          if (docked) {
-            setFilesOpen(false);
-            releaseDiff();
-          }
+          // the file stands over the browser in the panel, which stays behind it for the file's close
+          if (docked) releaseDiff();
           openFile({ path, paneId: diffViewing.paneId, machineId: diffViewing.machineId }, docked);
         }} keyboardActive={!settingsOpen && (viewing === null || fileDocked)} />
       </MachineContext.Provider>}

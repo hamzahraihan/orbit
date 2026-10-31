@@ -7,3 +7,107 @@
 .files-dialog .modal-body {
   min-height: calc(var(--control-h) * 8);
 }
+
+/*
+ * Docked (a wide window): the browser is a column beside the pane, in the file panel's place and
+ * with its width (FileViewer.css .file-panel), so a file opened here lands in the same column. Its
+ * header is the docked viewer's row (a small title, then the tabs and the ways out as ghost buttons),
+ * and the browser itself drops the card it had in the dialog for the panel's own surface.
+ */
+.files-panel-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: calc(var(--control-h) + var(--space-2));
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border-bottom: var(--hairline) solid var(--border);
+}
+
+/* the tab titles say what the panel is: the name gives way to them first in a narrow one */
+.files-panel-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-strong);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-tight);
+}
+
+/* dim and quiet beside the tabs, as the docked viewer's own actions are (the browser's rows keep
+   their own controls) */
+.files-panel-header .icon-button {
+  flex: none;
+  width: calc(var(--control-h) - 6px);
+  height: calc(var(--control-h) - 6px);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+}
+
+@media (hover: hover) {
+  .files-panel-header .icon-button:hover {
+    color: var(--text-strong);
+  }
+}
+
+.files-panel-header .icon-button svg {
+  width: calc(var(--icon-size) - 2px);
+  height: calc(var(--icon-size) - 2px);
+}
+
+.files-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* the tab shown fills the column, so its list scrolls in the panel instead of in a card under a bar */
+.files-panel .files-dialog-tab {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.files-panel .files-dialog-tab[hidden] {
+  display: none;
+}
+
+.files-panel .dir-browser,
+.files-panel .repo-changes {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* the panel is the card here: the browser has no frame of its own inside it */
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.files-panel .dir-browser .dir-browser-list,
+.files-panel .repo-changes .repo-changes-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* the dialog caps its lists at a share of the window; the panel's scroll in their column */
+  max-height: none;
+}
+
+/* the Changes tab's three commit fields stack where the column is too narrow for them, as they do
+   on a phone's dialog (a window narrower than that keeps the panel at its narrowest) */
+@container file-panel (max-width: 420px) {
+  .files-panel .repo-changes-commits {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* a touch screen wide enough for the panel keeps its targets */
+@media (pointer: coarse) {
+  .files-panel-header .icon-button {
+    width: var(--touch-target);
+    height: var(--touch-target);
+  }
+}

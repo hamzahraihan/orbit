@@ -5,7 +5,8 @@
  *   ?new=workspace|tab&cwd=<folder>&name=<name>&agent=<kind>
  *   &sidebar=hidden|shown
  *
- * `sidebar=hidden` opens a desktop with the sidebar collapsed, and is in the address while it is;
+ * `sidebar=hidden` opens a desktop with the sidebar minimized to its rail (styles.css), and is in
+ * the address while it is;
  * `sidebar=shown` opens a phone with its drawer out (a phone's drawer closes once a pane is picked,
  * so its address never says so).
  *
