@@ -77,7 +77,25 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
   color: var(--text);
 }
 
-/* Monograms in rail mode */
+/* status ring on a rail mark: running/blocked/done/idle visible at a glance without hovering */
+.app.sidebar-collapsed .sidebar-mark[data-status] {
+  outline: 2px solid;
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.app.sidebar-collapsed .sidebar-mark[data-status="working"],
+.app.sidebar-collapsed .sidebar-mark[data-status="waiting"] {
+  outline-color: var(--indicator-working);
+}
+.app.sidebar-collapsed .sidebar-mark[data-status="blocked"] {
+  outline-color: var(--indicator-blocked);
+}
+.app.sidebar-collapsed .sidebar-mark[data-status="done"] {
+  outline-color: var(--indicator-done);
+}
+.app.sidebar-collapsed .sidebar-mark[data-status="idle"] {
+  outline-color: var(--indicator-idle);
+}
 .workspace-mark-rail {
   display: none;
 }

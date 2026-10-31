@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, Download, Monitor, Plus, Settings, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Download, Plus, Settings, SlidersHorizontal, X } from "lucide-react";
 import type { Machine, MachineState, MachineUpdate } from "../../shared/machines.ts";
 import { MachineContext } from "../lib/machineContext.tsx";
 import { answerMachineSetup, machineRequest } from "../lib/api.ts";
@@ -7,6 +7,16 @@ import { describeProgress } from "../lib/bridgeProgress.ts";
 import { keepDismissed, noticeKey, readDismissed, waitingMachines, writeDismissed } from "../lib/machineNotice.ts";
 import type { AppActions } from "../lib/actions.ts";
 import { useInstallPrompt } from "../lib/install.ts";
+import { workspaceMonogram } from "../components/WorkspaceMonogram.tsx";
+
+/** Machine lifecycle states read as agent-like status on the rail mark. */
+const MACHINE_STATUS: Readonly<Record<MachineState, "idle" | "working" | "blocked" | "done" | "waiting" | "unknown">> = {
+  connecting: "waiting",
+  connected: "idle",
+  reconnecting: "waiting",
+  disconnected: "unknown",
+  error: "blocked",
+};
 import { Sidebar } from "./Sidebar.tsx";
 import { AgentSidebar } from "./AgentSidebar.tsx";
 import { SidebarActivityProvider, useSidebarActivityState } from "../lib/sidebarActivity.tsx";
@@ -108,7 +118,9 @@ function MachineGroup({ machine, ...props }: Props & { machine: Machine }) {
       tabIndex={0}
     >
       <div className="machine-title">
-        <span className="sidebar-mark" aria-hidden="true"><Monitor /></span>
+        <span className="sidebar-mark" aria-hidden="true" data-status={MACHINE_STATUS[machine.state]}>
+          <WorkspaceMonogram label={machine.name} size={18} status={MACHINE_STATUS[machine.state]} />
+        </span>
         <span className="machine-name">{machine.name}</span>
         {/* the computer this app's server runs on; on a phone "this PC" read as the phone */}
         {machine.kind === "local" && <span className="machine-kind" title={t("The computer this app runs on")}>{t("Host")}</span>}

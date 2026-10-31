@@ -356,7 +356,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
    * What leads a row: the coding agent in the pane the row opens, so the mark never promises an
    * agent a click would not reach. A shell is a terminal, a linked worktree without an agent its branch.
    */
-  const rowMark = (pane: PaneInfo, linked: boolean, label?: string) => {
+  const rowMark = (pane: PaneInfo, linked: boolean, status?: KnownStatus, label?: string) => {
     const mark = paneMark(agentByPane.get(pane.pane_id));
     return (
       <span className="sidebar-mark" aria-hidden="true">
@@ -365,10 +365,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
         ) : linked ? (
           <GitBranch />
         ) : (
-          <>
-            <Terminal className="workspace-icon-terminal" />
-            {label && <span className="workspace-mark-rail"><WorkspaceMonogram label={label} size={20} /></span>}
-          </>
+          <WorkspaceMonogram label={label ?? pane.pane_id} size={18} status={status} />
         )}
       </span>
     );
@@ -656,6 +653,8 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
     // a folded group's parent stands for its worktrees too, as herdr's collapsed parent does:
     // a checkout that waits or has finished must not hide behind the fold
     const statusPanes = collapsed ? [...panes, ...children.flatMap((child) => roster.filter((candidate) => candidate.workspace_id === child.workspace_id))] : panes;
+    // the row's mark rolls up every pane's status so running/blocked/done reads at a glance
+    const rowStatus = online ? rollupStatus(statusPanes.map((candidate) => activity.status(machineId, candidate))) : undefined;
     // on two lines the row says what its pane is doing, and the workspace it has named until now sits under that
     const lines = twoLine ? taskRowLines({ paneTitle: displayPaneTitle(pane), labelled: Boolean(pane.label?.trim()), folder: cwdBasename(pane.cwd), workspace: rowTitle, alias: secondaryBranch }) : null;
     // a folded group still shows the checkout that is open; the count is of the ones put away
@@ -743,7 +742,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
             actions.selectPane(pane.pane_id);
           }}
         >
-          {rowMark(pane, workspace.worktree?.is_linked_worktree === true, rowTitle)}
+          {rowMark(pane, workspace.worktree?.is_linked_worktree === true, rowStatus, rowTitle)}
           {editingWorkspace ? <input
             aria-label={t("Workspace name")}
             autoFocus

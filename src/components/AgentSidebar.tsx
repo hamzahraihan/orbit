@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ChevronDown, ChevronRight, Ellipsis, Pin, PinOff, Terminal } from "lucide-react";
+import { ChevronDown, ChevronRight, Ellipsis, Pin, PinOff } from "lucide-react";
 
 import type { Machine } from "../../shared/machines.ts";
 import { paneStorageId } from "../../shared/machines.ts";
@@ -18,6 +18,7 @@ import { AgentMark, hasAgentMark } from "./AgentMark.tsx";
 import { RowMenu } from "./RowMenu.tsx";
 import { RailFlyout } from "./RailFlyout.tsx";
 import { BackgroundBadge, displayPaneTitle, onRowContextMenu, PlanBadge, StatusBadge } from "./Sidebar.tsx";
+import { WorkspaceMonogram } from "./WorkspaceMonogram.tsx";
 import "./AgentSidebar.css";
 
 interface AgentRowBodyProps {
@@ -42,7 +43,9 @@ interface AgentRowBodyProps {
  */
 function AgentRowBody({ mark, markKind, title, name, context, tokens, backgroundTasks, plan, status }: AgentRowBodyProps) {
   return <>
-    <span className="sidebar-mark" aria-hidden="true">{mark !== null ? <AgentMark agent={mark} size={18} /> : <Terminal />}</span>
+    <span className="sidebar-mark" aria-hidden="true" data-status={status ?? null}>
+      {mark !== null ? <AgentMark agent={mark} size={18} /> : <WorkspaceMonogram label={title} size={18} status={status} />}
+    </span>
     <span className="agent-copy">
       {markKind && <span className="visually-hidden">{markKind}: </span>}
       <span className="agent-main">
