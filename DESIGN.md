@@ -27,6 +27,8 @@ stays over the terminal and in the palette. Sections are parted by space and a d
 a rule; the Agents list's workspace cards are an edge around rows, not a line between sections.
 Hover and selection share one neutral fill; the chosen workspace or agent row takes it flat, with
 no colored rail. Brand marks are the only other color there, and a ready row draws no state at all.
+Collapsed to the desktop rail, the same rows keep their leading mark and their state badge, and the
+title, the tokens and the row actions wait for the sidebar (styles.css).
 Rose connects focus, the chosen lens glyph, the chosen row and the terminal cursor.
 
 Messages say only what the person needs now, not everything the app knows:
@@ -709,7 +711,8 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   call the palette made that a PC's bridge from before the route answered 404 to reads there too,
   for a moment, as a `.pane-notice` line of `--status-blocked` `--fs-xs` text under a hairline
   ("This PC's bridge does not offer this yet"); the tab's menu says the same at the strip's end. With the
-  sidebar collapsed the toggle and the palette sit in the one bar. Below `769px` the header is the `--bg-panel` bar with
+  sidebar collapsed to its rail the bar keeps the toggle alone, centred on the rail's column, and the
+  rail's own search opens the palette. Below `769px` the header is the `--bg-panel` bar with
   its rule: the installed app's `theme-color` matches it. Over the chat, when the transcript is right
   under it (no tab strip or notice between), that bar is glass, as an iPhone's is: `--bar-bg` behind
   `--glass-blur` at `--z-header`, pulled over the pane by its own height (`--header-over`), so the
@@ -722,8 +725,17 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   focused. The chosen width is kept per device (`herdr-web-ui:sidebar-width`) and written as
   `--sidebar-user-w` on `.app`; the sidebar and its top row in the header both read
   `--sidebar-shown-w`. A phone's drawer keeps `--sidebar-w`.
-- The sidebar keeps its width on desktop until its edge is dragged, and is a `<=768px` drawer. The desktop collapse removes its
-  column; the drawer uses a scrim and keeps safe-area insets. On touch, a mostly horizontal swipe in
+- The sidebar keeps its width on desktop until its edge is dragged, and is a `<=768px` drawer. The
+  desktop collapse minimizes it to an icon rail rather than removing it: `--sidebar-shown-w` becomes
+  `--sidebar-rail-w` (`--control-h` + `--space-4`, so it follows the density), one mark a row, its
+  state a badge at the row's top-right corner, and a row's tooltip what it opens. Its New workspace
+  and search stand as their glyphs, a PC leads its marks with its monitor and its dot, the Agents
+  head keeps only its fold caret, and the footer keeps the gear; `⋯`, a worktree's face and fold, a
+  PC's `+` and fold, Install app and the setup panel leave with the words. Words are clipped, never
+  `display: none`, so every control keeps the name a reader hears; the seam's grip goes too. The rail
+  follows VS Code's activity bar: the column stays under the header, and the header itself stays one
+  bar. The drawer uses a scrim and
+  keeps safe-area insets. On touch, a mostly horizontal swipe in
   from the left `24px` edge opens the drawer and a swipe to the left closes it. While the finger is
   down the drawer is under it and the scrim darkens with it; let go, it stays open when more than half
   shows or a flick (`0.35` px/ms, not after a `100ms` rest) went that way, and slides the rest from there.
@@ -1244,7 +1256,17 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   More button carries a `--dot-size` `--accent` dot and its name says "alerts are off": the dot
   marks the state that needs a look, never "on".
 - The segmented Chat/Terminal view switch lives in the header. There is no floating view-toggle pill.
-  Files is an action, not a third lens: it opens the Files dialog and never joins the switch.
+  Files is an action, not a third lens: it opens the file browser and never joins the switch. From
+  980px that browser is a column beside the pane, in the file panel's place and width
+  (`aside.file-panel.files-panel`), so browsing and the file read from it share one column; below
+  980px it is the Files dialog, a sheet on a phone. The docked browser keeps its header to one row
+  (a `--fs-sm` title giving way first, **Browse** | **Changes**, the palette's folder browse and
+  Close as `--control-h` − 6px ghost buttons, as the docked viewer's header), drops the frames its
+  browser and Changes list have in the dialog so their rows fill the column and scroll in it, and
+  closes on Close, or on Escape while the focus is inside it (the pane beside it keeps its own).
+  A file opened from it that docks takes the column and the browser waits behind it, so closing
+  the file lands back on the list it came from; a page beside the pane, or Browse files itself,
+  takes the column back.
 - At `<=768px` the drawer toggle, the lens buttons and More are `--touch-target-header` squares
   (the switch's track loses its inset so the `--header-h` bar holds them).
 - Connection is one quiet chip, drawn only while the bridge is not live: a pulsing dot plus the
@@ -1325,6 +1347,9 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   a partial-view notice is among them. A reader page has no Close.
   A file opens in the popup unless Settings → Chat → Open files is Beside the pane (`fileOpen`,
   per device), which docks text and code from 980px; the header button moves the open file either way.
+  A file chosen in the docked Files browser is the one exception to that setting: it lands in the
+  column under the browser whatever kind it is (media, PDFs and folders included), and the browser
+  waits behind it.
   This differs from t3code's and paseo's docked file panels, whose look the docked viewer keeps: a
   file read from the chat leaves the chat its width unless the user asks for the split.
   Docked beside the pane (from 980px, `aside.file-panel`) the viewer is a split of the workspace on
