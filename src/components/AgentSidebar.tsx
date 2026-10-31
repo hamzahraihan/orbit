@@ -19,6 +19,7 @@ import { RowMenu } from "./RowMenu.tsx";
 import { RailFlyout } from "./RailFlyout.tsx";
 import { BackgroundBadge, displayPaneTitle, onRowContextMenu, PlanBadge, StatusBadge } from "./Sidebar.tsx";
 import { WorkspaceMonogram } from "./WorkspaceMonogram.tsx";
+import { knownStatus } from "../lib/status.ts";
 import "./AgentSidebar.css";
 
 interface AgentRowBodyProps {
@@ -42,9 +43,10 @@ interface AgentRowBodyProps {
  * its plugins report, and how it is doing.
  */
 function AgentRowBody({ mark, markKind, title, name, context, tokens, backgroundTasks, plan, status }: AgentRowBodyProps) {
+  const known = knownStatus(status);
   return <>
     <span className="sidebar-mark" aria-hidden="true" data-status={status ?? null}>
-      {mark !== null ? <AgentMark agent={mark} size={18} /> : <WorkspaceMonogram label={title} size={18} status={status} />}
+      {mark !== null ? <AgentMark agent={mark} size={18} /> : <WorkspaceMonogram label={title} size={18} status={known} />}
     </span>
     <span className="agent-copy">
       {markKind && <span className="visually-hidden">{markKind}: </span>}
@@ -63,7 +65,7 @@ function AgentRowBody({ mark, markKind, title, name, context, tokens, background
     </span>
     <span className="agent-row-status"><BackgroundBadge count={backgroundTasks} /><PlanBadge plan={plan} /></span>
     {/* drawn at the row's right edge, after its ⋯, as a workspace row's state is (AgentSidebar.css) */}
-    <span className="agent-row-state"><StatusBadge status={status} compact /></span>
+    <span className="agent-row-state"><StatusBadge status={known} compact /></span>
   </>;
 }
 

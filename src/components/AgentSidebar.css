@@ -1,285 +1,520 @@
-/* Agents takes the height of its rows, at most half the sidebar, docked above the footer; the
-   workspace list has the rest. Parted from it by space, not a rule. */
+/* AgentSidebar — redesigned to match new sidebar visual system */
+
 .agents-sidebar {
   display: flex;
-  flex: 0 1 auto;
   flex-direction: column;
+  gap: var(--space-1);
+  flex: 0 1 auto;
   min-height: 0;
-  max-height: 50%;
-  padding: var(--space-2) var(--side-gutter) 0;
+  background: var(--sidebar-bg);
 }
 
 .agents-sidebar.is-collapsed,
-.agents-sidebar.is-empty { flex: 0 0 auto; }
+.agents-sidebar.is-empty {
+  flex: 0 0 auto;
+}
 
-/* A visible Agents list fills the space released by folded PC groups, up to its existing cap. */
+/* A visible Agents list fills the space released by folded PC groups */
 .sidebar-shell:not(:has(.machine-list .machine-workspaces)):has(.agents-sidebar:not(.is-collapsed):not(.is-empty)) .agents-sidebar {
   flex: 1 1 auto;
 }
 
-/* positioned: a row's visually hidden label is absolute, and must not size the page instead */
-.agent-list-contents {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scroll-padding-bottom: var(--space-4);
-}
-
-.agents-sidebar.is-empty .agent-list-contents { flex: 0 0 auto; }
-
-/* a list that is cut fades out; at the end of its scroll the fade lies over its own spare space */
-.agent-list-contents::after {
-  content: "";
-  position: sticky;
-  bottom: 0;
-  display: block;
-  height: var(--space-4);
-  background: transparent;
-  pointer-events: none;
-}
-
-.agents-sidebar.is-empty .agent-list-contents::after { display: none; }
-
+/* Section toggle */
 .agent-section-toggle {
-  flex: 0 0 auto;
-  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--side-row);
+  padding: 0 var(--space-2);
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  border-radius: var(--sidebar-radius);
   cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
-/* the fold's caret hangs in the leading cell and shows when it is of use */
+.agent-section-toggle:hover {
+  background: var(--side-hover);
+  color: var(--text);
+}
+
+.agent-section-toggle:focus-visible {
+  outline: var(--ring);
+  outline-offset: calc(var(--ring-offset) * -1);
+}
+
 .agent-section-caret {
-  flex: none;
-  width: var(--space-4);
-  height: var(--space-4);
-  margin-inline: calc((var(--side-box) - var(--space-4)) / 2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--side-box);
+  height: var(--side-box);
+  color: var(--text-dim);
   opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
 .agent-section-toggle:focus-visible .agent-section-caret,
-.agents-sidebar.is-collapsed .agent-section-caret { opacity: 1; }
+.agents-sidebar.is-collapsed .agent-section-caret {
+  opacity: 1;
+}
 
 @media (hover: hover) {
-  .agent-section-toggle:hover .agent-section-caret { opacity: 1; }
+  .agent-section-toggle:hover .agent-section-caret {
+    opacity: 1;
+  }
 }
 
-/* a folded list still says how many agents it holds */
+.agents-sidebar.is-collapsed .agent-section-caret {
+  transform: rotate(-90deg);
+}
+
+/* Folded count */
 .agent-section-count {
-  width: var(--side-box);
-  margin-left: auto;
-  font-size: var(--fs-xs);
-  font-variant-numeric: tabular-nums;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  background: var(--bg-elevated);
+  border: var(--hairline) solid var(--sidebar-border);
+  border-radius: var(--radius-sm);
+  line-height: 1;
 }
 
-.agent-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* Pinned agents stand first in a card (Sidebar.css); the Agents head stays the list's only head. */
-
-/* The agent row selects its pane; its ⋯ (or a right-click) opens its pin menu. */
-/* The trailing padding keeps the state cell, which the row draws at its right edge after the ⋯, as
-   a workspace row does; the fill is the whole row's. */
-.agent-item {
+/* List contents */
+.agent-list-contents {
   position: relative;
   display: flex;
-  align-items: center;
-  padding-top: var(--space-1);
-  padding-right: var(--side-box);
-  padding-bottom: var(--space-1);
-  border-radius: var(--radius-md);
-  transition: background-color var(--dur-fast) var(--ease-out);
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow-y: auto;
+  padding: var(--space-1) 0;
 }
 
-.agent-row {
-  display: flex;
-  flex: 1 1 auto;
-  align-items: center;
-  min-width: 0;
-  min-height: var(--side-row-2);
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
+/* Fade at scroll edges */
+.agent-list-contents::before,
+.agent-list-contents::after {
+  content: "";
+  position: sticky;
+  left: 0;
+  right: 0;
+  height: 24px;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.agent-row:focus-visible { outline-offset: calc(var(--ring-offset) * -1); }
-.agent-row:disabled { cursor: default; }
+.agent-list-contents::before {
+  top: 0;
+  background: linear-gradient(to bottom, var(--sidebar-bg), transparent);
+}
 
-@media (hover: hover) {
-  .agent-item:has(> .agent-row:enabled):hover { background: var(--side-hover); }
+.agent-list-contents::after {
+  bottom: 0;
+  background: linear-gradient(to top, var(--sidebar-bg), transparent);
+}
+
+.agents-sidebar.is-empty .agent-list-contents::before,
+.agents-sidebar.is-empty .agent-list-contents::after {
+  display: none;
+}
+
+/* Unified agent row — matches .sidebar-row */
+.agent-item {
+  display: grid;
+  grid-template-columns: var(--side-box) 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--side-row);
+  padding: 0 var(--space-2);
+  border-radius: var(--sidebar-radius);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.agent-item:hover {
+  background: var(--side-hover);
 }
 
 .agent-item.is-selected {
   background: var(--side-selected);
 }
 
-/* As a workspace row's: the ⋯ takes no room until the row is hovered, focused, selected or its
-   menu is open, and stays in the focus order, since the menu hands the focus back to it. */
+.agent-item:focus-visible {
+  outline: var(--ring);
+  outline-offset: calc(var(--ring-offset) * -1);
+}
+
+.agent-item.is-offline {
+  opacity: 0.5;
+}
+
+/* Row button (the clickable area) */
+.agent-row {
+  display: contents;
+}
+
+/* Leading mark */
+.agent-item .sidebar-row-mark {
+  grid-column: 1;
+}
+
+/* Content area */
+.agent-copy {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.agent-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agent-title-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--fw-medium);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-item.is-selected .agent-title-line {
+  color: var(--text-strong);
+}
+
+.agent-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-context {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-name {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-medium);
+}
+
+.agent-tokens {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Trailing meta: background tasks + plan + status */
+.agent-row-status {
+  grid-column: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.background-count,
+.plan-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.background-count svg,
+.plan-count svg {
+  width: 12px;
+  height: 12px;
+}
+
+.plan-count svg { color: var(--status-working); }
+.plan-count.is-done svg { color: var(--status-done); }
+
+/* Status badge at row edge */
+.agent-row-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+}
+
+.agent-row-state .sidebar-status {
+  width: 100%;
+  height: 100%;
+}
+
+/* Actions (menu button) */
 .agent-actions {
   display: flex;
   align-items: center;
-  flex: 0 0 auto;
-  width: 0;
-  overflow: hidden;
+  gap: var(--space-1);
   opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
 }
 
 .agent-item:focus-within > .agent-actions,
 .agent-item.is-selected > .agent-actions,
 .agent-actions:has([aria-expanded="true"]) {
-  width: auto;
-  overflow: visible;
   opacity: 1;
 }
 
 @media (hover: hover) {
   .agent-item:hover > .agent-actions {
-    width: auto;
-    overflow: visible;
     opacity: 1;
   }
 }
 
-/* as a workspace row's (Sidebar.css): no "..." button where there is a mouse and room for a right-click */
 @media (pointer: fine) and (min-width: 769px) {
-  .agent-actions { display: none; }
+  .agent-actions {
+    display: none;
+  }
 }
 
-.agent-copy {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-/* the title and the place; on One line they share a line (below), else each has its own */
-.agent-main { display: contents; }
-
-.agent-title,
-.agent-context,
-.agent-tokens {
-  overflow: hidden;
-  line-height: var(--lh-tight);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.agent-title {
-  color: var(--text);
-  font-size: var(--fs-md);
-  font-weight: var(--fw-regular);
-}
-
-.agent-item.is-selected .agent-title { color: var(--text-strong); }
-
-.agent-title-line {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.agent-context {
-  color: var(--text-dim);
-  font-size: var(--fs-xs);
-}
-
-/* What herdr plugins report on the pane (its `$name` tokens: usage left, a task's progress): a
-   line of its own under the place, in either row height, only where the pane has one. Values
-   change while they are read, so their digits keep their width. */
-.agent-tokens {
-  color: var(--text-dim);
-  font-size: var(--fs-xs);
-  font-variant-numeric: tabular-nums;
-}
-
-/* the live name is what a command names the agent by: it reads in the command's face */
-.agent-name {
-  color: var(--text);
-  font-family: var(--font-mono);
-}
-
-/* Settings -> Sidebar rows -> One line: a workspace row's height, the place dim after the title.
-   The title keeps its width first; the place takes what is left and gives way with an ellipsis.
-   A pane's plugin tokens add their line under it. */
-.agents-sidebar.is-one-line .agent-row { min-height: var(--side-row); }
-
-.agents-sidebar.is-one-line .agent-main {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.agents-sidebar.is-one-line .agent-title-line { flex: 0 1 auto; }
-
-.agents-sidebar.is-one-line .agent-context {
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-.agent-row-status {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-}
-
-.agent-row > .agent-row-state {
-  position: absolute;
-  inset-block: 0;
-  right: 0;
+.sidebar-row-action.row-menu-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--side-box);
+  width: 28px;
+  height: 28px;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
-.agent-item.is-offline { opacity: 0.5; }
+.sidebar-row-action.row-menu-toggle:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+}
 
+.sidebar-row-action.row-menu-toggle:focus-visible {
+  outline: var(--ring);
+  outline-offset: calc(var(--ring-offset) * -1);
+}
+
+/* Pinned section */
+.sidebar-pinned {
+  background: var(--sidebar-pinned-bg);
+  border: var(--hairline) solid var(--sidebar-pinned-border);
+  border-radius: var(--sidebar-radius);
+  overflow: hidden;
+}
+
+.sidebar-pinned + ul {
+  margin-top: var(--space-2);
+}
+
+.sidebar-pinned-label {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--space-3);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  background: color-mix(in srgb, var(--sidebar-pinned-bg) 80%, transparent);
+  border-bottom: var(--hairline) solid var(--sidebar-pinned-border);
+}
+
+.sidebar-pinned-label svg {
+  width: 14px;
+  height: 14px;
+  margin-right: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* Empty state */
 .agent-empty {
-  margin: 0;
-  padding: var(--space-2) var(--space-2) var(--space-2) var(--side-box);
+  display: flex;
+  align-items: center;
+  min-height: var(--side-row);
+  padding: 0 var(--space-2);
   color: var(--text-dim);
   font-size: var(--fs-sm);
 }
 
+/* One-line mode (Settings → Sidebar rows → One line) */
+.agents-sidebar.is-one-line .agent-item {
+  min-height: var(--side-row);
+}
+
+.agents-sidebar.is-one-line .agent-main {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.agents-sidebar.is-one-line .agent-title-line {
+  flex: 0 1 auto;
+}
+
+.agents-sidebar.is-one-line .agent-context {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Touch adjustments */
 @media (pointer: coarse), (any-pointer: coarse) {
-  .agent-section-caret { opacity: 1; }
-
-  /* Row menus stay visible on touch or any touch-capable device. */
-  .agent-actions {
-    width: auto;
-    overflow: visible;
-    opacity: 1;
+  .agent-item {
+    min-height: var(--touch-target);
   }
 }
 
-/* As a workspace row's (Sidebar.css): a narrow window keeps the menu button visible instead of
-   waiting for a hover that may never come. */
+/* Narrow window: always show menu button */
 @media (max-width: 768px) {
-  .agent-actions {
-    width: auto;
-    overflow: visible;
-    opacity: 1;
+  @media (hover: hover) {
+    .agent-actions {
+      opacity: 1;
+    }
   }
 }
 
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .agent-item { transition: none; }
+  .agent-item,
+  .agent-section-toggle,
+  .agent-section-caret,
+  .sidebar-row-action {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
-/* a finger presses a row as an iPhone list row is pressed: it fills, it does not dim (styles.css) */
+/* Touch press */
 @media (hover: none) and (pointer: coarse) {
-  .agent-row:enabled:active { opacity: 1; }
-  .agent-item:has(> .agent-row:enabled:active) { background: var(--side-hover); }
+  .agent-item:active {
+    background: var(--side-hover);
+  }
+}
+
+/* ============================================================================
+   COLLAPSED / RAIL MODE (769px+)
+   ============================================================================ */
+
+@media (min-width: 769px) {
+  .app.sidebar-collapsed .agent-section-toggle {
+    justify-content: center;
+    min-height: var(--side-row);
+    padding: 0 var(--side-gutter);
+  }
+
+  .app.sidebar-collapsed .agent-section-toggle > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .app.sidebar-collapsed .agent-section-caret {
+    opacity: 1;
+    transform: rotate(-90deg);
+  }
+
+  .app.sidebar-collapsed .agents-sidebar:not(.is-collapsed) .agent-section-caret {
+    transform: rotate(0deg);
+  }
+
+  .app.sidebar-collapsed .agent-item {
+    justify-content: center;
+    min-height: var(--side-row);
+    padding-right: 0;
+  }
+
+  .app.sidebar-collapsed .agent-copy {
+    display: none;
+  }
+
+  .app.sidebar-collapsed .agent-row-status {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: auto;
+    height: auto;
+  }
+
+  .app.sidebar-collapsed .agent-actions {
+    display: none;
+  }
+
+  /* Pinned section in rail */
+  .app.sidebar-collapsed .sidebar-pinned {
+    padding: 0;
+    border: 0;
+  }
+
+  .app.sidebar-collapsed .sidebar-pinned-label {
+    display: none;
+  }
+
+  /* Hover/focus expansion */
+  .app.sidebar-collapsed .agents-sidebar:hover .agent-section-toggle > span,
+  .app.sidebar-collapsed .agents-sidebar:focus-within .agent-section-toggle > span {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: nowrap;
+  }
+
+  .app.sidebar-collapsed .agents-sidebar:hover .agent-item .agent-copy,
+  .app.sidebar-collapsed .agents-sidebar:focus-within .agent-item .agent-copy {
+    display: flex;
+  }
+
+  .app.sidebar-collapsed .agents-sidebar:hover .agent-item,
+  .app.sidebar-collapsed .agents-sidebar:focus-within .agent-item {
+    justify-content: start;
+    padding-right: var(--space-2);
+  }
+
+  .app.sidebar-collapsed .agents-sidebar:hover .agent-row-status,
+  .app.sidebar-collapsed .agents-sidebar:focus-within .agent-row-status {
+    position: static;
+  }
 }

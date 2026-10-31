@@ -1,463 +1,392 @@
-/* One PC per group: its name is the head of its workspaces. The monitor sits in the rows'
-   leading cell, over the workspaces' folders, and the state line starts where the name does.
-   The fold and the + close the header at its right. */
+/* Machines — redesigned to match new sidebar visual system */
+
 .machine-list {
-  position: relative;
-  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1 1 auto;
   min-height: 0;
-  padding-top: var(--space-2);
   overflow-y: auto;
-  overscroll-behavior: contain;
-  scroll-padding-bottom: var(--space-4);
+  padding: var(--space-2) var(--side-gutter);
 }
 
-/* When every PC is folded, keep this section at its headings instead of reserving the whole
-   flexible column, whether or not Agents has rows: a visible Agents list takes the space below
-   it (AgentSidebar.css) and the footer stays at the bottom (Sidebar.css). */
+/* When every PC is folded, keep this section at its headings */
 .sidebar-shell:not(:has(.machine-list .machine-workspaces)) .machine-list {
   flex: 0 1 auto;
 }
 
-/* spacer at the bottom of the machine list: a subtle fade signals scroll continuation */
+/* Spacer at the bottom of the machine list */
 .machine-list::after {
   content: "";
-  position: sticky;
-  bottom: 0;
-  display: block;
-  height: var(--space-4);
-  background: linear-gradient(to bottom, transparent, var(--bg-sidebar));
-  pointer-events: none;
+  flex: 0 0 var(--space-4);
 }
-
-.machine-list > .tree-state { padding-left: calc(var(--side-gutter) + var(--side-box)); }
 
 .machine-group {
-  --machine-indent: calc(var(--side-gutter) + var(--side-box));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
-.machine-group + .machine-group { margin-top: var(--space-4); }
+.machine-group + .machine-group {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--hairline) solid var(--sidebar-divider);
+}
 
+/* Machine header — matches .sidebar-section-header */
 .machine-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--side-box) 1fr auto;
   align-items: center;
-  padding: 0 var(--side-gutter);
+  gap: var(--space-2);
+  min-height: var(--side-row);
+  padding: 0 var(--space-2);
+  border-radius: var(--sidebar-radius);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.machine-header:hover {
+  background: var(--side-hover);
+}
+
+.machine-header:focus-visible {
+  outline: var(--ring);
+  outline-offset: calc(var(--ring-offset) * -1);
 }
 
 .machine-title {
   display: flex;
   align-items: center;
-  flex: 1 1 auto;
+  gap: var(--space-2);
   min-width: 0;
-  min-height: var(--side-row);
-  color: var(--text-strong);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
-  line-height: var(--lh-tight);
+}
+
+.machine-title .sidebar-mark {
+  flex: 0 0 var(--side-box);
+  width: var(--side-box);
 }
 
 .machine-name {
-  min-width: 0;
+  font-weight: var(--fw-medium);
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .machine-kind {
-  flex: none;
-  margin-left: var(--space-2);
-  color: var(--text-dim);
   font-size: var(--fs-xs);
-  font-weight: var(--fw-regular);
-}
-
-.machine-dot {
-  flex: none;
-  width: var(--dot-size);
-  height: var(--dot-size);
-  margin-left: var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--status-idle);
-}
-
-.machine-dot.is-connected { background: var(--status-done); }
-.machine-dot.is-error { background: var(--status-blocked); }
-
-.machine-dot.is-connecting,
-.machine-dot.is-reconnecting {
-  background: var(--status-working);
-  animation: pulse var(--dur-pulse) var(--ease-pulse) infinite;
-}
-
-/* the + fills the rows' status cell */
-.machine-new { width: var(--side-box); }
-
-/* An SSH PC's manage button takes no room until its header is hovered or focused, its panel is
-   open or the PC is not connected. It stays in the focus order. */
-.machine-manage {
-  width: 0;
-  overflow: hidden;
-  opacity: 0;
-}
-
-.machine-header:focus-within > .machine-manage,
-.machine-manage[aria-expanded="true"],
-.machine-group.is-offline .machine-manage {
-  width: var(--side-action);
-  overflow: visible;
-  opacity: 1;
-}
-
-@media (hover: hover) {
-  .machine-header:hover > .machine-manage {
-    width: var(--side-action);
-    overflow: visible;
-    opacity: 1;
-  }
-}
-
-@media (pointer: coarse) {
-  .machine-manage {
-    width: var(--side-action);
-    overflow: visible;
-    opacity: 1;
-  }
-
-  .machine-new {
-    width: var(--touch-target);
-    height: var(--touch-target);
-    margin-right: calc((var(--side-box) - var(--touch-target)) / 2);
-  }
+  color: var(--text-dim);
+  text-transform: lowercase;
+  flex-shrink: 0;
 }
 
 .machine-state {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--hairline) * 2);
-  margin: 0;
-  padding: 0 var(--side-gutter) var(--space-2) var(--machine-indent);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
   font-size: var(--fs-xs);
-  line-height: var(--lh-tight);
-}
-
-.machine-state-word {
   color: var(--text-dim);
-  font-weight: var(--fw-medium);
+  flex-shrink: 0;
 }
 
-.machine-state.is-error .machine-state-word { color: var(--status-blocked); }
-.machine-state.is-connecting .machine-state-word,
-.machine-state.is-reconnecting .machine-state-word { color: var(--status-working); }
+.machine-state-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
 
-/* the server's own words can run long (socket paths): two lines, the full text on hover */
-.machine-state-detail {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.machine-group.is-connected .machine-state-dot {
+  color: var(--status-done);
+}
+
+.machine-group.is-connecting .machine-state-dot,
+.machine-group.is-reconnecting .machine-state-dot {
+  color: var(--status-working);
+  animation: sidebar-pulse var(--dur-pulse) var(--ease-pulse) infinite;
+}
+
+.machine-group.is-error .machine-state-dot,
+.machine-group.is-offline .machine-state-dot {
+  color: var(--status-blocked);
+}
+
+.machine-fold,
+.machine-new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--side-box);
+  height: var(--side-box);
   color: var(--text-dim);
-  overflow-wrap: anywhere;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
-/* the step to take when the server's words name one (MachineSidebar.tsx): a notch above its words */
-.machine-state-next {
+.machine-fold:hover:not(:disabled),
+.machine-new:hover:not(:disabled) {
+  background: var(--bg-hover);
   color: var(--text);
 }
 
-.machine-empty {
-  padding: 0 var(--side-gutter) var(--space-2) var(--machine-indent);
+.machine-new:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--primary-text);
 }
 
-.machine-offline { opacity: 0.5; }
-
-.machine-controls {
-  display: grid;
-  gap: var(--space-2);
-  margin: 0 var(--space-3) var(--space-2);
-  padding: var(--space-3);
-  background: var(--bg-elevated);
-  border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
+.machine-fold:focus-visible,
+.machine-new:focus-visible {
+  outline: var(--ring);
+  outline-offset: calc(var(--ring-offset) * -1);
 }
 
-.machine-controls form,
-.machine-control-buttons {
+.machine-new:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Machine state line */
+.machine-state-line {
   display: flex;
-  flex-wrap: wrap;
-  align-items: end;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--side-row);
+  padding: 0 calc(var(--side-gutter) + var(--side-box) + var(--space-2));
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+}
+
+.machine-state-line.is-connected {
+  color: var(--text-dim);
+}
+
+.machine-state-line.is-connecting,
+.machine-state-line.is-reconnecting {
+  color: var(--status-working);
+}
+
+.machine-state-line.is-error {
+  color: var(--status-blocked);
+}
+
+.machine-state-word {
+  font-weight: var(--fw-medium);
+}
+
+.machine-state-detail {
+  overflow-wrap: anywhere;
+  opacity: 0.8;
+}
+
+.machine-state-next {
+  color: var(--text);
+  font-weight: var(--fw-medium);
+}
+
+/* Machine controls (editing) */
+.machine-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-elevated);
+  border: var(--hairline) solid var(--sidebar-border);
+  border-radius: var(--sidebar-radius);
+  margin: 0 var(--space-2) var(--space-2);
+}
+
+.machine-controls form {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-2);
 }
 
 .machine-controls .field {
-  flex: 1;
-  min-width: 0;
-  margin-bottom: 0;
-}
-
-.machine-dialog {
-  width: min(560px, calc(100vw - 24px));
-  max-height: calc(100dvh - 24px);
-  padding: 0;
-  border: var(--hairline) solid var(--border-strong);
-  color: var(--text);
-}
-
-/* The only native <dialog> in the app, so it has no .modal-scrim ancestor and the phone
-   bottom-sheet rules in styles.css never reach it: it stays a centred card on a phone. A dialog
-   opened with showModal() lives in the top layer and is centred by the UA's `margin: auto`,
-   clamped by its `max-width`/`max-height` and stretched by `inset: 0`, so the sheet form needs
-   all three reset, not just a border radius. */
-@media (max-width: 640px) {
-  .machine-dialog {
-    width: 100%;
-    max-width: none;
-    max-height: 92%;
-    margin: auto auto 0;
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-}
-
-/* the phone's keyboard is up (lib/viewport.ts): as the sheet does, this one ends where the
-   keyboard begins instead of sitting behind it — the same reason styles.css drops the sheet's
-   bottom padding here */
-@media (max-width: 640px) {
-  [data-keyboard] .machine-dialog {
-    inset-block-start: 0;
-    inset-block-end: auto;
-    height: var(--app-height, 100%);
-    margin-block: auto 0;
-    padding-bottom: 0;
-  }
-}
-
-.machine-dialog::backdrop { background: var(--scrim); }
-
-.machine-dialog .modal-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.machine-dialog form,
-.machine-advanced {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.machine-advanced { padding-top: var(--space-3); }
-
-.machine-dialog summary {
-  padding: var(--space-2) 0;
-  cursor: pointer;
-}
-
-.machine-challenge pre {
-  font-size: var(--fs-sm);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-/* the host-key question: the fingerprint to compare, one sentence, ssh's own words folded */
-.machine-fingerprint-label {
-  margin: 0 0 var(--space-1);
-  color: var(--text-dim);
-  font-size: var(--fs-xs);
-}
-
-.machine-fingerprint {
-  margin: 0;
-  color: var(--text-strong);
-  font-family: var(--font-mono);
-  font-size: var(--fs-md);
-  overflow-wrap: anywhere;
-}
-
-.machine-challenge > .field-hint {
-  margin: var(--space-3) 0 0;
-}
-
-.machine-ssh-fold > summary {
-  position: relative;
-  width: fit-content;
-  color: var(--text-dim);
-  font-size: var(--fs-xs);
-  cursor: pointer;
-}
-
-/* a finger's floor: the toggle keeps its one line and takes a --touch-target hit area, both ways,
-   through an invisible expander around it */
-@media (pointer: coarse) {
-  .machine-ssh-fold > summary::before {
-    content: "";
-    position: absolute;
-    inset: calc((1lh - var(--touch-target)) / 2) min(0px, calc((100% - var(--touch-target)) / 2));
-  }
-}
-
-.machine-ssh-fold pre {
-  margin: var(--space-1) 0 0;
-}
-
-.machine-progress {
-  padding: var(--space-3);
-  background: var(--bg-hover);
-  border-radius: var(--radius-md);
-  overflow-wrap: anywhere;
-}
-
-/* what ssh printed while it waits: a check URL to visit, a banner; bounded, the newest lines stay */
-.machine-ssh-output {
-  max-height: 9em;
-  margin: var(--space-2) 0 0;
-  padding: var(--space-2);
-  overflow: auto;
-  background: var(--bg-input);
-  border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: var(--fs-xs);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.machine-ssh-output a {
-  color: var(--accent);
-  text-decoration: underline;
-  text-underline-offset: var(--space-1);
-}
-
-.machine-install-list {
-  padding-left: var(--space-5);
-  line-height: 1.7;
-}
-
-.machine-error {
-  margin: 0;
-  color: var(--status-blocked);
-  font-size: var(--fs-xs);
-  overflow-wrap: anywhere;
-}
-
-.machine-group > .machine-error {
-  padding: 0 var(--space-3) var(--space-2) var(--machine-indent);
-}
-
-.machine-context-name {
-  max-width: 140px;
-  overflow: hidden;
-  color: var(--text-strong);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .machine-dot.is-connecting,
-  .machine-dot.is-reconnecting { animation: none; }
-}
-
-/* a PC that retrying cannot reconnect: the next step, spelled out, with its button */
-.machine-action {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-2);
-  margin: 0 var(--space-3) var(--space-2) var(--machine-indent);
-  padding: var(--space-2) var(--space-3);
-  border: var(--hairline) solid var(--status-blocked);
-  border-radius: var(--radius-md);
-  background: var(--bg-elevated);
-  font-size: var(--fs-xs);
-  line-height: var(--lh-tight);
+  gap: var(--space-1);
 }
 
-.machine-action-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-  color: var(--text-dim);
-}
-
-.machine-action-text strong {
-  color: var(--status-blocked);
-  font-weight: var(--fw-medium);
-}
-
-
-.machine-action-buttons {
+.machine-control-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
 }
 
-.machine-action-reason {
-  overflow-wrap: anywhere;
+.machine-error {
+  margin: var(--space-1) var(--space-2) var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-xs);
+  color: var(--status-blocked);
+  background: color-mix(in srgb, var(--status-blocked) 10%, transparent);
+  border: var(--hairline) solid var(--status-blocked);
+  border-radius: var(--sidebar-radius);
 }
 
-.machine-action.is-updating {
-  border-color: var(--border);
-  width: calc(100% - var(--space-3) - var(--machine-indent));
-}
-
-/* a bridge install: the step, a bar, the bytes and time left */
-.bridge-progress {
+/* Machine workspaces container */
+.machine-workspaces {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  width: 100%;
 }
 
-.bridge-progress-step {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin: 0;
-  color: var(--text-strong);
+/* Offline state */
+.machine-offline {
+  opacity: 0.5;
 }
 
-.bridge-progress-count,
-.bridge-progress-detail {
+/* Empty state */
+.machine-empty {
+  padding: var(--space-2) var(--space-3);
   color: var(--text-dim);
-  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-sm);
 }
 
-.bridge-progress-detail { margin: 0; }
+/* Touch adjustments */
+@media (pointer: coarse), (any-pointer: coarse) {
+  .machine-header,
+  .machine-fold,
+  .machine-new {
+    min-height: var(--touch-target);
+  }
 
-.bridge-progress-bar {
-  position: relative;
-  height: 6px;
-  overflow: hidden;
-  border-radius: var(--radius-pill);
-  background: var(--bg);
+  .machine-fold,
+  .machine-new {
+    width: var(--touch-target);
+    height: var(--touch-target);
+  }
 }
 
-.bridge-progress-bar span {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: inherit;
-  background: var(--status-working);
-  transition: width 0.3s ease;
-}
-
-/* no size to measure (install, restart): a band that keeps moving */
-.bridge-progress-bar span.is-indeterminate {
-  width: 35%;
-  animation: bridge-progress-slide 1.4s ease-in-out infinite;
-}
-
-@keyframes bridge-progress-slide {
-  from { left: -35%; }
-  to { left: 100%; }
-}
-
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .bridge-progress-bar span { transition: none; }
-  .bridge-progress-bar span.is-indeterminate { left: 0; width: 100%; animation: none; opacity: 0.5; }
+  .machine-header,
+  .machine-fold,
+  .machine-new,
+  .machine-state-dot {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
-/* an update in progress is news, not an error */
-.machine-action.is-updating .machine-action-text strong { color: var(--status-working); }
+/* Touch press */
+@media (hover: none) and (pointer: coarse) {
+  .machine-header:active {
+    background: var(--side-hover);
+  }
+}
 
-.machine-action.is-setup { border-color: var(--border); }
-.machine-action.is-setup .machine-action-text strong { color: var(--text); }
+/* ============================================================================
+   COLLAPSED / RAIL MODE (769px+)
+   ============================================================================ */
+
+@media (min-width: 769px) {
+  .app.sidebar-collapsed .machine-header {
+    justify-content: center;
+    min-height: var(--side-row);
+    padding: 0 var(--side-gutter);
+  }
+
+  .app.sidebar-collapsed .machine-title {
+    justify-content: center;
+  }
+
+  .app.sidebar-collapsed .machine-name,
+  .app.sidebar-collapsed .machine-kind {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .app.sidebar-collapsed .machine-fold,
+  .app.sidebar-collapsed .machine-new,
+  .app.sidebar-collapsed .machine-manage {
+    display: none;
+  }
+
+  .app.sidebar-collapsed .machine-state {
+    position: absolute;
+    top: var(--space-1);
+    right: var(--space-1);
+  }
+
+  .app.sidebar-collapsed .machine-state-line {
+    display: none;
+  }
+
+  .app.sidebar-collapsed .machine-controls,
+  .app.sidebar-collapsed .machine-action {
+    display: none;
+  }
+
+  /* Hover expansion: show name/kind/state on hover */
+  .app.sidebar-collapsed .machine-group:hover .machine-header :is(.machine-name, .machine-kind, .machine-state),
+  .app.sidebar-collapsed .machine-group:focus-within .machine-header :is(.machine-name, .machine-kind, .machine-state) {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: nowrap;
+  }
+
+  .app.sidebar-collapsed .machine-group:hover .machine-new,
+  .app.sidebar-collapsed .machine-group:focus-within .machine-new,
+  .app.sidebar-collapsed .machine-group:hover .machine-fold,
+  .app.sidebar-collapsed .machine-group:focus-within .machine-fold {
+    display: inline-flex;
+  }
+
+  /* Expand machine's workspace list on hover */
+  .app.sidebar-collapsed .machine-group:hover > .machine-workspaces,
+  .app.sidebar-collapsed .machine-group:focus-within > .machine-workspaces {
+    position: absolute;
+    left: var(--sidebar-rail-w);
+    top: 0;
+    min-width: 260px;
+    max-height: 100vh;
+    overflow-y: auto;
+    background: var(--sidebar-bg);
+    border: var(--hairline) solid var(--sidebar-border);
+    border-left: none;
+    border-radius: 0 var(--sidebar-radius) var(--sidebar-radius) 0;
+    box-shadow: var(--shadow-pop);
+    z-index: var(--z-popover);
+    padding: var(--space-2);
+  }
+
+  .app.sidebar-collapsed .machine-group:hover > .machine-workspaces .sidebar-row-content,
+  .app.sidebar-collapsed .machine-group:focus-within > .machine-workspaces .sidebar-row-content {
+    display: flex;
+  }
+
+  .app.sidebar-collapsed .machine-group:hover > .machine-workspaces .sidebar-row,
+  .app.sidebar-collapsed .machine-group:focus-within > .machine-workspaces .sidebar-row {
+    justify-content: start;
+    padding-right: var(--space-2);
+  }
+
+  .app.sidebar-collapsed .machine-group:hover > .machine-workspaces .sidebar-row-meta,
+  .app.sidebar-collapsed .machine-group:focus-within > .machine-workspaces .sidebar-row-meta {
+    position: static;
+  }
+}
+
+/* Mobile drawer */
+@media (max-width: 768px) {
+  .machine-list {
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  }
+}
