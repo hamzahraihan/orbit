@@ -7,16 +7,7 @@ import { describeProgress } from "../lib/bridgeProgress.ts";
 import { keepDismissed, noticeKey, readDismissed, waitingMachines, writeDismissed } from "../lib/machineNotice.ts";
 import type { AppActions } from "../lib/actions.ts";
 import { useInstallPrompt } from "../lib/install.ts";
-import { workspaceMonogram } from "../components/WorkspaceMonogram.tsx";
-
-/** Machine lifecycle states read as agent-like status on the rail mark. */
-const MACHINE_STATUS: Readonly<Record<MachineState, "idle" | "working" | "blocked" | "done" | "waiting" | "unknown">> = {
-  connecting: "waiting",
-  connected: "idle",
-  reconnecting: "waiting",
-  disconnected: "unknown",
-  error: "blocked",
-};
+import { WorkspaceMonogram } from "./WorkspaceMonogram.tsx";
 import { Sidebar } from "./Sidebar.tsx";
 import { AgentSidebar } from "./AgentSidebar.tsx";
 import { SidebarActivityProvider, useSidebarActivityState } from "../lib/sidebarActivity.tsx";
@@ -27,6 +18,15 @@ import { Button, Input } from "../lib/heroui/orbit-components.tsx";
 import { useT } from "../lib/i18n.ts";
 import { useAnnouncedText } from "../lib/useAnnouncedText.ts";
 import { saysHerdrAway } from "../lib/userError.ts";
+
+/** Machine lifecycle states read as agent-like status on the rail mark. */
+const MACHINE_STATUS: Readonly<Record<MachineState, "idle" | "working" | "blocked" | "done" | "waiting" | "unknown">> = {
+  connecting: "waiting",
+  connected: "idle",
+  reconnecting: "waiting",
+  disconnected: "unknown",
+  error: "blocked",
+};
 
 /** The PC header's state word; "connected" is the quiet default and shows as a dot alone, every other state also writes its word under the name. */
 export const STATE_WORD: Readonly<Record<MachineState, string>> = {
