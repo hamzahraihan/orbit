@@ -558,12 +558,15 @@ try {
     assert.equal(await page.evaluate(() => history.state?.["herdr-web-ui:file-preview"]), undefined, `${close} consumes the preview entry under a page the reader navigated inside its frame`);
   }
   console.log("PASS from 980px a page the reader navigated inside its frame still closes on Close file and Escape, consuming the preview's entry");
-  // a file chosen in the Files dialog opens in the panel, and the dialog, which would cover it, closes
+  // a file chosen in the Files browser takes the column, media too and whatever Open files says,
+  // and the browser waits behind it
   await openFiles(page);
-  const filesDialog = page.getByRole("dialog", { name: "Files", exact: true });
+  // the browser is a dialog below 980px and a column beside the pane from there
+  const filesDialog = page.getByRole("dialog", { name: "Files", exact: true }).or(page.getByRole("complementary", { name: "Files", exact: true }));
   await filesDialog.getByRole("button", { name: /preview\.webm/ }).click();
-  await page.locator(".modal.file-viewer video").waitFor();
-  assert.equal(await filesDialog.count(), 1, "a media popup stacks over Files");
+  await panel.locator("video").waitFor();
+  assert.equal(await page.locator(".modal.file-viewer").count(), 0, "a media file chosen in Files docks rather than popping up over the browser");
+  assert.equal(await filesDialog.count(), 0, "a file chosen in Files stands over the browser");
   await preview.getByRole("button", { name: "Close file", exact: true }).click();
   await preview.waitFor({ state: "detached" });
   await filesDialog.waitFor();
@@ -573,7 +576,7 @@ try {
   await panel.getByRole("button", { name: "Close file", exact: true }).click();
   await panel.waitFor({ state: "detached" });
   assert.equal(await page.evaluate(() => history.state?.["herdr-web-ui:file-preview"]), undefined, "Close file consumes the entry of a file opened from Files");
-  console.log("PASS from 980px a file opened from the Files dialog shows in the panel and the dialog closes");
+  console.log("PASS from 980px a file opened from the Files browser shows in the panel, over the browser, which returns as it closes");
 
   for (const [label, content] of [["extensionless", "Extensionless text"], ["unknown text", "Unknown extension text"]] as const) {
     const link = page.getByRole("button", { name: label, exact: true });

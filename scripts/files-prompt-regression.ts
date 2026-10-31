@@ -49,24 +49,29 @@ async function checkFiles(page: Page, label: string, phone: boolean, paneA: stri
   assert.equal(await selectedPane(page), paneA);
   if (phone) await runMoreItem(page, "Browse files");
   else await page.getByRole("button", { name: "Browse files", exact: true }).click();
-  const dialog = page.locator(".files-dialog");
+  // a wide window docks the browser beside the pane; a phone opens it over the pane as a sheet
+  const browser = phone ? ".files-dialog" : ".files-panel";
+  const dialog = page.locator(browser);
   await dialog.waitFor();
-  await page.waitForFunction((folder) => document.querySelector(".files-dialog .dir-browser-path")?.getAttribute("title") === folder, cwdA);
+  await page.waitForFunction(([folder, at]) => document.querySelector(`${at} .dir-browser-path`)?.getAttribute("title") === folder, [cwdA, browser]);
   await dialog.locator(".dir-browser-item", { hasText: "sub" }).click();
-  await page.waitForFunction((folder) => document.querySelector(".files-dialog .dir-browser-path")?.getAttribute("title") === folder, join(cwdA, "sub"));
+  await page.waitForFunction(([folder, at]) => document.querySelector(`${at} .dir-browser-path`)?.getAttribute("title") === folder, [join(cwdA, "sub"), browser]);
   await page.screenshot({ path: join(shots, `files-${label}-before-switch.png`) });
   await page.keyboard.press("Control+Shift+ArrowDown");
   await page.waitForFunction((id) => JSON.parse(sessionStorage.getItem("herdr-web-ui:selection") ?? "null")?.pane_id === id, paneB);
-  const outcome = await page.waitForFunction((folder) => {
-    const current = document.querySelector(".files-dialog");
+  const outcome = await page.waitForFunction(([folder, at]) => {
+    const current = document.querySelector(at);
     return current === null ? "closed" : current.querySelector(".dir-browser-path")?.getAttribute("title") === folder ? "followed" : false;
-  }, cwdB, { timeout: 3_000 }).then((handle) => handle.jsonValue() as Promise<string>).catch(() => "stuck");
+  }, [cwdB, browser], { timeout: 3_000 }).then((handle) => handle.jsonValue() as Promise<string>).catch(() => "stuck");
   await page.screenshot({ path: join(shots, `files-${label}-after-switch.png`) });
   const pass = outcome !== "stuck";
   results.push({ scenario: "Files follows pane switch", page: label, pass });
   console.log(`${pass ? "PASS" : "FAIL"} Files ${label}: ${outcome}`);
   if (await dialog.isVisible()) {
-    await page.keyboard.press("Escape");
+    // docked, Escape is the pane's when the focus is there (the shortcut just moved it), so the
+    // panel's own Close puts it away; the sheet still closes on Escape
+    if (phone) await page.keyboard.press("Escape");
+    else await dialog.getByRole("button", { name: "Close files", exact: true }).click();
     await dialog.waitFor({ state: "hidden" });
   }
   // The shortcut is intentionally global, including while the Files dialog is open.

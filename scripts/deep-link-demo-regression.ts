@@ -25,7 +25,11 @@ const waitQuery = (page: Page, name: string, value: string | null) => page.waitF
 async function withPage(browser: Browser, search: string, run: (page: Page) => Promise<void>): Promise<void> {
   const context = await browser.newContext({ viewport: { width: 1280, height: 860 }, locale: "en-US" });
   try {
-    await context.addInitScript(() => localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en", fileOpen: "panel" })));
+    await context.addInitScript(() => {
+      localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en", fileOpen: "panel" }));
+      // the welcome card covers every click it would otherwise land
+      localStorage.setItem("herdr-web-ui:onboarded", "1");
+    });
     const page = await context.newPage();
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
@@ -131,6 +135,7 @@ try {
         // after a reload marked to hold it, the PC list (its fetch and its stream) waits for __releaseRoster
         await heldContext.addInitScript(`
           localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en" }));
+          localStorage.setItem("herdr-web-ui:onboarded", "1");
           const hold = sessionStorage.getItem("hold-roster") === "1";
           sessionStorage.removeItem("hold-roster");
           let release = () => {};
@@ -362,11 +367,34 @@ try {
       });
       console.log("PASS the agent picker stays open when a text field scrolls and closes when its anchor moves; its keys scroll the list alone");
 
-      // sidebar=hidden opens a desktop with the sidebar collapsed; the address follows the toggle both ways
+      // sidebar=hidden opens a desktop with the sidebar minimized to its rail (styles.css): the
+      // column stays, a mark a row, and the words wait for the sidebar; the address follows the
+      // toggle both ways
       await withPage(browser, `?ws=${wsOf(INFRA)}&pane=${encodeURIComponent(INFRA)}&sidebar=hidden`, async (page) => {
         await page.locator(".app.sidebar-collapsed").waitFor();
         await waitQuery(page, "pane", INFRA);
         assert.equal((await query(page))["sidebar"], "hidden");
+        const rail = await page.evaluate(() => {
+          const box = (selector: string) => document.querySelector<HTMLElement>(selector)?.getBoundingClientRect() ?? null;
+          const sidebar = document.querySelector<HTMLElement>(".sidebar")!;
+          const toggle = document.querySelector<HTMLElement>(".sidebar-toggle")!;
+          return {
+            shown: getComputedStyle(sidebar).display !== "none",
+            width: sidebar.getBoundingClientRect().width,
+            /* the row's own mark: a workspace with worktrees also carries a hidden face in its fold */
+            mark: box(".sidebar .workspace-select .sidebar-mark")?.width ?? 0,
+            newWorkspace: box(".sidebar .sidebar-new")?.width ?? 0,
+            title: Boolean(document.querySelector<HTMLElement>(".sidebar .workspace-select")?.title),
+            expanded: toggle.getAttribute("aria-pressed"),
+          };
+        });
+        assert.ok(rail.shown, "the collapsed sidebar is still drawn");
+        assert.ok(rail.width > 0 && rail.width < 80, `it takes a rail's width: ${JSON.stringify(rail)}`);
+        assert.ok(rail.mark > 0, "a workspace's mark shows in the rail");
+        assert.ok(rail.newWorkspace > 0, "New workspace keeps its glyph");
+        assert.ok(rail.title, "a row's tooltip still says what it opens");
+        assert.equal(rail.expanded, "false", "the toggle says the sidebar is collapsed");
+        if (process.env.UI_EVIDENCE_DIR) await page.screenshot({ path: join(process.env.UI_EVIDENCE_DIR, "sidebar-rail-1280.png") });
         await page.locator(".sidebar-toggle").click();
         await page.locator(".app:not(.sidebar-collapsed)").waitFor();
         await waitQuery(page, "sidebar", null);
@@ -377,7 +405,10 @@ try {
       {
         const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: "en-US" });
         try {
-          await phone.addInitScript(() => localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en" })));
+          await phone.addInitScript(() => {
+          localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en" }));
+          localStorage.setItem("herdr-web-ui:onboarded", "1");
+        });
           const page = await phone.newPage();
           await page.goto(`${url}?ws=${wsOf(INFRA)}&pane=${encodeURIComponent(INFRA)}&sidebar=shown`);
           await page.locator('.drawer-toggle[aria-expanded="true"]').waitFor();
@@ -397,7 +428,7 @@ try {
           await phone.close();
         }
       }
-      console.log("PASS sidebar=hidden collapses a desktop's sidebar and the address follows the toggle; sidebar=shown opens a phone's drawer");
+      console.log("PASS sidebar=hidden minimizes a desktop's sidebar to its rail, its marks in reach, and the address follows the toggle; sidebar=shown opens a phone's drawer");
 
       // a link to a PC this app does not have opens this PC, and says so
       await withPage(browser, `?machine=nope&pane=${encodeURIComponent(INFRA)}`, async (page) => {
@@ -412,6 +443,7 @@ try {
       try {
         await delayedContext.addInitScript(`
           localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en" }));
+          localStorage.setItem("herdr-web-ui:onboarded", "1");
           let released = false, fullMachines = null;
           const deliveries = [];
           const hold = machines => {
@@ -507,7 +539,10 @@ try {
       // Files offers no palette entry on a phone; resizing restores it.
       const palettePhone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: "en-US" });
       try {
-        await palettePhone.addInitScript(() => localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en" })));
+        await palettePhone.addInitScript(() => {
+          localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en" }));
+          localStorage.setItem("herdr-web-ui:onboarded", "1");
+        });
         const page = await palettePhone.newPage();
         await page.goto(`${url}?pane=${encodeURIComponent(INFRA)}`);
         await waitSelected(page, INFRA);
@@ -519,7 +554,8 @@ try {
         assert.equal(await search.count(), 1, "More offers Search panes and actions");
         assert.equal((await more.locator(".row-sheet-item .row-sheet-label").allTextContents())[0], "Search panes and actions", "Search panes and actions is More's first item");
         await more.getByRole("button", { name: "Browse files", exact: true }).tap();
-        const files = page.getByRole("dialog", { name: "Files", exact: true });
+        // a phone shows the browser over the pane; the resize below docks it beside the pane
+        const files = page.getByRole("dialog", { name: "Files", exact: true }).or(page.getByRole("complementary", { name: "Files", exact: true }));
         await files.waitFor();
         // New folder belongs to New workspace's Browse; the Files browser only reads
         await files.locator(".dir-browser-bar").first().waitFor({ state: "attached" });
@@ -552,7 +588,10 @@ try {
       // closed by Cancel or by an item leaves no entry behind, so the next Back goes to the pane before
       const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: "en-US" });
       try {
-        await phone.addInitScript(() => localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en" })));
+        await phone.addInitScript(() => {
+          localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en" }));
+          localStorage.setItem("herdr-web-ui:onboarded", "1");
+        });
         const page = await phone.newPage();
         const errors: string[] = [];
         page.on("pageerror", (error) => errors.push(error.message));

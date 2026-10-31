@@ -17,7 +17,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { chromium, type Page } from "playwright-core";
+import { chromium, type Locator, type Page } from "playwright-core";
 import { build as viteBuild } from "vite";
 import { repoDiffResponse } from "../server/repo-diff.ts";
 import { serveStatic } from "../server/static.ts";
@@ -152,14 +152,17 @@ async function api(request: Request, url: URL): Promise<Response | null> {
 /** The diff's rows in its shadow DOM, a self-contained reader serialized into each `evaluate`. */
 const diffRows = () => Array.from(document.querySelector(".repo-diff diffs-container")?.shadowRoot?.querySelectorAll<HTMLElement>("[data-line]") ?? []);
 
+/** The Files browser: a column beside the pane on a wide window, a dialog over the pane below 980px. */
+const filesBrowser = (page: Page): Locator => page.getByRole("dialog", { name: "Files", exact: true }).or(page.getByRole("complementary", { name: "Files", exact: true }));
+
 async function openFiles(page: Page, paneId: string, machine = "local"): Promise<void> {
   await page.evaluate(([paneId, machine, directory]) => window.repoDiffQA.openFiles(machine, paneId, directory), [paneId, machine, panes.get(paneId) ?? "/nowhere"] as const);
-  await page.getByRole("dialog", { name: "Files", exact: true }).waitFor();
+  await filesBrowser(page).waitFor();
   await page.getByRole("button", { name: "Changes", exact: true }).click();
 }
 async function closeFiles(page: Page): Promise<void> {
   await page.evaluate(() => window.repoDiffQA.closeFiles());
-  await page.getByRole("dialog", { name: "Files", exact: true }).waitFor({ state: "detached" });
+  await filesBrowser(page).waitFor({ state: "detached" });
 }
 /** The Changes list once it has answered for `scope`: its rows as `mark path counts`. */
 async function changeRows(page: Page, scope = "workspace"): Promise<string[]> {
@@ -471,7 +474,7 @@ try {
     await page.locator(".repo-diff-viewer").waitFor();
     await page.keyboard.press("Escape");
     await page.locator(".repo-diff-viewer").waitFor({ state: "detached" });
-    await page.getByRole("dialog", { name: "Files", exact: true }).waitFor();
+    await filesBrowser(page).waitFor();
     console.log(`PASS ${label}: Open file shows the file above the diff; Escape closes the file, then the diff, and the list stays`);
 
     // Back and Close return the focus to the row that opened the diff
@@ -601,7 +604,7 @@ try {
     await page.goto(`http://127.0.0.1:${demoServer.port}/herdr-web-ui/demo/app/`);
     // a computer's header opens Files from its own button (the More menu keeps it on a phone)
     await page.locator(".header-files-button").click();
-    await page.getByRole("dialog", { name: "Files", exact: true }).waitFor();
+    await filesBrowser(page).waitFor();
     await page.getByRole("button", { name: "Changes", exact: true }).click();
     const demoRows = await changeRows(page);
     assert.deepEqual(demoRows, ["M docs/checkout-flow.png Binary", "R src/idempotency.ts → src/lib/idempotency.ts +0−0", "? src/money.test.ts", "M src/money.ts +4−1"], `the demo's changes: ${JSON.stringify(demoRows)}`);

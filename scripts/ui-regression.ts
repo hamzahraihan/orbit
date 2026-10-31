@@ -791,9 +791,11 @@ try {
   await page.keyboard.press("Escape");
   await page.locator(".row-menu").waitFor({ state: "detached" });
   await filesButton.click();
-  await page.getByRole("dialog", { name: "Files", exact: true }).waitFor();
+  // a wide window docks the browser beside the pane, where it is a column rather than a dialog
+  const filesBrowser = page.getByRole("dialog", { name: "Files", exact: true }).or(page.getByRole("complementary", { name: "Files", exact: true }));
+  await filesBrowser.waitFor();
   await page.getByRole("button", { name: "Close files", exact: true }).click();
-  await page.getByRole("dialog", { name: "Files", exact: true }).waitFor({ state: "detached" });
+  await filesBrowser.waitFor({ state: "detached" });
   // before the permission question is answered the item already reads as on: in-app alerts show
   assert.equal(await alertsState(page), "On in the app");
   assert.equal(await alertsOffMarked(page), false, "alerts that are on leave the More button unmarked");
