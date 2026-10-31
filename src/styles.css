@@ -184,6 +184,7 @@
   --dot-size: 7px;
   --rail-w: 3px;
   --hairline: 1px;
+  --content-w: 820px;
   /* the chat lane: transcript, composer column, held list (Settings → Chat width, lib/settings.ts).
      At the Default step PaneTerminal writes the pane's own lane on .terminal-stack, as one
      length (chatLaneLength: 71.43% of the pane in px, min 820px, max 60rem), and a file viewer
