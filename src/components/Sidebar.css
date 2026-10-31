@@ -77,6 +77,21 @@ button.sidebar-section-label:focus-visible { outline-offset: calc(var(--ring-off
   color: var(--text);
 }
 
+/* Monograms in rail mode */
+.workspace-mark-rail {
+  display: none;
+}
+
+.app.sidebar-collapsed .workspace-icon-terminal {
+  display: none;
+}
+
+.app.sidebar-collapsed .workspace-mark-rail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* also the connecting shell's one line, which sits outside the grid */
 .tree-state {
   margin: 0;

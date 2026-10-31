@@ -10,6 +10,7 @@ import { useInstallPrompt } from "../lib/install.ts";
 import { Sidebar } from "./Sidebar.tsx";
 import { AgentSidebar } from "./AgentSidebar.tsx";
 import { SidebarActivityProvider, useSidebarActivityState } from "../lib/sidebarActivity.tsx";
+import { RailFlyout } from "./RailFlyout.tsx";
 import "./Machines.css";
 
 import { Button, Input } from "../lib/heroui/orbit-components.tsx";
@@ -61,6 +62,7 @@ function MachineGroup({ machine, ...props }: Props & { machine: Machine }) {
   const [name, setName] = useState(machine.name);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [flyoutAnchor, setFlyoutAnchor] = useState<HTMLElement | null>(null);
   const online = machine.state === "connected";
   // a PC that waits on the user, or is updating, shows its notice in the state line's place
   const noticed = Boolean(machine.action_required || machine.updating);
@@ -96,7 +98,15 @@ function MachineGroup({ machine, ...props }: Props & { machine: Machine }) {
   };
   // the PC's name is the head of its workspaces, and the caret beside its + the one fold over them
   return <section className={`machine-group${props.selectedMachineId === machine.id ? " is-current" : ""}${online ? "" : " is-offline"}`} aria-label={t("PC {name}", { name: machine.name })}>
-    <header className="machine-header">
+    <header
+      className="machine-header"
+      title={`${machine.name} (${machine.kind === "local" ? t("Host") : "SSH"}) — ${stateWord ?? t(STATE_WORD[machine.state])}`}
+      onPointerEnter={(e) => { if (e.pointerType === "mouse") setFlyoutAnchor(e.currentTarget); }}
+      onPointerLeave={() => setFlyoutAnchor(null)}
+      onFocus={(e) => setFlyoutAnchor(e.currentTarget)}
+      onBlur={() => setFlyoutAnchor(null)}
+      tabIndex={0}
+    >
       <div className="machine-title">
         <span className="sidebar-mark" aria-hidden="true"><Monitor /></span>
         <span className="machine-name">{machine.name}</span>
@@ -108,6 +118,14 @@ function MachineGroup({ machine, ...props }: Props & { machine: Machine }) {
       {/* the fold over this PC's workspaces sits beside the + */}
       <button className="sidebar-row-action machine-toggle" aria-expanded={!collapsed} aria-label={collapsed ? t("Expand {name}", { name: machine.name }) : t("Collapse {name}", { name: machine.name })} title={collapsed ? t("Expand {name}", { name: machine.name }) : t("Collapse {name}", { name: machine.name })} onClick={toggle}>{collapsed ? <ChevronRight aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}</button>
       <button className="sidebar-row-action machine-new" disabled={!online} aria-label={t("New workspace on {name}", { name: machine.name })} title={t("New workspace")} onClick={() => props.onNew(machine.id)}><Plus aria-hidden="true" /></button>
+      <RailFlyout
+        anchor={flyoutAnchor}
+        open={flyoutAnchor !== null}
+        title={machine.name}
+        subtitle={machine.kind === "local" ? t("Host machine") : t("Remote PC (SSH)")}
+        detail={stateWord ?? t(STATE_WORD[machine.state])}
+        onClose={() => setFlyoutAnchor(null)}
+      />
     </header>
     {/* connected is the norm and says nothing new; every other state is spelled out */}
     {noticed && <MachineActionNotice machine={machine} onSetup={props.onSetup} />}

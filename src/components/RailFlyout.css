@@ -1,0 +1,74 @@
+.rail-flyout {
+  position: fixed;
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 160px;
+  max-width: 280px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-panel);
+  border: var(--hairline) solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  pointer-events: none;
+  font-family: var(--font-sans);
+  color: var(--text);
+  line-height: 1.35;
+  animation: rail-flyout-in var(--dur-fast) var(--ease-out);
+}
+
+@keyframes rail-flyout-in {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.rail-flyout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.rail-flyout-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-flyout-status {
+  display: inline-flex;
+  align-items: center;
+}
+
+.rail-flyout-subtitle {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-flyout-detail {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-flyout-content {
+  margin-top: var(--space-1);
+  font-size: var(--fs-xs);
+  color: var(--text);
+}

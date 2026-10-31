@@ -16,6 +16,7 @@ import { currentSidebarPins, pruneSidebarPins, setSidebarPins, sidebarPinKey, sp
 import { PANE_DRAG_TYPE, paneDragData } from "../lib/split.ts";
 import { AgentMark, hasAgentMark } from "./AgentMark.tsx";
 import { RowMenu } from "./RowMenu.tsx";
+import { RailFlyout } from "./RailFlyout.tsx";
 import { BackgroundBadge, displayPaneTitle, onRowContextMenu, PlanBadge, StatusBadge } from "./Sidebar.tsx";
 import "./AgentSidebar.css";
 
@@ -89,6 +90,7 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
   const t = useT();
   const listId = useId();
   const [collapsed, setCollapsed] = useState(() => window.matchMedia?.(DRAWER_QUERY).matches === true);
+  const [agentFlyout, setAgentFlyout] = useState<{ anchor: HTMLElement; title: string; subtitle?: string | null; detail?: string | null } | null>(null);
   const { settings } = useSettings();
   // shared with the other browsers of this server (lib/preferencesSync.ts)
   const pinned = useSyncExternalStore(subscribeSidebarPins, currentSidebarPins, currentSidebarPins);
@@ -156,7 +158,39 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
     return <li className={`agent-item${selected ? " is-selected" : ""}${online ? "" : " is-offline"}`} key={paneStorageId(machine.id, pane.pane_id)} data-machine={machine.id} data-pane={pane.pane_id} data-pin-key={pinKey}
       onMouseDownCapture={(event) => { if (event.button === 2 || (event.button === 0 && event.ctrlKey)) event.preventDefault(); }}
       onContextMenu={(event) => onRowContextMenu(event, toggleMenu)}>
-      <button type="button" className="agent-select agent-row" disabled={!online} aria-current={selected ? "true" : undefined} title={tooltip} onClick={() => onSelect(machine.id, pane.pane_id)}
+      <button
+        type="button"
+        className="agent-select agent-row"
+        disabled={!online}
+        aria-current={selected ? "true" : undefined}
+        title={tooltip}
+        onClick={() => onSelect(machine.id, pane.pane_id)}
+        onPointerEnter={(e) => {
+          if (e.pointerType === "mouse") {
+            setAgentFlyout({
+              anchor: e.currentTarget,
+              title,
+              subtitle: [markKind, name, agent?.display_agent].filter(Boolean).join(" · ") || null,
+              detail: context || (online ? null : stateWord(machine)),
+            });
+          }
+        }}
+        onPointerLeave={() => setAgentFlyout(null)}
+        onFocus={(e) => {
+          setAgentFlyout({
+            anchor: e.currentTarget,
+            title,
+            subtitle: [markKind, name, agent?.display_agent].filter(Boolean).join(" · ") || null,
+            detail: context || (online ? null : stateWord(machine)),
+          });
+        }}
+        onBlur={() => setAgentFlyout(null)}
+        onKeyDown={(e) => {
+          if ((e.key === "Enter" && (e.metaKey || e.ctrlKey)) || e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
+            e.preventDefault();
+            toggleMenu(e.currentTarget);
+          }
+        }}
         draggable={online}
         // dropped on the pane area, the row opens its pane in half of it (lib/split.ts)
         onDragStart={(event) => {
@@ -210,5 +244,13 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
         ? { id: "unpin", label: t("Unpin agent"), icon: PinOff, run: () => runPin(menu) }
         : { id: "pin", label: t("Pin agent"), icon: Pin, run: () => runPin(menu) },
     ]} />}
+    <RailFlyout
+      anchor={agentFlyout?.anchor ?? null}
+      open={agentFlyout !== null}
+      title={agentFlyout?.title ?? ""}
+      subtitle={agentFlyout?.subtitle}
+      detail={agentFlyout?.detail}
+      onClose={() => setAgentFlyout(null)}
+    />
   </section>;
 }

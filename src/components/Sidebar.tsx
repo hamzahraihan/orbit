@@ -13,6 +13,8 @@ import type { AppActions } from "../lib/actions.ts";
 import { indicatorGlyph, knownStatus, rollupStatus, STATUS_SENTENCE, STATUS_WORD } from "../lib/status.ts";
 import { AgentMark } from "./AgentMark.tsx";
 import { WorkspaceFavicon } from "./WorkspaceFavicon.tsx";
+import { WorkspaceMonogram } from "./WorkspaceMonogram.tsx";
+import { RailFlyout } from "./RailFlyout.tsx";
 import { ConfirmDialog } from "./ConfirmDialog.tsx";
 import { RowMenu, type RowMenuItem } from "./RowMenu.tsx";
 import { WorktreeDialog, type WorktreeDialogMode } from "./WorktreeDialog.tsx";
@@ -240,6 +242,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
   const [touchDrag, setTouchDrag] = useState<{ source: string; over: string | null } | null>(null);
   // the browser's drag and drop is a mouse's: on a touch screen a long press lifts the row instead
   const coarsePointer = useMediaQuery("(pointer: coarse)");
+  const [hoverFlyout, setHoverFlyout] = useState<{ anchor: HTMLElement; workspace: WorkspaceInfo; pane: PaneInfo; title: string; subtitle?: string | null; detail?: string | null; statusBadge?: React.ReactNode } | null>(null);
   const [inlineError, setInlineError] = useState<InlineError | null>(null);
   const rosterId = useId();
   const workspaceRoot = useRef<HTMLDivElement>(null);
@@ -353,11 +356,20 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
    * What leads a row: the coding agent in the pane the row opens, so the mark never promises an
    * agent a click would not reach. A shell is a terminal, a linked worktree without an agent its branch.
    */
-  const rowMark = (pane: PaneInfo, linked: boolean) => {
+  const rowMark = (pane: PaneInfo, linked: boolean, label?: string) => {
     const mark = paneMark(agentByPane.get(pane.pane_id));
     return (
       <span className="sidebar-mark" aria-hidden="true">
-        {mark !== null ? <AgentMark agent={mark} size={18} /> : linked ? <GitBranch /> : <Terminal />}
+        {mark !== null ? (
+          <AgentMark agent={mark} size={18} />
+        ) : linked ? (
+          <GitBranch />
+        ) : (
+          <>
+            <Terminal className="workspace-icon-terminal" />
+            {label && <span className="workspace-mark-rail"><WorkspaceMonogram label={label} size={20} /></span>}
+          </>
+        )}
       </span>
     );
   };
@@ -692,17 +704,47 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
           aria-current={selected ? "true" : undefined}
           title={[`${pane.pane_id} — ${rowTitle}`, branchNote, ...paths, paneTitle(pane), agentsTitle(workspace)].filter(Boolean).join(" — ")}
           onClick={() => actions.selectPane(pane.pane_id)}
+          onPointerEnter={(event) => {
+            if (event.pointerType === "mouse") {
+              setHoverFlyout({
+                anchor: event.currentTarget,
+                workspace,
+                pane,
+                title: rowTitle,
+                subtitle: branchLine || secondaryBranch || (paths[0] ? folderName(paths[0]) : null),
+                detail: paths[0] || null,
+                statusBadge: online && pane.restore_error ? <RestoreErrorBadge reason={pane.restore_error} /> : <StatusBadge compact status={online ? rollupStatus(statusPanes.map((candidate) => activity.status(machineId, candidate))) : undefined} />,
+              });
+            }
+          }}
+          onPointerLeave={() => setHoverFlyout(null)}
+          onFocus={(event) => {
+            setHoverFlyout({
+              anchor: event.currentTarget,
+              workspace,
+              pane,
+              title: rowTitle,
+              subtitle: branchLine || secondaryBranch || (paths[0] ? folderName(paths[0]) : null),
+              detail: paths[0] || null,
+              statusBadge: online && pane.restore_error ? <RestoreErrorBadge reason={pane.restore_error} /> : <StatusBadge compact status={online ? rollupStatus(statusPanes.map((candidate) => activity.status(machineId, candidate))) : undefined} />,
+            });
+          }}
+          onBlur={() => setHoverFlyout(null)}
           onKeyDown={(event) => {
             onRowKeyDown(event, workspace.workspace_id);
             if (event.defaultPrevented) return;
+            if ((event.key === "Enter" && (event.metaKey || event.ctrlKey)) || event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) {
+              event.preventDefault();
+              toggleMenu(event.currentTarget);
+              return;
+            }
             if (event.key !== "Enter" && event.key !== " ") return;
             event.preventDefault();
             actions.selectPane(pane.pane_id);
           }}
         >
-          {rowMark(pane, workspace.worktree?.is_linked_worktree === true)}
+          {rowMark(pane, workspace.worktree?.is_linked_worktree === true, rowTitle)}
           {editingWorkspace ? <input
-            className="input workspace-rename-input"
             aria-label={t("Workspace name")}
             autoFocus
             maxLength={MAX_LABEL_CHARS}
@@ -799,6 +841,15 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
         if (opened.agent_started === true) actions.agentStarted(machineId, opened.pane_id);
         actions.selectPane(opened.pane_id);
       }} />}
+      <RailFlyout
+        anchor={hoverFlyout?.anchor ?? null}
+        open={hoverFlyout !== null}
+        title={hoverFlyout?.title ?? ""}
+        subtitle={hoverFlyout?.subtitle}
+        detail={hoverFlyout?.detail}
+        statusBadge={hoverFlyout?.statusBadge}
+        onClose={() => setHoverFlyout(null)}
+      />
     </div>
   );
 }
