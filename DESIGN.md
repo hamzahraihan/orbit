@@ -950,7 +950,8 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   shows. For any other workspace it is a dim glyph or the icon, and no control. Worktree rows have no folder: they sit one cell in, their marks under the parent's.
   Worktree folds are remembered at
   `herdr-web-ui:worktree-group-collapsed:<machineId>:<repo_key>`; a folded group keeps the selected
-  child visible, and status snapshots preserve a deliberate fold.
+  child visible, and status snapshots preserve a deliberate fold. Its hover card stands at the
+  list's left edge, level with the row; the collapsed rail opens it beside the mark.
 - Worktree branches come from the existing `GET /api/worktree/list`, matched by repository key,
   open workspace ID and normalized checkout path. A listing-confirmed detached checkout reads
   **Detached HEAD**; without matching branch metadata, the workspace name remains the fallback.
@@ -975,8 +976,11 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   place beside it, and the tooltip keeps the name. Its background-task count and
   compact status sit at the right. A pane that waits for an answer is not listed apart or moved
   up: its state shows on its workspace row and its agent row, and the alerts say the rest. Pane state is
-  authoritative when the agent roster and pane status differ. The workspace and agent lists
-  share the existing combined machine roster and its SSE updates; neither adds a status subscription.
+  authoritative when the agent roster and pane status differ. Pointing at or focusing a row opens
+  its card level with that row at the list's left edge; the collapsed rail opens it beside the
+  mark. The card stays while the chat scrolls, follows its row when its own list scrolls, and hides
+  while the row is scrolled out of view. The workspace and agent lists share the existing combined
+  machine roster and its SSE updates; neither adds a status subscription.
   A disconnected PC's saved workspace and agent rows are dimmed, inert and draw no state until that PC reconnects.
 - What herdr plugins report on a pane (its `tokens`, `herdr pane report-metadata --token`: the Quota
   plugin's usage left, a task's progress) is a line of its own under an agent row's place, on One
@@ -1887,9 +1891,13 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   held modifiers. Restore defaults returns the original row. The keyboard mode control stays first.
 - A font family is a text field saved when it is left, on Enter or when the dialog closes, not
   per keystroke.
-- Remote PCs: an **Add PC** row (label, one-line description, button) opens the PC
-  setup dialog and closes Settings behind it; when that dialog closes, focus lands on the header's
-  workspace-list toggle. Under the row, once the server has answered, the bridge auto-update switch.
+- Remote PCs: an **Add PC** row (label, one-line description, button) opens the PC setup as a
+  step inside Settings, the way the key bar editor does: the header grows a Back control and reads
+  **Add PC**, Back and Escape return to Remote PCs with focus on the row, and nothing opens over
+  the settings it came from. The same setup component still backs the command palette's Add PC
+  dialog and a PC's Reconnect PC and Update remote bridge entries; embedded, it takes the settings
+  body's padding and scroll, draws its own rule and Cancel, and a Connect closes Settings and opens
+  the new PC. Under the row, once the server has answered, the bridge auto-update switch.
 - Install (a row of the Phone group) reflects installed, promptable or browser-instructions state;
   About links the repository.
 - The running versions are always written, since the sidebar carries none. About opens with
