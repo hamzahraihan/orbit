@@ -125,7 +125,7 @@ Copyright (c) 2026 T3 Tools Inc.
 - `src/lib/typography.ts`, `src/lib/settings.ts`, `src/components/SettingsDialog.tsx` <-
   `apps/web/src/appearanceFonts.ts`,
   `apps/web/src/components/settings/SettingsPanels.tsx`
-- `src/components/Composer.tsx`, `src/components/Composer.css`, `src/lib/composerStrip.ts` <-
+- `src/components/Composer.tsx`, `src/components/Composer.css` <-
   `apps/web/src/components/chat/ComposerSurface.tsx`,
   `apps/web/src/components/chat/ComposerControl.tsx`,
   `apps/web/src/components/chat/ChatComposer.tsx`

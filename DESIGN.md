@@ -27,8 +27,11 @@ stays over the terminal and in the palette. Sections are parted by space and a d
 a rule; the Agents list's workspace cards are an edge around rows, not a line between sections.
 Hover and selection share one neutral fill; the chosen workspace or agent row takes it flat, with
 no colored rail. Brand marks are the only other color there, and a ready row draws no state at all.
-Collapsed to the desktop rail, the same rows keep their leading mark and their state badge, and the
-title, the tokens and the row actions wait for the sidebar (styles.css).
+Collapsed to the desktop rail, a row keeps its leading mark and its state as one dot on the
+square's top-right corner; the chosen row is the rail's single filled `--accent` square, its mark
+reversed to white, so selection never reads as one more tinted row. The marks keep whatever Agent
+logos says (Color or Mono). The title, the tokens and the row actions wait for the sidebar
+(styles.css).
 Rose connects focus, the chosen lens glyph, the chosen row and the terminal cursor.
 
 Messages say only what the person needs now, not everything the app knows:
@@ -621,7 +624,7 @@ All spacing derives from a 4px base.
 | `--radius-md` | `8px` | Buttons, inputs, selected rows |
 | `--radius-lg` | `12px` | Menus and chat surfaces |
 | `--radius-xl` | `16px` | Modals and bottom sheets |
-| `--radius-2xl` | `24px` | The composer's input card |
+| `--radius-2xl` | `24px` | Dialogs and popover menus |
 | `--radius-pill` | `999px` | Pills and dots |
 
 ### Sizes
@@ -727,10 +730,13 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
   `--sidebar-shown-w`. A phone's drawer keeps `--sidebar-w`.
 - The sidebar keeps its width on desktop until its edge is dragged, and is a `<=768px` drawer. The
   desktop collapse minimizes it to an icon rail rather than removing it: `--sidebar-shown-w` becomes
-  `--sidebar-rail-w` (`--control-h` + `--space-4`, so it follows the density), one mark a row, its
-  state a badge at the row's top-right corner, and a row's tooltip what it opens. Its New workspace
+  `--sidebar-rail-w` (`--sidebar-rail-item` plus a `--space-2` gutter on each side), one mark a row,
+  its state a single dot at the row's top-right corner, and a row's tooltip what it opens. The rail is
+  the sidebar's own column, flush with the canvas and sharing its right hairline; it is not a card
+  floating over the panes, and it is not inset from the header. Its New workspace
   and search stand as their glyphs, a PC leads its marks with its monitor and its dot, the Agents
-  head keeps only its fold caret, and the footer keeps the gear; `⋯`, a worktree's face and fold, a
+  head is its count alone (no word, no fold caret, and `0` in place of an empty list's sentence),
+  and the footer keeps the gear; `⋯`, a worktree's face and fold, a
   PC's `+` and fold, Install app and the setup panel leave with the words. Words are clipped, never
   `display: none`, so every control keeps the name a reader hears; the seam's grip goes too. The rail
   follows VS Code's activity bar: the column stays under the header, and the header itself stays one
@@ -1062,8 +1068,10 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   on touch. Connected is the dot alone; every other state is also written under the name, with the server's
   error clamped to two lines and complete in the tooltip.
 - A repository's worktree workspaces (`workspace.worktree.is_linked_worktree`)
-  sit indented under the row of the workspace on its main checkout (`.worktree-children`), without
-  a tree hairline; a worktree whose repository workspace is not open stays at the top level.
+  sit indented under the row of the workspace on its main checkout (`.worktree-children`), on a
+  `--hairline` `--border-strong` branch that leaves that row's folder: a tee for each child and an
+  elbow on the last, so the group closes before the next repository. A worktree whose repository
+  workspace is not open stays at the top level.
 - Rows use only shared theme tokens in dark and light. Touch keeps row menus and folds visible,
   with `--touch-target` controls, and draws no hover fill; reduced motion removes row transitions
   and keeps the working dot's breath (opacity only).
@@ -1439,7 +1447,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
 
 ### Plan (`.bg-tasks-plan`, `.bg-step`, `.plan-count`)
 - A pane's plan has no control of its own: it shares the composer's background-task chip
-  (`.bg-tasks-toggle`, beside the add button in the input card's last row). With a plan the chip
+  (`.bg-tasks-toggle`, beside the Attach pill in the input card's last row). With a plan the chip
   starts with the list-checks glyph, the word **Plan** and `done/total` in tabular figures; running
   background tasks follow after a hairline as their glyph and number. The chip keeps the working
   tint while a step or a task is left, and goes quiet once every step is done and nothing runs. A
@@ -1539,33 +1547,33 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   transcript's end as an iPhone's input bar does: the composer rises `--composer-over`
   (`--space-8`) into the transcript, whose last lines fade into `--bg` and blur behind the card on
   `--card-glass` and `--glass-blur`.
-  The input box is a card: `--bg-elevated`, hairline border, `--radius-2xl`, `--shadow-card`
-  (the only other card on this surface is the prompt card docked over it, while an agent asks);
-  focus turns its border `--accent` (no inner outline). Above it the notices (below), the
+  The input box is the pane's floor, not a card floating over the chat: `--bg-composer` (the
+  elevated surface at 80%, so the transcript's fade shows through its top on a phone), a
+  `--border` hairline, `--radius-xl` at its two top corners and none at the bottom, where its edge
+  is the pane's, and no shadow (nothing is under it to lift it from; the only other card on this
+  surface is the prompt card docked over it, while an agent asks). The band a home indicator sits
+  in is the card's own bottom padding, so a phone's fill reaches the edge. Focus turns its border
+  `--border-strong` (no inner outline). Above it the notices (below), the
   completion popover and the background-task list; inside, the image strip is its own row at the top, then the auto-growing
   message box as a row of its own at the card's full width (each tile's X is a `--chip-h` circle
   with a mouse, reaching `--pointer-target` through an invisible `::before` expander; under a
   coarse pointer the button itself grows to `--touch-target` wide and `--touch-target` plus
-  `--space-1` tall), then ONE row of controls under it:
-  on the left the add button (lucide `Plus`, named "Attach files"), the mic when voice input
-  shows it (see Voice input), and the background-task chip; on the right the status content and ONE round Send/Stop button.
-  The message's text starts `--space-4` in (`--space-3` on a phone, `480px` and below).
-- The strip (`.composer-strip`) tucked under the card, as t3code's composer context strip: the
-  card's own `--bg-elevated` with a `--border` hairline, inset on each side by the card's radius
-  (`--radius-2xl`, never under `--space-5`) so it stays under the card's straight bottom edge,
-  its top `--space-4` under the card, where the card's hairline and `--shadow-card` part the two,
-  and only its bottom corners rounded (`--radius-xl`); `--space-5` top padding (so `--space-1`
-  shows under the card), `--space-3` at the sides, `--space-1` under. It names the pane's
-  working folder at its start (lucide `Folder`, the folder's last name, the whole path in its
-  `title`) and the branch at its end (lucide `GitBranch`), each a glyph the text's size and a
-  name in `--text-dim` at `--fs-xs`, `--chip-h` tall; a name that does not fit is cut short.
-  A linked worktree's folder takes lucide `FolderGit2` and the word Worktree after its name, in
-  a `--border` hairline box with `--radius-sm` corners.
-  Nothing in it is pressed. `composerStrip` (`src/lib/composerStrip.ts`) decides what it draws from
-  the composer's optional `cwd` and `branch`: a blank one is absent, and with neither there is no
-  strip at all. A phone (`640px` and below, or a coarse pointer) draws no strip: the screen is the
-  conversation's. The card stands over it (`z-index: 1`, so its popovers go with it and still rise
-  over the transcript).
+  `--space-1` tall), then ONE row under it that leads with who answers and carries the actions:
+  the model label at the start of the row, on the line the message's text starts on (`--space-4`
+  in, `--space-3` on a phone at `480px` and below), then the action pills — `Attach` (lucide
+  `Paperclip` and its word, named "Attach files"), the mic when voice input shows it (see Voice
+  input) and the background-task chip — and at the far end ONE square Send/Stop button. The
+  model leads, the actions follow it, and nothing sits between the two groups.
+- An action is a labelled pill (`.composer-pill-button`, `--control-h` tall, `--radius-pill`,
+  `--bg-hover` on hover): no fill, so its `--border-strong` hairline is the button, its glyph a
+  `--space-4` `--text-dim`, its word `--fs-xs` at `--fw-medium`. The mic inside the controls
+  wears that same edge (`.composer-controls .voice-mic`, a circle of the same height), so the
+  row's actions read as one set and the chip alone carries a tint; the edge is `--border-strong`
+  rather than `--card-border` because the latter is the dark card's light wash and would vanish
+  on a light surface.
+- Nothing sits under the card: it names no working folder and no branch (the pane's header crumb
+  and the sidebar carry them), and its bottom edge is the pane's own. The card stands over it
+  (`z-index: 1`, so its popovers go with it and still rise over the transcript).
 - Empty chat (`.composer-greeting`): one line on the composer's column, directly over it,
   `What should <agent> do in <folder>?` in `--text-strong`, `--fs-display`, `--fw-semibold`, `--tracking-display`, centred,
   and under it `PC · full path` in `--text-dim`, `--fs-sm`. Both wrap anywhere. While dictation's
@@ -1582,22 +1590,27 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   own empty line. While the composer is lifted, the completion menu's height is capped to the
   room over the input card, where it scrolls. On a coarse pointer the greeting takes no touch:
   a tap or drag on it reaches the chat under it, which puts the keyboard away.
-- The round button (`.composer-action`, a `--space-8` / `32px` circle with a `--space-4` glyph) is
-  Send or Stop in the same place at the same size, so only the glyph changes: Send is `--primary`
-  with lucide `ArrowUp`; Stop is `--text-strong` with a `--bg` square, and turns
-  `--status-blocked` on hover and focus. Not connected, Stop is disabled and loses its fill
-  (`--border-strong` outline, `--text-dim` glyph). A coarse pointer keeps that compact visible
-  circle inside a transparent `--touch-target` / `44px` button, so tapping remains easy.
-- The status content (`.composer-status`, `role="status"`) sits between the two control groups,
-  pushed to the button's side. It draws, at `--fs-xs`: the model pill and the uploading
-  or reconnecting sentence in `--text-dim`. The background-task chip is a button in the left controls;
+- The round button (`.composer-action`, a `36px` square with a `--radius-lg` / `12px` corner and
+  a `--space-8` / `32px` fill inside it, the card's own corner rather than a footer's circle) is
+  Send or Stop in the same place at the same size, so only the glyph changes: Send is the accent's
+  tint (`--accent` at 32% behind lucide `ArrowUp` in `--accent` mixed toward `--text-strong`)
+  rather than a full-strength fill, so the row has one raised way out and no shout beside the
+  pills; Stop is `--text-strong` with a `--bg` square, and turns `--status-blocked` on hover and
+  focus. Not connected, Stop is disabled and loses its fill (`--border-strong` outline,
+  `--text-dim` glyph). A coarse pointer keeps that compact visible square inside a transparent
+  `--touch-target` / `44px` button, so tapping remains easy.
+- The status content (`.composer-status`, `role="status"`) leads the card's last row, at its
+  start, on the message's text line; the actions follow it and the button holds the end. It
+  draws, at `--fs-xs`: the model pill and the uploading
+  or reconnecting sentence in `--text-dim`. The background-task chip is a button in the controls;
   its count is repeated here as `.visually-hidden` text, so a change is still announced. The agent's written name, its separator, the state words
   `READY` / `RUN` / `INPUT` / `DONE` / `BACKGROUND` and the sentence `Reasoning high` stay in it for assistive tech only
   (`.visually-hidden`): the header names the pane, and the state is told by Stop, the live row
   and the prompt card. No state word is drawn in the chat composer.
 - The model pill (`.composer-pill`) holds the agent mark, the model, the reasoning level and the
-  context ring in one quiet surface: `--bg-hover` fill, `--radius-pill`, `--control-h` tall,
-  `--space-3` inline padding, `--space-2` between its parts. The model is in `--text` at
+  context ring in one quiet run: no fill of its own (the row's only fills are the chip and the
+  button), no inline padding, `--control-h` tall, `--space-2` between its parts, so the label
+  stands directly on the card as its leading text. The model is in `--text` at
   `--fw-medium`; the level follows a middle dot in `--text-dim`, as the agent's own words with
   only the first letter drawn as a capital (`::first-letter`, the text is not rewritten); a pane
   that records no level draws no dot and no dash, only the name. On the
@@ -1661,14 +1674,15 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   of its own under it, without its leading dot, and wraps there; its `title` repeats it. Only
   the sentence takes a line: the mark, the model, the level and the ring stay one row over it
   (`.composer-status-meta`), where the label gives way exactly as it does with no sentence. The
-  status content is then left-aligned, beside the add button. In a narrow card (`data-compact`,
-  below `640px`) add, the icons and the round button at touch size leave it too little of the
-  row for a word, so while a sentence shows the status content takes a row of its own over them,
-  the card's width (`.composer-surface[data-compact]:has(> .composer-status[data-hint])`): the
-  sentence is read whole beside the model pill or under it, from where the message's text
-  starts, add and the round button keep their row, and the card grows by that row while the
-  sentence shows. The primary control and add are disabled. With a draft, the reconnecting sentence is said instead of
-  `Uploading file…`, never both: the attachment's own tile says it is uploading.
+  status content then takes the card's full width over the actions
+  (`.composer-surface:has(> .composer-status[data-hint])`), so the sentence is read whole on the
+  card's own inset, the label and the pills keep one row under it and the card grows by that row
+  while the sentence shows — in a narrow card below `640px` too, where the actions at touch size
+  would leave the sentence no room of its own. The label and the pills share that edge in both
+  rows (`--space-4` inside the card, `--space-1` on a phone), so a sentence over the actions
+  leaves one straight column rather than two. The primary control and the pills are disabled.
+  With a draft, the reconnecting sentence is said instead of `Uploading file…`, never both: the
+  attachment's own tile says it is uploading.
 - The stack over the input card, on its column, is written once (PaneTerminal): held messages,
   then the prompt card (see Prompt card), then the input card. The notices are the input card's
   own: they stand inside the composer, over the card and its quick replies, so they move with it
@@ -1747,7 +1761,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
 - Enter sends and Shift+Enter breaks by default; with **Enter sends** off, Mod+Enter sends. On touch screens the same device setting is shown inverted as **Return inserts a new line**, with Send and hardware Mod+Enter explained below it. IME Enter is ignored. Stop sends Escape. While the agent works and a draft shows Send in Stop's place, Escape in the box is Stop; an open completion menu takes the first Escape, and its X in the top corner (`.composer-menu-close`, Close suggestions, sticky over the rows it scrolls; the first row leaves it room) does the same for a pointer or a phone, which has no Escape, keeping the text and the focus in the box. T3 Code's command menu closes on Escape alone. Working Send schedules a pending message; its Send now action submits that same message now.
 
 ### Voice input
-- A mic button sits beside the add button in the composer and beside Send in the terminal input line; it
+- A mic button sits beside the Attach pill in the composer and beside Send in the terminal input line; it
   fills with `--accent` while recording. Dictated text is inserted at the caret, never sent.
 - `voiceInput`: `auto`, `on` or `off`; default `auto`. Auto puts the mic in the composer only, not on
   a phone (the composer's `(max-width: 640px), (pointer: coarse)`), and leaves it out where dictation
@@ -2028,7 +2042,7 @@ The values are the ones in `src/styles.css`.
 | Tinted lift | Named tint over an opaque surface | Primary and agent states |
 | Drawer shadow | `--shadow-drawer` | Mobile drawer |
 | Overlay shadow | `--shadow-pop` | Menus, palette and modal cards |
-| Card shadow | `--shadow-card` | The composer's input box — the one resting card in chat mode |
+| Card shadow | `--shadow-card` | A lifted canvas row (`.is-lifted`); the composer has none, standing on the pane's floor |
 
 ## 8. Accessibility Constraints & Accepted Debt
 
