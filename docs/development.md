@@ -2,16 +2,19 @@
 
 ## Run it
 
-Run the server and Vite side by side:
+`bun run dev` runs Vite on :5173 and proxies /api and /ws to the API on :7317. When nothing
+answers on that port it starts the API itself, prints its output in the same terminal and stops it
+when dev exits; a server you started by hand is left alone. The API outlives Vite's own restarts,
+so a config edit does not cut the panes attached to it.
 
 ```bash
 bun install
-bun run server   # API + WebSocket on :7317
-bun run dev      # Vite on :5173, proxies /api and /ws
+bun run dev
 ```
 
-`bun run server` serves the last `bun run build` and needs a restart after a change under
-`server/`; `bun run dev` rebuilds the client as you edit and proxies to a running server.
+`bun run server` runs the API by itself instead, and serves the last `bun run build`; it needs a
+restart after a change under `server/`. `bun run dev` restarts the API it started on such a change
+(and on one under `shared/`), and rebuilds the client as you edit.
 
 To have herdr start this checkout as a plugin, build it and link it: `bun run build`, then
 `herdr plugin link <path to the checkout>`. Link runs no build commands, so the server serves

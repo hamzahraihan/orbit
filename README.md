@@ -175,8 +175,8 @@ git clone https://github.com/hamzahraihan/orbit.git
 cd orbit
 bun install
 
-bun run server      # API + WebSocket on :7317
-bun run dev         # Vite on :5173; run in a second terminal
+bun run dev         # Vite on :5173, starting the API on :7317 when that port is free
+bun run server      # API + WebSocket alone on :7317; `bun run dev` restarts the API on server/ or shared/ changes
 ```
 
 ```bash
