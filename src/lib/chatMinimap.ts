@@ -2,8 +2,8 @@ import type { ConversationTurn } from "../../shared/protocol.ts";
 
 /** Fewer turns than this read at a glance: the minimap stays out. */
 export const MINIMAP_MIN_TURNS = 4;
-/** The empty margin beside the chat column the rail needs, so it never lies over the text. */
-export const MINIMAP_GUTTER_PX = 32;
+/** The empty margin beside the chat column the rail needs, so even its widest tick clears the text. */
+export const MINIMAP_GUTTER_PX = 40;
 
 /** The closest two ticks may sit: past this a rail stands for several turns with one tick. */
 export const MINIMAP_TICK_MIN_PX = 4;

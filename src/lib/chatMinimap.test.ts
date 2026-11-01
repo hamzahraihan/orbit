@@ -56,6 +56,9 @@ describe("chatMinimap", () => {
 
   test("the rail needs a margin beside the column", () => {
     expect(minimapFits(1200, 760)).toBe(true);
+    // the widest pill clears the column by the margin on both sides
+    expect(minimapFits(840, 760)).toBe(true);
+    expect(minimapFits(839, 760)).toBe(false);
     expect(minimapFits(800, 760)).toBe(false);
     expect(minimapFits(700, 760)).toBe(false);
   });
