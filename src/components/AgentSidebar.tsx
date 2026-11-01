@@ -95,7 +95,7 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
   const t = useT();
   const listId = useId();
   const [collapsed, setCollapsed] = useState(() => window.matchMedia?.(DRAWER_QUERY).matches === true);
-  const [agentFlyout, setAgentFlyout] = useState<{ anchor: HTMLElement; title: string; subtitle?: string | null; detail?: string | null } | null>(null);
+  const [agentFlyout, setAgentFlyout] = useState<{ anchor: HTMLElement; side: "left" | "right"; title: string; subtitle?: string | null; detail?: string | null } | null>(null);
   const { settings } = useSettings();
   // shared with the other browsers of this server (lib/preferencesSync.ts)
   const pinned = useSyncExternalStore(subscribeSidebarPins, currentSidebarPins, currentSidebarPins);
@@ -160,6 +160,13 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
     // one menu for the ⋯ and a right-click, which opens it at the pointer and leaves the focus where it was
     const toggleMenu = (anchor: HTMLElement, point?: { x: number; y: number }, previousFocus?: HTMLElement | null): void =>
       setMenu(menuOpen ? null : { key: pinKey, anchor, point, previousFocus, title, place: context, tokens: tokens.join(" · ") });
+    // the row button is `display: contents` (AgentSidebar.css), so it has no rect to stand a card on;
+    // the row itself is the cell the eye sees, and the card stands inside the list's left edge. In
+    // the rail there is no list to stand in, so the card opens beside the square instead.
+    const rowBox = (event: { currentTarget: HTMLElement }): { anchor: HTMLElement; side: "left" | "right" } => {
+      const anchor = event.currentTarget.closest<HTMLElement>(".agent-item") ?? event.currentTarget;
+      return { anchor, side: anchor.closest(".app")?.classList.contains("sidebar-collapsed") ? "right" : "left" };
+    };
     return <li className={`agent-item${selected ? " is-selected" : ""}${online ? "" : " is-offline"}`} key={paneStorageId(machine.id, pane.pane_id)} data-machine={machine.id} data-pane={pane.pane_id} data-pin-key={pinKey}
       onMouseDownCapture={(event) => { if (event.button === 2 || (event.button === 0 && event.ctrlKey)) event.preventDefault(); }}
       onContextMenu={(event) => onRowContextMenu(event, toggleMenu)}>
@@ -173,7 +180,7 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
         onPointerEnter={(e) => {
           if (e.pointerType === "mouse") {
             setAgentFlyout({
-              anchor: e.currentTarget,
+              ...rowBox(e),
               title,
               subtitle: [markKind, name, agent?.display_agent].filter(Boolean).join(" · ") || null,
               detail: context || (online ? null : stateWord(machine)),
@@ -183,7 +190,7 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
         onPointerLeave={() => setAgentFlyout(null)}
         onFocus={(e) => {
           setAgentFlyout({
-            anchor: e.currentTarget,
+            ...rowBox(e),
             title,
             subtitle: [markKind, name, agent?.display_agent].filter(Boolean).join(" · ") || null,
             detail: context || (online ? null : stateWord(machine)),
@@ -253,6 +260,7 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
     <RailFlyout
       anchor={agentFlyout?.anchor ?? null}
       open={agentFlyout !== null}
+      side={agentFlyout?.side ?? "left"}
       title={agentFlyout?.title ?? ""}
       subtitle={agentFlyout?.subtitle}
       detail={agentFlyout?.detail}
