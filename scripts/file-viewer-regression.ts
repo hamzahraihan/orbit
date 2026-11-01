@@ -346,9 +346,9 @@ try {
     console.log(`PASS Settings opens above the preview at ${width}px; Escape and Back preserve it, then X closes the file once`);
   }
 
-  // Add PC from Settings over a preview: Settings closes, the preview stays mounted beneath, and
-  // the native modal Add PC opens is on top. Tab walks Add PC's own controls; the preview's trap
-  // must not take it back to its own, now inert, controls.
+  // Add PC from Settings over a preview opens inside Settings, which stays mounted and raised
+  // above the preview. Tab stays inside Settings; Escape takes Add PC away alone, and the preview
+  // and its entry stay.
   await page.setViewportSize({ width: 1280, height: 800 });
   await videoLink.click();
   await preview.waitFor();
@@ -357,30 +357,33 @@ try {
   await settingsOverPreview.waitFor();
   await openSettingsPage(page, "Remote PCs");
   await settingsOverPreview.getByRole("button", { name: "Add PC", exact: true }).click();
-  const addPc = page.locator("dialog.machine-dialog");
-  await addPc.waitFor();
-  await settingsOverPreview.waitFor({ state: "hidden" });
-  assert.equal(await page.locator(".file-viewer").count(), 1, "the preview stays beneath Add PC");
-  await page.waitForFunction(() => Boolean(document.activeElement?.closest("dialog.machine-dialog")));
+  const addPcDestination = settingsOverPreview.getByRole("textbox", { name: "SSH alias or user@address", exact: true });
+  await addPcDestination.waitFor();
+  assert.equal(await settingsOverPreview.count(), 1, "Add PC opens inside Settings over the preview");
+  assert.equal(await page.locator(".file-viewer").count(), 1, "the preview stays beneath Settings and its Add PC form");
+  await page.waitForFunction(() => Boolean(document.activeElement?.closest(".settings-dialog")));
   const addPcFocus: string[] = [];
   for (let press = 0; press < 3; press++) {
     await page.keyboard.press("Tab");
     addPcFocus.push(await page.evaluate(() => {
       const active = document.activeElement;
-      return active?.closest("dialog.machine-dialog") ? active.outerHTML.slice(0, 120) : `outside: ${active?.outerHTML.slice(0, 80)}`;
+      return active?.closest(".settings-dialog") ? active.outerHTML.slice(0, 120) : `outside: ${active?.outerHTML.slice(0, 80)}`;
     }));
   }
-  assert.ok(addPcFocus.every((entry) => !entry.startsWith("outside")), `Tab stays inside Add PC over a preview: ${addPcFocus.join(" | ")}`);
-  assert.ok(new Set(addPcFocus).size >= 2, `Tab moves through Add PC over a preview: ${addPcFocus.join(" | ")}`);
-  // Escape is Add PC's too: it closes Add PC alone, and the preview and its entry stay
+  assert.ok(addPcFocus.every((entry) => !entry.startsWith("outside")), `Tab stays inside Settings with Add PC open: ${addPcFocus.join(" | ")}`);
+  assert.ok(new Set(addPcFocus).size >= 2, `Tab moves through Add PC inside Settings: ${addPcFocus.join(" | ")}`);
+  // Escape is Add PC's too: it returns to Remote PCs, and the preview and its entry stay
   const previewUnderAddPc = await page.evaluate(() => history.state["herdr-web-ui:file-preview"]);
   await page.keyboard.press("Escape");
-  await addPc.waitFor({ state: "hidden" });
+  await settingsOverPreview.getByRole("tabpanel", { name: "Remote PCs", exact: true }).waitFor();
+  assert.equal(await settingsOverPreview.count(), 1, "Escape over Add PC leaves Settings open");
   assert.equal(await page.locator(".file-viewer").count(), 1, "Escape over Add PC leaves the preview beneath it");
   assert.deepEqual(await page.evaluate(() => history.state["herdr-web-ui:file-preview"]), previewUnderAddPc, "Escape over Add PC preserves the preview entry");
+  await settingsOverPreview.getByRole("button", { name: "Close settings", exact: true }).click();
+  await settingsOverPreview.waitFor({ state: "hidden" });
   await preview.getByRole("button", { name: "Close file", exact: true }).click();
   await preview.waitFor({ state: "hidden" });
-  console.log("PASS Add PC opened from Settings over a preview keeps Tab inside Add PC, and its Escape closes Add PC alone");
+  console.log("PASS Add PC opens inside Settings over a preview, keeps Tab inside it, and Escape returns to Remote PCs");
 
   // With no preview beneath it, Settings stays on the layer every dialog shares, so the palette
   // its shortcut opens is drawn above Settings instead of taking focus and Escape unseen.
