@@ -242,7 +242,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
   const [touchDrag, setTouchDrag] = useState<{ source: string; over: string | null } | null>(null);
   // the browser's drag and drop is a mouse's: on a touch screen a long press lifts the row instead
   const coarsePointer = useMediaQuery("(pointer: coarse)");
-  const [hoverFlyout, setHoverFlyout] = useState<{ anchor: HTMLElement; workspace: WorkspaceInfo; pane: PaneInfo; title: string; subtitle?: string | null; detail?: string | null; statusBadge?: React.ReactNode } | null>(null);
+  const [hoverFlyout, setHoverFlyout] = useState<{ anchor: HTMLElement; side: "left" | "right"; workspace: WorkspaceInfo; pane: PaneInfo; title: string; subtitle?: string | null; detail?: string | null; statusBadge?: React.ReactNode } | null>(null);
   const [inlineError, setInlineError] = useState<InlineError | null>(null);
   const rosterId = useId();
   const workspaceRoot = useRef<HTMLDivElement>(null);
@@ -663,6 +663,21 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
     const fixed = fixedIds.has(workspace.workspace_id);
     const menuOpen = menu?.workspace.workspace_id === workspace.workspace_id;
     const contentsId = `${rosterId}-worktrees-${encodeURIComponent(workspace.workspace_id)}`;
+    // the row's card stands over the list it belongs to, level with the row (as an agent's does);
+    // the rail has no list beside the mark, so its card opens into the pane instead
+    const flyoutFor = (anchor: HTMLElement) => {
+      const side: "left" | "right" = anchor.closest(".app")?.classList.contains("sidebar-collapsed") ? "right" : "left";
+      return {
+        anchor,
+        side,
+        workspace,
+        pane,
+        title: rowTitle,
+        subtitle: branchLine || secondaryBranch || (paths[0] ? folderName(paths[0]) : null),
+        detail: paths[0] || null,
+        statusBadge: online && pane.restore_error ? <RestoreErrorBadge reason={pane.restore_error} /> : <StatusBadge compact status={online ? rollupStatus(statusPanes.map((candidate) => activity.status(machineId, candidate))) : undefined} />,
+      };
+    };
     // without a project icon the folder itself says the fold's state: open while the worktrees show
     const unfolded = children.length > 0 && repoKey !== undefined && !collapsed;
     const face = <WorkspaceFavicon root={workspace.worktree?.checkout_path ?? pane.cwd ?? null} fallback={<span className="sidebar-mark workspace-folder sidebar-row-face" aria-hidden="true">{unfolded ? <FolderOpen /> : <Folder />}</span>} />;
@@ -692,30 +707,10 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
         title={[`${pane.pane_id} — ${rowTitle}`, branchNote, ...paths, paneTitle(pane), agentsTitle(workspace)].filter(Boolean).join(" — ")}
         onClick={() => actions.selectPane(pane.pane_id)}
         onPointerEnter={(event) => {
-          if (event.pointerType === "mouse") {
-            setHoverFlyout({
-              anchor: event.currentTarget,
-              workspace,
-              pane,
-              title: rowTitle,
-              subtitle: branchLine || secondaryBranch || (paths[0] ? folderName(paths[0]) : null),
-              detail: paths[0] || null,
-              statusBadge: online && pane.restore_error ? <RestoreErrorBadge reason={pane.restore_error} /> : <StatusBadge compact status={online ? rollupStatus(statusPanes.map((candidate) => activity.status(machineId, candidate))) : undefined} />,
-            });
-          }
+          if (event.pointerType === "mouse") setHoverFlyout(flyoutFor(event.currentTarget));
         }}
         onPointerLeave={() => setHoverFlyout(null)}
-        onFocus={(event) => {
-          setHoverFlyout({
-            anchor: event.currentTarget,
-            workspace,
-            pane,
-            title: rowTitle,
-            subtitle: branchLine || secondaryBranch || (paths[0] ? folderName(paths[0]) : null),
-            detail: paths[0] || null,
-            statusBadge: online && pane.restore_error ? <RestoreErrorBadge reason={pane.restore_error} /> : <StatusBadge compact status={online ? rollupStatus(statusPanes.map((candidate) => activity.status(machineId, candidate))) : undefined} />,
-          });
-        }}
+        onFocus={(event) => setHoverFlyout(flyoutFor(event.currentTarget))}
         onBlur={() => setHoverFlyout(null)}
         onKeyDown={(event) => {
           onRowKeyDown(event, workspace.workspace_id);
@@ -869,6 +864,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
       <RailFlyout
         anchor={hoverFlyout?.anchor ?? null}
         open={hoverFlyout !== null}
+        side={hoverFlyout?.side ?? "left"}
         title={hoverFlyout?.title ?? ""}
         subtitle={hoverFlyout?.subtitle}
         detail={hoverFlyout?.detail}
