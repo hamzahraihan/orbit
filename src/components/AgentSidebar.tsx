@@ -230,9 +230,10 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
   const oneLine = settings.sidebarRows === "one";
   return <section ref={sectionRef} className={`agents-sidebar${collapsed ? " is-collapsed" : ""}${rows.length === 0 ? " is-empty" : ""}${oneLine ? " is-one-line" : ""}`} aria-label={t("Agents")}>
     <button type="button" className="agent-section-toggle sidebar-section-label" aria-expanded={!collapsed} aria-controls={listId} onClick={() => setCollapsed(!collapsed)}>
-      {collapsed ? <ChevronRight className="agent-section-caret" aria-hidden="true" /> : <ChevronDown className="agent-section-caret" aria-hidden="true" />}
       <span>{t("Agents")}</span>
-      {collapsed && rows.length > 0 && <span className="agent-section-count">{rows.length}</span>}
+      {/* the count stands in for the label where the sidebar is the rail, and beside a folded head */}
+      <span className="agent-section-count">{rows.length}</span>
+      {collapsed ? <ChevronRight className="agent-section-caret" aria-hidden="true" /> : <ChevronDown className="agent-section-caret" aria-hidden="true" />}
     </button>
     <div className="agent-list-contents" id={listId} hidden={collapsed}>
       <p className={shownEmpty === null ? "visually-hidden" : "agent-empty"} role="status">{shownEmpty}</p>
