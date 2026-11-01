@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { WorkspaceInfo, WorktreeEntry, WorktreeListing, WorktreeOpened } from "../../shared/protocol.ts";
 import { normalizeCheckoutPath, WorkspaceBranchCache, worktreeRepositories, worktreeWorkspaceSignature } from "./worktreeBranches.ts";
-import { branchWords, DETACHED } from "./paneBranch.ts";
 
 function workspace(id: string, path = `/repo/${id}`, repoKey = "repo", linked = true): WorkspaceInfo {
   return {
@@ -108,21 +107,19 @@ describe("worktree branch metadata", () => {
     expect(cache.branchesFor(workspaces).get("unknown")).toMatchObject({ branch: null, isDetached: false });
   });
 
-  it("publishes an omitted detached branch from Herdr without crashing the sidebar", () => {
+  it("reads a detached checkout from Herdr's inventory when the branch word is omitted", () => {
     const workspaces = [workspace("detached"), workspace("unknown")];
     const cache = new WorkspaceBranchCache();
     cache.reconcile(workspaces);
     // Herdr 0.9.5 omits absent Option fields from JSON rather than sending null.
     cache.rememberOpened(JSON.parse(JSON.stringify(opened("detached", "/repo/detached", null)),
       (key, value: unknown) => key === "branch" ? undefined : value));
-    expect([...branchWords(cache.branchesFor(workspaces))]).toEqual([]);
     const inventory: WorktreeListing = JSON.parse(JSON.stringify(listing([
       entry("detached", "/repo/detached", null, { is_detached: true }),
       entry("unknown", "/repo/unknown", null),
     ])), (key, value: unknown) => key === "branch" ? undefined : value);
     cache.applyListing("repo", inventory, cache.generation);
     const branches = cache.branchesFor(workspaces);
-    expect([...branchWords(branches)]).toEqual([["detached", DETACHED]]);
     expect(branches.get("detached")).toMatchObject({ branch: null, isDetached: true });
     expect(branches.get("unknown")).toMatchObject({ branch: null, isDetached: false });
   });

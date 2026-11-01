@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { SessionSnapshot, WorktreeOpened } from "../../shared/protocol.ts";
 import { ApiError } from "./api.ts";
 import { useMachineApi, useMachineId } from "./machineContext.tsx";
-import { publishBranches } from "./paneBranch.ts";
 import { usePageVisible } from "./visibility.ts";
 import { WorkspaceBranchCache, worktreeRepositories, worktreeWorkspaceSignature, type WorkspaceBranch } from "./worktreeBranches.ts";
 
@@ -10,9 +9,8 @@ const BRANCH_POLL_MS = 30_000;
 const NONE: ReadonlySet<string> = new Set();
 
 /** Use the existing worktree API; pane status updates never trigger a git inventory poll. */
-/** `roster`: this reader is the PC's roster, whose branches the panes' composers name too (lib/paneBranch.ts). */
 /** `unmarked`: git workspaces herdr has not marked as a repository's (no `worktree`), read one by one. */
-export function useWorktreeBranches(snapshot: SessionSnapshot | null, online: boolean, roster = false, unmarked: ReadonlySet<string> = NONE): {
+export function useWorktreeBranches(snapshot: SessionSnapshot | null, online: boolean, unmarked: ReadonlySet<string> = NONE): {
   branches: ReadonlyMap<string, WorkspaceBranch>;
   rememberOpened(opened: WorktreeOpened): void;
 } {
@@ -83,9 +81,5 @@ export function useWorktreeBranches(snapshot: SessionSnapshot | null, online: bo
     setRefresh((value) => value + 1);
   }, [owner]);
 
-  const branches = owner.cache.branchesFor(workspaces, unmarked);
-  useEffect(() => { if (roster) publishBranches(machineId, branches); });
-  useEffect(() => roster ? () => publishBranches(machineId, null) : undefined, [roster, machineId]);
-
-  return { branches, rememberOpened };
+  return { branches: owner.cache.branchesFor(workspaces, unmarked), rememberOpened };
 }
