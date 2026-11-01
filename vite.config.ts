@@ -1,13 +1,13 @@
 import { buildXtermSource } from "./scripts/build-xterm.ts";
 import { compressedAssets } from "./scripts/compressed-assets.ts";
+import { API_URL, API_WS_URL, devApi, API_WS_URL_OVERRIDE } from "./scripts/dev-api.ts";
 import { serviceWorkerBuild } from "./scripts/service-worker-build.ts";
 import { defineConfig, normalizePath, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwind from "@tailwindcss/vite";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-const xtermSource = normalizePath(buildXtermSource(fileURLToPath(new URL(".", import.meta.url))));
+import { fileURLToPath } from "node:url";const xtermSource = normalizePath(buildXtermSource(fileURLToPath(new URL(".", import.meta.url))));
 
 let revision: string | null = null;
 try { revision = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", timeout: 5000, stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { /* non-Git build */ }
@@ -30,7 +30,7 @@ const buildRevision: Plugin = {
 };
 
 export default defineConfig({
-  plugins: [react(), tailwind(), thirdPartyNotices, buildRevision, compressedAssets(), serviceWorkerBuild()],
+  plugins: [react(), tailwind(), thirdPartyNotices, buildRevision, compressedAssets(), serviceWorkerBuild(), devApi()],
   define: {
     __APP_REVISION__: JSON.stringify(revision),
     __APP_VERSION__: JSON.stringify((JSON.parse(readFileSync("package.json", "utf8")) as { version: string }).version),
@@ -42,8 +42,8 @@ export default defineConfig({
     proxy: {
       // not the string shorthand: Vite gives that changeOrigin, and the server's same-origin check
       // compares the browser's Origin (:5173) with the Host it was sent, which must stay :5173
-      "/api": { target: "http://localhost:7317", changeOrigin: false },
-      "/ws": { target: "ws://localhost:7317", ws: true },
+      "/api": { target: API_URL, changeOrigin: false },
+      "/ws": { target: API_WS_URL_OVERRIDE, ws: true },
     },
   },
   // Keep Vite 6's syntax targets when changing the bundler, including installed mobile clients.
