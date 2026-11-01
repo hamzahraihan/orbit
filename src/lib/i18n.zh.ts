@@ -1233,6 +1233,7 @@ export const ZH: Record<string, string> = {
   "Browse folders in the palette": "在命令面板中浏览文件夹",
   "Conversation turns": "对话轮次",
   "Go to turn {n}": "跳到第 {n} 轮",
+  "Message {n} of {total}": "第 {n} 条消息，共 {total} 条",
   "Show full message": "显示完整消息",
   "Welcome to Orbit": "欢迎使用 Orbit",
   "A browser companion for herdr. A few tips to get started:": "herdr 的浏览器伴侣。以下是几个入门提示：",

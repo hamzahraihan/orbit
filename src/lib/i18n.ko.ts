@@ -1229,6 +1229,7 @@ export const KO: Record<string, string> = {
   "Browse folders in the palette": "팔레트에서 폴더 탐색",
   "Conversation turns": "대화 턴",
   "Go to turn {n}": "{n}번째 턴으로 이동",
+  "Message {n} of {total}": "{total}개 중 {n}번째 메시지",
   "Show full message": "전체 메시지 보기",
   "Welcome to Orbit": "Orbit에 오신 것을 환영합니다",
   "A browser companion for herdr. A few tips to get started:": "herdr를 위한 브라우저 동반자입니다. 시작하는 데 도움이 될 몇 가지 팁입니다:",

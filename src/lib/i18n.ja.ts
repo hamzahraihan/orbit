@@ -1231,6 +1231,7 @@ export const JA: Record<string, string> = {
   "Browse folders in the palette": "パレットでフォルダを参照",
   "Conversation turns": "会話のターン",
   "Go to turn {n}": "ターン {n} へ移動",
+  "Message {n} of {total}": "{total} 件中 {n} 件目のメッセージ",
   "Show full message": "メッセージ全体を表示",
   "Welcome to Orbit": "Orbit へようこそ",
   "A browser companion for herdr. A few tips to get started:": "herdr のためのブラウザコンパニオンです。はじめにいくつかヒントがあります:",
