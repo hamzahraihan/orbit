@@ -714,18 +714,22 @@ try {
   await page.getByRole("button", { name: "Close settings", exact: true }).click();
   console.log("PASS settings shortcut and theme");
 
-  // Add PC lives in Settings → Remote PCs, not in the sidebar; opening it closes Settings behind it
+  // Add PC lives in Settings → Remote PCs, not in the sidebar, and opens inside the settings surface
   assert.equal(await page.locator(".sidebar").getByRole("button", { name: "Add PC", exact: true }).count(), 0, "the sidebar has no Add PC button");
   await page.keyboard.press("ControlOrMeta+Shift+Comma");
   await openSettingsPage(page, "Remote PCs");
-  await page.getByRole("dialog", { name: "Settings" }).getByRole("button", { name: "Add PC", exact: true }).click();
-  await page.getByRole("dialog", { name: "Add PC", exact: true }).waitFor();
-  assert.equal(await page.getByRole("dialog", { name: "Settings" }).count(), 0, "Add PC closes Settings");
-  await page.getByRole("button", { name: "Close PC setup", exact: true }).click();
-  await page.getByRole("dialog", { name: "Add PC", exact: true }).waitFor({ state: "hidden" });
-  // its trigger went with Settings: focus lands on the header's workspace-list toggle instead of nowhere
-  await until(async () => await page.evaluate(() => document.activeElement?.matches(".sidebar-toggle, .drawer-toggle") ?? false), "focus returns to the workspace-list toggle after Add PC closes");
-  console.log("PASS Add PC opens from Settings, and the sidebar has no top bar");
+  const settings = page.getByRole("dialog", { name: "Settings", exact: true });
+  await settings.getByRole("button", { name: "Add PC", exact: true }).click();
+  const destination = settings.getByRole("textbox", { name: "SSH alias or user@address", exact: true });
+  await destination.waitFor();
+  assert.equal(await settings.count(), 1, "Add PC stays inside Settings");
+  assert.equal(await page.getByRole("dialog", { name: "Add PC", exact: true }).count(), 0, "Add PC opens no dialog of its own");
+  await until(async () => await destination.evaluate((input) => document.activeElement === input), "the SSH field takes focus");
+  await settings.getByRole("button", { name: "Back to settings", exact: true }).click();
+  await settings.getByRole("tabpanel", { name: "Remote PCs", exact: true }).waitFor();
+  await until(async () => await settings.getByRole("button", { name: "Add PC", exact: true }).evaluate((button) => document.activeElement === button), "Back returns focus to the Add PC row");
+  await settings.getByRole("button", { name: "Close settings", exact: true }).click();
+  console.log("PASS Add PC opens inside Settings, and Back returns to Remote PCs");
 
   // the sidebar's right edge resizes it: its own top row in the header follows, the width is
   // kept on this device, the arrows move it from the keyboard and a double-click forgets it
