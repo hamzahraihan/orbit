@@ -32,6 +32,7 @@ import type { VoiceStatus } from "../../shared/voice.ts";
 import { dictationLocale, VOICE_CONFIG_EVENT } from "../lib/voice.ts";
 import { DevicesPanel } from "./DevicesPanel.tsx";
 import { ConfirmDialog } from "./ConfirmDialog.tsx";
+import { MachineSetup } from "./MachineDialog.tsx";
 import { PhonePanel } from "./PhonePanel.tsx";
 import { copyText } from "../lib/clipboard.ts";
 import { PushTestControls } from "./PushTestControls.tsx";
@@ -60,6 +61,8 @@ export interface SettingsDialogProps {
   onEnableNotifications: () => Promise<boolean>;
   /** the last change the server refused to save (lib/preferencesSync.ts); null once a save lands */
   saveError: UserError | null;
+  /** a PC connected in Settings' own Add PC view: the app closes Settings and opens it */
+  onAddPcConnected: (id: string) => void;
   /** a file preview is open beneath: the dialog is drawn above it */
   overPreview?: boolean;
 }
@@ -226,10 +229,10 @@ function useNarrow(): boolean {
 }
 
 /** What a Settings entry of the history shows, when it names a page this version has. */
-function shownBy(entry: SettingsLevel | null): { page: SettingsPage | null; keyBar: boolean } | null {
+function shownBy(entry: SettingsLevel | null): { page: SettingsPage | null; keyBar: boolean; addPc: boolean } | null {
   if (entry === null) return null;
   const page = PAGES.find(({ id }) => id === entry.page)?.id ?? null;
-  return page === null && entry.page !== null ? null : { page, keyBar: entry.keyBar && page === "terminal" };
+  return page === null && entry.page !== null ? null : { page, keyBar: entry.keyBar && page === "terminal", addPc: entry.addPc === true && page === "remote" };
 }
 
 /** What each theme is called: the color words are translated, the brand names stay as their projects write them. */
@@ -896,12 +899,12 @@ function DevicesPage({ auth, onSignOut }: { auth: HealthAuth | null; onSignOut: 
   );
 }
 
-function RemotePcsPage({ actions, pcSettings, pcSettingsError, onPcSettings }: { actions: AppActions; pcSettings: MachineSettings | null; pcSettingsError: string | null; onPcSettings: (patch: Partial<MachineSettings>) => void }) {
+function RemotePcsPage({ onAddPc, addPcButtonRef, pcSettings, pcSettingsError, onPcSettings }: { onAddPc: () => void; addPcButtonRef: RefObject<HTMLButtonElement | null>; pcSettings: MachineSettings | null; pcSettingsError: string | null; onPcSettings: (patch: Partial<MachineSettings>) => void }) {
   const t = useT();
   return (
     <SettingsGroup>
       <SettingsRow label={t("Add PC")} description={t("Connect another PC over an SSH alias or user@host. Its workspaces join the sidebar.")}>
-        <Button type="button" onClick={actions.openAddPc}><Monitor aria-hidden="true" />{t("Add PC")}</Button>
+        <Button ref={addPcButtonRef} type="button" onClick={onAddPc}><Monitor aria-hidden="true" />{t("Add PC")}</Button>
       </SettingsRow>
       {/* the switch is the server's and waits for its answer; Add PC never does */}
       {pcSettings && (
@@ -1011,7 +1014,7 @@ function SaveFailure({ error }: { error: UserError }) {
   </div>;
 }
 
-function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClose, actions, auth, herdrVersion, onEnableNotifications, saveError, overPreview = false }: SettingsDialogProps) {
+function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClose, actions, auth, herdrVersion, onEnableNotifications, saveError, onAddPcConnected, overPreview = false }: SettingsDialogProps) {
   const t = useT();
   const narrow = useNarrow();
   // opened by Forward, the dialog shows what that entry of the history showed
@@ -1024,18 +1027,22 @@ function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClo
   const [chosen, setChosen] = useState<SettingsPage | null>(asked ?? (restored ? restored.page : linked));
   const page = chosen ?? (narrow ? null : PAGES[0]!.id);
   const [keyBarOpen, setKeyBarOpen] = useState(restored?.keyBar ?? false);
+  // Add PC is a step inside Remote PCs, not a dialog over Settings (DESIGN.md)
+  const [addPcOpen, setAddPcOpen] = useState(restored?.addPc ?? false);
   // every step in is an entry of the history, so the system Back button takes one step out
   // (lib/settingsHistory.ts); the Back control, the X and Escape take the same entries off
-  useEffect(() => { recordSettings(settingsLevels(narrow, page, keyBarOpen)); }, [narrow, page, keyBarOpen]);
+  useEffect(() => { recordSettings(settingsLevels(narrow, page, keyBarOpen, addPcOpen)); }, [narrow, page, keyBarOpen, addPcOpen]);
   useEffect(() => { onPage?.(page); }, [onPage, page]);
   useEffect(() => onSettingsHistory((entry, own) => {
     const view = own ? null : shownBy(entry);
     if (view === null) return;
     setChosen(view.page);
     setKeyBarOpen(view.keyBar);
+    setAddPcOpen(view.addPc);
   }), []);
   const keyBarButtonRef = useRef<HTMLButtonElement>(null);
   const backRef = useRef<HTMLButtonElement>(null);
+  const addPcButtonRef = useRef<HTMLButtonElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   const settingsBodyRef = useRef<HTMLDivElement>(null);
   const settingsScrollRef = useRef(0);
@@ -1045,16 +1052,23 @@ function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClo
   const shown = useRef<{ page: SettingsPage | null; keyBar: boolean } | null>(null);
   const label = (id: SettingsPage): string => t(id === "appearance" ? "Appearance" : id === "chat" ? "Chat" : id === "terminal" ? "Terminal" : id === "alerts" ? "Alerts" : id === "voice" ? "Voice input"
     : id === "shortcuts" ? "Shortcuts" : id === "devices" ? "Phone & devices" : id === "remote" ? "Remote PCs" : id === "integrations" ? "Agent integrations" : "About");
-  const openPage = (id: SettingsPage): void => { setKeyBarOpen(false); setChosen(id); };
+  const openPage = (id: SettingsPage): void => { setAddPcOpen(false); setKeyBarOpen(false); setChosen(id); };
   const openKeyBar = (): void => {
     settingsScrollRef.current = settingsBodyRef.current?.scrollTop ?? 0;
     setKeyBarOpen(true);
   };
   const goBack = (): void => {
     if (keyBarOpen) setKeyBarOpen(false);
+    else if (addPcOpen) setAddPcOpen(false);
     else setChosen(null);
   };
   const tab = (id: SettingsPage | null): HTMLElement | null => tabsRef.current?.querySelector<HTMLElement>(id === null ? '[role="tab"]' : `[data-settings-page="${id}"]`) ?? null;
+  // Back from Add PC lands on the Add PC row, since the row is drawn again only now
+  const addPcWasOpen = useRef(false);
+  useLayoutEffect(() => {
+    if (addPcWasOpen.current && !addPcOpen) addPcButtonRef.current?.focus({ preventScroll: true });
+    addPcWasOpen.current = addPcOpen;
+  }, [addPcOpen]);
   useLayoutEffect(() => {
     const before = shown.current;
     shown.current = { page, keyBar: keyBarOpen };
@@ -1094,13 +1108,14 @@ function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClo
       // an Escape that cancels an IME composition (the editor's Character field) is the IME's
       if (event.key !== "Escape" || event.isComposing || event.keyCode === 229) return;
       event.preventDefault();
-      // out of the key bar editor first; from any page, a phone's included, it closes the dialog
+      // out of the key bar editor or Add PC first; from any page, a phone's included, it closes the dialog
       if (keyBarOpen) setKeyBarOpen(false);
+      else if (addPcOpen) setAddPcOpen(false);
       else onClose();
     };
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [onClose, keyBarOpen]);
+  }, [onClose, keyBarOpen, addPcOpen]);
 
   /** the list is one Tab stop: the arrows walk it, and beside an open page they turn the page too */
   const onTabKey = (event: ReactKeyboardEvent<HTMLButtonElement>, index: number): void => {
@@ -1121,13 +1136,13 @@ function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClo
       case "voice": return <VoicePage />;
       case "shortcuts": return <ShortcutsPage />;
       case "devices": return <DevicesPage auth={auth} onSignOut={actions.lock} />;
-      case "remote": return <RemotePcsPage actions={actions} pcSettings={pcSettings} pcSettingsError={pcSettingsError} onPcSettings={(patch) => void updatePcSettings(patch)} />;
+      case "remote": return <RemotePcsPage onAddPc={() => setAddPcOpen(true)} addPcButtonRef={addPcButtonRef} pcSettings={pcSettings} pcSettingsError={pcSettingsError} onPcSettings={(patch) => void updatePcSettings(patch)} />;
       case "integrations": return <IntegrationsPage />;
       case "about": return <AboutPage herdrVersion={herdrVersion} />;
       default: return null;
     }
   };
-  const listShown = !narrow || (page === null && !keyBarOpen);
+  const listShown = !narrow || (page === null && !keyBarOpen && !addPcOpen);
   const focusable = page ?? PAGES[0]!.id;
 
   return (
@@ -1135,8 +1150,8 @@ function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClo
       {/* named Settings on every page: the page's own name is the visible title */}
       <section ref={surface} className="modal settings-dialog" role="dialog" aria-modal="true" aria-label={keyBarOpen ? t("Key bar") : t("Settings")} tabIndex={-1}>
         <header className="modal-header settings-header">
-          {(keyBarOpen || (narrow && page !== null)) && <button type="button" ref={backRef} className="icon-button settings-back" aria-label={t("Back to settings")} onClick={goBack}><ArrowLeft aria-hidden="true" /></button>}
-          <h2 className="modal-title settings-title">{keyBarOpen ? t("Key bar") : page === null ? t("Settings") : label(page)}</h2>
+          {(keyBarOpen || addPcOpen || (narrow && page !== null)) && <button type="button" ref={backRef} className="icon-button settings-back" aria-label={t("Back to settings")} onClick={goBack}><ArrowLeft aria-hidden="true" /></button>}
+          <h2 className="modal-title settings-title">{keyBarOpen ? t("Key bar") : addPcOpen ? t("Add PC") : page === null ? t("Settings") : label(page)}</h2>
           <button type="button" className="icon-button settings-close" aria-label={t("Close settings")} onClick={onClose}><X aria-hidden="true" /></button>
         </header>
         {listShown && (
@@ -1153,7 +1168,11 @@ function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClo
             </div>
           </nav>
         )}
-        {page !== null && <div key={page} ref={settingsBodyRef} id="settings-panel" className="modal-body settings-body" role="tabpanel" aria-label={label(page)} hidden={keyBarOpen}>{saveError !== null && <SaveFailure error={saveError} />}{body()}</div>}
+        {addPcOpen
+          ? <div ref={settingsBodyRef} id="settings-panel" className="modal-body settings-body" role="tabpanel" aria-label={t("Add PC")}>
+              <MachineSetup embedded autoFocus onClose={() => setAddPcOpen(false)} onConnected={(id) => { setAddPcOpen(false); onAddPcConnected(id); }} />
+            </div>
+          : page !== null && <div key={page} ref={settingsBodyRef} id="settings-panel" className="modal-body settings-body" role="tabpanel" aria-label={label(page)} hidden={keyBarOpen}>{saveError !== null && <SaveFailure error={saveError} />}{body()}</div>}
         {keyBarOpen && <div className="modal-body settings-key-bar-body"><KeyBarSettings /></div>}
       </section>
     </div>
