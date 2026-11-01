@@ -230,7 +230,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
     ))).then(publish);
     return () => { live = false; };
   }, [listWorktrees, unmarked, online]);
-  const { branches, rememberOpened } = useWorktreeBranches(snapshot, online, true, repositoryWorkspaces);
+  const { branches, rememberOpened } = useWorktreeBranches(snapshot, online, repositoryWorkspaces);
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [worktreeDialog, setWorktreeDialog] = useState<{ mode: WorktreeDialogMode; workspace: WorkspaceInfo } | null>(null);
@@ -665,7 +665,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
     const contentsId = `${rosterId}-worktrees-${encodeURIComponent(workspace.workspace_id)}`;
     // without a project icon the folder itself says the fold's state: open while the worktrees show
     const unfolded = children.length > 0 && repoKey !== undefined && !collapsed;
-    const face = <WorkspaceFavicon root={workspace.worktree?.checkout_path ?? pane.cwd ?? null} fallback={<span className="sidebar-mark workspace-folder" aria-hidden="true">{unfolded ? <FolderOpen /> : <Folder />}</span>} />;
+    const face = <WorkspaceFavicon root={workspace.worktree?.checkout_path ?? pane.cwd ?? null} fallback={<span className="sidebar-mark workspace-folder sidebar-row-face" aria-hidden="true">{unfolded ? <FolderOpen /> : <Folder />}</span>} />;
     const toggleMenu = (anchor: HTMLElement, point?: { x: number; y: number }, previousFocus?: HTMLElement | null): void => setMenu(menuOpen ? null : { anchor, point, previousFocus, workspace, title: rowTitle, place: [branchNote, ...paths].filter(Boolean).join(" · ") || workspace.label });
     return <li
       className={`sidebar-row${selected ? " is-selected" : ""}${collapsed ? " is-collapsed" : ""}${dragWorkspaceId === workspace.workspace_id ? " is-dragging" : ""}${touchDrag?.source === workspace.workspace_id ? " is-lifted" : ""}`}
@@ -680,6 +680,8 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
         className="sidebar-row"
         role="button"
         tabIndex={0}
+        onMouseDownCapture={(event) => { if ((event.button === 2 || (event.button === 0 && event.ctrlKey)) && !(event.target as HTMLElement).closest("input")) event.preventDefault(); }}
+        onContextMenu={(event) => onRowContextMenu(event, toggleMenu)}
         draggable={!coarsePointer && !editingWorkspace && !fixed}
         onDragStart={(event) => { if (!editingWorkspace) onDragStart(event, workspace.workspace_id, pane.pane_id); }}
         onDragEnd={() => setDragWorkspaceId(null)}
@@ -728,24 +730,25 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
           actions.selectPane(pane.pane_id);
         }}
       >
-        {/* Leading mark */}
-        {rowMark(pane, workspace.worktree?.is_linked_worktree === true, rowStatus, rowTitle)}
-        
-        {/* Worktree fold toggle */}
-        {nested ? null : children.length > 0 && repoKey !== undefined ? (
+        {/* One leading cell (DESIGN.md): the group's fold where worktrees hang under this row,
+            else who the row is (an agent's mark, a worktree's branch, or the folder's monogram).
+            A second cell here cost every name 28px of the width it reads in. */}
+        {!nested && children.length > 0 && repoKey !== undefined ? (
           <button
             type="button"
-            className="sidebar-row-action workspace-toggle"
+            className="sidebar-row-action workspace-toggle sidebar-row-face"
             aria-label={collapsed ? t("Expand worktrees of {name}", { name: workspace.label }) : t("Collapse worktrees of {name}", { name: workspace.label })}
             title={collapsed ? t("Expand worktrees of {name}", { name: workspace.label }) : t("Collapse worktrees of {name}", { name: workspace.label })}
             aria-expanded={!collapsed}
             aria-controls={contentsId}
-            onClick={() => setWorktreeCollapsed(repoKey, !collapsed)}
+            onClick={(event) => { event.stopPropagation(); setWorktreeCollapsed(repoKey, !collapsed); }}
           >
             {face}
             <span className="workspace-toggle-fold" aria-hidden="true">{collapsed ? <Folder /> : <FolderOpen />}</span>
           </button>
-        ) : face}
+        ) : (
+          rowMark(pane, workspace.worktree?.is_linked_worktree === true, rowStatus, rowTitle)
+        )}
         
         {/* Content */}
         <div className="sidebar-row-content">
@@ -801,7 +804,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
         
         {/* Actions */}
         <div className="sidebar-row-actions">
-          <button type="button" className={`sidebar-row-action row-menu-toggle${rowMenuHint ? " is-hinted" : ""}`} aria-label={t("More for {title}", { title: rowTitle })} aria-haspopup="menu" aria-expanded={menuOpen} onClick={(event) => toggleMenu(event.currentTarget)}>
+          <button type="button" className={`sidebar-row-action row-menu-toggle${rowMenuHint ? " is-hinted" : ""}`} aria-label={t("More for {title}", { title: rowTitle })} aria-haspopup="menu" aria-expanded={menuOpen} onClick={(event) => { event.stopPropagation(); toggleMenu(event.currentTarget); }}>
             <Ellipsis aria-hidden="true" />
           </button>
         </div>
