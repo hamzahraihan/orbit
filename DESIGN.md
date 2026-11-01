@@ -1310,6 +1310,14 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   floor stays in px (`--content-w` is px); under a 13.67px root, where 60rem is less than 820px, the
   floor wins and Default is the same lane as Narrow.
   Structured Claude/omp transcripts fall back to ANSI-stripped pane scrollback when unavailable.
+- The turn minimap (`.chat-minimap`) is a 12×4px `--radius-pill` per turn in the gutter left of the
+  lane, on a 24px pitch; the turn in view is `--space-6` wide, accent-tinted, with a soft halo, and
+  a pointed-at turn is `--space-4`. Hovering or focusing a pill opens its card to the right of the
+  rail: the bubble glyph, **Message n of N** (`--fs-md`, `--fw-semibold`), a `--border` hairline,
+  then up to three lines of the turn's own words (`--text-dim`, `--fs-sm`) on `--bg-elevated` with
+  a `--border` edge, `--radius-lg` and `--shadow-card`. The card follows the reference chat's message
+  navigator; the rail stays left of the lane, where a right-edge rail would sit on the transcript's
+  scrollbar. It is no target itself: the pointer never enters it, and focus alone opens it.
 - The register is Codex / gajae-code-app: a quiet document. User turns are right-aligned neutral
   cards (`--bg-elevated`, a `--bubble-border` edge, `--radius-lg` on all four corners, ≤80% wide,
   no avatar or name). Assistant turns have no header: the answer is plain prose.
@@ -2010,10 +2018,11 @@ The values are the ones in `src/styles.css`.
 - Only state changes move: hover/press, the drawer, a phone's sheets, settings switches, working and
   reconnecting.
 - Two transitions animate `width`, each because the width is the quantity being read: the chat
-  minimap's tick grows from `--space-2` to `--space-3` on hover and under `aria-current` (a 4px
-  line inset from the rail, nothing around it reflows), and the bridge update bar's fill follows
-  the reported percent (inline width, `0.3s ease`) as an install reports its step. Both are state
-  changes of a small inset element, never a text box or a container other content lays out around.
+  minimap's pill grows from `--space-3` to `--space-4` on hover and to `--space-6` under
+  `aria-current` (a 4px pill inset from the rail, nothing around it reflows), and the bridge update
+  bar's fill follows the reported percent (inline width, `0.3s ease`) as an install reports its
+  step. Both are state changes of a small inset element, never a text box or a container other
+  content lays out around.
 - From `641px` dialogs and their scrims snap open and closed; they have no entrance or exit
   animation. At `<=640px` they are bottom sheets and move as an iPhone's do (Modal, above): what a
   finger drags follows the finger, and the rest rises and drops.
