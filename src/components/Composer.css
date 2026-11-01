@@ -5,10 +5,10 @@
   position: relative;
   flex: none;
   width: 100%;
-  /* one bottom space: the composer's own, or most of the home indicator's when that is taller.
-     The indicator is a thin bar near the bottom edge: the box may sit 16px into its 34px inset
-     and still clear it, and the full inset left a band of nothing under the box */
-  padding: 0 var(--space-4) max(var(--space-4), calc(env(safe-area-inset-bottom, 0px) - var(--space-4)));
+  /* The composer is the pane's floor: the card runs to the bottom edge, with no band under it.
+     The band a home indicator sits in is the card's own (Composer.css .composer-surface), so a
+     phone's card covers it instead of leaving a strip of nothing beneath */
+  padding: 0 var(--space-4);
   background: var(--bg-panel);
 }
 
@@ -55,11 +55,6 @@
 /* opened held rows end in buttons: a little air before the card */
 .composer-queue + .prompt-dock:not(:empty) {
   margin-top: var(--space-2);
-}
-
-/* the soft keyboard covers the home indicator: the box sits just above the keyboard */
-[data-keyboard] .composer {
-  padding-bottom: var(--space-2);
 }
 
 /* An empty chat's greeting: one line on the composer's column, over it. Out of the flow, so the
@@ -158,11 +153,12 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: var(--space-1);
   min-width: 0;
   min-height: var(--chip-h);
-  padding: var(--space-1) var(--space-2) var(--space-3);
+  /* its mark sits on the line the message starts on, as the card's own leading label */
+  padding: var(--space-1) var(--space-2) var(--space-3) var(--space-4);
   color: var(--text-dim);
   font-size: var(--fs-xs);
   white-space: nowrap;
@@ -179,26 +175,6 @@
 .composer-status[data-hint] {
   flex-wrap: wrap;
   row-gap: 0;
-}
-
-/* A narrow card (data-compact: the card's own width, Composer.tsx) with a sentence to say: add,
-   the icons and the round button at touch size leave the status content too little of the row
-   for a word, so it takes a row of its own over them, the card's width, where the sentence is
-   read whole beside the model pill or under it, from where the message's text starts. Add and
-   the round button keep their row. The card grows by that row while the sentence shows.
-   data-hint is the sentence's presence, not a measurement, so this layout never feeds back into
-   the fit that measures the row */
-.composer-surface[data-compact]:has(> .composer-status[data-hint]) {
-  grid-template-areas:
-    "attachments attachments attachments"
-    "text text text"
-    "status status status"
-    "left . right";
-}
-
-.composer-surface[data-compact]:has(> .composer-status[data-hint]) > .composer-status {
-  justify-content: flex-start;
-  padding: var(--space-1) var(--space-4) 0;
 }
 
 /* everything but the sentence. No box of its own at rest: its items are the status line's. Beside
@@ -235,9 +211,11 @@
   gap: var(--space-2);
   min-width: 0;
   height: var(--control-h);
-  padding: 0 var(--space-3);
+  padding: 0;
   border-radius: var(--radius-pill);
-  background: var(--bg-hover);
+  /* no box of its own: the row leads with who answers, then the actions, and only the actions
+     carry a pill's edge */
+  background: transparent;
   overflow: hidden;
 }
 
@@ -465,27 +443,30 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  /* The label takes what it can, the actions take what they need, and the track between them is
+     the one flexible one: a narrow card shortens the label — which steps out whole when it would
+     be cut — and never the actions, which cannot shrink inside a control's own size. */
+  grid-template-columns: minmax(0, max-content) max-content minmax(0, 1fr) auto;
   grid-template-areas:
-    "attachments attachments attachments"
-    "text text text"
-    "left status right";
+    "attachments attachments attachments attachments"
+    "text text text text"
+    "status left . right";
   background: var(--bg-composer);
-  border: 1px solid var(--card-border);
-  /* the input card: one rounded surface, no scored edge. Resting surfaces carry no shadow
-     beyond this one card */
-  border-radius: 16px;
-  box-shadow: var(--shadow-composer);
-  transition:
-    border-color var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out);
+  /* the themed edge, not --card-border: that one is the dark card's light wash and would leave the
+     card with no line at all on a light surface */
+  border: 1px solid var(--border);
+  /* A floor, not a card floating over the chat: the top corners are the card's, the bottom edge is
+     the pane's. No shadow either — nothing is under it to lift it from — and the home indicator's
+     band is the card's own bottom padding, so its fill reaches the pane's edge. */
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  transition: border-color var(--dur-fast) var(--ease-out);
 }
 
 /* focus is the surface's: the accent border on the rounded box, not a rectangle on the
    textarea inside it (the global :focus-visible ring is suppressed below) */
 .composer-surface:focus-within {
-  border-color: var(--card-border-strong);
-  box-shadow: var(--shadow-composer);
+  border-color: var(--border-strong);
 }
 
 .composer-surface.is-dragging {
@@ -564,9 +545,84 @@
   min-height: var(--control-h);
 }
 
+/* the actions follow the card's leading label, at its line's height. They start on the label's
+   own edge (--space-4), so a sentence over them leaves one straight column rather than two */
 .composer-controls-left {
   grid-area: left;
-  padding: var(--space-1) 0 var(--space-3) var(--space-3);
+  justify-content: flex-start;
+  padding: var(--space-1) var(--space-2) var(--space-3) var(--space-4);
+}
+
+/* An action in the card's last row: a labelled pill, as the row reads as words rather than a
+   row of bare glyphs ("+" said nothing of what it opened). The label is the control's name; the
+   button keeps its `aria-label` and title, so a reader hears the fuller "Attach files" */
+.composer-pill-button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--control-h);
+  padding: 0 var(--space-3);
+  background: transparent;
+  /* the edge is the button: no fill carries it, so it takes the themed border, not the card's —
+     --card-border is a light wash fixed for the dark surface and would vanish on a light one */
+  border: var(--hairline) solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.composer-pill-button svg {
+  width: var(--space-4);
+  height: var(--space-4);
+  flex: none;
+}
+
+.composer-pill-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .composer-pill-button:hover:not(:disabled) {
+    background: var(--bg-hover);
+    color: var(--text);
+  }
+}
+
+/* the mic stands between the pills with a bare glyph and reads as a label, not a control: it
+   wears their edge, so the row's actions read as one set and only Send is filled */
+.composer-controls .voice-mic {
+  border-color: var(--border-strong);
+}
+
+/* A statement (uploading, reconnecting) takes a row of its own over the actions, whatever the
+   card's width, a narrow one included: at touch size the pills would otherwise leave the sentence
+   no room of its own. It is read whole beside the label or under it, from where the message's
+   text starts; the label and the pills keep one row under it, and the card grows by that row
+   while the sentence shows. data-hint is the sentence's presence, not a measurement, so this
+   layout never feeds back into the fit that measures the row. */
+.composer-surface:has(> .composer-status[data-hint]) {
+  grid-template-areas:
+    "attachments attachments attachments attachments"
+    "text text text text"
+    "status status status status"
+    "left . . right";
+}
+
+/* only the vertical insets are the row's own: the sentence keeps whatever side inset the card
+   gives the status (--space-4, --space-1 on a phone), so it stays on the label's edge */
+.composer-surface:has(> .composer-status[data-hint]) > .composer-status {
+  padding-top: var(--space-1);
+  padding-bottom: 0;
 }
 
 .composer-controls-right {
@@ -584,6 +640,7 @@
 .composer-controls .icon-button {
   color: var(--text-dim);
   border-radius: var(--radius-pill);
+  border-color: var(--border-strong);
 }
 
 .composer-action {
@@ -595,7 +652,8 @@
   height: 36px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-md);
+  /* a rounded square, as the card's own corner asks: --xl would read as a footer button */
+  border-radius: var(--radius-lg);
   background: transparent;
   color: var(--primary-text);
 }
@@ -628,9 +686,11 @@
   height: var(--icon-size);
 }
 
+/* Send is the row's one filled target, in the accent's tint rather than its full strength: the
+   arrow carries the colour, so the button reads as the way out without shouting beside the pills */
 .composer-send {
-  --composer-action-fill: var(--accent-strong);
-  background: linear-gradient(180deg, var(--accent-strong) 0%, var(--accent-deep) 100%);
+  --composer-action-fill: color-mix(in srgb, var(--accent) 32%, transparent);
+  color: color-mix(in srgb, var(--accent) 45%, var(--text-strong));
   opacity: 1;
 }
 .composer-send:disabled {
@@ -678,7 +738,7 @@
 
 @media (hover: hover) {
   .composer-send:hover:not(:disabled) {
-    --composer-action-fill: var(--primary-hover);
+    --composer-action-fill: color-mix(in srgb, var(--accent) 46%, transparent);
   }
 
   .composer-stop:hover:not(:disabled) {
@@ -688,66 +748,6 @@
   .composer-controls .icon-button:hover:not(:disabled) {
     background: var(--bg-hover);
   }
-}
-
-/* The strip tucked under the card, as t3code's composer context strip: the card's own surface,
-   inset on each side by the card's radius (never less than --space-5, for a sharp palette), so it
-   stays under the card's straight bottom edge; its top --space-4 under the card, where the card's
-   hairline and shadow part the two (the seam), and only its bottom corners rounded. It names the
-   pane's working folder (the whole path in its title) at its start and the branch at its end,
-   each a glyph and a name in --text-dim at --fs-xs, and nothing in it is pressed. Composer.tsx
-   draws it only with a folder or a branch to name; a name that does not fit is cut short */
-.composer-strip {
-  --composer-strip-inset: max(var(--radius-2xl), var(--space-5));
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  width: calc(min(100%, var(--chat-w)) - 2 * var(--composer-strip-inset));
-  margin: calc(-1 * var(--space-4)) auto 0;
-  padding: var(--space-5) var(--space-3) var(--space-1);
-  border: var(--hairline) solid var(--border);
-  border-top: 0;
-  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
-  background: var(--bg-elevated);
-  color: var(--text-dim);
-  font-size: var(--fs-xs);
-}
-
-.composer-strip-item {
-  display: inline-flex;
-  flex: 0 1 auto;
-  align-items: center;
-  gap: var(--space-1);
-  min-width: 0;
-  height: var(--chip-h);
-}
-
-/* a linked worktree says what it is: the folder's name alone reads like any checkout's */
-.composer-strip-kind {
-  flex: none;
-  padding: 0 var(--space-1);
-  border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-sm);
-}
-
-.composer-strip-branch {
-  margin-inline-start: auto;
-}
-
-/* the glyph is the text's size, as the task chip's is */
-.composer-strip-item svg {
-  flex: none;
-  width: var(--fs-xs);
-  height: var(--fs-xs);
-}
-
-.composer-strip-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .composer-menu {
@@ -1084,10 +1084,6 @@
 
   .composer-status {
     padding: var(--space-1) var(--space-2) var(--space-2) var(--space-1);
-  }
-
-  .composer-surface[data-compact]:has(> .composer-status[data-hint]) > .composer-status {
-    padding: var(--space-1) var(--space-3) 0;
   }
 
   /* A phone fits neither half of a pi command's row, and pi writes explanations twice as long as
