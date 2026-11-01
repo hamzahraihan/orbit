@@ -245,8 +245,8 @@ export function App() {
   const machinesRef = useRef(machines); machinesRef.current = machines;
   const [updateRemote, setUpdateRemote] = useState(false);
   const [machineDialog, setMachineDialog] = useState<Machine | "new" | null>(null);
-  // Add PC from Settings or the palette leaves no trigger to return focus to once its dialog
-  // closes (Settings closed when it opened): the header's workspace-list toggle stands in
+  // Add PC from the palette closes Settings behind its dialog; there is no trigger left to return
+  // focus to once it closes, so the header's workspace-list toggle stands in
   const addPcFocusReturn = useRef(false);
   const closeMachineDialog = useCallback(() => {
     setMachineDialog(null);
@@ -1831,7 +1831,7 @@ export function App() {
         setFilesOpen(false);
         selectTargetRef.current(machineId, paneId);
       }} />
-      <SettingsDialog auth={auth} herdrVersion={health?.herdr?.version ?? null} open={settingsOpen} linkPage={settingsLinkPage} linkSection={settingsLinkSection} onPage={onSettingsPage} onClose={closeSettings} actions={actions} onEnableNotifications={enableNotifications} saveError={settingsSaveError} overPreview={(viewing !== null && !fileDocked) || diffViewing !== null} />
+      <SettingsDialog auth={auth} herdrVersion={health?.herdr?.version ?? null} open={settingsOpen} linkPage={settingsLinkPage} linkSection={settingsLinkSection} onPage={onSettingsPage} onClose={closeSettings} actions={actions} onEnableNotifications={enableNotifications} saveError={settingsSaveError} onAddPcConnected={(id) => { closeSettings(); selectTarget(id, null); void load(); }} overPreview={(viewing !== null && !fileDocked) || diffViewing !== null} />
       {filesOpen && filesBrowser !== null && !filePanelAvailable && (
         <FilesDialog {...filesBrowser} />
       )}
