@@ -22,5 +22,5 @@ export function WorkspaceFavicon({ root, fallback }: { root: string | null; fall
   }, [root, machineId]);
 
   if (root === null || found === null || found.root !== root || broken === found.path) return <>{fallback}</>;
-  return <span className="sidebar-mark workspace-favicon" aria-hidden="true"><img src={fileUrl(found.path, null)} alt="" width={16} height={16} onError={() => setBroken(found.path)} /></span>;
+  return <span className="sidebar-mark workspace-favicon sidebar-row-face" aria-hidden="true"><img src={fileUrl(found.path, null)} alt="" width={16} height={16} onError={() => setBroken(found.path)} /></span>;
 }
