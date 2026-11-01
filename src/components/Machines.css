@@ -4,7 +4,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  flex: 1 1 auto;
+  /* the roster hugs its rows: the Agents head follows the last workspace, as herdr docks its
+     Agents panel under Spaces instead of pinning it to the footer */
+  flex: 0 1 auto;
   min-height: 0;
   overflow-y: auto;
   padding: var(--space-2) var(--side-gutter);
@@ -33,12 +35,13 @@
   border-top: var(--hairline) solid var(--sidebar-divider);
 }
 
-/* Machine header — matches .sidebar-section-header */
+/* Machine header: the title owns its own mark, then the controls take their own columns, so no
+   cell has to hold a mark and a name at once. */
 .machine-header {
   display: grid;
-  grid-template-columns: var(--side-box) 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
   min-height: var(--side-row);
   padding: 0 var(--space-2);
   border-radius: var(--sidebar-radius);
@@ -68,6 +71,7 @@
 }
 
 .machine-name {
+  font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
   color: var(--text);
   overflow: hidden;
@@ -76,7 +80,7 @@
 }
 
 .machine-kind {
-  font-size: var(--fs-xs);
+  font-size: var(--fs-2xs);
   color: var(--text-dim);
   text-transform: lowercase;
   flex-shrink: 0;
@@ -135,8 +139,8 @@
 }
 
 .machine-new:hover:not(:disabled) {
-  background: var(--accent);
-  color: var(--primary-text);
+  background: var(--bg-hover);
+  color: var(--text);
 }
 
 .machine-fold:focus-visible,
@@ -308,7 +312,7 @@
     border: 0;
   }
 
-  .app.sidebar-collapsed .machine-fold,
+  .app.sidebar-collapsed .machine-toggle,
   .app.sidebar-collapsed .machine-new,
   .app.sidebar-collapsed .machine-manage {
     display: none;
@@ -329,59 +333,8 @@
     display: none;
   }
 
-  /* Hover expansion: show name/kind/state on hover */
-  .app.sidebar-collapsed .machine-group:hover .machine-header :is(.machine-name, .machine-kind, .machine-state),
-  .app.sidebar-collapsed .machine-group:focus-within .machine-header :is(.machine-name, .machine-kind, .machine-state) {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0;
-    padding: 0;
-    overflow: visible;
-    clip-path: none;
-    white-space: nowrap;
-  }
-
-  .app.sidebar-collapsed .machine-group:hover .machine-new,
-  .app.sidebar-collapsed .machine-group:focus-within .machine-new,
-  .app.sidebar-collapsed .machine-group:hover .machine-fold,
-  .app.sidebar-collapsed .machine-group:focus-within .machine-fold {
-    display: inline-flex;
-  }
-
-  /* Expand machine's workspace list on hover */
-  .app.sidebar-collapsed .machine-group:hover > .machine-workspaces,
-  .app.sidebar-collapsed .machine-group:focus-within > .machine-workspaces {
-    position: absolute;
-    left: var(--sidebar-rail-w);
-    top: 0;
-    min-width: 260px;
-    max-height: 100vh;
-    overflow-y: auto;
-    background: var(--sidebar-bg);
-    border: var(--hairline) solid var(--sidebar-border);
-    border-left: none;
-    border-radius: 0 var(--sidebar-radius) var(--sidebar-radius) 0;
-    box-shadow: var(--shadow-pop);
-    z-index: var(--z-popover);
-    padding: var(--space-2);
-  }
-
-  .app.sidebar-collapsed .machine-group:hover > .machine-workspaces .sidebar-row-content,
-  .app.sidebar-collapsed .machine-group:focus-within > .machine-workspaces .sidebar-row-content {
-    display: flex;
-  }
-
-  .app.sidebar-collapsed .machine-group:hover > .machine-workspaces .sidebar-row,
-  .app.sidebar-collapsed .machine-group:focus-within > .machine-workspaces .sidebar-row {
-    justify-content: start;
-    padding-right: var(--space-2);
-  }
-
-  .app.sidebar-collapsed .machine-group:hover > .machine-workspaces .sidebar-row-meta,
-  .app.sidebar-collapsed .machine-group:focus-within > .machine-workspaces .sidebar-row-meta {
-    position: static;
-  }
+  /* No hover expansion: the rail already stands every mark in this PC, so opening a second copy of
+     the list over the terminal would be a duplicate. A row's tooltip says what it opens. */
 }
 
 /* Mobile drawer */
