@@ -18,10 +18,11 @@ const ABOVE_KEY = "herdr-web-ui:settings-above";
 /** how long to wait before releasing the traversal's busy state, not its ownership */
 const LANDING_MS = 1000;
 
-/** One step into Settings: the page shown (null: a phone's list of pages) and the key bar editor over it. */
+/** One step into Settings: the page shown (null: a phone's list of pages), the key bar editor over it, and Add PC over Remote PCs. */
 export interface SettingsLevel {
   page: string | null;
   keyBar: boolean;
+  addPc?: boolean;
 }
 
 export interface SettingsEntry extends SettingsLevel {
@@ -33,10 +34,11 @@ export interface SettingsEntry extends SettingsLevel {
  * What the dialog shows, as the steps that led there. A phone lists the pages first, so its
  * list is a step of its own; a wider dialog opens on a page, and turning to another replaces it.
  */
-export function settingsLevels(narrow: boolean, page: string | null, keyBar: boolean): SettingsLevel[] {
+export function settingsLevels(narrow: boolean, page: string | null, keyBar: boolean, addPc = false): SettingsLevel[] {
   const levels: SettingsLevel[] = narrow ? [{ page: null, keyBar: false }] : [];
   if (page !== null) levels.push({ page, keyBar: false });
   if (page !== null && keyBar) levels.push({ page, keyBar: true });
+  if (page !== null && addPc) levels.push({ page, keyBar: false, addPc: true });
   return levels;
 }
 
@@ -45,10 +47,11 @@ export function settingsEntry(state: unknown): SettingsEntry | null {
   if (state === null || typeof state !== "object") return null;
   const entry = (state as Record<string, unknown>)[KEY];
   if (entry === null || typeof entry !== "object") return null;
-  const { page, keyBar, depth } = entry as Record<string, unknown>;
+  const { page, keyBar, addPc, depth } = entry as Record<string, unknown>;
   if ((page !== null && typeof page !== "string") || typeof keyBar !== "boolean") return null;
-  if (typeof depth !== "number" || !Number.isInteger(depth) || depth < 1 || depth > 3) return null;
-  return { page, keyBar, depth };
+  if (addPc !== undefined && typeof addPc !== "boolean") return null;
+  if (typeof depth !== "number" || !Number.isInteger(depth) || depth < 1 || depth > 4) return null;
+  return { page, keyBar, depth, ...(addPc === true ? { addPc: true } : {}) };
 }
 
 const fieldOf = (state: unknown, key: string): unknown =>
@@ -69,7 +72,7 @@ const listeners = new Set<Listener>();
 let wanted: readonly SettingsLevel[] = [];
 /** the steps this module knows the history holds for Settings, by depth; null for one it did not push and cannot see */
 let held: Array<SettingsLevel | null> = [];
-const same = (a: SettingsLevel | null, b: SettingsLevel): boolean => a !== null && a.page === b.page && a.keyBar === b.keyBar;
+const same = (a: SettingsLevel | null, b: SettingsLevel): boolean => a !== null && a.page === b.page && a.keyBar === b.keyBar && (a.addPc === true) === (b.addPc === true);
 /** traversals asked for here that have not landed yet: nothing is pushed while one is under way */
 let rewinding = 0;
 let landing: ReturnType<typeof setTimeout> | undefined;
