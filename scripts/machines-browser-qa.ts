@@ -137,13 +137,15 @@ try {
   await page.getByRole("button", { name: "New workspace on QA second PC", exact: true }).click();
   const create = page.getByRole("dialog", { name: "New workspace · QA second PC", exact: true });
   await create.waitFor(); await create.getByRole("button", { name: "Close dialog", exact: true }).click();
-  // Add PC lives in Settings → Remote PCs; opening it closes Settings
+  // Add PC lives in Settings → Remote PCs, and opens inside the settings surface
   await page.locator(".sidebar-footer").getByRole("button", { name: "Settings", exact: true }).click();
   await openSettingsPage(page, "Remote PCs");
-  await page.getByRole("dialog", { name: "Settings", exact: true }).getByRole("button", { name: "Add PC", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Add PC", exact: true }); await dialog.waitFor();
+  const settingsDialog = page.getByRole("dialog", { name: "Settings", exact: true });
+  await settingsDialog.getByRole("button", { name: "Add PC", exact: true }).click();
+  await settingsDialog.getByRole("textbox", { name: "SSH alias or user@address", exact: true }).waitFor();
   await page.screenshot({ path: join(evidence, "desktop-add-pc-dark.png") });
-  await dialog.getByRole("button", { name: "Close PC setup" }).click();
+  await settingsDialog.getByRole("button", { name: "Back to settings", exact: true }).click();
+  await settingsDialog.getByRole("button", { name: "Close settings", exact: true }).click();
   await page.screenshot({ path: join(evidence, "desktop-dark.png") });
   await page.locator(".sidebar-footer").getByRole("button", { name: "Settings", exact: true }).click();
   await page.getByRole("dialog", { name: "Settings", exact: true }).getByRole("button", { name: "Light", exact: true }).click();
@@ -155,11 +157,14 @@ try {
   await page.screenshot({ path: join(evidence, "mobile-light.png") });
   await page.locator(".sidebar-footer").getByRole("button", { name: "Settings", exact: true }).click();
   await openSettingsPage(page, "Remote PCs");
-  await page.getByRole("dialog", { name: "Settings", exact: true }).getByRole("button", { name: "Add PC", exact: true }).click();
+  const mobileSettings = page.getByRole("dialog", { name: "Settings", exact: true });
+  await mobileSettings.getByRole("button", { name: "Add PC", exact: true }).click();
+  await mobileSettings.getByRole("textbox", { name: "SSH alias or user@address", exact: true }).waitFor();
   await page.screenshot({ path: join(evidence, "mobile-add-pc-light.png") });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false);
-  await page.getByRole("button", { name: "Close PC setup" }).click();
-  // Settings closed the drawer when it opened, and Add PC closed Settings: open the drawer again
+  await mobileSettings.getByRole("button", { name: "Back to settings", exact: true }).click();
+  await mobileSettings.getByRole("button", { name: "Close settings", exact: true }).click();
+  // Settings closed the drawer when it opened: open the drawer again
   await page.getByRole("button", { name: "Open workspace list", exact: true }).click();
   await page.locator(".sidebar-footer").getByRole("button", { name: "Settings", exact: true }).click();
   const settings = page.getByRole("dialog", { name: "Settings", exact: true });
