@@ -1,10 +1,11 @@
-/* the turn rail: a short dash per turn the user sent, in the margin left of the chat column */
+/* the turn rail: one short pill per turn the user sent, in the margin left of the chat column */
 .chat-minimap {
   position: absolute;
   top: 50%;
   left: var(--space-2);
   z-index: var(--z-header);
-  width: var(--space-4);
+  /* the current turn's pill is this wide; the other turns take half of it */
+  width: var(--space-6);
   transform: translateY(-50%);
 }
 
@@ -13,7 +14,7 @@
   left: 0;
   width: 100%;
   /* one step of the rail: a dense rail's ticks touch and never overlap */
-  height: min(var(--space-2), calc(100% / var(--minimap-steps)));
+  height: min(var(--space-6), var(--minimap-step, var(--space-2)));
   padding: 0;
   border: 0;
   background: transparent;
@@ -26,26 +27,82 @@
   position: absolute;
   top: 50%;
   left: 0;
-  width: var(--space-2);
-  height: 1px;
-  background: var(--text-muted);
-  transition: width var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+  width: var(--space-3);
+  /* a pill, not a hairline: dense rails thin it so the turns stay apart */
+  height: min(var(--space-1), calc(var(--minimap-step, var(--space-1)) * 0.6));
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text-dim) 62%, transparent);
+  transform: translateY(-50%);
+  transition: width var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
 }
 
 .chat-minimap-tick:hover::before {
-  width: var(--space-3);
-  background: var(--text);
+  width: var(--space-4);
+  background: var(--text-dim);
 }
 
 .chat-minimap-tick[aria-current="true"]::before {
-  width: var(--space-3);
-  background: var(--accent);
+  width: var(--space-6);
+  background: color-mix(in srgb, var(--accent) 45%, var(--text));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 38%, transparent);
 }
 
 .chat-minimap-tick:focus-visible {
   outline: var(--ring);
   outline-offset: 0;
   border-radius: var(--radius-sm);
+}
+
+/* the turn card: the bubble glyph, which message this is, then its first words */
+.chat-minimap-card {
+  position: absolute;
+  z-index: var(--z-popover);
+  width: 20rem;
+  overflow: hidden;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-card);
+  color: var(--text);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.chat-minimap-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+}
+
+.chat-minimap-card-head svg {
+  flex: none;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  color: var(--text-dim);
+}
+
+.chat-minimap-card-head span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-minimap-card-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-top: var(--hairline) solid var(--border);
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-base);
+  overflow-wrap: anywhere;
 }
 
 @media (prefers-reduced-motion: reduce) {
