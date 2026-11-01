@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Monitor, X } from "lucide-react";
 import type { Machine, SetupAction, SetupJob } from "../../shared/machines.ts";
 import { answerMachineSetup, fetchMachineSetup, startMachineSetup } from "../lib/api.ts";
@@ -11,9 +11,37 @@ import "./Machines.css";
 import { Button } from "../lib/heroui/orbit-components.tsx";
 import { useT } from "../lib/i18n.ts";
 
+/**
+ * The standalone setup dialog: Add PC from the command palette, and Reconnect PC or Update
+ * remote bridge from a PC's own menu. Settings → Remote PCs draws the same form inside its own
+ * surface instead, so nothing opens over the settings it came from.
+ */
 export function MachineDialog({ machine, updateRemote = false, onClose, onConnected }: { machine?: Machine; updateRemote?: boolean; onClose(): void; onConnected(id: string): void }) {
   const t = useT();
   const dialog = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  const title = updateRemote ? t("Update remote bridge") : machine?.action_required === "connect" ? t("Connect") : machine?.action_required === "setup" ? t("Set up web access") : machine ? t("Reconnect PC") : t("Add PC");
+  // showModal() moves focus to the first focusable element (Close), so the field takes it once the
+  // dialog is up; Settings' embedded form focuses the same field from its own effect
+  useEffect(() => {
+    const element = dialog.current;
+    element?.showModal();
+    element?.querySelector<HTMLInputElement>(".machine-destination")?.focus();
+  }, []);
+  return <dialog ref={dialog} className="modal machine-dialog" aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); onClose(); }}>
+    <header className="modal-header"><h2 id={titleId} className="modal-title"><Monitor size={18} /> {title}</h2><button type="button" className="icon-button" aria-label={t("Close PC setup")} onClick={onClose}><X /></button></header>
+    <MachineSetup machine={machine} updateRemote={updateRemote} onClose={onClose} onConnected={onConnected} />
+  </dialog>;
+}
+
+/**
+ * The setup steps themselves: the SSH form, the host-key question, install approval and progress.
+ * It is the dialog's body and footer, and Settings' inline Add PC view; `embedded` takes the
+ * settings body's padding and scroll instead of a modal's, and offers its own Cancel.
+ */
+export function MachineSetup({ machine, updateRemote = false, embedded = false, autoFocus = false, onClose, onConnected }: { machine?: Machine; updateRemote?: boolean; embedded?: boolean; autoFocus?: boolean; onClose(): void; onConnected(id: string): void }) {
+  const t = useT();
+  const formId = useId();
   const destinationField = useRef<HTMLInputElement>(null);
   const [destination, setDestination] = useState(machine?.target?.destination ?? "");
   const [name, setName] = useState(machine?.name ?? "");
@@ -30,11 +58,17 @@ export function MachineDialog({ machine, updateRemote = false, onClose, onConnec
   const secretAllowed = window.isSecureContext;
   const needsBridgeUpdate = job?.phase === "failed" && job.action_required === "update_bridge";
 
-  // closing cancels a job that still waits on this dialog (a question, an approval); an
-  // approved install keeps going on the server and shows in the sidebar
-  // React's autoFocus runs at mount, while the dialog is still closed; showModal() then moves focus
-  // to the first focusable element (Close), so the field is focused again once the dialog is open
-  useEffect(() => { mounted.current = true; dialog.current?.showModal(); destinationField.current?.focus(); return () => { mounted.current = false; const current = jobRef.current; if (current && !["connected", "failed", "cancelled", "installing", "starting"].includes(current.phase)) void answerMachineSetup(current.id, { action: "cancel" }).catch(() => {}); }; }, []);
+  // closing cancels a job that still waits on this form (a question, an approval); an approved
+  // install keeps going on the server and shows in the sidebar
+  useEffect(() => {
+    mounted.current = true;
+    if (autoFocus) destinationField.current?.focus();
+    return () => {
+      mounted.current = false;
+      const current = jobRef.current;
+      if (current && !["connected", "failed", "cancelled", "installing", "starting"].includes(current.phase)) void answerMachineSetup(current.id, { action: "cancel" }).catch(() => {});
+    };
+  }, [autoFocus]);
   const running = !!job && ["installing", "starting"].includes(job.phase);
   useEffect(() => {
     if (!job || finished) return;
@@ -74,12 +108,11 @@ export function MachineDialog({ machine, updateRemote = false, onClose, onConnec
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setPending(false); }
   };
-  return <dialog ref={dialog} className="modal machine-dialog" aria-labelledby="machine-dialog-title" onCancel={(e) => { e.preventDefault(); onClose(); }}>
-    <header className="modal-header"><h2 id="machine-dialog-title" className="modal-title"><Monitor size={18} /> {t(updateRemote ? "Update remote bridge" : machine?.action_required === "connect" ? "Connect" : machine?.action_required === "setup" ? "Set up web access" : machine ? "Reconnect PC" : "Add PC")}</h2><button className="icon-button" aria-label={t("Close PC setup")} onClick={onClose}><X /></button></header>
-    <div className="modal-body">
-      {(!job || finished && job.phase !== "connected") && <form id="machine-connect-form" onSubmit={(e) => { e.preventDefault(); void begin(); }}>
+  return <>
+    <div className={embedded ? "machine-setup-body" : "modal-body"}>
+      {(!job || finished && job.phase !== "connected") && <form id={formId} onSubmit={(e) => { e.preventDefault(); void begin(); }}>
         {machine?.herdr_profile_id ? <p className="field-hint">{machine.name} — {destination} / {session}</p> : <>
-        <label className="field"><span className="field-label">{t("SSH alias or user@address")}</span><input ref={destinationField} autoFocus className="input" required autoComplete="off" value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="devbox or user@192.168.1.20" /></label>
+        <label className="field"><span className="field-label">{t("SSH alias or user@address")}</span><input ref={destinationField} className="input machine-destination" required autoComplete="off" value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="devbox or user@192.168.1.20" /></label>
         <label className="field"><span className="field-label">{t("PC name")}</span><input className="input" maxLength={100} value={name} placeholder={destination || t("Filled from the SSH address")} onChange={(e) => setName(e.target.value)} /></label>
         <details><summary>{t("Advanced settings")}</summary><div className="machine-advanced">
           <label className="field"><span className="field-label">{t("SSH port")}</span><input className="input" type="number" min="1" max="65535" placeholder={t("From SSH config (default 22)")} value={port} onChange={(e) => setPort(e.target.value)} /></label>
@@ -100,14 +133,15 @@ export function MachineDialog({ machine, updateRemote = false, onClose, onConnec
       </form></>}</div>}
       {error && <p className="machine-error" role="alert">{error}</p>}
     </div>
-    <footer className="modal-footer">
+    <footer className={embedded ? "machine-setup-footer" : "modal-footer"}>
+      {embedded && (!job || finished && job.phase !== "connected") && <Button variant="ghost" disabled={pending} onClick={onClose}>{t("Cancel")}</Button>}
       {job && !finished && <Button variant="secondary" disabled={pending} onClick={() => void act({ action: "cancel" })}>{t(running ? "Cancel install" : "Cancel connection")}</Button>}
       {running && <Button variant="primary" onClick={onClose}>{t("Continue in background")}</Button>}
       {job?.challenge?.kind === "host_key" && <><Button variant="secondary" disabled={pending} onClick={() => void act({ action: "answer", challenge_id: job.challenge!.id, answer: "no" })}>{t("Reject")}</Button><Button variant="primary" disabled={pending} onClick={() => void act({ action: "answer", challenge_id: job.challenge!.id, answer: "yes" })}>{t("Trust fingerprint")}</Button></>}
       {job?.phase === "approval" && <Button variant="primary" disabled={pending} onClick={() => void act({ action: "approve" })}>{t("Install and connect")}</Button>}
-      {job?.phase === "connected" ? <Button variant="primary" onClick={() => onConnected(job.machine_id)}>{t("Open PC")}</Button> : (!job || finished) && <Button type="submit" variant="primary" form="machine-connect-form" disabled={pending}>{t(pending ? "Connecting…" : needsBridgeUpdate ? "Update bridge and connect" : job ? "Retry connection" : "Connect")}</Button>}
+      {job?.phase === "connected" ? <Button variant="primary" onClick={() => onConnected(job.machine_id)}>{t("Open PC")}</Button> : (!job || finished) && <Button type="submit" variant="primary" form={formId} disabled={pending}>{t(pending ? "Connecting…" : needsBridgeUpdate ? "Update bridge and connect" : job ? "Retry connection" : "Connect")}</Button>}
     </footer>
-  </dialog>;
+  </>;
 }
 
 function SshOutput({ text }: { text: string }) {
