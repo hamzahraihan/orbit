@@ -24,7 +24,6 @@ import { arrangeNotices, dismissNotice, NO_DISMISSALS, settleDismissed, type Dis
 import { hermesCtrlCTooSoon, stopKey } from "../lib/hermesStop.ts";
 import { type DraftRefusal, MAX_COMPOSER_CHARS, QUEUE_READY_STATUS, agentDisplayLabel, composerDelivery, composerMessage, composerPayload, pendingActionUncertain, submitNote, submitNotTyped, submitRefusal } from "../lib/compose.ts";
 import { afterRead, afterSend, afterSettled, composerLift, greetingMemory, rememberGreeting, greetingFits, greetingFolder, roomOverComposer, showsGreeting, type ChatRead } from "../lib/greeting.ts";
-import { DETACHED, usePaneBranch } from "../lib/paneBranch.ts";
 import { answerFromText, answerHint, answerRefusal, needsConfirmation, type TypedAnswer } from "../lib/promptAnswer.ts";
 import { ApiError, AttachmentTooLargeError, assertAttachable, fetchPaneScroll, fetchPaneSelection, scrollPane } from "../lib/api.ts";
 import { userErrorMessage } from "../lib/userError.ts";
@@ -116,10 +115,6 @@ export interface PaneTerminalProps {
   backgroundWait?: boolean;
   /** the pane's working directory and its PC's name: an empty chat's greeting names them */
   cwd?: string | null;
-  /** the pane's workspace: its checkout's branch stands beside the folder under the composer */
-  workspaceId?: string | null;
-  /** that workspace is a linked worktree of this repository (its name, as herdr gives it); null: it is not one */
-  worktreeRepo?: string | null;
   machineName?: string;
   /** the lens over the pane: the chat transcript, or the live xterm grid (App remembers it per pane) */
   view: PaneView;
@@ -168,8 +163,6 @@ export function PaneTerminal({
   plan = null,
   backgroundWait = false,
   cwd = null,
-  workspaceId = null,
-  worktreeRepo = null,
   machineName = "",
   view,
   findRequest = 0,
@@ -197,7 +190,6 @@ export function PaneTerminal({
   const machineId = useMachineId();
   const openWebRef = useRef((uri: string, shiftKey: boolean) => openWebPage?.(uri, shiftKey, machineId) ?? false);
   openWebRef.current = (uri, shiftKey) => openWebPage?.(uri, shiftKey, machineId) ?? false;
-  const branchWord = usePaneBranch(machineId, workspaceId);
   const machineSessions = useMachineSessions();
   const sessionRef = useRef<MachineSession | null>(null);
   const submitRetention = useContext(PaneSubmitContext);
@@ -3058,9 +3050,6 @@ export function PaneTerminal({
         <Composer
           key={paneId}
           paneId={paneId}
-          cwd={cwd}
-          branch={branchWord === DETACHED ? t("Detached HEAD") : branchWord}
-          worktreeRepo={worktreeRepo}
           autoFocus={active && !autoSelected && !coarse}
           active={active}
           agent={agent}
