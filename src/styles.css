@@ -25,7 +25,9 @@
   /* t3.chat dark theme tokens (aubergine + raspberry) */
   --bg-sidebar: #14080f;
   --bg-main: #221d27;
-  --bg-composer: rgba(42, 36, 48, 0.8);
+  /* the input card's face: its theme's elevated surface at four fifths, so the card follows every
+     palette instead of holding this one's dark plum under a light theme's text */
+  --bg-composer: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
   --bg-chip: rgba(255, 255, 255, 0.05);
   --accent-strong: #8f1a52;
   /* the send button's gradient foot */
@@ -193,21 +195,24 @@
      own box and the columns would differ by their gutters */
   /* a long user message folds to this many lines of its prose (ChatView.css caps the bubble's body
      at the count; lib/userMessageFold.ts folds a message past it) */
-  /* sidebar semantic tokens (new design) */
+  /* sidebar semantic tokens: herdr's own sidebar is the density reference, so a row is one control
+     tall and the roster follows the density setting like every other control */
   --sidebar-bg: var(--bg-panel);
   --sidebar-border: var(--border);
-  --sidebar-row-h: 40px;
-  --sidebar-row-h-2: 56px;
-  --sidebar-mark-size: 20px;
-  --sidebar-gutter: 12px;
-  --sidebar-indent: 16px;
+  --sidebar-row-h: var(--control-h);
+  --sidebar-row-h-2: calc(var(--control-h) + var(--space-3));
+  --sidebar-mark-size: var(--icon-size);
+  --sidebar-gutter: var(--space-2);
   --sidebar-hover: var(--bg-hover);
-  --sidebar-selected: var(--bg-hover);
+  --sidebar-selected: var(--accent-tint);
   --sidebar-pinned-bg: var(--bg-elevated);
   --sidebar-pinned-border: var(--border-strong);
   --sidebar-divider: var(--border);
   --sidebar-radius: var(--radius-md);
-  --sidebar-rail-w: 48px;
+  /* the collapsed rail: its square target, and the column that holds it with a `--space-2` gutter
+     on each side. The rail is a column of the sidebar, not a card over the panes */
+  --sidebar-rail-item: 38px;
+  --sidebar-rail-w: calc(var(--sidebar-rail-item) + 2 * var(--space-2));
 
   /* focus */
   /* the chat lane: transcript, composer column, held list (Settings → Chat width, lib/settings.ts).
@@ -1624,8 +1629,6 @@ button {
   /* the sidebar column's width: the one the user dragged its edge to (--sidebar-user-w, written
      by App), else the density's; never more than half the window */
   --sidebar-shown-w: min(var(--sidebar-user-w, var(--sidebar-w)), 50vw);
-  /* the column the toggle leaves in its place: one mark a row, with the room for its state badge */
-  --sidebar-rail-w: 48px;
   /* the docked file panel's width (FileViewer.css): the one its edge was dragged to (--file-panel-user-w,
      written by App), else min(42vw, 560px). The panel yields first to leave 320px for the pane. */
   --file-panel-shown-w: min(max(320px, min(var(--file-panel-user-w, min(42vw, 560px)), 60vw)), calc(100vw - var(--sidebar-shown-w) - 320px));
@@ -1672,50 +1675,6 @@ button {
   border-right: none;
   padding-left: env(safe-area-inset-left, 0px);
 }
-
-/* a full-width New workspace button, then a search row: the two things a rail offers first */
-.sidebar-new {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  flex: 0 0 auto;
-  min-height: 36px;
-  margin: var(--space-2) var(--space-2) var(--space-1);
-  padding: 0 var(--space-3);
-  border: 0;
-  border-radius: var(--radius-md);
-  background: linear-gradient(180deg, var(--accent-strong) 0%, #7a1648 100%);
-  color: var(--primary-text);
-  font: inherit;
-  font-size: 13px;
-  font-weight: var(--fw-semibold);
-  cursor: pointer;
-}
-.sidebar-new:hover { background: var(--accent); }
-.sidebar-new svg { width: var(--icon-size); height: var(--icon-size); }
-
-.sidebar-search {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex: 0 0 auto;
-  min-height: var(--control-h);
-  margin: 0 var(--space-2) var(--space-2);
-  padding: var(--space-2) 0;
-  border: 0;
-  border-bottom: var(--hairline) solid var(--border);
-  border-radius: 0;
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--fs-sm);
-  text-align: left;
-  cursor: pointer;
-}
-.sidebar-search:hover { color: var(--text); }
-.sidebar-search svg { width: var(--icon-size); height: var(--icon-size); flex: 0 0 auto; }
-.sidebar-search span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 
 
