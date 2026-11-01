@@ -39,6 +39,11 @@ describe("settingsLevels", () => {
   it("has no key bar step without a page under it", () => {
     expect(settingsLevels(true, null, true)).toEqual([{ page: null, keyBar: false }]);
   });
+
+  it("puts the Add PC form above Remote PCs, after a phone's list", () => {
+    expect(settingsLevels(false, "remote", false, true)).toEqual([{ page: "remote", keyBar: false }, { page: "remote", keyBar: false, addPc: true }]);
+    expect(settingsLevels(true, "remote", false, true)).toEqual([{ page: null, keyBar: false }, { page: "remote", keyBar: false }, { page: "remote", keyBar: false, addPc: true }]);
+  });
 });
 
 describe("settingsEntry", () => {
@@ -47,11 +52,13 @@ describe("settingsEntry", () => {
   it("reads the entry beside whatever else the state holds", () => {
     expect(settingsEntry({ ...state({ page: "chat", keyBar: false, depth: 2 }), "herdr-web-ui:file-preview": { path: "a" } })).toEqual({ page: "chat", keyBar: false, depth: 2 });
     expect(settingsEntry(state({ page: null, keyBar: false, depth: 1 }))).toEqual({ page: null, keyBar: false, depth: 1 });
+    expect(settingsEntry(state({ page: "remote", keyBar: false, addPc: true, depth: 2 }))).toEqual({ page: "remote", keyBar: false, addPc: true, depth: 2 });
   });
 
   it("is null for a state without one, or one it did not write", () => {
     for (const other of [null, undefined, "settings", 1, {}, state(null), state("chat"), state({ page: 3, keyBar: false, depth: 1 }), state({ page: "chat", keyBar: "no", depth: 1 }),
-      state({ page: "chat", keyBar: false }), state({ page: "chat", keyBar: false, depth: 0 }), state({ page: "chat", keyBar: false, depth: 1.5 }), state({ page: "chat", keyBar: false, depth: 9 })]) {
+      state({ page: "chat", keyBar: false }), state({ page: "chat", keyBar: false, depth: 0 }), state({ page: "chat", keyBar: false, depth: 1.5 }), state({ page: "chat", keyBar: false, depth: 9 }),
+      state({ page: "remote", keyBar: false, addPc: "yes", depth: 2 })]) {
       expect(settingsEntry(other)).toBeNull();
     }
   });
