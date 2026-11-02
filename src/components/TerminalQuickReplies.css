@@ -1,0 +1,65 @@
+/* The quick reply row under the terminal's input line (TerminalQuickReplies.tsx), between the
+   input slot and the key bar: the line hangs from the slot's bottom edge and grows upward over
+   the grid, so a line of several rows never covers these chips. */
+
+.terminal-quick {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-2) 0;
+}
+
+.terminal-quick-row {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.terminal-quick-row::-webkit-scrollbar {
+  display: none;
+}
+
+.terminal-quick-reply {
+  flex: 0 0 auto;
+  max-width: 16em;
+  min-height: var(--control-h);
+  padding: 0 var(--space-3);
+  overflow: hidden;
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.terminal-quick-reply:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+/* a reply whose first tap only asked: the danger tint says the next tap acts, until the arm lapses */
+.terminal-quick-reply.is-armed,
+.terminal-quick-reply.is-armed:hover:not(:disabled) {
+  border-color: var(--status-blocked);
+  background: var(--status-blocked-tint);
+  color: var(--status-blocked);
+}
+
+.terminal-quick-reply:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (pointer: coarse) {
+  .terminal-quick-reply {
+    min-height: calc(var(--touch-target) + var(--space-1));
+  }
+}
+
+.terminal-quick-note {
+  margin: var(--space-1) 0 0;
+  color: var(--status-blocked);
+  font-size: var(--fs-xs);
+}

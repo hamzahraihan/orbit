@@ -35,6 +35,7 @@ import { useMachineApi, useMachineId } from "../lib/machineContext.tsx";
 import { paneStorageId } from "../../shared/machines.ts";
 import { KeyBar } from "./KeyBar.tsx";
 import { TerminalInput } from "./TerminalInput.tsx";
+import { TerminalQuickReplies } from "./TerminalQuickReplies.tsx";
 import { FindBar } from "./FindBar.tsx";
 import { TerminalViewportTools, type TerminalSearchState } from "./TerminalViewportTools.tsx";
 import { SecretInput } from "./SecretInput.tsx";
@@ -2430,6 +2431,10 @@ export function PaneTerminal({
     updateSettings({ terminalInputMode: directTyping ? "line" : "direct" });
   }, [directTyping, updateSettings]);
 
+  // a quick reply put in the input line needs that line: a pane typing straight into the grid
+  // opens it, so the words are there to finish rather than hidden until the next switch
+  const revealInputLine = useCallback(() => { updateSettings({ terminalInputMode: "line" }); }, [updateSettings]);
+
   // the input line keeps a tapped grid from raising the keyboard; typing straight into it gives it
   // back. Only turning direct typing on raises it: a pane or lens picked with it on does not.
   const directTypingRef = useRef(directTyping);
@@ -3087,6 +3092,18 @@ export function PaneTerminal({
       {((!chatView && lineSlot) || secretInput) && <div ref={setInputSlot} className={`terminal-input-slot${!chatView && lineSlot ? "" : " is-empty"}`}>
         {secretInput ?? (!chatView && lineSlot && !secretActive && <TerminalInput key={paneId} active={active} owner={paneStorageId(machineId, paneId)} onComposing={setLineComposing} connected={connected && !held} onSend={sendTerminalLine} onEnter={pressEnter} onFocus={reassertGrid} />)}
       </div>}
+      {/* Settings → Quick replies draws the composer's list in the terminal too: a tap sends the
+          words and Enter, or leaves them in the input line when replies are set to go there. It
+          sits under the line's slot, where a line grown to several rows cannot cover it. */}
+      {presented && paneId !== null && !chatView && !secretActive && !observing && !ended && (
+        <TerminalQuickReplies
+          key={paneId}
+          owner={paneStorageId(machineId, paneId)}
+          connected={connected && !held}
+          onSend={sendTerminalLine}
+          onRevealInput={revealInputLine}
+        />
+      )}
       {presented && paneId !== null && !secretActive && !observing && !chatView && <KeyBar disabled={composing || !connected || !inputReady || held || ended} onKey={pressKey}
         holdScope={`${paneStorageId(machineId, paneId)}:${view}`}
         modifiers={modifiers} onToggleModifier={toggleModifier} items={settings.keyBarItems}
