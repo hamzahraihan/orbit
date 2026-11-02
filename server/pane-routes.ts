@@ -14,9 +14,10 @@ import { DevinHistoryChanged } from "./devin.ts";
 import { GjcSdkLookupError } from "./gjc-sdk.ts";
 import { agentRename, HerdrError, layoutSetSplitRatio, paneClear, paneClose, paneFind, paneFocus, paneGet, paneRead, paneRename, paneResize, paneScroll, paneScrollInfo, paneSelectionRead, paneSendKeys, paneSendText, paneSplit, paneSwap, paneSwapWith, paneZoom } from "./herdr/client.ts";
 import { PasteImageError, readImageBody, savePaneImage } from "./paste.ts";
+import type { ScheduledPrompts } from "./scheduled-prompts.ts";
 
 /** the native stores createServer was given; unset, each reader finds its own */
-export type PaneStores = { codexHome?: string; grokHome?: string; opencodeDb?: string; devinDbPath?: string; hermesHome?: string; onScroll?: (paneId: string) => void };
+export type PaneStores = { codexHome?: string; grokHome?: string; opencodeDb?: string; devinDbPath?: string; hermesHome?: string; onScroll?: (paneId: string) => void; scheduled?: ScheduledPrompts };
 
 /** the sides herdr's pane.swap and pane.resize take; anything else is refused before the RPC, which would answer invalid_request */
 const isPaneDirection = (value: unknown): value is PaneDirection => value === "left" || value === "right" || value === "up" || value === "down";
@@ -25,6 +26,15 @@ const READ_SOURCES = new Set<ReadSource>(["detection", "recent", "recent_unwrapp
 const READ_FORMATS = new Set<ReadFormat>(["ansi", "text"]);
 
 const observedCwds = new Map<string, string>();
+
+/** Why a schedule was refused, in the words the client shows as it is. */
+const SCHEDULE_ERRORS: Readonly<Record<string, string>> = {
+  empty_text: "there is nothing to send",
+  text_too_long: "that message is too long to schedule",
+  send_at_in_past: "that time has already passed",
+  send_at_too_far: "a schedule stops at 30 days ahead",
+  too_many: "this pane already has 20 messages lined up",
+};
 
 export async function paneContext(paneId: string): Promise<{ agent: string | null; cwd: string }> {
   const pane = await paneGet(paneId);
@@ -239,6 +249,34 @@ export async function handlePaneRequest(request: Request, url: URL, pathname: st
       if (error instanceof ConversationUnavailable) return jsonResponse({ source: "scrollback", turns: [] });
       return errorResponse(error);
     }
+  }
+
+  // messages the user lined up for later (server/scheduled-prompts.ts): they live on the PC that
+  // owns the pane, so the schedule fires there whatever browser is open, or none
+  if (pathname === "/api/pane/schedule") {
+    const scheduled = options.scheduled;
+    if (!scheduled) return jsonResponse({ error: { code: "not_supported", message: "this server keeps no schedules" } }, 404);
+    if (request.method === "GET") {
+      const paneId = url.searchParams.get("pane_id");
+      if (!paneId) return badRequest("missing_pane_id", "pane_id query parameter is required");
+      return jsonResponse({ prompts: scheduled.list(paneId) });
+    }
+    if (request.method === "POST") {
+      const payload = await readJsonObject<{ pane_id?: unknown; text?: unknown; send_at?: unknown }>(request);
+      if (payload instanceof Response) return payload;
+      if (typeof payload.pane_id !== "string" || payload.pane_id.length === 0) return badRequest("missing_pane_id", "pane_id is required");
+      if (typeof payload.text !== "string") return badRequest("missing_text", "text is required");
+      if (typeof payload.send_at !== "number") return badRequest("missing_send_at", "send_at is required, in epoch milliseconds");
+      const created = scheduled.add({ paneId: payload.pane_id, text: payload.text, sendAt: payload.send_at });
+      if ("error" in created) return jsonResponse({ error: { code: created.error, message: SCHEDULE_ERRORS[created.error] ?? created.error } }, 400);
+      return jsonResponse({ prompt: created });
+    }
+    if (request.method === "DELETE") {
+      const promptId = url.searchParams.get("id");
+      if (!promptId) return badRequest("missing_id", "id query parameter is required");
+      return scheduled.cancel(promptId) ? jsonResponse({ ok: true }) : jsonResponse({ error: { code: "not_found", message: "no such scheduled message" } }, 404);
+    }
+    return badRequest("method_not_allowed", "use GET, POST or DELETE");
   }
 
   if (pathname === "/api/pane/input" || pathname === "/api/pane/keys") {
