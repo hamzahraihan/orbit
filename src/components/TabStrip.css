@@ -1,7 +1,8 @@
-/* herdr's tab row, over the pane: quiet names on a hairline, the open one underlined in amber */
+/* herdr's tab row, over the pane: quiet names, the open one on a filled plate
+   (tab-strip-item.is-active), never an accent underline */
 .tab-strip {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: var(--space-1);
   flex: 0 0 auto;
   min-height: var(--control-h);
@@ -48,22 +49,27 @@
 .tab-strip-item {
   position: relative;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   flex: 0 0 auto;
+  border-radius: var(--radius-sm);
 }
 
-/* the underline spans the name and the optional touch menu */
+/* the plate spans the name and the optional touch menu: one step up from the strip, with the
+   bar's hairline, as the header's chosen lens */
 .tab-strip-item.is-active {
-  box-shadow: inset 0 -2px 0 var(--accent);
+  background: var(--bg-chip);
+  box-shadow: inset 0 0 0 var(--hairline) var(--border-strong);
 }
 
 .tab-strip-tab {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 0 var(--space-3);
+  height: calc(var(--control-h) - var(--space-2));
+  padding: 0 var(--space-2);
   background: transparent;
   border: 0;
+  border-radius: var(--radius-sm);
   color: var(--text-dim);
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
@@ -130,8 +136,8 @@
   justify-content: center;
   align-self: center;
   flex: 0 0 auto;
-  width: 28px;
-  height: 28px;
+  width: calc(var(--control-h) - var(--space-2));
+  height: calc(var(--control-h) - var(--space-2));
   padding: 0;
   background: transparent;
   border: 0;
@@ -234,14 +240,14 @@
   .tab-strip-menu { transition: none; }
 }
 
-/* From 769px the header over the pane is the pane's surface (styles.css), and the strip under
-   it is the same one, not a band of the panel's colour between the two: the terminal's colour,
-   or the chat's, where the header has no rule and the strip's hairline is the one line over the
-   transcript. Below that the header is the panel's bar and the strip stays with it. */
+/* From 769px the strip takes the same surface as the flat bar above it (styles.css): the
+   panel's colour, so the chrome reads as one band, or the chat's, where the header has no rule
+   and the strip's hairline is the one line over the transcript. Below that the header is the
+   panel's bar and the strip stays with it. */
 @media (min-width: 769px) {
   .tab-strip,
   .tab-strip-row {
-    --strip-bg: var(--term-bg);
+    --strip-bg: var(--bg-panel);
   }
 
   .pane-column.is-chat .tab-strip,
