@@ -194,6 +194,124 @@
   text-align: center;
 }
 
+/* A stretch of rows is selected: one quiet bar above the patch says which, and offers the comment. */
+.repo-diff-selection {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+}
+
+.repo-diff-selection-range {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* the comment takes the same bar: what it is about goes as the bar's first row */
+.repo-diff-comment {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+}
+
+.repo-diff-comment-box {
+  width: 100%;
+  min-height: calc(var(--fs-sm) * var(--lh-base) * 3);
+  max-height: 30vh;
+  margin: 0;
+  padding: var(--space-2);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-base);
+  resize: vertical;
+}
+
+.repo-diff-comment-box::placeholder { color: var(--text-dim); }
+
+.repo-diff-comment-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.repo-diff-comment-open,
+.repo-diff-comment-cancel,
+.repo-diff-comment-send {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--control-h);
+  padding: 0 var(--space-3);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+.repo-diff-comment-open svg {
+  flex: none;
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.repo-diff-comment-open:hover,
+.repo-diff-comment-cancel:hover {
+  background: var(--bg-hover);
+}
+
+/* the one action that takes the comment: rose while it holds something to send, quiet until then */
+.repo-diff-comment-send {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: var(--fw-semibold);
+}
+
+.repo-diff-comment-send:disabled {
+  background: var(--bg-hover);
+  color: var(--text-dim);
+  cursor: default;
+}
+
+.repo-diff-comment-said {
+  flex: none;
+  margin: 0 0 var(--space-2);
+  text-align: left;
+}
+
+@media (pointer: coarse) {
+  .repo-diff-comment-open,
+  .repo-diff-comment-cancel,
+  .repo-diff-comment-send {
+    min-height: max(44px, var(--touch-target));
+    padding: 0 var(--space-4);
+  }
+}
+
 /* the patch on its way: rows the size of the diff's, a number and a line each, so the dialog holds its shape */
 .repo-diff-loading {
   display: flex;

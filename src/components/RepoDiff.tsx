@@ -1,9 +1,10 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_VIRTUAL_FILE_METRICS, parsePatchFiles, trimPatchContext, type FileDiffMetadata } from "@pierre/diffs";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { DEFAULT_VIRTUAL_FILE_METRICS, parsePatchFiles, trimPatchContext, type FileDiffMetadata, type SelectedLineRange } from "@pierre/diffs";
 import { FileDiff, Virtualizer, type FileDiffOptions } from "@pierre/diffs/react";
 
 import { DiffWorkerPool } from "./DiffWorkerPool.tsx";
 import { useT } from "../lib/i18n.ts";
+import { diffLineSelection, selectedDiffLines, type DiffCommentLine, type DiffLineSelection } from "../lib/repoDiffComment.ts";
 import type { DiffStyle } from "../lib/settings.ts";
 import { VIRTUAL_HIGHLIGHT_LINES } from "../lib/sourcePreview.ts";
 import { contentKey, keepEmptyRows, SCROLL_CONFIG, SHADOW_CSS, SOURCE_THEME } from "../lib/sourceTheme.ts";
@@ -19,6 +20,10 @@ export interface RepoDiffProps {
   theme: "dark" | "light";
   /** colored in the pool's worker; false draws plain rows, still windowed by the pool's manager (the setting off, or too long, which the host says) */
   colored: boolean;
+  /** the rows the user dragged over, or null once the selection is gone: the host comments on them */
+  onSelect: (selected: { selection: DiffLineSelection; lines: DiffCommentLine[] } | null) => void;
+  /** changes when the host has used the selection: the package's own highlight is cleared in place */
+  clearSelection: number;
 }
 
 /** The fewest context lines the package's trimmer keeps correct (at 0 it miscounts the lines it drops). */
@@ -56,9 +61,12 @@ function parseFile(text: string): FileDiffMetadata | null {
  * the virtualizer renders by identity, and its host fills the scroll root so it has a box before
  * the first anchor pass (the contracts VirtualSource measured).
  */
-export default function RepoDiff({ patch, style, folded, wrap, theme, colored }: RepoDiffProps) {
+export default function RepoDiff({ patch, style, folded, wrap, theme, colored, onSelect, clearSelection }: RepoDiffProps) {
   const t = useT();
   const hostRef = useRef<HTMLDivElement>(null);
+  // the package's component takes no ref, so its instance is kept from the post-render hook: it owns
+  // the selection highlight the host asks it to drop once the comment is taken
+  const diffRef = useRef<{ setSelectedLines(range: SelectedLineRange | null): void } | null>(null);
   const [lineHeight, setLineHeight] = useState<number | null>(null);
 
   useLayoutEffect(() => {
@@ -70,7 +78,16 @@ export default function RepoDiff({ patch, style, folded, wrap, theme, colored }:
 
   const text = useMemo(() => (folded ? trimPatchContext(patch, FOLDED_CONTEXT_LINES) : patch), [patch, folded]);
   const fileDiff = useMemo(() => parseFile(text), [text]);
-  const onPostRender = useCallback<NonNullable<Options["onPostRender"]>>((node, _instance, phase) => {
+  const onLineSelectionEnd = useCallback((range: SelectedLineRange | null) => {
+    const selection = diffLineSelection(range);
+    onSelect(selection === null || fileDiff === null ? null : { selection, lines: selectedDiffLines(fileDiff, selection) });
+  }, [fileDiff, onSelect]);
+  // the rows stay selected in the package until told otherwise: the host says when the comment is taken
+  useEffect(() => {
+    diffRef.current?.setSelectedLines(null);
+  }, [clearSelection]);
+  const onPostRender = useCallback<NonNullable<Options["onPostRender"]>>((node, instance, phase) => {
+    diffRef.current = phase === "unmount" ? null : instance;
     if (phase !== "unmount" && node.shadowRoot !== null) keepEmptyRows(node.shadowRoot);
   }, []);
   const options = useMemo<Options>(() => ({
@@ -82,10 +99,11 @@ export default function RepoDiff({ patch, style, folded, wrap, theme, colored }:
     themeType: theme,
     tokenizeMaxLength: colored ? VIRTUAL_HIGHLIGHT_LINES : 0,
     lineHoverHighlight: "disabled",
-    enableLineSelection: false,
+    enableLineSelection: true,
+    onLineSelectionEnd,
     unsafeCSS: DIFF_SHADOW_CSS,
     onPostRender,
-  }), [style, wrap, theme, colored, onPostRender]);
+  }), [style, wrap, theme, colored, onPostRender, onLineSelectionEnd]);
   const metrics = useMemo(() => (lineHeight === null ? null : { ...DEFAULT_VIRTUAL_FILE_METRICS, lineHeight }), [lineHeight]);
 
   if (fileDiff === null || fileDiff.hunks.length === 0) return <p className="repo-diff-note">{t("No lines changed.")}</p>;

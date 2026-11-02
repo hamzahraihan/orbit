@@ -1,18 +1,23 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Columns2, Copy, CopySlash, FileText, FoldVertical, Rows3, TriangleAlert, X } from "lucide-react";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Check, Columns2, Copy, CopySlash, FileText, FoldVertical, MessageSquarePlus, Rows3, TriangleAlert, X } from "lucide-react";
 
 import "./RepoDiffViewer.css";
 import { RenderBoundary } from "./RenderBoundary.tsx";
 import { Skeleton } from "./Skeleton.tsx";
 
 import type { RepoDiffFilePatch } from "../../shared/protocol.ts";
+import { paneStorageId } from "../../shared/machines.ts";
 import { ApiError } from "../lib/api.ts";
 import { copyText } from "../lib/clipboard.ts";
+import { composerDrafts } from "../lib/composerDraft.ts";
+import { MAX_COMPOSER_CHARS } from "../lib/compose.ts";
 import { pathParts } from "../lib/filePaths.ts";
 import { canHighlight, languageForPath } from "../lib/highlight.ts";
 import { useT } from "../lib/i18n.ts";
 import { useMachineApi } from "../lib/machineContext.tsx";
 import { comparisonWord, diffColorable, diffErrorMessage, diffStyleFor, repositoryFilePath, statusWord, unavailableMessage, type RepoDiffTarget } from "../lib/repoDiff.ts";
+import { formatDiffComment, type DiffCommentLine, type DiffLineSelection } from "../lib/repoDiffComment.ts";
+import { appendQuote } from "../lib/terminalQuote.ts";
 import { useSettings } from "../lib/settings.ts";
 import { SHEET_QUERY, useSheetSwipe } from "../lib/sheets.ts";
 import { skeletonRows } from "../lib/skeleton.ts";
@@ -84,6 +89,13 @@ export function RepoDiffViewer({ target, onClose, onOpenFile, keyboardActive = t
   const [load, setLoad] = useState<Load>(PENDING);
   const [folded, setFolded] = useState(false);
   const [shown, setShown] = useState<Shown | null>(null);
+  /** the rows the user dragged over, and their text, while a comment is written about them */
+  const [selected, setSelected] = useState<{ selection: DiffLineSelection; lines: DiffCommentLine[] } | null>(null);
+  const [commenting, setCommenting] = useState(false);
+  const [comment, setComment] = useState("");
+  const [commentNote, setCommentNote] = useState<string | null>(null);
+  /** bumped to clear the package's own highlight once the comment is taken */
+  const [selectionReset, setSelectionReset] = useState(0);
   const textRef = useRef<HTMLTextAreaElement>(null);
   useSheetSwipe(surface, onClose);
 
@@ -92,6 +104,9 @@ export function RepoDiffViewer({ target, onClose, onOpenFile, keyboardActive = t
     let live = true;
     setLoad(PENDING);
     setShown(null);
+    setSelected(null);
+    setCommenting(false);
+    setCommentNote(null);
     fetchRepoDiffFile({ paneId, directory, scope, base, head }, path, oldPath).then(
       (answer) => { if (live) setLoad({ status: "ready", answer }); },
       (error: unknown) => { if (live) setLoad({ status: "failed", error }); },
@@ -101,16 +116,43 @@ export function RepoDiffViewer({ target, onClose, onOpenFile, keyboardActive = t
 
   useEffect(() => {
     if (!keyboardActive) return;
-    const onKey = (event: KeyboardEvent): void => { if (event.key === "Escape" && !nativeModalOver(surface.current)) onClose(); };
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape" || nativeModalOver(surface.current)) return;
+      // a comment being written gives Escape up first: the diff closes on the next one
+      if (commenting) { setCommenting(false); setComment(""); return; }
+      onClose();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, keyboardActive, surface]);
+  }, [onClose, keyboardActive, surface, commenting]);
 
   useLayoutEffect(() => {
     if (shown === null) return;
     textRef.current?.focus();
     textRef.current?.select();
   }, [shown]);
+
+  const onSelectLines = useCallback((next: { selection: DiffLineSelection; lines: DiffCommentLine[] } | null) => {
+    setSelected(next);
+    setCommentNote(null);
+    if (next === null) setCommenting(false);
+  }, []);
+
+  /** The comment joins the pane's chat draft, where the user reads it and sends it: nothing is sent from here. */
+  const addComment = (): void => {
+    if (selected === null || target.paneId === null) return;
+    const block = formatDiffComment(path, selected.selection, selected.lines, comment);
+    if (block === null) return;
+    const key = `herdr-web-ui:composer-draft:${paneStorageId(target.machineId, target.paneId)}`;
+    const next = appendQuote(composerDrafts.read(key).text, block, MAX_COMPOSER_CHARS);
+    if (next === null) { setCommentNote(t("Too long for the message draft")); return; }
+    composerDrafts.set(key, next);
+    setSelected(null);
+    setCommenting(false);
+    setComment("");
+    setSelectionReset((count) => count + 1);
+    setCommentNote(t("Added to the message draft"));
+  };
 
   const answer = load.status === "ready" ? load.answer : null;
   const file = answer?.file ?? null;
@@ -137,7 +179,7 @@ export function RepoDiffViewer({ target, onClose, onOpenFile, keyboardActive = t
     if (unavailable !== null || patch === null) return <p className="repo-diff-note">{unavailable ?? t("No lines changed.")}</p>;
     return <RenderBoundary resetKey={patch} fallback={() => <p className="repo-diff-note" role="alert">{t("This change can't be shown.")}</p>}>
       <Suspense fallback={<DiffSkeleton label={t("Opening…")} />}>
-        <RepoDiff patch={patch} style={style} folded={folded} wrap={settings.wrapCode} theme={resolvedEntry.mode} colored={colored} />
+        <RepoDiff patch={patch} style={style} folded={folded} wrap={settings.wrapCode} theme={resolvedEntry.mode} colored={colored} onSelect={onSelectLines} clearSelection={selectionReset} />
       </Suspense>
     </RenderBoundary>;
   })();
@@ -184,7 +226,29 @@ export function RepoDiffViewer({ target, onClose, onOpenFile, keyboardActive = t
           </div>
           <button type="button" className="icon-button repo-diff-action repo-diff-close" aria-label={t("Close diff")} title={t("Close diff")} onClick={onClose}><X aria-hidden="true" /></button>
         </header>
-        <div className="repo-diff-body">{body}</div>
+        <div className="repo-diff-body">
+          {selected !== null && target.paneId !== null && (commenting
+            ? <form className="repo-diff-comment" onSubmit={(event) => { event.preventDefault(); addComment(); }}>
+              <label className="visually-hidden" htmlFor="repo-diff-comment-note">{t("Comment on these lines")}</label>
+              <textarea id="repo-diff-comment-note" className="repo-diff-comment-box" value={comment} maxLength={MAX_COMPOSER_CHARS}
+                placeholder={t("What should change here?")} autoFocus
+                onChange={(event) => setComment(event.target.value)} />
+              <div className="repo-diff-comment-actions">
+                <button type="button" className="repo-diff-comment-cancel" onClick={() => { setCommenting(false); setComment(""); }}>{t("Cancel")}</button>
+                <button type="submit" className="repo-diff-comment-send" disabled={comment.trim() === ""}>{t("Add to message")}</button>
+              </div>
+            </form>
+            : <div className="repo-diff-selection">
+              <span className="repo-diff-selection-range">
+                {t("Lines {start}–{end} selected", { start: selected.selection.start, end: selected.selection.end })}
+              </span>
+              <button type="button" className="repo-diff-comment-open" onClick={() => setCommenting(true)}>
+                <MessageSquarePlus aria-hidden="true" />{t("Comment")}
+              </button>
+            </div>)}
+          {commentNote !== null && <p className="repo-diff-note repo-diff-comment-said" role="status">{commentNote}</p>}
+          {body}
+        </div>
       </section>
     </div>
   );
