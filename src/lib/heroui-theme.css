@@ -42,9 +42,13 @@
   /* Accent / primary action — Orbit's ONE muted rose */
   --accent-foreground: var(--primary-text);
   --accent-hover: var(--primary-hover);
-  --accent-soft: var(--accent-tint);
-  --accent-soft-foreground: var(--accent);
-  --accent-soft-hover: color-mix(in srgb, var(--accent) 20%, transparent);
+  /* A chosen toggle reads as chosen: --accent-tint (12%) sits within a few units of the neutral
+     surface beside it, and the old foreground was --accent itself — dark rose on dark rose, so the
+     selected option looked more disabled than the unselected ones. One 30% mix holds up in both
+     themes, unlike the per-theme tints (12% dark, 10% light). */
+  --accent-soft: color-mix(in srgb, var(--accent) 30%, transparent);
+  --accent-soft-foreground: var(--text-strong);
+  --accent-soft-hover: color-mix(in srgb, var(--accent) 42%, transparent);
 
   /* Segmented / selected */
   --segment: var(--accent);

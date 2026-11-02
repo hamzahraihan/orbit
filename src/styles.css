@@ -2448,6 +2448,20 @@ button {
   color: var(--text-strong);
 }
 
+/* The chosen option takes the rose fill a settings toggle takes (--accent-soft in
+   lib/heroui-theme.css) and nothing else: --bg-hover over a --bg-elevated track is a few tonal
+   units apart, so the chosen tab read as one more hover. No ring around it: the track is the
+   frame, and a second one inside it reads as a box in a box. The header's view switch keeps the
+   hover fill and its own accent underline. */
+.segmented:not(.view-switch) > button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* on the filled option the accent-colored glyph sits on its own color: the label color reads */
+.segmented:not(.view-switch) > button[aria-pressed="true"] svg {
+  color: var(--text-strong);
+}
+
 /* the chosen lens carries the selection color on its glyph, like the rail does in the list */
 .segmented > button[aria-pressed="true"] svg {
   color: var(--accent);
