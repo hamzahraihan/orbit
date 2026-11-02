@@ -1649,7 +1649,7 @@ button {
   height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
   padding: env(safe-area-inset-top, 0px) calc(var(--space-3) + env(safe-area-inset-right, 0px)) 0
     calc(var(--space-3) + env(safe-area-inset-left, 0px));
-  background: var(--bg-main);
+  background: var(--bg-panel);
   /* a flat top: the content below is the page, the header only names it */
   border-bottom: none;
   /* Keep the header's painted background at the top of the app. The home-screen
@@ -1835,19 +1835,19 @@ button {
   gap: var(--space-2);
   flex: 0 0 auto;
   margin: 0;
-  font-size: var(--fs-lg);
-  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-tight);
   line-height: var(--lh-tight);
-  color: var(--text-strong);
+  color: var(--text);
   padding: 0;
   white-space: nowrap;
 }
 
 .brand-mark {
   display: block;
-  width: var(--mark-size);
-  height: var(--mark-size);
+  width: 18px;
+  height: 18px;
 }
 
 /* The selected pane on one line: mark and title, then PC › workspace › folder. The title may
@@ -1924,7 +1924,7 @@ button {
 }
 
 /* From 769px the lens switch is its two words and nothing around them: no track, no glyphs, the
-   chosen lens on the hover fill. Files follows it as an action of its own, after a hairline. */
+   chosen lens on a quiet plate. Files follows it as an action of its own, after a hairline. */
 @media (min-width: 769px) {
   .app-header .view-switch {
     padding: 0;
@@ -1937,41 +1937,57 @@ button {
   }
 }
 
-/* view-switch buttons: ghost style, text-only, accent underline on active */
+/* the two lenses are one quiet pair on the bar: the chosen one a filled plate, the other a word */
 .view-switch > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(var(--control-h) - var(--space-2));
   background: transparent;
   border: 0;
-  color: var(--text-muted);
-  font-size: 13px;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
-  padding: var(--space-1) var(--space-2);
+  padding: 0 var(--space-2);
   border-radius: var(--radius-sm);
-  position: relative;
 }
 .view-switch > button:hover {
   color: var(--text);
   background: var(--bg-chip);
 }
 .view-switch > button[aria-pressed="true"] {
-  color: var(--text);
-  background: transparent;
-}
-.view-switch > button[aria-pressed="true"]::after {
-  content: "";
-  position: absolute;
-  left: var(--space-2);
-  right: var(--space-2);
-  bottom: 0;
-  height: 2px;
-  background: var(--accent);
-  border-radius: 1px;
+  color: var(--text-strong);
+  background: var(--bg-chip);
+  box-shadow: inset 0 0 0 var(--hairline) var(--border-strong);
 }
 
 .header-divider {
   flex: 0 0 auto;
   width: var(--hairline);
-  height: var(--chip-h);
+  height: 16px;
   background: var(--border);
+}
+
+/* the bar's own controls: small quiet glyphs that take a plate only under the pointer. A coarse
+   pointer keeps the finger-sized buttons (the primitives below, and the phone rules). */
+@media (pointer: fine) {
+  .app-header .icon-button {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    color: var(--text-dim);
+  }
+
+  .app-header .icon-button svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (hover: hover) {
+  .app-header .icon-button:hover:not(:disabled) {
+    background: var(--bg-chip);
+  }
 }
 
 /* the workspace-list toggle and the palette: in the bar below 769px and beside a collapsed
@@ -1980,15 +1996,13 @@ button {
   display: contents;
 }
 
+/* no plate of its own: the bar is the plate, and the More glyph joins the bar's other controls */
 .header-meta {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   flex: 0 0 auto;
   margin-left: auto;
-  padding: var(--space-1);
-  border-radius: var(--radius-pill);
-  background: var(--bg-chip);
   font-size: var(--fs-xs);
 }
 
@@ -2093,15 +2107,15 @@ button {
   white-space: pre-wrap;
 }
 
-/* From 769px the header is two zones. Over the sidebar, the sidebar's own top row (its toggle
-   and the palette) on the sidebar's surface, the seam between sidebar and pane running to the
-   top of the window. Over the pane, the pane's surface: under the chat lens no bar and no rule,
-   the transcript scrolls under a short fade (ChatView.css); under the terminal lens the
-   terminal's colour and the rule. A collapsed sidebar leaves one bar. A phone keeps the
-   --bg-panel bar and its rule: the installed app's theme-color matches it. */
+/* From 769px the header is one flat bar over the whole window: the sidebar's own top row (its
+   toggle and the palette) at the bar's start, then the pane's controls, all on --bg-panel with no
+   seam between sidebar and pane. Under the chat lens the bar takes the transcript's surface
+   instead (no rule, the transcript scrolling under a short fade, ChatView.css); under the
+   terminal lens it stays a step above the terminal. A collapsed sidebar leaves the same bar. A
+   phone keeps the --bg-panel bar and its rule: the installed app's theme-color matches it. */
 @media (min-width: 769px) {
   .app-header.is-zoned {
-    background: var(--term-bg);
+    background: var(--bg-panel);
   }
 
   .app-header.is-zoned.is-chat {
@@ -2113,17 +2127,17 @@ button {
     padding-left: 0;
   }
 
-  /* stretched over the header's top inset and its bottom rule, so the sidebar's surface is
-     one piece from the window's top down */
+  /* the bar's own top row, stretched over the header's top inset and as wide as the sidebar:
+     its toggle and the palette start the bar */
   .app:not(.sidebar-collapsed) .header-side {
     display: flex;
     flex: 0 0 var(--sidebar-shown-w);
     align-items: center;
     align-self: stretch;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: var(--space-1);
     margin: calc(-1 * env(safe-area-inset-top, 0px)) var(--space-2) calc(-1 * var(--hairline)) 0;
     padding: env(safe-area-inset-top, 0px) var(--space-3) 0 calc(var(--space-3) + env(safe-area-inset-left, 0px));
-    border-right: var(--hairline) solid var(--border);
     background: var(--bg-panel);
   }
 }
@@ -2443,7 +2457,7 @@ button {
   height: 15px;
 }
 
-.segmented > button[aria-pressed="true"] {
+.segmented:not(.view-switch) > button[aria-pressed="true"] {
   background: var(--bg-hover);
   color: var(--text-strong);
 }
@@ -2451,8 +2465,8 @@ button {
 /* The chosen option takes the rose fill a settings toggle takes (--accent-soft in
    lib/heroui-theme.css) and nothing else: --bg-hover over a --bg-elevated track is a few tonal
    units apart, so the chosen tab read as one more hover. No ring around it: the track is the
-   frame, and a second one inside it reads as a box in a box. The header's view switch keeps the
-   hover fill and its own accent underline. */
+   frame, and a second one inside it reads as a box in a box. The header's view switch keeps its
+   own quiet plate (above), as the tab strip's open tab does. */
 .segmented:not(.view-switch) > button[aria-pressed="true"] {
   background: color-mix(in srgb, var(--accent) 30%, transparent);
 }
