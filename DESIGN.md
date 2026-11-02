@@ -706,33 +706,37 @@ are absent at zero, and both count only agents waiting on the user, never finish
   `.terminal-host`. While a phone's soft keyboard is up (`data-keyboard`), `--app-height` follows
   `visualViewport` so the keyboard does not cover input; otherwise the shell is `100dvh`, because an
   iPhone home screen app reports a visual viewport shorter than the screen without a keyboard.
-- The header is one line at every width. Anatomy, left to right: mobile drawer toggle / desktop
-  sidebar toggle and the command palette (`.header-side`); the flexible context, agent mark and
-  title then the PC › workspace › folder crumb; segmented Chat/Terminal switch; from `769px` a
-  hairline and the Files button (`.header-files-button`); the connection
-  chip while the bridge is not live (herdr version in its tooltip), the offline pill, sign out and
-  the More menu (`⋯`). Theme lives in Settings and the palette; the herdr version is also read
-  in Settings.
-- From `769px` the header is two zones. Over the sidebar, `.header-side` is the sidebar's own top
-  row (toggle at its start, palette at its end) on `--bg-panel`, as wide as `--sidebar-w`, and the
-  sidebar's seam runs to the top of the window. Over the pane, the header takes the pane's
-  surface: under the chat lens `--bg` with no bottom rule, the transcript scrolling under a
-  `--space-5` fade from `--bg`; under the terminal lens, with no pane, or with a pane herdr could
-  not restore, `--term-bg` and the rule. A tab strip takes the same surface as the header over
-  it from `769px` (`--strip-bg`: `--bg` under the chat lens, `--term-bg` otherwise, `--bg-panel`
-  below `769px`) and keeps its hairline, under the chat the one line over the transcript (no
-  fade under it). The reload notice and a PC's action banner are drawn in the pane column, over
-  the tab strip, never across the window: the sidebar and its top row stay one piece. A layout
-  call the palette made that a PC's bridge from before the route answered 404 to reads there too,
-  for a moment, as a `.pane-notice` line of `--status-blocked` `--fs-xs` text under a hairline
-  ("This PC's bridge does not offer this yet"); the tab's menu says the same at the strip's end. With the
-  sidebar collapsed to its rail the bar keeps the toggle alone, centred on the rail's column, and the
-  rail's own search opens the palette. Below `769px` the header is the `--bg-panel` bar with
-  its rule: the installed app's `theme-color` matches it. Over the chat, when the transcript is right
-  under it (no tab strip or notice between), that bar is glass, as an iPhone's is: `--bar-bg` behind
-  `--glass-blur` at `--z-header`, pulled over the pane by its own height (`--header-over`), so the
-  transcript scrolls on under it while its first line, the banners and anything else at the pane's
-  top start below it. The xterm mount is not fitted under the chat, so this resizes no pty.
+- The header is one line at every width, a flat bar rather than a card: no track, no chip around
+  a control, no accent rule under the chosen item. Anatomy, left to right: mobile drawer toggle /
+  desktop sidebar toggle and the command palette (`.header-side`, `28px` quiet glyphs that take a
+  `--bg-chip` plate only under the pointer); the flexible context, agent mark and title then the
+  PC › workspace › folder crumb; segmented Chat/Terminal switch, the chosen lens on a
+  `--bg-chip` plate ringed in `--border-strong`; from `769px` a 16px hairline and the Files button
+  (`.header-files-button`); the connection chip while the bridge is not live (herdr version in its
+  tooltip), the offline pill and the More menu (`⋯`), which has no plate of its own. Theme lives
+  in Settings and the palette; the herdr version is also read in Settings.
+- From `769px` the header is one flat bar on `--bg-panel` across the window. `.header-side` is the
+  sidebar's own top row (its toggle and the palette side by side) as wide as `--sidebar-shown-w`,
+  and the bar runs on over the pane with no seam at the sidebar's edge. Under the chat lens the
+  whole bar takes the transcript's surface (`--bg`) with no bottom rule, the transcript scrolling
+  under a `--space-5` fade from `--bg`; under the terminal lens, with no pane, or with a pane herdr
+  could not restore, it is `--bg-panel` above the terminal's `--term-bg`. A tab strip takes the
+  same surface as the bar above it from `769px` (`--strip-bg`: `--bg` under the chat lens,
+  `--bg-panel` otherwise and below `769px`) and keeps its hairline, under the chat the one line
+  over the transcript (no fade under it). The reload notice and a PC's action banner are drawn in
+  the pane column, over the tab strip, never across the window: the bar's start, with the sidebar's
+  toggle and the palette, stays put. A layout call the palette made that a PC's bridge from before
+  the route answered 404 to reads there too, for a moment, as a `.pane-notice` line of
+  `--status-blocked` `--fs-xs` text under a hairline ("This PC's bridge does not offer this yet");
+  the tab's menu says the same at the strip's end. With the sidebar collapsed to its rail the bar
+  keeps the toggle alone, centred on the rail's column, and the rail's own search opens the
+  palette. Below `769px` the header is the `--bg-panel` bar: the installed app's `theme-color`
+  matches it. Over the chat, when the transcript is right under it (no tab strip or notice
+  between), that bar is glass, as an
+  iPhone's is: `--bar-bg` behind `--glass-blur` at `--z-header`, pulled over the pane by its own
+  height (`--header-over`), so the transcript scrolls on under it while its first line, the
+  banners and anything else at the pane's top start below it. The xterm mount is not fitted under
+  the chat, so this resizes no pty.
 - From `769px` the sidebar's right edge is a grip (`.sidebar-resizer`, `role="separator"`): drag
   it to resize the sidebar between `240px` and `520px`, never past half the window; the arrow
   keys move the focused edge `16px`, Home and End go to the limits, and a double-click returns to
@@ -800,12 +804,12 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
 - It is not a generic tab list. Five or more choices go in a select.
 - Used for Chat/Terminal, theme, density, sidebar rows and the like. The header's own
   Chat/Terminal switch (`.segmented`, `aria-pressed`) is Orbit's: from `769px` it drops the track
-  and the glyphs — two words, the chosen one on the hover fill; at `<=768px` it keeps the track,
-  and at `<=560px` it is glyphs only.
+  and the glyphs — two words, the chosen one on a `--bg-chip` plate ringed in `--border-strong`;
+  at `<=768px` it keeps the track, and at `<=560px` it is glyphs only.
 - Every other `.segmented` (Files dialog tabs, the file viewer's modes, the diff layout) draws its
   chosen option with the same rose fill and strong label as the settings toggle: `--bg-hover` on a
-  `--bg-elevated` track is too small a step to read as chosen. The header switch keeps the hover
-  fill and its accent underline.
+  `--bg-elevated` track is too small a step to read as chosen. The header switch keeps the quiet
+  plate and has no accent underline, as the tab strip's open tab does.
 - Orbit's `.segmented` keeps an option at `--control-h` less `--segmented-inset` tall, so its
   track is `--control-h`. On a coarse pointer each option is at least `--touch-target` wide, so
   neighbours never share a tap, and reaches `--touch-target` tall through an invisible `::before`
@@ -1133,8 +1137,8 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   is herdr's own new tab: it calls `POST /api/tab/create` with no agent at once, in the workspace's
   folder, and opens the new shell pane unless another pane was opened meanwhile; a refusal shows
   in the strip. An agent tab comes from the tab menu's New tab with agent…, which opens the dialog.
-  Tabs retain their names, status dots, active underline, keyboard navigation, rename field and
-  close confirmation. A right-click opens tab actions at the pointer, including Move tab left/right
+  Tabs retain their names, status dots, the open tab's filled plate, keyboard navigation, rename
+  field and close confirmation. A right-click opens tab actions at the pointer, including Move tab left/right
   when a neighbouring position exists. Tabs have no close buttons or chevrons. Touch and narrow layouts show a `⋯` beside
   the selected tab for a trimmed menu, and there a tab is at least `--touch-target` tall and wide, so a one- or
   two-character name (탭 1) is still a finger's target with the `⋯` a target of its own beside it; a desktop with a mouse draws the same `⋯` on the selected tab, hidden in its place
