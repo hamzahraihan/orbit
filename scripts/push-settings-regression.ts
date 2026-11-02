@@ -17,6 +17,7 @@ export async function checkPushSettings(browser: Browser, origin: string): Promi
   try {
     await context.addInitScript((endpoint) => {
       localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en" }));
+      localStorage.setItem("herdr-web-ui:onboarded", "1");
       let subscription: object | null = null;
       const pushManager = {
         getSubscription: async () => subscription,
