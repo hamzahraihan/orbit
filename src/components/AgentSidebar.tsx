@@ -11,7 +11,7 @@ import { useAnnouncedText } from "../lib/useAnnouncedText.ts";
 import { agentContext, agentTabName, paneMark, sidebarAgents, type SidebarAgent } from "../lib/sidebarAgents.ts";
 import { useSettings } from "../lib/settings.ts";
 import { useSidebarActivity } from "../lib/sidebarActivity.tsx";
-import { activityOrder } from "../lib/sidebarOrder.ts";
+import { activityOrder, groupAgentRows } from "../lib/sidebarOrder.ts";
 import { currentSidebarPins, pruneSidebarPins, setSidebarPins, sidebarPinKey, splitPinnedRows, subscribeSidebarPins, toggleSidebarPin } from "../lib/sidebarPins.ts";
 import { PANE_DRAG_TYPE, paneDragData } from "../lib/split.ts";
 import { AgentMark, hasAgentMark } from "./AgentMark.tsx";
@@ -86,10 +86,10 @@ interface PinMenu { key: string; anchor: HTMLElement; point?: { x: number; y: nu
 
 /**
  * All PCs' live agents form a second list; workspace and PC folds do not hide these rows.
- * In the phone's drawer the list starts folded, leaving the room to the workspaces.
- * The pinned agents stand first, in a card; on a desktop only a
- * right-click (or the context-menu key) opens the menu. A row's ⋯, or a right-click on it, opens its
- * menu, which pins or unpins it.
+ * In the phone's drawer the list starts folded, leaving the room to the workspaces. Unpinned rows
+ * stand in their status group: Active while they run or wait on the user, Idle otherwise. The
+ * pinned agents stand above both, in a card; on a desktop only a right-click (or the context-menu
+ * key) opens the menu. A row's ⋯, or a right-click on it, opens its menu, which pins or unpins it.
  */
 export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stateWord, onSelect }: AgentSidebarProps) {
   const t = useT();
@@ -108,8 +108,9 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
     const agents = sidebarAgents(machine.snapshot);
     return (byActivity ? activityOrder(agents, (entry) => entry.pane, activity.seqs(machine.id)) : agents).map((entry): AgentRow => ({ machine, entry }));
   }), [machines, byActivity, activity]);
-  // the pinned rows stand first, in the order they were pinned
+  // the pinned rows stand first, in the order they were pinned; the rest part by agent state
   const split = useMemo(() => splitPinnedRows(rows, pinned, ({ machine, entry }) => sidebarPinKey(machine.id, entry.pane.pane_id)), [rows, pinned]);
+  const groups = useMemo(() => groupAgentRows(split.rest, ({ entry }) => entry.pane), [split.rest]);
   const togglePin = (key: string): void => {
     // pins of panes gone from this server leave with a change of the user's, never by themselves: the
     // list is shared, and a pane this page has not seen yet (a PC still loading) is not gone
@@ -243,9 +244,10 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
         <span className="agent-section-count">{rows.length}</span>
         {collapsed ? <ChevronRight className="agent-section-caret" aria-hidden="true" /> : <ChevronDown className="agent-section-caret" aria-hidden="true" />}
       </button>
-      {/* The roster's own order, without a trip to Settings → Agents order: the same setting, so
-          the two controls never disagree. Pressed is priority — the agent that needs you first. */}
-      <button type="button" className="agent-section-order" aria-label={t("Agents order")} aria-pressed={byActivity} title={byActivity ? t("Priority: waiting agents first") : t("Grouped by workspace")} onClick={() => update({ agentOrder: byActivity ? "workspace" : "activity" })}>
+      {/* The order within Active and Idle, without a trip to Settings → Agents order: the same
+          setting, so the two controls never disagree. Pressed is priority — the agent that needs
+          you first inside its group. */}
+      <button type="button" className="agent-section-order" aria-label={t("Agents order")} aria-pressed={byActivity} title={byActivity ? t("Within each group: waiting agents first") : t("Within each group: herdr's workspace order")} onClick={() => update({ agentOrder: byActivity ? "workspace" : "activity" })}>
         <ArrowUpDown aria-hidden="true" />
       </button>
     </div>
@@ -256,7 +258,16 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
           <p className="sidebar-pinned-label" aria-hidden="true"><span><Pin />{t("Pinned")}</span></p>
           <ul className="agent-list agent-list-pinned sidebar-pinned" aria-label={t("Pinned")}>{split.pinned.map(agentItem)}</ul>
         </>}
-        {split.rest.length > 0 && <ul className="agent-list">{split.rest.map(agentItem)}</ul>}
+        {split.rest.length > 0 && <div className="agent-groups">
+          {groups.active.length > 0 && <div className="agent-group is-active">
+            <p className="agent-group-label" aria-hidden="true"><span>{t("Active")}</span><span className="agent-group-count">{groups.active.length}</span></p>
+            <ul className="agent-list" aria-label={t("Active agents")}>{groups.active.map(agentItem)}</ul>
+          </div>}
+          {groups.idle.length > 0 && <div className="agent-group is-idle">
+            <p className="agent-group-label" aria-hidden="true"><span>{t("Idle")}</span><span className="agent-group-count">{groups.idle.length}</span></p>
+            <ul className="agent-list" aria-label={t("Idle agents")}>{groups.idle.map(agentItem)}</ul>
+          </div>}
+        </div>}
       </>}
     </div>
     {menu && <RowMenu anchor={menu.anchor} point={menu.point} restoreFocusTo={menu.previousFocus} title={menu.title} subtitle={menu.place} detail={menu.tokens || undefined} onClose={closeMenu} items={[

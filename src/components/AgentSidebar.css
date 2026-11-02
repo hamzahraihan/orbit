@@ -157,6 +157,45 @@
   padding: var(--space-1) 0;
 }
 
+/* The unpinned roster, parted by state: Active first, then Idle under the one rule that separates
+   them. Each group keeps its own label and count; a group with no rows draws neither. */
+.agent-groups {
+  display: flex;
+  flex-direction: column;
+}
+
+.agent-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.agent-group + .agent-group {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: var(--hairline) solid var(--sidebar-divider);
+}
+
+.agent-group-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+  padding: 0 var(--space-2);
+  color: var(--text-dim);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+}
+
+.agent-group-count {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Fade at the cut's lower edge. Only the bottom band is drawn: a sticky band at the top of the flow
    reserved 24px between the head and its first row, and herdr's own list starts at once. */
 .agent-list-contents::after {
@@ -398,7 +437,7 @@
   overflow: hidden;
 }
 
-.sidebar-pinned + ul {
+.sidebar-pinned + .agent-groups {
   margin-top: var(--space-2);
 }
 
@@ -575,5 +614,20 @@
 
   .app.sidebar-collapsed .sidebar-pinned-label {
     display: none;
+  }
+
+  /* The rail has no room for the group words or their rule: one column of marks, as before */
+  .app.sidebar-collapsed .agent-group-label {
+    display: none;
+  }
+
+  .app.sidebar-collapsed .agent-group {
+    gap: 0;
+  }
+
+  .app.sidebar-collapsed .agent-group + .agent-group {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
   }
 }

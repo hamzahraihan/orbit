@@ -35,6 +35,13 @@ const texts = (html: string, className: string): string[] =>
 /** each agent row's tooltip, line by line */
 const tooltips = (html: string): string[][] =>
   [...html.matchAll(/class="agent-select agent-row"[^>]* title="([^"]*)"/g)].map((match) => decode(match[1]!).split("\n"));
+/** the status groups, in order: their label, count and the titles inside them */
+const groups = (html: string): { label: string; count: number; titles: string[] }[] =>
+  [...html.matchAll(/<div class="agent-group[^"]*"><p class="agent-group-label"[^>]*><span>([^<]*)<\/span><span class="agent-group-count">(\d+)<\/span><\/p><ul[^>]*>(.*?)<\/ul><\/div>/g)].map((match) => ({
+    label: decode(match[1]!),
+    count: Number(match[2]),
+    titles: [...match[3]!.matchAll(/class="agent-title">([^<]*)</g)].map((title) => decode(title[1]!)),
+  }));
 
 describe("AgentSidebar plugin tokens", () => {
   const saved = Object.getOwnPropertyDescriptor(globalThis, "window");
@@ -50,6 +57,23 @@ describe("AgentSidebar plugin tokens", () => {
     if (savedLanguages) Object.defineProperty(navigator, "languages", savedLanguages);
     else Reflect.deleteProperty(navigator, "languages");
     setAgentRowTokens(null);
+  });
+
+  test("unpinned rows stand in Active, then Idle under a rule and their counts", () => {
+    const html = render([machine([
+      pane("w1:p1", { agent_status: "idle", title: "Ready" }),
+      pane("w1:p2", { agent_status: "working", title: "Running" }),
+      pane("w1:p3", { agent_status: "blocked", title: "Needs input" }),
+      pane("w1:p4", { agent_status: "done", title: "Finished" }),
+      pane("w1:p5", { agent_status: "done", background_wait: true, title: "Background" }),
+    ])]);
+    expect(groups(html)).toEqual([
+      { label: "Active", count: 3, titles: ["Running", "Needs input", "Background"] },
+      { label: "Idle", count: 2, titles: ["Ready", "Finished"] },
+    ]);
+    expect(html).toContain('aria-label="Active agents"');
+    expect(html).toContain('aria-label="Idle agents"');
+    expect(html.match(/class="agent-group /g)?.length).toBe(2);
   });
 
   test("a row draws every token its pane has, by name, as text; a pane without any draws no line", () => {
