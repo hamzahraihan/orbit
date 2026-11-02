@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ChevronDown, ChevronRight, Ellipsis, Pin, PinOff } from "lucide-react";
+import { ArrowUpDown, ChevronDown, ChevronRight, Ellipsis, Pin, PinOff } from "lucide-react";
 
 import type { Machine } from "../../shared/machines.ts";
 import { paneStorageId } from "../../shared/machines.ts";
@@ -96,7 +96,7 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
   const listId = useId();
   const [collapsed, setCollapsed] = useState(() => window.matchMedia?.(DRAWER_QUERY).matches === true);
   const [agentFlyout, setAgentFlyout] = useState<{ anchor: HTMLElement; side: "left" | "right"; title: string; subtitle?: string | null; detail?: string | null } | null>(null);
-  const { settings } = useSettings();
+  const { settings, update } = useSettings();
   // shared with the other browsers of this server (lib/preferencesSync.ts)
   const pinned = useSyncExternalStore(subscribeSidebarPins, currentSidebarPins, currentSidebarPins);
   // which `$name` tokens herdr's own sidebar draws, from this server's herdr config (server/herdr-sidebar.ts)
@@ -236,12 +236,19 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
   // Settings -> Sidebar rows -> One line: an agent row is one line too, its place dim after its title
   const oneLine = settings.sidebarRows === "one";
   return <section ref={sectionRef} className={`agents-sidebar${collapsed ? " is-collapsed" : ""}${rows.length === 0 ? " is-empty" : ""}${oneLine ? " is-one-line" : ""}`} aria-label={t("Agents")}>
-    <button type="button" className="agent-section-toggle sidebar-section-label" aria-expanded={!collapsed} aria-controls={listId} onClick={() => setCollapsed(!collapsed)}>
-      <span>{t("Agents")}</span>
-      {/* the count stands in for the label where the sidebar is the rail, and beside a folded head */}
-      <span className="agent-section-count">{rows.length}</span>
-      {collapsed ? <ChevronRight className="agent-section-caret" aria-hidden="true" /> : <ChevronDown className="agent-section-caret" aria-hidden="true" />}
-    </button>
+    <div className="agent-section-head">
+      <button type="button" className="agent-section-toggle sidebar-section-label" aria-expanded={!collapsed} aria-controls={listId} onClick={() => setCollapsed(!collapsed)}>
+        <span>{t("Agents")}</span>
+        {/* the count stands in for the label where the sidebar is the rail, and beside a folded head */}
+        <span className="agent-section-count">{rows.length}</span>
+        {collapsed ? <ChevronRight className="agent-section-caret" aria-hidden="true" /> : <ChevronDown className="agent-section-caret" aria-hidden="true" />}
+      </button>
+      {/* The roster's own order, without a trip to Settings → Agents order: the same setting, so
+          the two controls never disagree. Pressed is priority — the agent that needs you first. */}
+      <button type="button" className="agent-section-order" aria-label={t("Agents order")} aria-pressed={byActivity} title={byActivity ? t("Priority: waiting agents first") : t("Grouped by workspace")} onClick={() => update({ agentOrder: byActivity ? "workspace" : "activity" })}>
+        <ArrowUpDown aria-hidden="true" />
+      </button>
+    </div>
     <div className="agent-list-contents" id={listId} hidden={collapsed}>
       <p className={shownEmpty === null ? "visually-hidden" : "agent-empty"} role="status">{shownEmpty}</p>
       {rows.length > 0 && <>

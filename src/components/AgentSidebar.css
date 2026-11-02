@@ -7,8 +7,61 @@
   flex: 0 1 auto;
   min-height: 0;
   /* the roster's own gutter, so an agent's mark lines up under a workspace's */
-  padding: 0 var(--side-gutter);
+  padding: var(--space-2) var(--side-gutter) 0;
   background: var(--sidebar-bg);
+  /* One hairline parts the roster from the workspaces above it: two lists ran into one column
+     with only space between them, and the fold between them read as one more row. */
+  border-top: var(--hairline) solid var(--sidebar-divider);
+}
+
+/* The head holds the fold and the order control side by side: two buttons, never one inside the
+   other (the whole head folds, and its order is its own control). */
+.agent-section-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.agent-section-head > .agent-section-toggle {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Quiet at rest; the brightest text while priority is on, so the roster says how it is read */
+.agent-section-order {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: var(--side-box);
+  height: var(--side-box);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.agent-section-order svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+.agent-section-order[aria-pressed="true"] {
+  color: var(--text);
+}
+
+.agent-section-order:hover {
+  background: var(--side-hover);
+  color: var(--text);
+}
+
+.agent-section-order:focus-visible {
+  outline: var(--ring);
+  outline-offset: calc(var(--ring-offset) * -1);
 }
 
 .agents-sidebar.is-collapsed,
@@ -420,14 +473,16 @@
   }
 }
 
-/* Reduced motion */
+/* Reduced motion. The row menu's transition is set on `.sidebar-row-action.row-menu-toggle`,
+   so that pair is repeated here: the block comes later, and wins at equal specificity. */
 @media (prefers-reduced-motion: reduce) {
   .agent-item,
   .agent-section-toggle,
   .agent-section-caret,
-  .sidebar-row-action {
-    animation: none !important;
-    transition: none !important;
+  .sidebar-row-action,
+  .sidebar-row-action.row-menu-toggle {
+    animation: none;
+    transition: none;
   }
 }
 
