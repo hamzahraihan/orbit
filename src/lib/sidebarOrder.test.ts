@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
 import type { PaneInfo } from "../../shared/protocol.ts";
-import { activityOrder, liveSeqs, newSeqMemory, shownStatus, stateSeqs } from "./sidebarOrder.ts";
+import { activityOrder, agentGroup, groupAgentRows, liveSeqs, newSeqMemory, shownStatus, stateSeqs } from "./sidebarOrder.ts";
 import { DEFAULT_SETTINGS, sanitizeSettings } from "./settings.ts";
 
 const pane = (id: string, agent_status: string, workspace_id = `w-${id}`) => ({ pane_id: id, workspace_id, agent_status }) as PaneInfo;
@@ -94,6 +94,25 @@ describe("shown status", () => {
     expect(shownStatus(held)).toBe("waiting");
     expect(shownStatus({ ...held, agent_status: "blocked" })).toBe("blocked");
     expect(shownStatus(pane("a", "done"))).toBe("done");
+  });
+});
+
+describe("status groups", () => {
+  it("files running, waiting for an answer and background work as Active; ready, finished and unknown as Idle", () => {
+    expect(agentGroup({ agent_status: "working" })).toBe("active");
+    expect(agentGroup({ agent_status: "blocked" })).toBe("active");
+    expect(agentGroup({ agent_status: "done", background_wait: true })).toBe("active");
+    expect(agentGroup({ agent_status: "idle" })).toBe("idle");
+    expect(agentGroup({ agent_status: "done" })).toBe("idle");
+    expect(agentGroup({})).toBe("idle");
+  });
+
+  it("parts the rows without reordering either half", () => {
+    const rows = [pane("ready", "idle"), pane("running", "working"), pane("finished", "done"), pane("asking", "blocked")];
+    expect(groupAgentRows(rows, (row) => row)).toEqual({
+      active: [rows[1], rows[3]],
+      idle: [rows[0], rows[2]],
+    });
   });
 });
 

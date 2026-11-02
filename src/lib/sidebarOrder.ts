@@ -70,6 +70,25 @@ export function shownStatus(pane: Pick<HerdrPane, "agent_status" | "background_w
   return pane.background_wait ? paneStatus(pane) : pane.agent_status;
 }
 
+export type AgentGroup = "active" | "idle";
+
+/**
+ * Which half of the Agents list a pane belongs to: Active while it has a turn to run, a question
+ * the user has to answer, or background work its last turn started; Idle once it is ready,
+ * finished or unknown. An unknown state is not evidence of work, so it waits with Idle.
+ */
+export function agentGroup(pane: Pick<HerdrPane, "agent_status" | "background_wait">): AgentGroup {
+  const status = knownStatus(shownStatus(pane));
+  return status === "working" || status === "blocked" || status === "waiting" ? "active" : "idle";
+}
+
+/** Rows parted by `agentGroup`, each half keeping the order it was given. */
+export function groupAgentRows<T>(rows: readonly T[], paneOf: (row: T) => Pick<HerdrPane, "agent_status" | "background_wait">): { active: T[]; idle: T[] } {
+  const groups: { active: T[]; idle: T[] } = { active: [], idle: [] };
+  for (const row of rows) groups[agentGroup(paneOf(row))].push(row);
+  return groups;
+}
+
 /**
  * Rows in Activity order: a blocked one first, then the most recent state change, then the
  * order given. State is not ranked otherwise: ranking moved a row the moment its state changed (a
