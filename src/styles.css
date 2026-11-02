@@ -204,7 +204,9 @@
   --sidebar-mark-size: var(--icon-size);
   --sidebar-gutter: var(--space-2);
   --sidebar-hover: var(--bg-hover);
-  --sidebar-selected: var(--accent-tint);
+  /* one neutral fill for hover and selection, as DESIGN.md has it: a chosen row is not a tinted
+     one, and the rose stays for focus, the lens glyph and the cursor */
+  --sidebar-selected: var(--bg-hover);
   --sidebar-pinned-bg: var(--bg-elevated);
   --sidebar-pinned-border: var(--border-strong);
   --sidebar-divider: var(--border);

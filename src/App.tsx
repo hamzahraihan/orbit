@@ -12,6 +12,7 @@ import { PANE_TABPANEL_ID, paneTabPanelLabel } from "./lib/paneRegion.ts";
 import { AccessGate } from "./components/AccessGate.tsx";
 import { AgentMark } from "./components/AgentMark.tsx";
 import { NewSessionDialog, type NewTabTarget } from "./components/NewSessionDialog.tsx";
+import { attentionTitle, setWaitingBadge, waitingCount } from "./lib/attention.ts";
 import { passingFolder, recentDirectories } from "./lib/recent-directories.ts";
 import { usePreferencesSync } from "./lib/preferencesSync.ts";
 import { TabStrip } from "./components/TabStrip.tsx";
@@ -1313,9 +1314,18 @@ export function App() {
     ? headerCrumb({ machine: selectedMachine?.name ?? selectedMachineId, machineCount: machines.length, workspace: selectedWorkspace?.label ?? selectedPane.workspace_id, title: selectedTitle, cwd: selectedPane.cwd })
     : null;
 
+  // The agents waiting on the user, said outside the app as well as in it: the title's count and
+  // the installed app's badge (lib/attention.ts). A tab in the background shows no droplet, and a
+  // closed app shows nothing at all, so the number is what brings someone back to the pane.
+  const waiting = useMemo(() => waitingCount(machines), [machines]);
   useEffect(() => {
-    document.title = selectedTitle ? `${selectedTitle} · Orbit` : APP_TITLE;
-  }, [selectedTitle]);
+    document.title = attentionTitle(selectedTitle ? `${selectedTitle} · Orbit` : APP_TITLE, waiting);
+  }, [selectedTitle, waiting]);
+  useEffect(() => {
+    setWaitingBadge(waiting);
+  }, [waiting]);
+  // the badge belongs to the count, not to the page: leaving clears it rather than leaving it behind
+  useEffect(() => () => setWaitingBadge(0), []);
 
   // A new tab's workspace: the named one, else the selected pane's. Its folder is the workspace's:
   // a worktree's checkout, else where the pane in front (the selected one, else the one herdr has

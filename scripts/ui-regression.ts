@@ -92,6 +92,7 @@ try {
   await context.addInitScript((ids) => {
     // only the first load: a reload must keep what Settings stored, such as the language
     if (!localStorage.getItem("herdr-web-ui:settings")) localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en" }));
+    localStorage.setItem("herdr-web-ui:onboarded", "1");
     for (const id of ids) localStorage.setItem(`herdr-web-ui:view:${id}`, "chat");
   }, panes);
   // A hook for a check that changes the roster on a page already loaded: a route cannot reach the
