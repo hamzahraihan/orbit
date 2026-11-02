@@ -1,0 +1,98 @@
+/* Messages lined up for later: one quiet row per chip, above the composer, in the composer's own
+   column. The clock is the state; the X is the only control. A row whose send failed keeps the
+   same shape and says why in place of the time, in the danger text colour and nothing louder. */
+
+.scheduled-prompts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: min(calc(100% - 2 * var(--space-4)), var(--chat-w));
+  margin: 0 auto;
+  padding: var(--space-2) 0 0;
+  list-style: none;
+}
+
+.scheduled-prompt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--side-box);
+  padding: 0 var(--space-2);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+}
+
+.scheduled-prompt-mark {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  color: var(--text-dim);
+}
+
+/* the time is the row's fact: read first, never pushed out by a long message */
+.scheduled-prompt-when {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.scheduled-prompt.is-failed .scheduled-prompt-when {
+  color: var(--danger-text);
+}
+
+/* waiting on the agent's own box: the time stays as it was asked for, the reason takes the words' place */
+.scheduled-prompt.is-held .scheduled-prompt-text {
+  font-style: italic;
+}
+
+.scheduled-prompt-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scheduled-prompt-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: var(--side-box);
+  height: var(--side-box);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.scheduled-prompt-cancel svg {
+  width: 12px;
+  height: 12px;
+}
+
+@media (hover: hover) {
+  .scheduled-prompt:hover .scheduled-prompt-cancel {
+    color: var(--text);
+  }
+}
+
+.scheduled-prompt-cancel:hover {
+  background: var(--bg-hover);
+}
+
+.scheduled-prompt-cancel:focus-visible {
+  outline: var(--ring);
+  outline-offset: calc(var(--ring-offset) * -1);
+}
+
+.scheduled-prompt-cancel:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
