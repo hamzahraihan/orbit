@@ -159,7 +159,7 @@ bun scripts/droplet-demo-regression.ts        # real-app alerts below the header
 bun scripts/chat-greeting-demo-regression.ts  # an empty chat's greeting: centred on a desktop, docked on a phone
 bun scripts/composer-fit-demo-regression.ts   # one Send/Stop control, pending Send now actions, context/label fit and Chat font sizing
 bun scripts/held-rows-demo-regression.ts      # held messages: the fold under an approval card, its button, a row's error
-bun scripts/sidebar-activity-demo-regression.ts # Agents order Activity and pins: blocked pinned, recency, Pin agent / Unpin agent and Pin workspace / Unpin workspace from a right-click and the context-menu key, and the ⋯ on a phone
+bun scripts/sidebar-activity-demo-regression.ts # Agents Active/Idle groups, the order within them and pins: blocked pinned, recency, Pin agent / Unpin agent and Pin workspace / Unpin workspace from a right-click and the context-menu key, and the ⋯ on a phone
 bun scripts/sidebar-branch-line-demo-regression.ts # herdr's branch line: a repository and an unmarked git folder say their branch under the name, worktrees and folders outside git stay one line, desktop and phone, dark and light
 bun scripts/sidebar-tokens-demo-regression.ts # herdr plugin tokens on agent rows: a dim line of their own on One line and Two lines, cut with the whole text in the tooltip and a phone's sheet, as text, following herdr's `$name` rows, and changing live
 bun scripts/sidebar-hover-card-demo-regression.ts # a workspace's and an agent's hover card opens level with its row, follows it through that list's scroll, leaves while the row is out of the list, and stays put when the chat scrolls
