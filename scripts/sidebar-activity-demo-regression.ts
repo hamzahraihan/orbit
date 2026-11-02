@@ -7,17 +7,19 @@ import panes from "../site/demo/fixtures/panes.json";
 import { buildDemoApp } from "./demo-build.ts";
 import { chromePath } from "./chrome-path.ts";
 
-// Settings → Agents order (Activity) and the Agents list's pins, on the unmodified app over the
-// demo's fixture transport, whose agents carry herdr's state_change_seq and bump it on every state
-// change. The demo's Claude pane finishes by itself 4.5s in (site/demo/transport.ts), and a message
-// sent from a chat runs for 2.4s and then finishes. All files and HTTP traffic stay in this
-// disposable, loopback-only app; no herdr session is opened.
+// The Agents list's Active and Idle groups, the order within them (Settings → Agents order) and
+// its pins, on the unmodified app over the demo's fixture transport, whose agents carry herdr's
+// state_change_seq and bump it on every state change. The demo's Claude pane finishes by itself
+// 4.5s in (site/demo/transport.ts), and a message sent from a chat runs for 2.4s and then finishes.
+// All files and HTTP traffic stay in this disposable, loopback-only app; no herdr session is opened.
 const app = mkdtempSync(join(tmpdir(), "herdr-sidebar-activity-demo-"));
 
 const API = "Idempotent payments";        // claude, working, finishes by itself
 const WEB = "Guard the export button";    // codex, blocked
 const INFRA = "Plan the config file";     // omp, idle: the agent a message is sent from
 const AGENTS_HERDR_ORDER = [API, WEB, "Fix the flaky retry test", INFRA, "Ship the retry flag", "Draft the changelog"];
+// the same rows once the API pane finishes: Active keeps WEB, and the finished API pane opens Idle
+const AGENTS_AFTER_API_DONE = [WEB, API, ...AGENTS_HERDR_ORDER.filter((title) => title !== WEB && title !== API)];
 
 const agents = (page: Page) => page.locator(".agents-sidebar .agent-item");
 const agentTitles = (page: Page) => agents(page).locator(".agent-title").allTextContents();
@@ -75,16 +77,18 @@ try {
     const browser = await chromium.launch({ executablePath: chromePath(), headless: true, args: ["--no-sandbox"] });
     try {
       // Workspace menus no longer mix in pane operations; header More keeps pane movement.
-      // herdr's order in a flat list, each row naming its own workspace, with its row and its ⋯
+      // herdr's order inside each status group, each row naming its own workspace, with its row and its ⋯
       await withPage(browser, {}, async (page) => {
         assert.deepEqual(await agentTitles(page), AGENTS_HERDR_ORDER);
+        assert.deepEqual(await page.locator(".agents-sidebar .agent-group-label > span:first-child").allTextContents(), ["Active", "Idle"]);
+        assert.deepEqual(await page.locator(".agents-sidebar .agent-group-count").allTextContents(), ["2", "4"]);
         assert.match(await agent(page, API).locator(".agent-context").textContent() ?? "", /checkout-api/, "a row names its workspace");
         // a desktop draws no row ⋯: a right-click or the context-menu key opens the menu
         assert.equal(await agent(page, API).getByRole("button").count(), 1, "a desktop row is its selector alone");
         assert.equal(await page.locator(".row-menu-toggle:visible").count(), 0, "no row ⋯ on a desktop");
         assert.equal(await page.locator(".agents-sidebar .agent-list-pinned").count(), 0, "no pinned list without pins");
       });
-      console.log("PASS the Agents list is flat, in herdr's order, each row a selector with no ⋯ on a desktop");
+      console.log("PASS the Agents list parts into Active and Idle with counts, each half in herdr's order, each row a selector with no ⋯ on a desktop");
 
       // a pane's plan: the composer's chip shows how far it got and opens its steps, as the background
       // tasks do; the header carries no plan of its own
@@ -261,14 +265,15 @@ try {
         assert.deepEqual(await agentTitles(page), AGENTS_HERDR_ORDER);
         console.log("PASS workspace right-click scope, pointer anchor and focus; the context-menu key opens the same menu; a workspace pins into a card and returns to herdr's order; an agent pins and unpins from its right-click menu and the key");
         await waitStatus(page, API, "done");
-        assert.deepEqual(await agentTitles(page), AGENTS_HERDR_ORDER, "a finish does not move an agent");
+        assert.deepEqual(await agentTitles(page), AGENTS_AFTER_API_DONE, "a finish moves the agent into Idle");
+        assert.deepEqual(await page.locator(".agents-sidebar .agent-group-count").allTextContents(), ["1", "5"]);
         await agentSelect.click();
         await page.waitForFunction((paneId) => JSON.parse(sessionStorage.getItem("herdr-web-ui:selection") ?? "{}").pane_id === paneId, panes.api, { timeout: 5_000 });
         assert.equal(await agentSelect.getAttribute("aria-current"), "true", "ordinary click still selects the agent");
         assert.equal(await page.locator(".row-menu, .row-sheet").count(), 0, "selecting the agent does not open a menu");
         assert.equal(await agentStatus(page, API), "done", "herdr's DONE stands until herdr itself shows the pane");
       });
-      console.log("PASS the Agents list keeps herdr's order through a finish, and an opened DONE keeps its dot");
+      console.log("PASS a finish moves the agent from Active to Idle, each half keeps herdr's order, and an opened DONE keeps its dot");
 
       await withPage(browser, {}, async (page) => {
         const drawerToggle = page.locator('button[aria-controls="workspace-drawer"]');
