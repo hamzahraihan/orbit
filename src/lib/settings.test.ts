@@ -429,17 +429,41 @@ describe("alert choices", () => {
 
 describe("quick replies", () => {
   it("keep replies as typed, bounded, and show only the ones with something to send", () => {
-    expect(quickReplyButtons(DEFAULT_SETTINGS)).toEqual(["continue", "yes", "no", "commit and push", "retry"]);
+    expect(quickReplyButtons(DEFAULT_SETTINGS).map((reply) => reply.text)).toEqual(["continue", "yes", "no", "commit and push", "retry"]);
+    // the one that reaches the remote asks first; the rest act on the tap
+    expect(DEFAULT_SETTINGS.quickReplyConfirm).toEqual([false, false, false, true, false]);
+    expect(quickReplyButtons(DEFAULT_SETTINGS).filter((reply) => reply.confirm).map((reply) => reply.text)).toEqual(["commit and push"]);
     // a trailing space is the next word being typed: it stays
     const typed = sanitizeSettings({ quickReplies: ["run the ", "", "  ", 7, "ship it"] });
     expect(typed.quickReplies).toEqual(["run the ", "", "  ", "ship it"]);
-    expect(quickReplyButtons(typed)).toEqual(["run the ", "ship it"]);
+    expect(quickReplyButtons(typed).map((reply) => reply.text)).toEqual(["run the ", "ship it"]);
     const many = sanitizeSettings({ quickReplies: Array.from({ length: 20 }, (_, index) => "x".repeat(300) + index) });
     expect(many.quickReplies).toHaveLength(QUICK_REPLIES_MAX);
     expect(many.quickReplies.every((reply) => reply.length === QUICK_REPLY_MAX_CHARS)).toBe(true);
     // an emptied list is a choice, not a broken record
     expect(sanitizeSettings({ quickReplies: [] }).quickReplies).toEqual([]);
     expect(sanitizeSettings({}).quickReplies).toEqual(DEFAULT_SETTINGS.quickReplies);
+  });
+
+  it("keeps a confirm step beside its reply, and reads a record from before it as acting at once", () => {
+    const asked = sanitizeSettings({ quickReplies: ["push", "yep", "ok"], quickReplyConfirm: [true, false, "yes", true, true] });
+    expect(asked.quickReplyConfirm).toEqual([true, false, false]);
+    expect(quickReplyButtons(asked)).toEqual([
+      { text: "push", confirm: true }, { text: "yep", confirm: false }, { text: "ok", confirm: false },
+    ]);
+    // a stored list with no confirm list is every reply acting on the tap
+    const plain = sanitizeSettings({ quickReplies: ["push", "yep"] });
+    expect(plain.quickReplyConfirm).toEqual([false, false]);
+    expect(quickReplyButtons(plain).some((reply) => reply.confirm)).toBe(false);
+    // a blank reply being typed is not a button, and its confirm flag stays at its index
+    const typing = sanitizeSettings({ quickReplies: ["", "push"], quickReplyConfirm: [false, true] });
+    expect(quickReplyButtons(typing)).toEqual([{ text: "push", confirm: true }]);
+  });
+
+  it("sends on a tap until asked to put replies in the message box", () => {
+    expect(DEFAULT_SETTINGS.quickReplyMode).toBe("send");
+    expect(sanitizeSettings({ quickReplyMode: "insert" }).quickReplyMode).toBe("insert");
+    for (const quickReplyMode of [null, 1, "send it", "SEND"]) expect(sanitizeSettings({ quickReplyMode }).quickReplyMode).toBe("send");
   });
 });
 

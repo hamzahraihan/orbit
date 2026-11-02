@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from "react";
-import { ArrowLeft, Bell, Check, ChevronRight, Info, Keyboard, MessageSquare, Mic, Monitor, Palette, Plug, Plus, Search, Smartphone, SquareTerminal, Star, X, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Bell, Check, ChevronRight, Info, Keyboard, MessageSquare, Mic, Monitor, Palette, Plug, Plus, Search, ShieldAlert, Smartphone, SquareTerminal, Star, X, type LucideIcon } from "lucide-react";
 
 import { Button } from "../lib/heroui/orbit-components.tsx";
 import "./SettingsDialog.css";
@@ -395,13 +395,17 @@ function ChatPage() {
       </SettingsGroup>
 
       <SettingsGroup title={t("Quick replies")} section="quick-replies">
-        <SettingsRow label={t("Show above the message box")} description={t("One-tap messages above the message box, on this device. Each is sent as if typed: queued while the agent works, an answer when a question is open.")}>
+        <SettingsRow label={t("Show above the message box")} description={t("One-tap messages above the message box, on this device. Each is sent as if typed: queued while the agent works, an answer when a question is open. The same row sits over the terminal, where a tap types it and presses Enter.")}>
           <Toggle label={t("Show above the message box")} checked={settings.showQuickReplies} onChange={(showQuickReplies) => update({ showQuickReplies })} />
+        </SettingsRow>
+        <SettingsRow label={t("Put replies in the message box")} description={t("A tap adds the reply at the caret instead of sending it, so you can add to it before sending. In the terminal it goes into the input line. The confirm step only applies while replies send.")}>
+          <Toggle label={t("Put replies in the message box")} checked={settings.quickReplyMode === "insert"} onChange={(checked) => update({ quickReplyMode: checked ? "insert" : "send" })} />
         </SettingsRow>
         <div className="settings-item">
           <ol className="quick-replies-list">
-            {settings.quickReplies.map((reply, index) => (
-              <li key={index}>
+            {settings.quickReplies.map((reply, index) => {
+              const ask = settings.quickReplyConfirm[index] === true;
+              return <li key={index}>
                 <input
                   className="input"
                   name="quick-reply"
@@ -413,15 +417,20 @@ function ChatPage() {
                   autoCorrect="off"
                   onChange={(event) => update({ quickReplies: settings.quickReplies.map((current, at) => at === index ? event.target.value : current) })}
                 />
-                <button type="button" className="icon-button" aria-label={t("Remove quick reply {number}", { number: index + 1 })} onClick={() => update({ quickReplies: settings.quickReplies.filter((_, at) => at !== index) })}>
+                <button type="button" className="icon-button" aria-pressed={ask}
+                  aria-label={t("Ask before sending quick reply {number}", { number: index + 1 })} title={t("Ask before sending")}
+                  onClick={() => update({ quickReplyConfirm: settings.quickReplies.map((_, at) => at === index ? !ask : settings.quickReplyConfirm[at] === true) })}>
+                  <ShieldAlert aria-hidden="true" />
+                </button>
+                <button type="button" className="icon-button" aria-label={t("Remove quick reply {number}", { number: index + 1 })} onClick={() => update({ quickReplies: settings.quickReplies.filter((_, at) => at !== index), quickReplyConfirm: settings.quickReplyConfirm.filter((_, at) => at !== index) })}>
                   <X aria-hidden="true" />
                 </button>
-              </li>
-            ))}
+              </li>;
+            })}
           </ol>
           <div className="settings-actions">
-            <Button variant="secondary" disabled={settings.quickReplies.length >= QUICK_REPLIES_MAX} onClick={() => update({ quickReplies: [...settings.quickReplies, ""] })}><Plus aria-hidden="true" />{t("Add reply")}</Button>
-            <Button variant="ghost" onClick={() => update({ quickReplies: [...DEFAULT_SETTINGS.quickReplies] })}>{t("Restore defaults")}</Button>
+            <Button variant="secondary" disabled={settings.quickReplies.length >= QUICK_REPLIES_MAX} onClick={() => update({ quickReplies: [...settings.quickReplies, ""], quickReplyConfirm: [...settings.quickReplyConfirm, false] })}><Plus aria-hidden="true" />{t("Add reply")}</Button>
+            <Button variant="ghost" onClick={() => update({ quickReplies: [...DEFAULT_SETTINGS.quickReplies], quickReplyConfirm: [...DEFAULT_SETTINGS.quickReplyConfirm] })}>{t("Restore defaults")}</Button>
           </div>
         </div>
       </SettingsGroup>

@@ -1462,6 +1462,14 @@
   border-color: var(--accent);
 }
 
+/* a reply whose first tap only asked: the danger tint says the next tap acts, until the arm lapses */
+.composer-quick-reply.is-armed,
+.composer-quick-reply.is-armed:hover:not(:disabled) {
+  border-color: var(--status-blocked);
+  background: var(--status-blocked-tint);
+  color: var(--status-blocked);
+}
+
 .composer-quick-reply:disabled {
   opacity: 0.5;
   cursor: default;

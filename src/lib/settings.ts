@@ -131,6 +131,11 @@ export interface Settings {
   alertSound: boolean;
   /** one-tap replies above the composer, in order; blank ones are kept while being typed, never shown */
   quickReplies: string[];
+  /** per reply, whether a tap must be confirmed first, at the same index. Kept beside the words so an
+   *  older tab, which reads the words alone, loses the confirm steps and never the replies. */
+  quickReplyConfirm: boolean[];
+  /** what a tap does: send the reply, or put it in the message box at the caret */
+  quickReplyMode: QuickReplyMode;
   /** whether the quick replies show above the composer at all */
   showQuickReplies: boolean;
   /** every pane's lens until switched in that pane; changing it puts every pane back on it */
@@ -174,7 +179,7 @@ export type DiffStyle = (typeof DIFF_STYLES)[number];
 export const SETTING_SCOPE = {
   theme: "shared", palette: "shared", darkTheme: "shared", lightTheme: "shared", language: "shared", sidebarRows: "shared", agentOrder: "shared",
   agentMarks: "shared", autoSendQueued: "shared", showThinking: "shared", quickReplies: "shared", quietComposer: "device",
-  showQuickReplies: "shared", defaultView: "device", suggestionChip: "device",
+  showQuickReplies: "shared", quickReplyConfirm: "shared", quickReplyMode: "device", defaultView: "device", suggestionChip: "device",
   terminalInputMode: "device", keyBarExtras: "device", keyBarItems: "device", shortcutOverrides: "device", density: "device",
   terminalFontSize: "device",
   terminalWheelSpeed: "device", terminalFontFamily: "device", paneClipboard: "device", releasePaneAway: "device",
@@ -232,6 +237,9 @@ export const DEFAULT_SETTINGS: Settings = {
   alertInApp: true,
   alertSound: false,
   quickReplies: ["continue", "yes", "no", "commit and push", "retry"],
+  // commit and push reaches the remote: an accidental tap should not
+  quickReplyConfirm: [false, false, false, true, false],
+  quickReplyMode: "send",
   showQuickReplies: false,
   defaultView: "auto",
   voiceInput: "auto",
@@ -251,6 +259,19 @@ export const DEFAULT_SETTINGS: Settings = {
 export const QUICK_REPLIES_MAX = 12;
 export const QUICK_REPLY_MAX_CHARS = 200;
 
+/** What a quick reply does when tapped; sending is the phone's one-tap answer, inserting is for editing first. */
+export type QuickReplyMode = "send" | "insert";
+export const QUICK_REPLY_MODES: readonly QuickReplyMode[] = ["send", "insert"];
+/** How long a confirm step waits for its second tap before the reply goes back to asking once more. */
+export const QUICK_REPLY_ARM_MS = 5_000;
+
+/** One reply above the composer: its words, and whether a tap has to be confirmed before it acts. */
+export interface QuickReply {
+  text: string;
+  confirm: boolean;
+}
+
+
 /**
  * A record from before the button had a place of its own holds a boolean: on stays on. Its off
  * was also what a device that never chose held, so it follows the default.
@@ -266,8 +287,10 @@ export function wantsVoiceInput(setting: VoiceButton, mode: "chat" | "terminal",
 }
 
 /** The replies worth a button: what the list holds, without the blank ones still being written. */
-export function quickReplyButtons(settings: Settings): string[] {
-  return settings.quickReplies.filter((reply) => reply.trim() !== "");
+export function quickReplyButtons(settings: Settings): QuickReply[] {
+  return settings.quickReplies
+    .map((text, at) => ({ text, confirm: settings.quickReplyConfirm[at] === true }))
+    .filter((reply) => reply.text.trim() !== "");
 }
 
 /** This device's alert choices, as the server keeps them with its push subscription. */
@@ -362,6 +385,13 @@ export function sanitizeSettings(raw: unknown): Settings {
   const keyBarFallback = Array.isArray(record["keyBarExtras"])
     ? migrateKeyBarItems(keyBarExtras)
     : DEFAULT_KEY_BAR_ITEMS;
+  // kept as typed (a trailing space is the next word being started), only bounded. A record from
+  // before the confirm step has no confirm list: its replies all act on the first tap.
+  const quickReplies = Array.isArray(record["quickReplies"])
+    ? record["quickReplies"].filter((reply): reply is string => typeof reply === "string").slice(0, QUICK_REPLIES_MAX).map((reply) => reply.slice(0, QUICK_REPLY_MAX_CHARS))
+    : [...DEFAULT_SETTINGS.quickReplies];
+  const quickReplyConfirm = quickReplies.map((_, at) =>
+    Array.isArray(record["quickReplyConfirm"]) ? record["quickReplyConfirm"][at] === true : DEFAULT_SETTINGS.quickReplyConfirm[at] === true);
   return {
     terminalInputMode: record["terminalInputMode"] === "line" || record["terminalInputMode"] === "direct" ? record["terminalInputMode"] : "auto",
     keyBarExtras,
@@ -403,10 +433,9 @@ export function sanitizeSettings(raw: unknown): Settings {
     alertDone: record["alertDone"] === "off" || record["alertDone"] === "long" || record["alertDone"] === "always" ? record["alertDone"] : DEFAULT_SETTINGS.alertDone,
     alertInApp: typeof record["alertInApp"] === "boolean" ? record["alertInApp"] : DEFAULT_SETTINGS.alertInApp,
     alertSound: typeof record["alertSound"] === "boolean" ? record["alertSound"] : DEFAULT_SETTINGS.alertSound,
-    // kept as typed (a trailing space is the next word being started), only bounded
-    quickReplies: Array.isArray(record["quickReplies"])
-      ? record["quickReplies"].filter((reply): reply is string => typeof reply === "string").slice(0, QUICK_REPLIES_MAX).map((reply) => reply.slice(0, QUICK_REPLY_MAX_CHARS))
-      : [...DEFAULT_SETTINGS.quickReplies],
+    quickReplies,
+    quickReplyConfirm,
+    quickReplyMode: QUICK_REPLY_MODES.includes(record["quickReplyMode"] as QuickReplyMode) ? record["quickReplyMode"] as QuickReplyMode : DEFAULT_SETTINGS.quickReplyMode,
     showQuickReplies: typeof record["showQuickReplies"] === "boolean" ? record["showQuickReplies"] : DEFAULT_SETTINGS.showQuickReplies,
     defaultView: record["defaultView"] === "chat" || record["defaultView"] === "terminal" || record["defaultView"] === "auto" ? record["defaultView"] : DEFAULT_SETTINGS.defaultView,
     voiceInput: voiceButton(record["voiceInput"]),

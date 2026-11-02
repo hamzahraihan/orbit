@@ -52,7 +52,7 @@ import { modelLabel } from "../lib/modelName.ts";
 import { useFacesArrived } from "../lib/fontFaces.ts";
 import { activeTrigger, applyCompletion, type ActiveTrigger } from "../lib/mentions.ts";
 import { resolveComposerMenuActiveItemId } from "../lib/composerMenuHighlight.ts";
-import { quickReplyButtons, useSettings } from "../lib/settings.ts";
+import { QUICK_REPLY_ARM_MS, quickReplyButtons, useSettings, type QuickReply } from "../lib/settings.ts";
 import { AgentMark } from "./AgentMark.tsx";
 import { BackgroundTasks } from "./BackgroundTasks.tsx";
 import { MicButton, VoiceRecordingPill, useDictation } from "./VoiceInput.tsx";
@@ -243,6 +243,8 @@ export function Composer({
   /** the card's own width: a narrow one shows the task chip's count */
   const [cardWidth, setCardWidth] = useState(0);
   const [quickExpanded, setQuickExpanded] = useState(false);
+  /** the index of a reply whose first tap only asked: the second tap acts, or the arm lapses */
+  const [armedQuickReply, setArmedQuickReply] = useState<number | null>(null);
   const [contextShown, setContextShown] = useState(false);
   const composingRef = useRef(false);
   // the chat lens's input surface takes the keyboard when it appears (a pane switch remounts
@@ -871,6 +873,13 @@ export function Composer({
     }
   }, [awaitCommit, clearCommitWait, t]);
 
+  // an arm that is not taken lapses, so a later tap is never the one that acts by accident
+  useEffect(() => {
+    if (armedQuickReply === null) return;
+    const timer = window.setTimeout(() => setArmedQuickReply(null), QUICK_REPLY_ARM_MS);
+    return () => window.clearTimeout(timer);
+  }, [armedQuickReply]);
+
   /** A quick reply follows the same delivery policy as Send, and leaves the box alone. */
   const sendQuick = useCallback((reply: string) => {
     if (!connected || sending) return;
@@ -889,6 +898,34 @@ export function Composer({
       if (mounted.current) setNote(t("Not confirmed. Check the terminal before sending again."));
     }
   }, [connected, draftKey, onSend, sending]);
+
+  /** Settings → Quick replies asks for the words above the box: a tap puts them at the caret, never sends. */
+  const insertQuick = useCallback((reply: string) => {
+    const element = textareaRef.current;
+    const current = textRef.current;
+    const start = element?.value === current ? (element.selectionStart ?? caretRef.current) : caretRef.current;
+    const end = element?.value === current ? (element.selectionEnd ?? start) : start;
+    const next = `${current.slice(0, start)}${reply}${current.slice(end)}`;
+    if (next.length > MAX_COMPOSER_CHARS) { announce(t("Too long for the message draft")); return; }
+    setTextAndCaret(next, start + reply.length);
+  }, [announce, setTextAndCaret, t]);
+
+  /** One tap acts, unless the reply carries a confirm step: then the first tap arms it and says so. */
+  const useQuickReply = useCallback((reply: QuickReply, index: number) => {
+    setNote(null);
+    if (settings.quickReplyMode === "insert") {
+      setArmedQuickReply(null);
+      insertQuick(reply.text);
+      return;
+    }
+    if (reply.confirm && armedQuickReply !== index) {
+      setArmedQuickReply(index);
+      announce(t("Tap again to send “{reply}”", { reply: reply.text }));
+      return;
+    }
+    setArmedQuickReply(null);
+    sendQuick(reply.text);
+  }, [announce, armedQuickReply, insertQuick, sendQuick, settings.quickReplyMode, t]);
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1041,18 +1078,23 @@ export function Composer({
               {t("Hide")}
             </button>
           )}
-          {quickReplies.map((reply, index) => (
-            <button
-              key={`${index}:${reply}`}
+          {quickReplies.map((reply, index) => {
+            const armed = armedQuickReply === index;
+            const label = settings.quickReplyMode === "insert"
+              ? t("Put “{reply}” in the message box", { reply: reply.text })
+              : armed ? t("Tap again to send “{reply}”", { reply: reply.text }) : t("Send “{reply}”", { reply: reply.text });
+            return <button
+              key={index}
               type="button"
-              className="composer-quick-reply"
-              title={t("Send “{reply}”", { reply })}
+              className={`composer-quick-reply${armed ? " is-armed" : ""}`}
+              title={label}
+              aria-label={label}
               disabled={!connected || sending}
-              onClick={() => sendQuick(reply)}
+              onClick={() => useQuickReply(reply, index)}
             >
-              {reply}
-            </button>
-          ))}
+              {reply.text}
+            </button>;
+          })}
         </div>
         )
       )}
