@@ -63,6 +63,8 @@ import { terminalLabel } from "../lib/terminalLabel.ts";
 import { useMediaQuery } from "../lib/useMediaQuery.ts";
 import { useAnnouncedText } from "../lib/useAnnouncedText.ts";
 import { modalOpen } from "../lib/focus.ts";
+import { schedulePrompt, scheduleRefusal } from "../lib/scheduled.ts";
+import { ScheduledPrompts } from "./ScheduledPrompts.tsx";
 import { pinchFontSize } from "../lib/pinchFontSize.ts";
 import { narrowPaneFontSize } from "../lib/narrowPaneFont.ts";
 import { finalStep, HERDR_MOUSE_SCROLL_LINES, wheelSteps } from "../lib/wheelSteps.ts";
@@ -488,6 +490,24 @@ export function PaneTerminal({
       && previous.value?.context?.window === value?.context?.window ? previous : { pane, value });
   }, []);
   const queueStore = messageQueues;
+  // Send later: the rows this pane has lined up on its PC, and the bump that re-reads them after
+  // the composer lines one up
+  const [scheduleEpoch, bumpSchedule] = useState(0);
+  // a PC whose bridge predates schedules (an older remote bundle) is not offered the clock: the
+  // first read of this pane's rows says so, and the clock goes rather than refusing every time
+  const [schedulesUnsupported, setSchedulesUnsupported] = useState(false);
+  const onSchedulesUnsupported = useCallback(() => setSchedulesUnsupported(true), []);
+  const scheduleMessage = useCallback(async (text: string, sendAt: number): Promise<string | null> => {
+    if (paneId === null) return t("This pane is gone");
+    try {
+      await schedulePrompt(machineId, paneId, text, sendAt);
+      bumpSchedule((epoch) => epoch + 1);
+      return null;
+    } catch (error) {
+      // the server's own refusal (too many, too far ahead, a past time) is what the box says
+      return scheduleRefusal(error, t);
+    }
+  }, [machineId, paneId, t]);
   const queueOwner = paneId === null ? null : paneStorageId(machineId, paneId);
   const queued = useSyncExternalStore(queueStore.subscribe, () => queueStore.read(queueOwner ?? ""));
   const pending = useSyncExternalStore(pendingMessages.subscribe, () => pendingMessages.read(queueOwner ?? ""));
@@ -3051,6 +3071,12 @@ export function PaneTerminal({
       {presented && paneId !== null && chatView && <div className="prompt-dock" ref={setPromptDock} aria-live="polite" />}
       {/* the composer belongs to the chat lens: in terminal mode the grid itself is
           the input surface (key bar included), so a second box would only duplicate it */}
+      {/* the messages this pane has lined up: above the input card, in its column, so the chip is
+          where the message will land */}
+      {presented && paneId !== null && chatView && !observing && (
+        <ScheduledPrompts machineId={machineId} paneId={paneId} refreshKey={scheduleEpoch} connected={connected}
+          onUnsupported={onSchedulesUnsupported} />
+      )}
       {presented && paneId !== null && chatView && !secretActive && !observing && !ended && (
         <Composer
           key={paneId}
@@ -3081,6 +3107,7 @@ export function PaneTerminal({
           onSend={composerSend}
           onAbort={abortTurn}
           onUploadImage={uploadImage}
+          onSchedule={observing || schedulesUnsupported ? undefined : scheduleMessage}
         />
       )}
       {/* In the terminal lens the input line and the masked input float over the grid's last rows

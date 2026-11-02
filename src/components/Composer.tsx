@@ -12,7 +12,8 @@ import {
   type ReactNode,
 } from "react";
 import { flushSync } from "react-dom";
-import { ArrowUp, FileText, FolderGit2, LoaderCircle, Minimize2, Package, Paperclip, Puzzle, Square, TriangleAlert, UserRound, X, type LucideIcon } from "lucide-react";
+import { ArrowUp, Clock, FileText, FolderGit2, LoaderCircle, Minimize2, Package, Paperclip, Puzzle, Square, TriangleAlert, UserRound, X, type LucideIcon } from "lucide-react";
+import { pickedSendAt, presetSendAt, SCHEDULE_PRESETS_MS } from "../lib/scheduled.ts";
 
 import "./Composer.css";
 
@@ -96,6 +97,9 @@ export interface ComposerProps {
   onSend: (text: string, clearDraft?: string, sendAnyway?: boolean) => boolean | string | DraftRefusal | Promise<boolean | string | DraftRefusal>;
   onAbort: () => void;
   onUploadImage: (file: File) => Promise<string>;
+  /** Lines the box's text up to go to the pane at `sendAt` instead of now (server/scheduled-prompts.ts);
+   *  resolves to an error to show, or null once it is lined up. Unset, no Send later is offered. */
+  onSchedule?: (text: string, sendAt: number) => Promise<string | null>;
 }
 
 const UPLOADS_AT_ONCE = 3;
@@ -228,6 +232,7 @@ export function Composer({
   onSend,
   onAbort,
   onUploadImage,
+  onSchedule,
 }: ComposerProps) {
   const t = useT();
   const activeRef = useRef(active);
@@ -246,6 +251,12 @@ export function Composer({
   /** the index of a reply whose first tap only asked: the second tap acts, or the arm lapses */
   const [armedQuickReply, setArmedQuickReply] = useState<number | null>(null);
   const [contextShown, setContextShown] = useState(false);
+  // Send later: the picker under the clock, the clock a typed time means, and the server's refusal
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleClock, setScheduleClock] = useState("");
+  const [scheduleNote, setScheduleNote] = useState<string | null>(null);
+  const [scheduling, setScheduling] = useState(false);
+  const scheduleRef = useRef<HTMLDivElement | null>(null);
   const composingRef = useRef(false);
   // the chat lens's input surface takes the keyboard when it appears (a pane switch remounts
   // it), as the grid does in the terminal lens: a pane picked from the drawer is typed into
@@ -253,6 +264,23 @@ export function Composer({
   useEffect(() => {
     if (autoFocus && !modalOpen()) textareaRef.current?.focus({ preventScroll: true });
   }, [autoFocus]);
+
+  // a tap anywhere else, or Escape, puts the Send later picker away: it is a choice, not a mode
+  useEffect(() => {
+    if (!scheduleOpen) return;
+    const away = (event: PointerEvent): void => {
+      if (!scheduleRef.current?.contains(event.target as Node)) setScheduleOpen(false);
+    };
+    const escape = (event: globalThis.KeyboardEvent): void => {
+      if (event.key === "Escape") setScheduleOpen(false);
+    };
+    document.addEventListener("pointerdown", away);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", away);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [scheduleOpen]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const attachmentsRef = useRef<Attachment[]>([]);
   const removedAttachments = useRef(new Set<number>());
@@ -873,6 +901,26 @@ export function Composer({
     }
   }, [awaitCommit, clearCommitWait, t]);
 
+  /**
+   * Send later: the box's text is lined up for `sendAt` and the box is emptied. The text lives in
+   * the scheduled chip from then on, in one place, so it can never go out twice.
+   */
+  const scheduleAt = useCallback(async (sendAt: number): Promise<void> => {
+    if (!onSchedule || scheduling || !connected) return;
+    const body = text.trim();
+    if (body.length === 0) return;
+    setScheduling(true);
+    setScheduleNote(null);
+    try {
+      const refusal = await onSchedule(body, sendAt);
+      if (refusal !== null) { setScheduleNote(refusal); return; }
+      setTextAndCaret("", 0);
+      setScheduleOpen(false);
+    } finally {
+      setScheduling(false);
+    }
+  }, [connected, onSchedule, scheduling, setTextAndCaret, text]);
+
   // an arm that is not taken lapses, so a later tap is never the one that acts by accident
   useEffect(() => {
     if (armedQuickReply === null) return;
@@ -1327,6 +1375,34 @@ export function Composer({
             <Paperclip aria-hidden="true" />
             <span>{t("Attach")}</span>
           </button>
+          {onSchedule && (
+            <div className="composer-schedule-wrap" ref={scheduleRef}>
+              {/* the clock states a choice, not a mode: it opens only while there is text to line up */}
+              <button type="button" className="composer-pill-button composer-schedule-button"
+                aria-label={t("Send later")} title={t("Send later")} aria-expanded={scheduleOpen}
+                disabled={!connected || scheduling || text.trim().length === 0}
+                onClick={() => { setScheduleNote(null); setScheduleOpen((open) => !open); }}>
+                <Clock aria-hidden="true" />
+                <span>{t("Send later")}</span>
+              </button>
+              {scheduleOpen && <div className="composer-schedule" role="group" aria-label={t("Send later")}>
+                <p className="composer-schedule-head">{t("Send this message at")}</p>
+                <button type="button" className="composer-schedule-preset" disabled={scheduling}
+                  onClick={() => { void scheduleAt(presetSendAt(SCHEDULE_PRESETS_MS[0], Date.now())); }}>{t("In 15 minutes")}</button>
+                <button type="button" className="composer-schedule-preset" disabled={scheduling}
+                  onClick={() => { void scheduleAt(presetSendAt(SCHEDULE_PRESETS_MS[1], Date.now())); }}>{t("In 1 hour")}</button>
+                <button type="button" className="composer-schedule-preset" disabled={scheduling}
+                  onClick={() => { void scheduleAt(presetSendAt("tomorrow", Date.now())); }}>{t("Tomorrow at 9")}</button>
+                <div className="composer-schedule-pick">
+                  <input type="time" className="composer-schedule-time" aria-label={t("Time")} value={scheduleClock}
+                    disabled={scheduling} onChange={(event) => setScheduleClock(event.currentTarget.value)} />
+                  <button type="button" className="composer-schedule-go" disabled={scheduling || scheduleClock === ""}
+                    onClick={() => { const at = pickedSendAt(scheduleClock, Date.now()); if (at !== null) void scheduleAt(at); }}>{t("Schedule")}</button>
+                </div>
+                {scheduleNote !== null && <p className="composer-schedule-note" role="alert">{scheduleNote}</p>}
+              </div>}
+            </div>
+          )}
           {dictation.shown && <MicButton dictation={dictation} />}
           <BackgroundTasks paneId={paneId} count={backgroundTasks} omo={agent === "omo"} claude={agent === "claude"} plan={plan} />
         </div>

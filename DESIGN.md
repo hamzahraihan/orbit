@@ -695,6 +695,12 @@ Alert rows of the table above from the `--droplet-*` roles in `src/styles.css`.
 | `--droplet-ring` | Card hairline |
 | `--droplet-shadow` | Drop shadow under the liquid |
 
+Outside the app the same wait is said by the browser's own chrome, never by a new surface of
+ours: the tab title leads with the count (`(2) checkout-api · Orbit`) and the installed app's
+badge (`navigator.setAppBadge`) carries the number. Both are the OS's type and the OS's dot, both
+are absent at zero, and both count only agents waiting on the user, never finished work.
+(`src/lib/attention.ts`.)
+
 ### Shell
 - `.app` is a full-viewport column: `.app-header` over `.app-body`; the body is sidebar plus
   `.terminal-host`. While a phone's soft keyboard is up (`data-keyboard`), `--app-height` follows
@@ -1598,8 +1604,20 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   the model label at the start of the row, on the line the message's text starts on (`--space-4`
   in, `--space-3` on a phone at `480px` and below), then the action pills — `Attach` (lucide
   `Paperclip` and its word, named "Attach files"), the mic when voice input shows it (see Voice
-  input) and the background-task chip — and at the far end ONE square Send/Stop button. The
-  model leads, the actions follow it, and nothing sits between the two groups.
+  input), `Send later` (a lucide `Clock` and its word, beside Attach, disabled while the box is
+  empty; it opens a small `--bg-elevated` list of moments over the card, closed by a tap anywhere
+  else or Escape — never a dialog; a PC whose bridge keeps no schedules — an older remote bundle
+  answers 404 — never shows it, since a control whose only end is a refusal is not offered) and
+  the background-task chip — and at the far end ONE square Send/Stop button. The model leads,
+  the actions follow it, and nothing sits between the two groups.
+- Messages lined up for later (`.scheduled-prompts`) are one quiet chip per message in the
+  composer's own column, above the card: a dim `Clock`, its time in the mono face at `--text`, the
+  message's first words ellipsized, and an X at the far end. It is the same surface as the card
+  (`--bg-elevated`, `--border` hairline, `--radius-md`), no chip fills the row with colour, and a
+  row whose send failed says why in place of the time in `--danger-text`: the failure is a fact in
+  the same row, never a banner. A row whose moment came into an agent input box that holds a draft
+  keeps its time and says what it waits on, in italics, in place of the words (`.is-held`): the
+  time asked for never moves, and nothing colours the row until the wait ends badly.
 - An action is a labelled pill (`.composer-pill-button`, `--control-h` tall, `--radius-pill`,
   `--bg-hover` on hover): no fill, so its `--border-strong` hairline is the button, its glyph a
   `--space-4` `--text-dim`, its word `--fs-xs` at `--fw-medium`. The mic inside the controls

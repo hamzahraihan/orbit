@@ -1528,3 +1528,99 @@
     backdrop-filter: var(--glass-blur);
   }
 }
+
+/* Send later: a clock in the card's left group that opens a small list of moments. The picker is
+   the card's own surface lifted one step (--bg-elevated over the card), never a dialog: it asks one
+   small question and leaves on a tap anywhere else. */
+.composer-schedule-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.composer-schedule {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  left: 0;
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: var(--hairline);
+  min-width: 208px;
+  padding: var(--space-2);
+  border: var(--hairline) solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-card);
+}
+
+.composer-schedule-head {
+  margin: 0;
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+}
+
+.composer-schedule-preset,
+.composer-schedule-go {
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+.composer-schedule-preset:hover,
+.composer-schedule-go:hover {
+  background: var(--bg-hover);
+}
+
+.composer-schedule-preset:disabled,
+.composer-schedule-go:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.composer-schedule-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  padding: var(--space-1) var(--space-2) 0;
+  border-top: var(--hairline) solid var(--border);
+}
+
+.composer-schedule-time {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: var(--control-h);
+  padding: 0 var(--space-2);
+  border: var(--hairline) solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+}
+
+.composer-schedule-go {
+  flex: 0 0 auto;
+  padding-inline: var(--space-3);
+}
+
+.composer-schedule-note {
+  margin: 0;
+  padding: var(--space-1) var(--space-2) 0;
+  color: var(--danger-text);
+  font-size: var(--fs-xs);
+}
+
+.composer-schedule-preset:focus-visible,
+.composer-schedule-go:focus-visible,
+.composer-schedule-time:focus-visible {
+  outline: var(--ring);
+  outline-offset: calc(var(--ring-offset) * -1);
+}

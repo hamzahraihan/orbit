@@ -23,7 +23,11 @@ to change. Also read [server/AGENTS.md](server/AGENTS.md) and [src/AGENTS.md](sr
   stream is the truth. Only a mirrored pane (Windows, or no Node for the sidecar) is drawn from
   `pane.read`, so never assume a pty exists.
 - Nothing the user typed is sent automatically after a disconnect: it waits in a draft until the
-  user sends or discards it.
+  user sends or discards it. The one text the server sends on its own is a schedule the user set
+  (`server/scheduled-prompts.ts`), which is an instruction to send at that time, kept on the PC
+  that owns the pane. It never types into a box that holds a draft: that moment waits for the box
+  to clear and gives up after ten minutes. A send that failed is never retried and keeps its row
+  with the reason.
 - Prompt answers go through `POST /api/pane/prompt/answer`, never guessed digit keys.
 - Selecting a pane or tab in the browser never moves herdr's own focus; only an explicit action
   that needs it calls `pane.focus`.
