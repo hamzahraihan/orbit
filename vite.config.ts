@@ -1,13 +1,15 @@
 import { buildXtermSource } from "./scripts/build-xterm.ts";
 import { compressedAssets } from "./scripts/compressed-assets.ts";
-import { API_URL, API_WS_URL, devApi, API_WS_URL_OVERRIDE } from "./scripts/dev-api.ts";
+import { API_URL, devApi, API_WS_URL_OVERRIDE } from "./scripts/dev-api.ts";
 import { serviceWorkerBuild } from "./scripts/service-worker-build.ts";
 import { defineConfig, normalizePath, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwind from "@tailwindcss/vite";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";const xtermSource = normalizePath(buildXtermSource(fileURLToPath(new URL(".", import.meta.url))));
+import { fileURLToPath } from "node:url";
+
+const xtermSource = normalizePath(buildXtermSource(fileURLToPath(new URL(".", import.meta.url))));
 
 let revision: string | null = null;
 try { revision = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", timeout: 5000, stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { /* non-Git build */ }

@@ -283,14 +283,16 @@
   }
 }
 
-/* Reduced motion */
+/* Reduced motion. The pulse is declared on `.machine-group.is-connecting`/`.is-reconnecting
+   .machine-state-dot`, which outranks the dot alone: those selectors are repeated here. */
 @media (prefers-reduced-motion: reduce) {
   .machine-header,
   .machine-fold,
   .machine-new,
-  .machine-state-dot {
-    animation: none !important;
-    transition: none !important;
+  .machine-group.is-connecting .machine-state-dot,
+  .machine-group.is-reconnecting .machine-state-dot {
+    animation: none;
+    transition: none;
   }
 }
 

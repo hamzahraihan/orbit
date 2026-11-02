@@ -30,3 +30,7 @@ Microsoft/
 graphify-out/
 
 skills/
+
+# demo server build output and PID
+.demo-look/
+.demo-look.pid

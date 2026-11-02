@@ -23,8 +23,14 @@ a browser that never changed one moves to Codex with everyone new.
 The sidebar is one grid: a leading cell that says who or what a row is (the coding agent's brand
 mark, else the place's own glyph), a title, and a trailing cell that says how it is. Workspaces
 and Agents are independent lists, as in herdr's Spaces and Agents panels; tab and pane navigation
-stays over the terminal and in the palette. Sections are parted by space and a dim head, never by
-a rule; the Agents list's workspace cards are an edge around rows, not a line between sections.
+stays over the terminal and in the palette. Sections are parted by space and a dim head; where the
+agent roster meets the workspaces above it, one hairline says so, because two lists in one column
+with only space between them read as one. The line is not earned anywhere else, and the Agents
+list's workspace cards are an edge around rows, not a line between sections. The Agents head also
+carries the roster's own order control (`.agent-section-order`): the same setting as Appearance's
+Agents order, quiet at `--text-dim` while agents are grouped by workspace, at `--text` while
+priority puts the waiting ones first, so the list never needs a trip to Settings to say how it is
+read.
 Hover and selection share one neutral fill; the chosen workspace or agent row takes it flat, with
 no colored rail. Brand marks are the only other color there, and a ready row draws no state at all.
 Collapsed to the desktop rail, a row keeps its leading mark and its state as one dot on the
@@ -781,12 +787,19 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
 ### Segmented control (HeroUI `.toggle-button-group`, Orbit `.segmented`)
 - Settings' two-to-four-choice control is HeroUI's ToggleButtonGroup (`Segmented` in
   `components/SettingsControls.tsx`): attached buttons on one track, the chosen one filled with
-  the accent tint (`--accent-soft`), `disallowEmptySelection` so one option is always chosen.
+  the stronger rose tint (`--accent-soft` → `--primary-tint`) and its label in `--text-strong`,
+  `disallowEmptySelection` so one option is always chosen. The faint tint and the accent-colored
+  label it used to take read as the disabled option on a dark card. No hairline of its own: the
+  track is the frame.
 - It is not a generic tab list. Five or more choices go in a select.
 - Used for Chat/Terminal, theme, density, sidebar rows and the like. The header's own
   Chat/Terminal switch (`.segmented`, `aria-pressed`) is Orbit's: from `769px` it drops the track
   and the glyphs — two words, the chosen one on the hover fill; at `<=768px` it keeps the track,
   and at `<=560px` it is glyphs only.
+- Every other `.segmented` (Files dialog tabs, the file viewer's modes, the diff layout) draws its
+  chosen option with the same rose fill and strong label as the settings toggle: `--bg-hover` on a
+  `--bg-elevated` track is too small a step to read as chosen. The header switch keeps the hover
+  fill and its accent underline.
 - Orbit's `.segmented` keeps an option at `--control-h` less `--segmented-inset` tall, so its
   track is `--control-h`. On a coarse pointer each option is at least `--touch-target` wide, so
   neighbours never share a tap, and reaches `--touch-target` tall through an invisible `::before`
@@ -1242,6 +1255,17 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   within the source bounds (256 KB, 5 000 lines), else the rows stay plain and the header says
   `Too long to highlight`. Between hunks nothing expands: the routes serve the patch alone, not
   the files around it; **Open file** is the way to the whole file.
+- Dragging across rows selects a stretch with the package's own line selection (its highlight is
+  in the shadow root). A `.repo-diff-selection` bar above the patch names it (`Lines 12–15
+  selected`, mono, dim) and offers **Comment** (`MessageSquarePlus`); on a phone both are 44px.
+  **Comment** opens `.repo-diff-comment` in the same place: a `.repo-diff-comment-box` (the
+  composer's limit, its caret placed at once) and **Cancel** | **Add to message**, the latter rose
+  on `--accent` with `--bg` ink and quiet on `--bg-hover` until the box holds something. Adding
+  joins that pane's chat draft through the composer's own store, as Quote in message does: the
+  file heading (`src/a.ts lines 12-15`, `old` for the version before the change), the selected
+  rows in a `diff` fence with git's signs, then the note, with the same "Added to the message
+  draft" / "Too long for the message draft" line under the bar. Nothing is sent, and the
+  selection clears once it is taken.
 - What has no rows says so in a `.repo-diff-note`: a binary file, a change past the server's
   patch cap (with the cap in bytes), a merge conflict, a path that is not a regular file, a pure
   rename or mode change (`No lines changed.`), a file that no longer differs, and every refusal of
@@ -1853,8 +1877,12 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
 - Pages, in order: **Appearance** (theme, dark theme, light theme, density, language, sidebar rows), **Chat**
   (panes open in, show thinking, chat width, chat font size and family; then
   **Composer**: Enter sends, send queued messages automatically, and on a touch screen the suggestion
-  chip (off by default); then **Quick replies**; then **File viewer**: wrap long
-  lines, Markdown width, Diff layout), **Terminal** (font size, font family, wheel
+  chip (off by default); then **Quick replies**: show above the message box and over the terminal,
+  put replies in the message box (in the terminal, the input line) instead of sending, and one row
+  per reply — its words, a `ShieldAlert` icon button
+  (`aria-pressed`, one per row) that asks for a second tap before it acts, and Remove; then
+  **File viewer**: wrap long lines, Markdown width, Diff layout), **Terminal** (font size, font
+  family, wheel
   speed, input mode, Key bar), **Alerts**, **Voice input**,
   **Shortcuts** (the platform-resolved global bindings), **Phone & devices** (the phone address,
   Keep screen on, Install; then paired devices),

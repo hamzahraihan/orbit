@@ -909,19 +909,27 @@ li.sidebar-row {
   }
 }
 
-/* Reduced motion */
+/* Reduced motion. A few of these animations and transitions are declared on descendant or
+   state selectors (`.sidebar-section-header .machine-fold`, `.sidebar-status[data-status="working"]
+   .sidebar-status-dot`, …), which outrank the bare class: they are repeated here, and this block
+   comes later, so it wins at equal specificity. */
 @media (prefers-reduced-motion: reduce) {
   .sidebar-row,
   .sidebar-section-header,
   .sidebar-row-mark,
   .sidebar-row-action,
-  .machine-fold,
-  .machine-new,
+  .sidebar-row-action.workspace-toggle,
+  .sidebar-section-header .machine-fold,
+  .sidebar-section-header .machine-new,
+  .machine-state-dot,
+  .sidebar-section-header.is-connecting .machine-state-dot,
+  .sidebar-section-header.is-reconnecting .machine-state-dot,
   .sidebar-status-dot,
   .sidebar-status-glyph,
-  .machine-state-dot {
-    animation: none !important;
-    transition: none !important;
+  .sidebar-status[data-status="working"] .sidebar-status-dot,
+  .sidebar-status[data-status="working"] .sidebar-status-glyph {
+    animation: none;
+    transition: none;
   }
 }
 
