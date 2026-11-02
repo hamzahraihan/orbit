@@ -4,6 +4,7 @@ import { createInputLane } from "./core/input.ts";
 import { type Client, connectionData, connectionOf, createConnections, presenceOf, send, type SocketData } from "./core/connections.ts";
 import { createStatusHub } from "./core/status.ts";
 import { handlePaneRequest, paneContext } from "./pane-routes.ts";
+import { createScheduledPrompts, type ScheduledPrompts } from "./scheduled-prompts.ts";
 import { randomBytes } from "node:crypto";
 import { readHerdrProfiles, type HerdrMachineProfile } from "./herdr-profiles.ts";
 import { accessSync, constants } from "node:fs";
@@ -49,7 +50,7 @@ import {
   sessionSnapshot,
 } from "./herdr/client.ts";
 import { type AlertTiming, defaultStateDir, handlePushRequest } from "./push.ts";
-import { claudeHeldIsGrey, shownInputBox, codexQuestionsCollapsed, handlePromptRequest, isClaudeHeld, heldCandidate, modelListWaits, noteSubmitted, parseInteractivePrompt } from "./prompt.ts";
+import { claudeHeldIsGrey, claudeInputDraft, shownInputBox, codexQuestionsCollapsed, handlePromptRequest, isClaudeHeld, heldCandidate, modelListWaits, noteSubmitted, parseInteractivePrompt } from "./prompt.ts";
 import { secretPrompt, validSecret } from "../shared/secret-prompt.ts";
 import { PtySession } from "./pty/session.ts";
 import { AttachOutputTail, AttachStartupProbes, isTakeoverExit } from "./attach-output.ts";
@@ -272,6 +273,8 @@ export function createServer(
     herdrUpdate?: HerdrUpdater;
     /** voice input's key, provider and models; tests pass one with their own env and fetch */
     voice?: VoiceService;
+    /** messages lined up for later (server/scheduled-prompts.ts); tests pass one with a clock of their own */
+    scheduled?: ScheduledPrompts;
     machines?: boolean;
     /** Read-only saved profiles from the local herdr client; tests supply their own catalog. */
     herdrProfiles?: () => Promise<HerdrMachineProfile[]>;
@@ -376,6 +379,25 @@ export function createServer(
   const preferences = new PreferenceStore(options.stateDir ?? defaultStateDir());
   const herdrSidebar = new HerdrSidebarConfig(options.herdrConfigPath ?? herdrConfigPath());
   const voice = options.voice ?? new VoiceService({ stateDir: options.stateDir ?? defaultStateDir(), env: process.env, fetch });
+  // a schedule is kept on the PC that owns the pane, so it fires while every browser is shut
+  const scheduled = options.scheduled ?? createScheduledPrompts({
+    stateDir: options.stateDir ?? defaultStateDir(),
+    send: (paneId, text) => paneSendText(paneId, text),
+    // its moment arrives into whatever the agent is doing: a pane waiting on an answer, or one
+    // whose own input box holds the user's draft, is left alone and looked at again in a minute
+    hold: async (paneId) => {
+      const pane = await paneGet(paneId);
+      if (pane.agent_status === "blocked") return "the agent is waiting for an answer";
+      const agent = pane.agent ?? pane.agent_session?.agent ?? null;
+      if (agent === "claude") {
+        // the same reader the queued-message checks use; without colors a box with anything in it
+        // counts as a draft, which is the safe way to be wrong here
+        const screen = (await paneRead({ paneId, source: "detection", format: "text" })).text;
+        if (claudeInputDraft(screen, null)) return "the agent's input box holds a draft";
+      }
+      return null;
+    },
+  });
   /** a login named here is taken as it is: a tagged node has none of its own to read (HERDR_WEB_TAILSCALE_OWNER) */
   const namedOwner = options.tailscaleOwner !== undefined ? options.tailscaleOwner : process.env["HERDR_WEB_TAILSCALE_OWNER"]?.trim() || undefined;
   const tailnet = options.tailnet ?? new TailnetIdentitySource();
@@ -1427,7 +1449,7 @@ export function createServer(
         }
       }
 
-      const paneStores = { ...options, onScroll: (paneId: string) => { attachments.get(paneId)?.mirror?.poke(); } };
+      const paneStores = { ...options, scheduled, onScroll: (paneId: string) => { attachments.get(paneId)?.mirror?.poke(); } };
       const paneResponse = await handlePaneRequest(request, url, pathname, paneStores);
       if (paneResponse) return paneResponse;
 
@@ -2193,6 +2215,7 @@ export function createServer(
       claudeAgents.stop();
       clearInterval(waitTimer);
       plans.stop();
+      scheduled.close();
       machines?.stop();
       registration?.close();
       for (const client of clients) killWatches(client);
