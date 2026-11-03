@@ -2,7 +2,7 @@ import { afterEach, expect, test } from "bun:test";
 import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { forgetTranscriptState, HistoryChanged, parseClaudeTranscript, transcriptPage, transcriptToolOutput, TRANSCRIPT_WINDOW_BYTES } from "./conversation.ts";
+import { forgetTranscriptState, HistoryChanged, parseClaudeTranscript, transcriptPage, transcriptToolOutput, TRANSCRIPT_WINDOW_BYTES, type TranscriptStreamReuse } from "./conversation.ts";
 import { parseConversationMetadata } from "./conversation-metadata.ts";
 import { isContextClear, parseOmpTranscript } from "./transcript-records.ts";
 
@@ -94,6 +94,64 @@ for (const source of ["omp-transcript", "omo-transcript", "gjc-transcript", "cla
     expect(transcriptPage(source, path)).toEqual(latest);
   });
 }
+
+test("walking pages warms a scan that a cold walk would find the same", () => {
+  const path = fixture(jsonl(Array.from({ length: 1200 }, (_, i) => message("user", `turn ${i}`))));
+  const walk = (): string[][] => {
+    const pages: string[][] = [];
+    let cursor = transcriptPage("omp-transcript", path).cursor;
+    while (cursor !== null && pages.length < 12) {
+      const page = transcriptPage("omp-transcript", path, { before: cursor });
+      pages.push(page.turns.map((entry) => JSON.stringify(entry)));
+      cursor = page.cursor;
+    }
+    return pages;
+  };
+  const warm = walk();
+  forgetTranscriptState();
+  expect(walk()).toEqual(warm);
+});
+
+test("a deep walk reads every turn once, wherever its page windows fall", () => {
+  // the offset of each page window is a fixed distance back from a page start, so these padding
+  // lengths land those edges at different points inside the turn lines: a window edge that cuts
+  // a line must not lose the turn that line opens
+  for (const pad of [0, 1, 7, 64, 683]) {
+    const names = Array.from({ length: 1200 }, (_, i) => `turn ${i}`);
+    const path = fixture(jsonl([
+      message("assistant", "x".repeat(pad)),
+      ...names.map((name, i) => message("user", `${name} ${"y".repeat(40 + (i * 37) % 260)}`)),
+    ]));
+    const pages: string[][] = [];
+    let page = transcriptPage("omp-transcript", path);
+    const collect = () => pages.push(page.turns.flatMap((turn) => turn.parts.flatMap((part) => part.kind === "text" && part.text.startsWith("turn ") ? [part.text.split(" ").slice(0, 2).join(" ")] : [])));
+    collect();
+    let cursor = page.cursor;
+    for (let guard = 0; cursor !== null && guard < 100; guard += 1) {
+      page = transcriptPage("omp-transcript", path, { before: cursor });
+      collect();
+      cursor = page.cursor;
+    }
+    expect(pages.reverse().flat()).toEqual(names);
+    forgetTranscriptState();
+  }
+});
+
+test("a reused reader stream still sees an appended page", () => {
+  const path = fixture(jsonl(Array.from({ length: 130 }, (_, i) => message("user", `turn ${i}`))));
+  const reuse: TranscriptStreamReuse = {};
+  const newest = transcriptPage("omp-transcript", path, {}, undefined, reuse);
+  const stream = reuse.stream;
+  const older = transcriptPage("omp-transcript", path, { before: newest.cursor! }, undefined, reuse);
+  expect([...older.turns, ...newest.turns]).toHaveLength(100);
+  expect(reuse.stream).toBe(stream);
+  appendFileSync(path, jsonl([message("user", "after the walk")]));
+  const after = transcriptPage("omp-transcript", path, {}, undefined, reuse);
+  expect(reuse.stream).not.toBe(stream);
+  expect(after.turns.at(-1)?.parts).toEqual([{ kind: "text", text: "after the walk" }]);
+  expect(after.history_id).toBe(newest.history_id);
+  expect(transcriptPage("omp-transcript", path, { before: newest.cursor! }, undefined, reuse).turns).toEqual(older.turns);
+});
 
 test("reset scanning crosses chunk boundaries, excludes pre-clear full outputs and pending tools", () => {
   const opening = jsonl([message("assistant", [{ type: "toolCall", id: "old", name: "Read", arguments: {} }]), message("toolResult", "old output", { toolCallId: "old" })]);
