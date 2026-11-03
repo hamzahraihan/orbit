@@ -75,6 +75,26 @@
     top: 0;
     margin: 0 0 calc(-1 * var(--space-5));
   }
+
+  /* the same fade at the other end: an older line leaves under the composer, not off a straight
+     edge. It takes the transcript's own bottom padding as its lane and starts there, so it hangs
+     over a line only while there is more below it and the end of a thread stays whole — and, being
+     pulled up into that padding, it adds no height to the scroller, which keeps the composer's
+     distance from the last line and the scroller's idea of "at the end" as they were. */
+  .terminal-host:first-child .chat-view::after {
+    content: "";
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    display: block;
+    height: var(--space-5);
+    margin: calc(-1 * var(--space-5)) calc(-1 * var(--space-4)) 0;
+    background: linear-gradient(transparent, var(--bg));
+    pointer-events: none;
+  }
+  .terminal-host:first-child .chat-view-virtual::after {
+    margin: calc(-1 * var(--space-5)) 0 0;
+  }
 }
 
 .chat-transcript {
