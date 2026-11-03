@@ -7,3 +7,6 @@
 export function paletteOpenQuery(query: unknown): string {
   return typeof query === "string" ? query : "";
 }
+
+/** What the palette lists: everything it knows, or the chats' words alone (Mod+Shift+M). */
+export type PaletteMode = "all" | "messages";
