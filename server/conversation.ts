@@ -755,6 +755,66 @@ function turnStarts(bytes: Buffer, source: StreamSource, chain: PromptChain = { 
 }
 
 /**
+ * The turn starts of one page window, reused by the page before it. Walking backwards slides the
+ * window left by one page's bytes, so the next window mostly lies inside this one: its starts are
+ * already found, and only the part reaching past this window is scanned, not another 16 MB. The
+ * starts are the unparsed lines a page can begin on, so the same bytes still parse once, when the
+ * page that needs them is read.
+ */
+interface PageWindowScan {
+  id: string;
+  source: StreamSource;
+  from: number;
+  to: number;
+  starts: number[];
+}
+const pageWindowScans = new Map<string, PageWindowScan>();
+const WINDOW_LINE_LOOKBACK = 4096;
+
+/**
+ * The start of the line that holds `from`, so a cached window never begins inside one: a line
+ * split by the window's left edge is read as the fragment it is and never counted as a turn
+ * start, which would drop that turn from a later page. A line longer than the lookback has no
+ * start inside it, and its window is simply not cached.
+ */
+function windowLineStart(stream: TranscriptStream, from: number, floor: number): number | null {
+  if (from <= floor) return from;
+  const back = Math.min(WINDOW_LINE_LOOKBACK, from - floor);
+  const newline = readStream(stream, from - back, from).lastIndexOf(0x0a);
+  return newline === -1 ? null : from - back + newline + 1;
+}
+
+function pageWindowStarts(stream: TranscriptStream, source: StreamSource, path: string, from: number, to: number): { starts: number[]; bytes: Buffer | null } {
+  if (stream.promptStarts) return { starts: stream.promptStarts.filter((at) => at >= from && at < to), bytes: null };
+  // a Claude prompt chain depends on the bytes before the window; a cached window carries the
+  // chain its own start began with, so a page boundary could read a re-send differently: no cache
+  if (source === "claude-transcript") {
+    const bytes = readStream(stream, from, to);
+    return { starts: turnStarts(bytes, source).map((at) => from + at), bytes };
+  }
+  const keep = (starts: number[], aligned: number) => remember(pageWindowScans, path, { id: stream.id, source, from: aligned, to, starts }, 8);
+  const cached = pageWindowScans.get(path);
+  if (cached !== undefined && cached.id === stream.id && cached.source === source && cached.to >= to) {
+    // the window lies inside the cached one, as a backward walk's does: no bytes to read or scan
+    if (cached.from <= from) return { starts: cached.starts.filter((at) => at >= from && at < to), bytes: null };
+    // the window reaches left of it: scan only the exposed prefix, which ends on a line start
+    const aligned = windowLineStart(stream, from, stream.floor);
+    if (aligned !== null) {
+      const prefix = readStream(stream, aligned, cached.from);
+      const starts = [...turnStarts(prefix, source).map((at) => aligned + at), ...cached.starts.filter((at) => at >= cached.from)];
+      keep(starts, aligned);
+      return { starts: starts.filter((at) => at >= from), bytes: null };
+    }
+  }
+  const aligned = windowLineStart(stream, from, stream.floor);
+  if (aligned === null) return { starts: turnStarts(readStream(stream, from, to), source).map((at) => from + at), bytes: null };
+  const bytes = readStream(stream, aligned, to);
+  const starts = turnStarts(bytes, source).map((at) => aligned + at);
+  keep(starts, aligned);
+  return { starts: starts.filter((at) => at >= from), bytes: aligned === from ? bytes : bytes.subarray(from - aligned) };
+}
+
+/**
  * The page of turns ending at `to`: at most MAX_PAGE_PROMPTS prompts, starting on a
  * line that opens a turn, at `floor` (a held start) or at the very beginning. An
  * older page is read once, so for a turn longer than a window it reaches further
@@ -762,19 +822,28 @@ function turnStarts(bytes: Buffer, source: StreamSource, chain: PromptChain = { 
  * every append, so it never does: with no turn start in its window it starts
  * mid-turn, at a whole line.
  */
-function pageBefore(stream: TranscriptStream, source: StreamSource, to: number, { floor = stream.floor, widen }: { floor?: number; widen: boolean }): { start: number; bytes: Buffer } {
+function pageBefore(stream: TranscriptStream, source: StreamSource, path: string, to: number, { floor = stream.floor, widen }: { floor?: number; widen: boolean }): { start: number; bytes: Buffer } {
   let from = Math.max(floor, to - TRANSCRIPT_WINDOW_BYTES);
-  let bytes = readStream(stream, from, to);
+  let bytes: Buffer | null = null;
   for (;;) {
-    const starts = stream.promptStarts ? stream.promptStarts.filter((at) => at >= from && at < to).map((at) => at - from) : turnStarts(bytes, source);
-    const keep = starts.length > MAX_PAGE_PROMPTS ? starts[starts.length - MAX_PAGE_PROMPTS] : from === floor ? 0 : starts[0];
-    if (keep !== undefined) return { start: from + keep, bytes: bytes.subarray(keep) };
+    let starts: number[];
+    if (bytes === null) {
+      const scan = pageWindowStarts(stream, source, path, from, to);
+      starts = scan.starts;
+      bytes = scan.bytes;
+    } else {
+      // a widened window begins on a whole line only if it happens to: its starts are not kept
+      starts = turnStarts(bytes, source).map((at) => from + at);
+    }
+    const start = starts.length > MAX_PAGE_PROMPTS ? starts[starts.length - MAX_PAGE_PROMPTS] : from === floor ? from : starts[0];
+    if (start !== undefined) return { start, bytes: bytes === null ? readStream(stream, start, to) : bytes.subarray(start - from) };
+    const window = bytes ?? readStream(stream, from, to);
     if (!widen || to - from >= MAX_PAGE_BYTES) {
-      const firstLine = bytes.indexOf(0x0a) + 1;
-      return { start: from + firstLine, bytes: bytes.subarray(firstLine) };
+      const firstLine = window.indexOf(0x0a) + 1;
+      return { start: from + firstLine, bytes: window.subarray(firstLine) };
     }
     const next = Math.max(floor, from - TRANSCRIPT_WINDOW_BYTES);
-    bytes = Buffer.concat([readStream(stream, next, from), bytes]);
+    bytes = Buffer.concat([readStream(stream, next, from), window]);
     from = next;
   }
 }
@@ -1048,6 +1117,7 @@ export function forgetTranscriptState(): void {
   forgetSubagents();
   forgetOpencodeState();
   liveScans.clear();
+  pageWindowScans.clear();
   settledTurns.clear();
   codexTurns.clear();
   transcriptRevisions.clear();
@@ -1085,6 +1155,7 @@ export function forgetPaneTranscriptState(paneId: string): void {
     for (const key of [...cache.keys()]) if (key.startsWith(`${path}\0`)) cache.delete(key);
     transcriptRevisions.delete(path);
     liveScans.delete(path);
+    pageWindowScans.delete(path);
     for (const key of [...settledTurns.keys()]) if (key.startsWith(`${path}\0`)) settledTurns.delete(key);
     codexTurns.delete(path);
     clearScans.delete(path);
@@ -1490,6 +1561,79 @@ export async function paneTranscript(paneId: string, codexHome?: string, snapsho
 }
 
 /**
+ * One pane's conversation, opened once and read page by page: the transcript behind it is
+ * resolved (and, for a transcript file, its stream is kept) when the reader opens. A search that
+ * walks many pages of one pane reuses that work instead of resolving the same session per page.
+ */
+export interface PaneConversationReader {
+  read(page?: ConversationPage): Promise<RecognizedConversation>;
+}
+
+/** no transcript states the model yet: the agent's own screen does (start-screen.ts). A screen
+ * that cannot be read leaves it unknown, as it was */
+async function notBegunConversation(paneId: string, source: RecognizedConversation["source"], id: string): Promise<RecognizedConversation> {
+  const screen = readsStartScreen(source) ? await paneRead({ paneId, source: "visible", format: "text", timeoutMs: 2_000 }).then((read) => read.text, () => "") : "";
+  const metadata = startScreenMetadata(source, screen);
+  return { source, turns: [], metadata, cursor: null, history_id: id, version: answerVersion(id, `${metadata.model}\0${metadata.reasoning_effort}`) };
+}
+
+type ConversationOpening =
+  | { kind: "resolved"; resolved: NativeTranscript; snapshot: SessionSnapshot }
+  // the pane's session has not written its first record: only its first page can answer
+  | { kind: "unwritten"; error: ConversationNotStarted; snapshot: SessionSnapshot }
+  // an agent this server started writes no session before its first message (launched-agents.ts)
+  | { kind: "launched"; source: RecognizedConversation["source"]; historyId: string; snapshot: SessionSnapshot };
+
+export async function openPaneConversation(paneId: string, codexHome?: string, devinDbPath?: string, opencodeDb?: string, hermesHome?: string, grokHome?: string): Promise<PaneConversationReader> {
+  const snapshot = await sessionSnapshot();
+  let opening: ConversationOpening;
+  try {
+    const resolved = await paneTranscript(paneId, codexHome, snapshot, devinDbPath, opencodeDb, hermesHome, grokHome);
+    launchedAgents.forget(paneId);
+    opening = { kind: "resolved", resolved, snapshot };
+  } catch (error) {
+    if (error instanceof ConversationNotStarted) {
+      launchedAgents.forget(paneId);
+      opening = { kind: "unwritten", error, snapshot };
+    } else if (error instanceof ConversationUnavailable) {
+      const pane = snapshot.panes.find((candidate) => candidate.pane_id === paneId);
+      if (pane === undefined) { launchedAgents.forget(paneId); throw error; }
+      const launch = launchedAgents.notBegun(paneId, pane.agent_status);
+      if (launch === null) throw error;
+      opening = { kind: "launched", source: launch.source, historyId: launch.historyId, snapshot };
+    } else {
+      throw error;
+    }
+  }
+
+  const notStarted = (error: ConversationNotStarted, page: ConversationPage): Promise<RecognizedConversation> => {
+    // a file read before and gone since is no conversation not begun: the terminal stands in for it
+    if (writtenSessions.has(`${error.source}\0${error.identity}`)) throw new ConversationUnavailable("transcript_missing");
+    // nothing comes before a conversation not begun: a cursor into it is another one's
+    if (page.before !== undefined || page.since !== undefined || page.from !== undefined) throw new HistoryChanged();
+    // an agent at work on its first turn has written nothing yet, but its terminal shows the turn
+    const status = opening.snapshot.panes.find((pane) => pane.pane_id === paneId)?.agent_status;
+    if (status === "working" || status === "blocked") throw error;
+    // the chat says there is nothing yet; the session's first prompt writes the file and
+    // the next refresh's history_id differs, so the chat takes it whole
+    return notBegunConversation(paneId, error.source, `unwritten:${error.sessionId}`);
+  };
+
+  // one transcript file's stream, while the reader keeps reading pages of the same file
+  let reuse: TranscriptStreamReuse | undefined;
+  return {
+    async read(page: ConversationPage = {}): Promise<RecognizedConversation> {
+      if (opening.kind === "unwritten") return notStarted(opening.error, page);
+      if (opening.kind === "launched") {
+        if (page.before !== undefined || page.since !== undefined || page.from !== undefined) throw new HistoryChanged();
+        return notBegunConversation(paneId, opening.source, opening.historyId);
+      }
+      return readConversation(paneId, opening.resolved, opening.snapshot, page, codexHome, devinDbPath, opencodeDb, hermesHome, grokHome, reuse ??= {});
+    },
+  };
+}
+
+/**
  * pane -> agent session -> transcript turns. Read-only, same-user files only.
  * Claude sessions are looked up by id under ~/.claude/projects; omp sessions
  * come from herdr or the pane's omp process (ompTranscriptPath); omo sessions are resolved from its own store by
@@ -1503,44 +1647,19 @@ export async function paneTranscript(paneId: string, codexHome?: string, snapsho
  * `opencodeDb` is OpenCode's store, unset where OpenCode itself would find it.
  */
 export async function paneConversation(paneId: string, codexHome?: string, page: ConversationPage = {}, devinDbPath?: string, opencodeDb?: string, hermesHome?: string, grokHome?: string): Promise<RecognizedConversation> {
-  const snapshot = await sessionSnapshot();
-  let resolved: NativeTranscript;
+  const reader = await openPaneConversation(paneId, codexHome, devinDbPath, opencodeDb, hermesHome, grokHome);
+  return reader.read(page);
+}
 
-  // no transcript states the model yet: the agent's own screen does (start-screen.ts). A screen
-  // that cannot be read leaves it unknown, as it was
-  const notBegun = async (source: RecognizedConversation["source"], id: string): Promise<RecognizedConversation> => {
-    const screen = readsStartScreen(source) ? await paneRead({ paneId, source: "visible", format: "text", timeoutMs: 2_000 }).then((read) => read.text, () => "") : "";
-    const metadata = startScreenMetadata(source, screen);
-    return { source, turns: [], metadata, cursor: null, history_id: id, version: answerVersion(id, `${metadata.model}\0${metadata.reasoning_effort}`) };
-  };
-
+async function readConversation(paneId: string, resolved: NativeTranscript, snapshot: SessionSnapshot, page: ConversationPage, codexHome: string | undefined, devinDbPath: string | undefined, opencodeDb: string | undefined, hermesHome: string | undefined, grokHome: string | undefined, reuse: TranscriptStreamReuse): Promise<RecognizedConversation> {
   const onNotStarted = (error: ConversationNotStarted): Promise<RecognizedConversation> => {
-    // a file read before and gone since is no conversation not begun: the terminal stands in for it
     if (writtenSessions.has(`${error.source}\0${error.identity}`)) throw new ConversationUnavailable("transcript_missing");
-    // nothing comes before a conversation not begun: a cursor into it is another one's
     if (page.before !== undefined || page.since !== undefined || page.from !== undefined) throw new HistoryChanged();
-    // an agent at work on its first turn has written nothing yet, but its terminal shows the turn
     const status = snapshot.panes.find((pane) => pane.pane_id === paneId)?.agent_status;
     if (status === "working" || status === "blocked") throw error;
-    // the chat says there is nothing yet; the session's first prompt writes the file and
-    // the next refresh's history_id differs, so the chat takes it whole
-    return notBegun(error.source, `unwritten:${error.sessionId}`);
+    return notBegunConversation(paneId, error.source, `unwritten:${error.sessionId}`);
   };
 
-  try {
-    resolved = await paneTranscript(paneId, codexHome, snapshot, devinDbPath, opencodeDb, hermesHome, grokHome);
-    launchedAgents.forget(paneId);
-  } catch (error) {
-    if (error instanceof ConversationNotStarted) { launchedAgents.forget(paneId); return await onNotStarted(error); }
-    if (!(error instanceof ConversationUnavailable)) throw error;
-    const pane = snapshot.panes.find((candidate) => candidate.pane_id === paneId);
-    if (pane === undefined) { launchedAgents.forget(paneId); throw error; }
-    // an agent this server started writes no session before its first message (launched-agents.ts)
-    const launch = launchedAgents.notBegun(paneId, pane.agent_status);
-    if (launch === null) throw error;
-    if (page.before !== undefined || page.since !== undefined || page.from !== undefined) throw new HistoryChanged();
-    return await notBegun(launch.source, launch.historyId);
-  }
   if (resolved.source === "devin-transcript") {
     try {
       const answer = devinConversation(resolved.session, resolved.cwd, page, resolved.path);
@@ -1577,7 +1696,7 @@ export async function paneConversation(paneId: string, codexHome?: string, page:
     : resolved.source === "claude-transcript" ? nodePath.basename(resolved.path, ".jsonl")
     : resolved.source === "pi-transcript" || resolved.source === "omp-transcript" ? realpathSync(resolved.path) : null;
   rememberPaneRead(paneId, resolved.path);
-  const answer = transcriptPage(resolved.source, resolved.path, page, resolved.codexHome ?? codexHome);
+  const answer = transcriptPage(resolved.source, resolved.path, page, resolved.codexHome ?? codexHome, reuse);
   const status = snapshot.panes.find((pane) => pane.pane_id === paneId)?.agent_status;
   if (resolved.source === "grok-transcript" && answer.turns.length === 0 && page.before === undefined
     && (status === "working" || status === "blocked")) {
@@ -1595,8 +1714,16 @@ export async function paneConversation(paneId: string, codexHome?: string, page:
   return answer;
 }
 
+/** A reader's last transcript stream, kept while its file stays the same (see paneConversationReader). */
+export interface TranscriptStreamReuse {
+  source?: StreamSource;
+  path?: string;
+  stat?: { dev: number; ino: number; size: number; mtimeMs: number; ctimeMs: number };
+  stream?: TranscriptStream;
+}
+
 /** One page of a resolved transcript (paneConversation's `page`). */
-export function transcriptPage(source: StreamSource, path: string, page: ConversationPage = {}, codexHome?: string): RecognizedConversation {
+export function transcriptPage(source: StreamSource, path: string, page: ConversationPage = {}, codexHome?: string, reuse?: TranscriptStreamReuse): RecognizedConversation {
   if (source === "agy-transcript") {
     try { return withAgyHistory(path, (projection, fd) => ({ ...transcriptPageRead(source, path, page, codexHome, projection, fd), activity: projection.activity })); }
     catch (error) {
@@ -1604,10 +1731,10 @@ export function transcriptPage(source: StreamSource, path: string, page: Convers
       throw new ConversationUnavailable("transcript_missing");
     }
   }
-  return transcriptPageRead(source, path, page, codexHome);
+  return transcriptPageRead(source, path, page, codexHome, undefined, undefined, reuse);
 }
 
-function transcriptPageRead(source: StreamSource, path: string, page: ConversationPage, codexHome?: string, agy?: AgyProjection, fd?: number): RecognizedConversation {
+function transcriptPageRead(source: StreamSource, path: string, page: ConversationPage, codexHome?: string, agy?: AgyProjection, fd?: number, reuse?: TranscriptStreamReuse): RecognizedConversation {
   let stat: { dev: number; ino: number; size: number; mtimeMs: number; ctimeMs: number };
   try {
     stat = statSync(path);
@@ -1616,8 +1743,18 @@ function transcriptPageRead(source: StreamSource, path: string, page: Conversati
   }
   let stream: TranscriptStream;
   try {
-    stream = transcriptStream(source, path, stat, codexHome ?? defaultCodexHome(), agy, fd);
-    applyHistoryBoundary(path, stream, source);
+    // Pages of one walk read the same file a moment apart: the stream, and with it the file's
+    // chain and reset boundary, is reused until the stat says the file changed.
+    const kept = reuse?.source === source && reuse.path === path && reuse.stream !== undefined
+      && reuse.stat?.dev === stat.dev && reuse.stat.ino === stat.ino && reuse.stat.size === stat.size
+      && reuse.stat.mtimeMs === stat.mtimeMs && reuse.stat.ctimeMs === stat.ctimeMs ? reuse.stream : null;
+    if (kept !== null) {
+      stream = kept;
+    } else {
+      stream = transcriptStream(source, path, stat, codexHome ?? defaultCodexHome(), agy, fd);
+      applyHistoryBoundary(path, stream, source);
+      if (reuse !== undefined) Object.assign(reuse, { source, path, stat, stream });
+    }
   } catch (error) {
     // a branch that cannot be walked says so; a file that went unreadable mid-read has
     // one answer, and an unreadable branch has its own
@@ -1645,7 +1782,7 @@ function transcriptPageRead(source: StreamSource, path: string, page: Conversati
       const before = parseCursor(stream, page.before);
       const floor = page.since === undefined ? stream.floor : parseCursor(stream, page.since);
       if (floor > before) throw new HistoryChanged();
-      const older = before === floor ? { start: floor, bytes: Buffer.alloc(0) } : pageBefore(stream, source, before, { floor, widen: true });
+      const older = before === floor ? { start: floor, bytes: Buffer.alloc(0) } : pageBefore(stream, source, path, before, { floor, widen: true });
       start = older.start;
       text = older.bytes.toString("utf8");
     } else {
@@ -1661,7 +1798,7 @@ function transcriptPageRead(source: StreamSource, path: string, page: Conversati
         text = "";
       } else {
         // no turn starts in the window: the page begins mid-turn, read whole as before
-        const whole = pageBefore(stream, source, stream.length, { widen: false });
+        const whole = pageBefore(stream, source, path, stream.length, { widen: false });
         start = held !== null && held >= whole.start ? held : whole.start;
         text = whole.bytes.subarray(start - whole.start).toString("utf8");
       }
