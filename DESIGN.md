@@ -662,7 +662,6 @@ Comfortable values are `:root`; the final column is the complete compact overrid
 | `--chat-fold-lines` | `12` | — | Lines of prose a long user message shows before it folds behind Show full message (Chat turn); `lib/userMessageFold.ts` folds a message past the same count |
 | `--palette-w` | `640px` | — | Command palette |
 | `--palette-top` | `12vh` | — | Palette top offset |
-| `--context-line` | `calc(var(--fs-lg) * var(--lh-base))` = `24px` | `21.75px`, through the scale | The selected pane's crumb row, min and max height. Scoped to `.context`, not `:root`, so it follows `--fs-lg`/`--lh-base` in either density |
 
 ### Focus and layers
 
@@ -706,26 +705,47 @@ are absent at zero, and both count only agents waiting on the user, never finish
   `.terminal-host`. While a phone's soft keyboard is up (`data-keyboard`), `--app-height` follows
   `visualViewport` so the keyboard does not cover input; otherwise the shell is `100dvh`, because an
   iPhone home screen app reports a visual viewport shorter than the screen without a keyboard.
+- Every scroll area shares one rail: a `--scrollbar-lane` (10px) transparent lane with a
+  `--radius-pill` thumb in `--border-strong`, inset `--scrollbar-inset` on each side so it sits in
+  the lane rather than filling it, and `--text-muted` under the pointer. Styling the pseudo-elements
+  also takes away the engine's old arrow buttons, and a transparent track means a list, a transcript
+  or a menu reads as the surface it scrolls on rather than as a widget laid over it. It is declared
+  on the root and its descendants because menus and sheets are portals on `<body>`, outside `.app`.
+  Firefox, whose rail comes from the standard properties instead, gets the same dim line thin (only
+  there: any `scrollbar-color` makes Chromium drop the pseudo-element rail). Containers that hide
+  their scrollbar — the tab strip, the key bar, the palette's filters, xterm's viewport — keep
+  `scrollbar-width: none` on themselves.
 - The header is one line at every width, a flat bar rather than a card: no track, no chip around
-  a control, no accent rule under the chosen item. Anatomy, left to right: mobile drawer toggle /
-  desktop sidebar toggle and the command palette (`.header-side`, `28px` quiet glyphs that take a
-  `--bg-chip` plate only under the pointer); the flexible context, agent mark and title then the
-  PC › workspace › folder crumb; segmented Chat/Terminal switch, the chosen lens on a
-  `--bg-chip` plate ringed in `--border-strong`; from `769px` a 16px hairline and the Files button
-  (`.header-files-button`); the connection chip while the bridge is not live (herdr version in its
-  tooltip), the offline pill and the More menu (`⋯`), which has no plate of its own. Theme lives
-  in Settings and the palette; the herdr version is also read in Settings.
+  a control, no accent rule under the chosen item. It names no pane: what is open is said by the
+  sidebar's selected row and by the tab strip, which rides in the bar itself from `769px`.
+  Anatomy, left to right: mobile drawer toggle / desktop sidebar toggle, the command palette and,
+  from `769px`, the More menu — all of `.header-side`, `28px` quiet glyphs that take a `--bg-chip`
+  plate only under the pointer; the pane's tab strip (`.header-tabs`), its tabs opening the pane
+  side with the `+` after them; the note's slot for the free middle; the segmented Chat/Terminal
+  switch at the bar's end, its two lenses quiet words with their glyphs, the chosen one on a
+  `--bg-chip` plate ringed in `--border-strong`; then the connection chip while the bridge is not
+  live (herdr version in its tooltip), the offline pill, and the two named actions from `769px`,
+  Files and Changes (`.header-files-button`, `.header-changes-button`), each a glyph and its word,
+  opening the file browser on Browse or on the pane's repository changes. With no pane selected
+  the brand and the PC's name take the lens's place. Below `769px` the More menu closes the bar
+  instead, where it is the whole menu. Theme lives in Settings and the palette; the herdr version
+  is also read in Settings.
 - From `769px` the header is one flat bar on `--bg-panel` across the window. `.header-side` is the
   sidebar's own top row (its toggle and the palette side by side) as wide as `--sidebar-shown-w`,
-  and the bar runs on over the pane with no seam at the sidebar's edge. Under the chat lens the
+  and the bar runs on over the pane with no seam at the sidebar's edge. That row is the bar's one
+  hairline: a `--sidebar-border` rule on its own bottom edge, exactly as wide as the sidebar, so
+  the roster starts under a line while the pane beside it keeps the bar flat. Under the chat lens the
   whole bar takes the transcript's surface (`--bg`) with no bottom rule, the transcript scrolling
-  under a `--space-5` fade from `--bg`; under the terminal lens, with no pane, or with a pane herdr
-  could not restore, it is `--bg-panel` above the terminal's `--term-bg`. A tab strip takes the
-  same surface as the bar above it from `769px` (`--strip-bg`: `--bg` under the chat lens,
-  `--bg-panel` otherwise and below `769px`) and keeps its hairline, under the chat the one line
-  over the transcript (no fade under it). The reload notice and a PC's action banner are drawn in
-  the pane column, over the tab strip, never across the window: the bar's start, with the sidebar's
-  toggle and the palette, stays put. A layout call the palette made that a PC's bridge from before
+  under a `--space-5` fade from `--bg` and leaving under the same fade into it at the composer's
+  edge, which sits in the transcript's own bottom padding and so hangs over a line only while more
+  is below it; under the terminal lens, with no pane, or with a pane herdr
+  could not restore, it is `--bg-panel` above the terminal's `--term-bg`. The tab strip in the bar
+  is the bar's own surface (`--strip-bg`: `--bg` under the chat lens, `--bg-panel` otherwise),
+  with none of its row's padding or hairline; below `769px`, and one per half while the pane area
+  is split, it keeps its own row under the bar with that hairline (under the chat the one line
+  over the transcript, no fade under it). The reload notice and a PC's action banner are drawn in
+  the pane column, under the bar, never across the window: the bar's start, with the sidebar's
+  toggle, the palette and the More menu, stays put. A layout call the palette made that a PC's bridge from before
   the route answered 404 to reads there too, for a moment, as a `.pane-notice` line of
   `--status-blocked` `--fs-xs` text under a hairline ("This PC's bridge does not offer this yet");
   the tab's menu says the same at the strip's end. With the sidebar collapsed to its rail the bar
@@ -803,9 +823,9 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   track is the frame.
 - It is not a generic tab list. Five or more choices go in a select.
 - Used for Chat/Terminal, theme, density, sidebar rows and the like. The header's own
-  Chat/Terminal switch (`.segmented`, `aria-pressed`) is Orbit's: from `769px` it drops the track
-  and the glyphs — two words, the chosen one on a `--bg-chip` plate ringed in `--border-strong`;
-  at `<=768px` it keeps the track, and at `<=560px` it is glyphs only.
+  Chat/Terminal switch (`.segmented`, `aria-pressed`) is Orbit's: at every width it drops the track
+  — two lenses of glyph and word, the chosen one on a `--bg-chip` plate ringed in
+  `--border-strong` — and at `<=560px` it is the two glyphs only, each named in its title.
 - Every other `.segmented` (Files dialog tabs, the file viewer's modes, the diff layout) draws its
   chosen option with the same rose fill and strong label as the settings toggle: `--bg-hover` on a
   `--bg-elevated` track is too small a step to read as chosen. The header switch keeps the quiet
@@ -934,7 +954,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   A tab's mark follows the same choice, held still.
 
 ### Pill (`.pill`)
-- Mono metadata at `--chip-h`. Offline is the one header pill that stays, and uses danger tokens. A deep link waiting for its PC's roster says **Opening link…** in the same `.header-note` pill (`role="status"`) until it lands or its failure note replaces it. That status stays in the document while there is no note, clipped and empty (`.visually-hidden`, never `display: none`, as `.conn-live`), and the words of a page that opens with a link land a frame after it: a live region that appears together with its content is not announced. The `.header-note` pill carries a sentence, so it is set in the interface face (`--font-ui`), not the mono one. A deep link that could not open what it named, and Copy link, say so in a plain `.header-note` pill for a moment (8 s, 1.6 s for Link copied). The note takes the flexible context's place and ellipsizes when narrow, keeping the lens and More controls in view.
+- Mono metadata at `--chip-h`. Offline is the one header pill that stays, and uses danger tokens. A deep link waiting for its PC's roster says **Opening link…** in the same `.header-note` pill (`role="status"`) until it lands or its failure note replaces it. That status stays in the document while there is no note, clipped and empty (`.visually-hidden`, never `display: none`, as `.conn-live`), and the words of a page that opens with a link land a frame after it: a live region that appears together with its content is not announced. The `.header-note` pill carries a sentence, so it is set in the interface face (`--font-ui`), not the mono one. A deep link that could not open what it named, and Copy link, say so in a plain `.header-note` pill for a moment (8 s, 1.6 s for Link copied). The note takes the bar's free room and ellipsizes when narrow, keeping the lens and the controls at the bar's end in view.
 
 ### Sidebar roster row and footer
 - No top bar. The sidebar opens with the PC workspace groups and a separate **Agents** list spanning the connected PCs. A workspace starts from the `+` on its PC's header, or from the **New workspace**
@@ -1281,15 +1301,11 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   rename or mode change (`No lines changed.`), a file that no longer differs, and every refusal of
   the routes in the app's words.
 
-### Header context and connection
-- A selected pane shows agent mark + title (`--fs-md`), then on the same line the crumb
-  PC › workspace › folder (`--fs-xs`, `--text-dim`); with one PC registered the PC is left out, as
-  the sidebar leaves it out. The folder shows as its last name, and only
-  when the title, the workspace or the PC name shown on the line does not already say it
-  (`lib/headerCrumb.ts`, which also owns the one-PC rule). The
-  title may shorten with an ellipsis; the crumb never does: when it does not fit whole beside the
-  whole title it is not drawn, and the title has the row. The full path is in the context's
-  tooltip and at the top of the More menu. With no selection, the brand fills the context slot.
+### Header and connection
+- The bar carries no title, agent mark or crumb at any width: the pane is named by the sidebar's
+  selected row and by its tab, and the full location (PC › workspace, then the path in mono) opens
+  at the top of the More menu (`lib/headerCrumb.ts` builds that line). With no selection, the brand
+  and the PC's name stand at the start of the bar, where the lenses would be.
 - The More menu (`.header-more-button`, the `RowMenu` popover, a bottom sheet at `<=640px`) opens
   with the location on two lines, "PC › workspace" then the full path in mono. Its first item,
   at every width, is **Search panes and actions**, which opens the command palette (its shortcut
@@ -1301,8 +1317,12 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   `aria-checked` in the popover and a button with `aria-pressed` in the sheet. While alerts are off on this device the
   More button carries a `--dot-size` `--accent` dot and its name says "alerts are off": the dot
   marks the state that needs a look, never "on".
-- The segmented Chat/Terminal view switch lives in the header. There is no floating view-toggle pill.
-  Files is an action, not a third lens: it opens the file browser and never joins the switch. From
+- The bar's pane side opens with its tab strip and closes with the segmented Chat/Terminal view
+  switch and the two actions after it. There is no floating view-toggle pill.
+  Files and Changes are actions, not lenses: each opens the file browser on its own list (the
+  pane's folder, its repository's changes) and neither joins the switch. They are the bar's named
+  actions — glyph and word side by side, dim as the bar's other controls until the pointer
+  reaches them (`header-action-label`). From
   980px that browser is a column beside the pane, in the file panel's place and width
   (`aside.file-panel.files-panel`), so browsing and the file read from it share one column; below
   980px it is the Files dialog, a sheet on a phone. The docked browser keeps its header to one row
