@@ -1173,6 +1173,15 @@ export function Composer({
         className={`composer-surface${dragging ? " is-dragging" : ""}`}
         data-compact={statusCompact ? "" : undefined}
         data-quiet={settings.quietComposer ? "" : undefined}
+        // touch has no hover, and it focuses what it presses before the click lands: the row opens
+        // on the message box's focus, and stays open while the focus is anywhere on the card, so a
+        // tap never widens the row under its own click (Composer.css).
+        onFocus={(event) => {
+          if (event.target instanceof HTMLElement && event.target.classList.contains("composer-text")) event.currentTarget.setAttribute("data-quiet-open", "");
+        }}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) event.currentTarget.removeAttribute("data-quiet-open");
+        }}
         onDragEnter={(event) => {
           event.preventDefault();
           setDragging(true);
