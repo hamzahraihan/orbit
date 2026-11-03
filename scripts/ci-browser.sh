@@ -92,6 +92,7 @@ run_script scripts/droplet-demo-regression.ts
 run_script scripts/chat-greeting-demo-regression.ts
 run_script scripts/restored-draft-demo-regression.ts
 run_script scripts/composer-fit-demo-regression.ts
+run_script scripts/composer-first-tap-demo-regression.ts
 run_script scripts/held-rows-demo-regression.ts
 run_script scripts/sidebar-activity-demo-regression.ts
 run_script scripts/sidebar-spacing-demo-regression.ts
