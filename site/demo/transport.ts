@@ -12,7 +12,7 @@
  * one notice instead of a TUI. A message sent from a chat gets a demo answer.
  * What does not: files, images, push and remote PCs, which need a real machine.
  */
-import type { AgentIntegration, AgentStatus, ConversationTurn, IntegrationsResponse, Machine, MachineEvent, PaneDirection, PaneFindMatch, PaneFindRequest, PanePlan, PaneResized, PaneSplit, PaneSwapped, PaneZoomed, PendingMessage, PlanStep, PluginActionResult, PluginActions, PluginActionsResponse, ServerMessage, SessionSnapshot, TabMoved, WorkspaceCreated, WorkspaceInfo, WorktreeEntry, WorktreeListing, WorktreeOpened, WorktreeRemoved } from "../../shared/protocol.ts";
+import type { AgentIntegration, AgentStatus, ConversationSearchMatch, ConversationSearchResponse, ConversationTurn, IntegrationsResponse, Machine, MachineEvent, PaneDirection, PaneFindMatch, PaneFindRequest, PanePlan, PaneResized, PaneSplit, PaneSwapped, PaneZoomed, PendingMessage, PlanStep, PluginActionResult, PluginActions, PluginActionsResponse, ServerMessage, SessionSnapshot, TabMoved, WorkspaceCreated, WorkspaceInfo, WorktreeEntry, WorktreeListing, WorktreeOpened, WorktreeRemoved } from "../../shared/protocol.ts";
 import type { RepoDiffFile, RepoDiffFileList, RepoDiffFilePatch, RepoDiffRepository, RepoDiffScope } from "../../shared/protocol.ts";
 import { VOICE_DEFAULTS, type VoiceStatus } from "../../shared/voice.ts";
 import { isAgentName } from "../../shared/agent-name.ts";
@@ -558,6 +558,35 @@ async function route(url: URL, method: string, init: RequestInit | undefined, in
     return json({ workspace_id: made.workspace_id, pane_id: made.pane_id, already_open: false, path: checkout.path, branch: checkout.branch, ...(agent ? { agent_started: made.agent_started } : {}) } satisfies WorktreeOpened);
   }
 
+  // the palette's search over the demo's own chats, with the same rule as the server: the newest
+  // turns first, two per pane, one line around the words (the fixture chats fit one page)
+  if (path === "/api/conversation/search") {
+    const text = (query.get("q") ?? "").trim();
+    if (!text) return error("invalid_query", "q must be 1 to 200 characters", 400);
+    const asked = Number(query.get("limit") ?? 12);
+    const limit = Number.isFinite(asked) ? Math.min(20, Math.max(1, Math.trunc(asked))) : 12;
+    const needle = text.toLowerCase();
+    const matches: ConversationSearchMatch[] = [];
+    let unavailable = 0;
+    for (const [pane, key] of keyOfPane) {
+      const chat = chats.get(key);
+      if (!chat) { unavailable += 1; continue; }
+      let found = 0;
+      for (let index = chat.turns.length - 1; index >= 0 && found < 2; index -= 1) {
+        const turn = chat.turns[index]!;
+        const prose = turn.parts.flatMap((part) => part.kind === "text" || part.kind === "compact" || part.kind === "notice" ? [part.text] : []).join("\n");
+        const at = prose.toLowerCase().indexOf(needle);
+        if (at < 0) continue;
+        const start = Math.max(0, at - 60);
+        const end = Math.min(prose.length, at + text.length + 140);
+        const flat = prose.slice(start, end).replace(/\s+/g, " ").trim();
+        matches.push({ pane_id: pane, page: 0, turn: index, role: turn.role, ts: turn.ts, snippet: `${start > 0 ? "…" : ""}${flat}${end < prose.length ? "…" : ""}` });
+        found += 1;
+      }
+    }
+    matches.sort((a, b) => (b.ts ?? "").localeCompare(a.ts ?? ""));
+    return json({ matches: matches.slice(0, limit), unavailable } satisfies ConversationSearchResponse);
+  }
   if (path === "/api/pane/conversation") {
     const key = keyOfPane.get(paneId);
     const chat = key ? chats.get(key) : undefined;
