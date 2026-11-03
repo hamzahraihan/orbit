@@ -1,5 +1,5 @@
 import { type CSSProperties, type DragEvent, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Bell, Ellipsis, FolderOpen, Link, Menu, MessageSquare, PanelLeft, Search, SquareTerminal, X } from "lucide-react";
+import { Bell, Ellipsis, FolderOpen, GitBranch, Link, Menu, MessageSquare, PanelLeft, Search, SquareTerminal, X } from "lucide-react";
 
 import type { AgentStatus, ServerMessage, AccessRefusal, HealthAuth, HerdrPane } from "../shared/protocol.ts";
 import { ApiError, authenticate, createTab, fetchHealth, fetchBridgeHealth, fetchMachines, fetchSession, pairDevice, routeMissing, sendTestPush, signOut, splitPane, zoomPane, type HealthInfo } from "./lib/api.ts";
@@ -10,7 +10,6 @@ import { MachineSessionsProvider } from "./lib/machineSessionContext.tsx";
 import { PaneTerminal } from "./components/PaneTerminal.tsx";
 import { PANE_TABPANEL_ID, paneTabPanelLabel } from "./lib/paneRegion.ts";
 import { AccessGate } from "./components/AccessGate.tsx";
-import { AgentMark } from "./components/AgentMark.tsx";
 import { NewSessionDialog, type NewTabTarget } from "./components/NewSessionDialog.tsx";
 import { attentionTitle, setWaitingBadge, waitingCount } from "./lib/attention.ts";
 import { passingFolder, recentDirectories } from "./lib/recent-directories.ts";
@@ -158,13 +157,12 @@ function SlotSessions({ slot, machineIds, children }: { slot: SplitSlot; machine
 
 /** The header's note. Its status is in the header from the header's first render, clipped while empty
     (never display: none, as the connection chip), and its words land a frame after the box, even the
-    ones a page opens with (lib/useAnnouncedText.ts). Its sentence is cut like the title it stands in
-    for, under its own class: only the pane title carries .context-title-text, which the browser
-    checks measure (scripts/mobile-tabs-regression.ts). */
+    ones a page opens with (lib/useAnnouncedText.ts). It takes the bar's free middle while it shows,
+    and its sentence is cut there under its own class (styles.css). */
 function HeaderNote({ note }: { note: string | null }) {
   const shown = useAnnouncedText(note);
   return (
-    <div className={shown === null ? "visually-hidden" : "context"}>
+    <div className={shown === null ? "visually-hidden" : "header-note-slot"}>
       <span className={shown === null ? undefined : "pill header-note"} role="status" style={{ minWidth: 0 }}>
         <span className="header-note-text">{shown}</span>
       </span>
@@ -424,6 +422,9 @@ export function App() {
   // the file browser open (beside the pane on a wide window, a dialog over it below that), and the
   // file open in the viewer (a path as the chat or the browser gave it)
   const [filesOpen, setFilesOpen] = useState(false);
+  // which of the browser's two lists it is on: Browse, or the pane's repository changes. It is
+  // App's, so the bar's Files and Changes buttons each open the one they name
+  const [filesTab, setFilesTab] = useState<"browse" | "changes">("browse");
   const { viewing, openFile, closeFile, setPresentation, releaseFile } = useFileViewer();
   // a repository diff from the Files dialog's Changes tab, an entry of its own like a file
   const { viewing: diffViewing, openDiff, closeDiff, releaseDiff } = useRepoDiffViewer();
@@ -449,12 +450,14 @@ export function App() {
    * page or a docked file, and a dialog over the pane below that. The docked browser stays behind
    * a file opened from it, so closing the file lands back on the list.
    */
-  const openFiles = useCallback(() => {
+  const openFilesOn = useCallback((tab: "browse" | "changes") => {
+    setFilesTab(tab);
     setFilesOpen(true);
     if (!filePanelAvailable) return;
     setWebPage(null);
     if (viewing !== null && fileDocked) closeFile();
   }, [filePanelAvailable, viewing, fileDocked, closeFile]);
+  const openFiles = useCallback(() => openFilesOn("browse"), [openFilesOn]);
   // the panel is no dialog, so no trap gives the focus back when it closes: what opened the file
   // (a link in the chat, a row of Files) gets it, as it does from the popup. So does the browser
   // in that column when it closes.
@@ -1492,6 +1495,37 @@ export function App() {
     { id: "copy-link", label: t("Copy link"), icon: Link, run: () => void copyText(window.location.href).then((ok) => { if (ok) setHeaderNote("copied"); }) },
     ...(bellVisible ? [{ id: "alerts", label: t("Alerts"), hint: bell.state, checked: bell.on, title: bell.title, icon: Bell, run: () => void bell.run() }] : []),
   ];
+  // The header's More, whose dot marks alerts that are off on this device. A wide bar keeps it with
+  // the sidebar's own controls, so the bar's end belongs to the pane: its lenses, Files, Changes
+  const moreButton = (
+    <span className="header-more">
+      <button
+        type="button"
+        className="icon-button header-more-button"
+        aria-label={alertsOffDot ? t("More · alerts are off") : t("More")}
+        title={alertsOffDot ? t("More · alerts are off") : t("More")}
+        aria-haspopup="menu"
+        aria-expanded={more !== null}
+        onClick={(event) => {
+          const anchor = event.currentTarget;
+          setMore((open) => (open ? null : { anchor }));
+        }}
+      >
+        <Ellipsis />
+      </button>
+      {alertsOffDot && <span className="header-more-dot" aria-hidden="true" />}
+    </span>
+  );
+  // The tab strip rides in the bar from 769px, where the pane side starts: its own row below that,
+  // and one per half while the pane area is split (components/TabStrip.tsx)
+  const stripInBar = wideScreen && !splitOn && snapshot !== null && selectedWorkspace !== null && selectedPane !== null;
+  // the open pane's actions for the tab menu: the strip renders before the canvas, so an item runs
+  // against the canvas's latest render (the strip in the pane column asks the same way)
+  const stripPaneActions = (paneId: string): RowMenuItem[] => {
+    const target = snapshot?.panes.find((item) => item.pane_id === paneId);
+    if (!target || !paneActionsRef.current) return [];
+    return paneActionsRef.current(target).map((item) => ({ ...item, run: () => (paneActionsRef.current?.(target).find((fresh) => fresh.id === item.id) ?? item).run() }));
+  };
 
   // the chat's surface is what the pane column shows: the header's pane zone and the tab strip
   // take it (from 769px). A pane herdr could not restore draws a placeholder, not the chat.
@@ -1501,6 +1535,8 @@ export function App() {
   const filesBrowser: FilesDialogProps | null = selectedPane === null ? null : {
     start: selectedPane.foreground_cwd ?? selectedPane.cwd ?? "",
     paneId: selectedPane.pane_id,
+    tab: filesTab,
+    onTab: setFilesTab,
     viewing: (viewing !== null && !fileDocked) || diffViewing !== null,
     onOpenFile: viewFile,
     onOpenDiff: (comparison, file) => openDiff({ machineId: selectedMachineId, paneId: selectedPane.pane_id, directory: selectedPane.foreground_cwd ?? selectedPane.cwd ?? null, ...comparison, path: file.path, oldPath: file.old_path }),
@@ -1541,8 +1577,8 @@ export function App() {
     } as CSSProperties}>
       <header className={`app-header is-zoned${chatShown ? " is-chat" : ""}`}>
         {/* is-zoned tells this header from the connecting shell's, which has no zones to draw.
-            .header-side is the sidebar's own top row from 769px (styles.css); below that its
-            buttons sit in the bar */}
+            .header-side is the sidebar's own top row from 769px, the More menu with it so the bar's
+            end is the pane's (styles.css); below 769px its buttons and that menu sit in the bar */}
         <div className="header-side">
           <button
             type="button"
@@ -1567,29 +1603,19 @@ export function App() {
           <button type="button" className="icon-button palette-button" aria-label={t("Command palette")} title={t("Command palette (⌘⇧K)")} onClick={() => openPalette()}>
             <Search />
           </button>
+          {wideScreen && moreButton}
         </div>
-        <HeaderNote note={note} />
-        {note !== null ? null : selectedPane && crumb ? (
-          <div className="context" title={crumb.tooltip}>
-            <div className="context-title">
-              {selectedAgent && <AgentMark agent={selectedAgent} size={18} />}
-              <span className="context-title-text">{selectedTitle}</span>
-            </div>
-            <div className="context-sub">
-              {/* one PC needs no name: the sidebar leaves it out too, and More still says it */}
-              {crumb.showMachine && <><span className="machine-context-name">{crumb.machine}</span><span className="context-sep" aria-hidden="true">›</span></>}
-              <span>{crumb.workspace}</span>
-              {crumb.folder !== null && (
-                <>
-                  <span className="context-sep" aria-hidden="true">›</span>
-                  <span>{crumb.folder}</span>
-                </>
-              )}
-            </div>
+        {stripInBar && snapshot && selectedWorkspace && selectedPane && (
+          <div className="header-tabs">
+            <TabStrip snapshot={snapshot} workspace={selectedWorkspace} selectedPane={selectedPane} splitDrag={wideScreen}
+              onSelectPane={selectPane} onNewTab={() => actions.openNewTab()} onNewTerminal={() => actions.openTerminalTab()}
+              paneActions={stripPaneActions} />
           </div>
-        ) : (
+        )}
+        {selectedPane === null && (
           <><Brand /><span className="machine-context-name">{selectedMachine?.name ?? selectedMachineId}</span></>
         )}
+        <HeaderNote note={note} />
         {selectedPane && (
           <div className="segmented view-switch" role="group" aria-label="Pane view">
             <button type="button" aria-pressed={view === "chat"} onClick={() => { setView("chat"); setDrawerOpen(false); }} title={t("Chat transcript (⌘⇧J)")}>
@@ -1603,15 +1629,6 @@ export function App() {
             </button>
           </div>
         )}
-        {selectedPane && wideScreen && (
-          <>
-            {/* opens Files, it is no third lens: set apart from the switch by a hairline */}
-            <span className="header-divider" aria-hidden="true" />
-            <button type="button" className="icon-button header-files-button" aria-label={t("Browse files")} title={t("Browse files")} onClick={openFiles}>
-              <FolderOpen />
-            </button>
-          </>
-        )}
         <div className="header-meta">
           <ConnectionChip
             connected={connected}
@@ -1620,23 +1637,21 @@ export function App() {
           />
           {/* the Host's herdr is away: the step to take is on that PC (the sidebar's state line says the same) */}
           {!targetHerdr && <span className="pill pill-offline" title={selectedMachineId === "local" ? t("Start herdr on this PC, or check HERDR_SOCKET.") : undefined}>{t("herdr offline")}</span>}
-          <span className="header-more">
-            <button
-              type="button"
-              className="icon-button header-more-button"
-              aria-label={alertsOffDot ? t("More · alerts are off") : t("More")}
-              title={alertsOffDot ? t("More · alerts are off") : t("More")}
-              aria-haspopup="menu"
-              aria-expanded={more !== null}
-              onClick={(event) => {
-                const anchor = event.currentTarget;
-                setMore((open) => (open ? null : { anchor }));
-              }}
-            >
-              <Ellipsis />
-            </button>
-            {alertsOffDot && <span className="header-more-dot" aria-hidden="true" />}
-          </span>
+          {/* Files and Changes are the bar's named actions, each opening the browser on the list it
+              names: the pane's folder, or its repository's changes */}
+          {selectedPane && wideScreen && (
+            <>
+              <button type="button" className="icon-button header-files-button" aria-label={t("Browse files")} title={t("Browse files")} onClick={openFiles}>
+                <FolderOpen />
+                <span className="header-action-label">{t("Files")}</span>
+              </button>
+              <button type="button" className="icon-button header-changes-button" aria-label={t("Changes")} title={t("Changes")} onClick={() => openFilesOn("changes")}>
+                <GitBranch />
+                <span className="header-action-label">{t("Changes")}</span>
+              </button>
+            </>
+          )}
+          {!wideScreen && moreButton}
         </div>
         {more && (
           <RowMenu
@@ -1741,7 +1756,9 @@ export function App() {
                 <RenderBoundary resetKey={`${machineId}:${paneId ?? ""}`} fallback={(retry) => <>{slotBar}<RegionCrash message={t("This pane can't be shown.")} retry={retry} onShown={active ? paneLost : undefined} /></>}>
                 <CrashProbe region="pane" />
                 {!(slotSnapshot && pane && workspace) && slotBar}
-                {slotSnapshot && pane && workspace && (
+                {/* the bar carries the open tab's strip (stripInBar): the body's own only below 769px,
+                    and one per half in a split */}
+                {slotSnapshot && pane && workspace && !(stripInBar && active) && (
                   <TabStrip snapshot={slotSnapshot} workspace={workspace} selectedPane={pane} panelId={slotPanelId} splitDrag={wideScreen} onSelectPane={onSelect} end={slotEnd}
                     onNewTab={() => actions.openNewTab(active ? undefined : { machineId, workspaceId: workspace.workspace_id })}
                     onNewTerminal={() => actions.openTerminalTab(active ? undefined : { machineId, workspaceId: workspace.workspace_id })}

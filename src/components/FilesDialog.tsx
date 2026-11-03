@@ -17,6 +17,9 @@ export interface FilesDialogProps {
   start: string;
   /** the pane whose repository's changes are listed */
   paneId: string;
+  /** the list it shows: App's, so the bar's Files and Changes buttons each open the one they name */
+  tab: Tab;
+  onTab: (tab: Tab) => void;
   /** a file or a diff is open above this dialog: Escape belongs to it, which closes first */
   viewing: boolean;
   onOpenFile: (path: string) => void;
@@ -30,21 +33,21 @@ export interface FilesDialogProps {
   panelStart?: ReactNode;
 }
 
-type Tab = "browse" | "changes";
+export type Tab = "browse" | "changes";
 
 /**
  * The files of the pane's folder (and any other), each opened in the file viewer, and the changes
  * of its repository, each opened as a diff: a column beside the pane on a wide window, where the
  * docked file panel is, and a dialog over the pane below that.
  */
-export function FilesDialog({ start, paneId, viewing, onOpenFile, onOpenDiff, onBrowseFolders, onClose, docked = false, panelStart }: FilesDialogProps) {
+export function FilesDialog({ start, paneId, tab, onTab, viewing, onOpenFile, onOpenDiff, onBrowseFolders, onClose, docked = false, panelStart }: FilesDialogProps) {
   const t = useT();
   const phone = useMediaQuery("(max-width: 480px)");
   // docked, the rest of the page stays reachable: no trap, and no sheet on a phone (there is no panel there)
   const surface = useFocusTrap<HTMLElement>(!docked);
-  const [tab, setTab] = useState<Tab>("browse");
   // the changes are read with the first visit and kept, as the browser keeps its folder
-  const [changesVisited, setChangesVisited] = useState(false);
+  const [changesVisited, setChangesVisited] = useState(tab === "changes");
+  useEffect(() => { if (tab === "changes") setChangesVisited(true); }, [tab]);
   useSheetSwipe(surface, docked ? null : onClose);
   // a file opened from the list is drawn over it with an entry of its own: Back closes the file first
   usePhoneSheetBack(onClose, !viewing);
@@ -61,7 +64,7 @@ export function FilesDialog({ start, paneId, viewing, onOpenFile, onOpenDiff, on
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, viewing, docked]);
   const show = (next: Tab): void => {
-    setTab(next);
+    onTab(next);
     if (next === "changes") setChangesVisited(true);
   };
   // the folder the browser shows now (it tells each one it opens), for the pane it showed it for;
