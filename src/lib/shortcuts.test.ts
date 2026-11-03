@@ -23,6 +23,7 @@ describe("matchShortcut", () => {
     expect(matchShortcut(keyEvent("f", { ctrlKey: true }), false, { find: null })).toBeNull();
     expect(matchShortcut(keyEvent("g", { ctrlKey: true }), false, sanitizeShortcutOverrides({ find: "g" }))).toBe("find");
     expect(matchShortcut(keyEvent("B", { ctrlKey: true }), false)).toBe("toggle-sidebar");
+    expect(matchShortcut(keyEvent("M", { ctrlKey: true }), false)).toBe("conversation-search");
     expect(matchShortcut(keyEvent("n", { ctrlKey: true }), false)).toBe("new-session");
     expect(matchShortcut(keyEvent("ArrowUp", { ctrlKey: true }), false)).toBe("previous-pane");
     expect(matchShortcut(keyEvent("ArrowDown", { ctrlKey: true }), false)).toBe("next-pane");
@@ -92,6 +93,8 @@ it("matches shifted digits and detects alias and default-restoration conflicts",
 describe("shortcutDisplayKeys", () => {
   it("shows the default chord, custom chord, disabled state, and uncustomizable voice chord", () => {
     expect(shortcutDisplayKeys("palette", {})).toEqual(["Mod", "Shift", "K"]);
+    expect(shortcutDisplayKeys("conversation-search", {})).toEqual(["Mod", "Shift", "M"]);
+    expect(shortcutDisplayKeys("conversation-search", { "conversation-search": null })).toEqual([]);
     expect(shortcutDisplayKeys("toggle-view", { "toggle-view": "p" })).toEqual(["Mod", "Shift", "P"]);
     expect(shortcutDisplayKeys("settings", { settings: null })).toEqual([]);
     expect(shortcutDisplayKeys("voice", { voice: "p" })).toEqual(["Mod", "Shift", "Space"]);

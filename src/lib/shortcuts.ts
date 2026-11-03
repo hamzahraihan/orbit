@@ -7,6 +7,7 @@ import type { AppActions } from "./actions.ts";
 
 export const SHORTCUTS = [
   { id: "palette", label: "Command palette", keys: ["Mod", "Shift", "K"] },
+  { id: "conversation-search", label: "Search conversations", keys: ["Mod", "Shift", "M"] },
   { id: "find", label: "Find in terminal", keys: ["Mod", "Shift", "F"] },
   { id: "toggle-view", label: "Switch chat / terminal", keys: ["Mod", "Shift", "J"] },
   { id: "focus-input", label: "Focus pane input", keys: ["Mod", "Shift", "E"] },
@@ -42,6 +43,7 @@ export interface ShortcutEventLike {
 
 const KEY_TO_ID: Readonly<Record<string, ShortcutId>> = {
   k: "palette",
+  m: "conversation-search",
   f: "find",
   j: "toggle-view",
   e: "focus-input",
@@ -234,6 +236,9 @@ export function useShortcuts(actions: AppActions, enabled: boolean): void {
       switch (shortcut) {
         case "palette":
           actions.openPalette();
+          break;
+        case "conversation-search":
+          actions.openConversationSearch();
           break;
         case "find":
           actions.openFind();

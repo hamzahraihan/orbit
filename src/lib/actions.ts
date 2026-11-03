@@ -37,6 +37,8 @@ export interface AppActions {
   openTerminalTab: (target?: { machineId: string; workspaceId: string }) => Promise<void>;
   /** the palette, blank or opened on `query` (a `>` prefix keeps the actions alone) */
   openPalette: (query?: string) => void;
+  /** the palette opened in conversation search: no panes or actions, recent searches when blank */
+  openConversationSearch: () => void;
   /** A pane this page started an agent in opens in an agent's lens, whatever its first snapshot says. */
   agentStarted: (machineId: string, paneId: string) => void;
   openFind: () => void;
