@@ -161,6 +161,27 @@
   margin-left: auto;
 }
 
+/* the heading's own quiet action where it has one (Clear, over the remembered searches) */
+.palette-section-action {
+  flex: 0 0 auto;
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  cursor: pointer;
+}
+
+.palette-section-action:hover {
+  color: var(--text);
+}
+
+.palette-section-action:focus-visible {
+  outline: var(--ring);
+  outline-offset: var(--ring-offset);
+}
+
 /* every row is the full menu width: the hover fill and the right-aligned badge/shortcut line up */
 .command-palette .orbit-menu-item {
   width: 100%;
@@ -208,6 +229,66 @@
   margin-top: var(--space-1);
   color: var(--text-dim);
   font-size: var(--fs-xs);
+}
+
+/* a remembered search: its row, with its own way out at the row's end */
+.palette-recent-row {
+  position: relative;
+}
+
+.palette-recent-row .orbit-menu-item {
+  padding-inline-end: calc(var(--control-h) + var(--space-3));
+}
+
+.palette-recent-remove {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: var(--space-1);
+  display: inline-grid;
+  place-items: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.palette-recent-remove svg {
+  width: var(--fs-md);
+  height: var(--fs-md);
+}
+
+@media (hover: hover) {
+  /* the row stays under the pointer while its Remove is: the pointer has not left the row */
+  .palette-recent-row:hover .orbit-menu-item {
+    background: var(--bg-hover);
+    color: var(--text-strong);
+  }
+
+  .palette-recent-remove:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+  }
+}
+
+.palette-recent-remove:focus-visible {
+  outline: var(--ring);
+  outline-offset: var(--ring-offset);
+}
+
+/* the match inside a conversation result: the row's text, with the searched words picked out */
+.palette-message .palette-row-title {
+  font-weight: var(--fw-regular);
+}
+
+.palette-snippet mark {
+  color: var(--accent);
+  background: none;
+  font-weight: var(--fw-medium);
 }
 
 .palette-selected {
@@ -334,6 +415,20 @@
     content: "";
     position: absolute;
     inset: calc((var(--control-h) - 2px - 2 * var(--hairline) - var(--touch-target)) / 2) 0;
+  }
+
+  /* a finger gets the whole row end for Remove, and the row keeps its text clear of it */
+  .palette-recent-row .orbit-menu-item {
+    padding-inline-end: calc(var(--touch-target) + var(--space-3));
+  }
+
+  .palette-recent-remove {
+    width: var(--touch-target);
+    height: var(--touch-target);
+  }
+
+  .palette-section-action {
+    min-height: var(--touch-target);
   }
 }
 

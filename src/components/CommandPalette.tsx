@@ -6,9 +6,9 @@ import "./CommandPalette.css";
 
 import { Button } from "../lib/heroui/orbit-components.tsx";
 
-import type { DirectoryListing, HerdrPane, PluginActions, SessionSnapshot, TabInfo } from "../../shared/protocol.ts";
+import type { ConversationSearchMatch, DirectoryListing, HerdrPane, PluginActions, SessionSnapshot, TabInfo } from "../../shared/protocol.ts";
 import type { Machine } from "../../shared/machines.ts";
-import { ApiError } from "../lib/api.ts";
+import { ApiError, searchConversations } from "../lib/api.ts";
 import { paneStatus, STATUS_SENTENCE, STATUS_WORD } from "../lib/status.ts";
 import { zoomMode } from "../lib/layoutMap.ts";
 import type { AppActions, PaneView } from "../lib/actions.ts";
@@ -33,20 +33,34 @@ import { worktreeLabel } from "../lib/worktreeName.ts";
 import { browseEntries, folderQuery, folderQueryFor, homeRelative, matchFolders, pinnedFolders, requestFilesFolder } from "../lib/paletteFolders.ts";
 import { currentSidebarPins, subscribeSidebarPins } from "../lib/sidebarPins.ts";
 import { recentDirectories } from "../lib/recent-directories.ts";
+import type { PaletteMode } from "../lib/paletteSeed.ts";
+import { forgetRecentSearch, loadRecentSearches, RECENT_SEARCHES_KEY, rememberRecentSearch } from "../lib/recentSearches.ts";
 
 import { availableTarget, groupMachinePanes, loadRecentTargets, rankMachinePanes, recentTargets, rememberTarget, targetKey, RECENT_KEY, type MachineBranches, type MachinePane, type RecentPane } from "../lib/machinePalette.ts";
 import { worktreeWorkspaceSignature, type WorkspaceBranch } from "../lib/worktreeBranches.ts";
 const RECENT_SHOWN = 3;
 /** pinned and recent folders offered as jumps, each */
 const FOLDERS_SHOWN = 5;
+/** conversation matches the palette lists, and the shortest search it sends to the server */
+const MESSAGES_SHOWN = 6;
+const MESSAGE_MIN_CHARS = 2;
+/** one request per pause in typing, not per keystroke */
+const MESSAGE_DEBOUNCE_MS = 220;
+/** once typing rests, how many pages per chat the deeper ask walks (the newest is page 0) */
+const MESSAGE_DEEP_PAGES = 20;
+/** typing rests this long before the walk: the newest page's answer is on screen by then */
+const MESSAGE_DEEP_MS = 700;
 
 interface CommandPaletteProps {
   open: boolean;
   /** the search text it opens with; blank from the shortcut */
   initialQuery?: string;
+  /** "messages" opens in conversation search: the chats' words alone, recent searches when blank */
+  initialMode?: PaletteMode;
   onClose: () => void;
   machines: readonly Machine[];
-  onSelect(machineId: string, paneId: string): void;
+  /** `view` opens the pane in that lens (a conversation match opens its chat) */
+  onSelect(machineId: string, paneId: string, view?: PaneView): void;
   snapshot: SessionSnapshot | null;
   online: boolean;
   selectedPaneId: string | null;
@@ -69,7 +83,12 @@ interface ActionRow { kind: "action"; action: PaletteAction }
 interface PluginRow { kind: "plugin"; offered: OfferedPluginAction }
 /** a folder of the selected PC: picking it lists it in the palette */
 interface FolderRow { kind: "folder"; id: string; label: string; path: string; detail: string | null; icon: ComponentType }
-type PaletteRow = PaneRow | ActionRow | PluginRow | FolderRow;
+/** a match in a pane's conversation, with the PC it was found on */
+type MachineMatch = ConversationSearchMatch & { machineId: string };
+interface MessageRow { kind: "message"; machine: Machine; pane: HerdrPane; hit: MachineMatch }
+/** a search this browser ran before, offered while the box is blank */
+interface RecentSearchRow { kind: "recent-search"; query: string }
+type PaletteRow = PaneRow | ActionRow | PluginRow | FolderRow | MessageRow | RecentSearchRow;
 
 /** what went wrong listing a folder, said in the empty list */
 type BrowseError = "invalid" | "failed";
@@ -104,8 +123,26 @@ function pluginActionKey({ plugin, action }: OfferedPluginAction): string {
   return `${plugin.plugin_id}.${action.action_id}`;
 }
 
+function messageKey(machineId: string, hit: ConversationSearchMatch): string {
+  return `${machineId}:${hit.pane_id}:${hit.page}:${hit.turn}`;
+}
+
 function rowKey(sectionId: string, row: PaletteRow): string {
-  return `${sectionId}:${row.kind === "pane" ? targetKey(row) : row.kind === "action" ? row.action.id : row.kind === "folder" ? row.id : pluginActionKey(row.offered)}`;
+  const own = row.kind === "pane" ? targetKey(row)
+    : row.kind === "action" ? row.action.id
+    : row.kind === "folder" ? row.id
+    : row.kind === "message" ? messageKey(row.machine.id, row.hit)
+    : row.kind === "recent-search" ? `search:${row.query}`
+    : pluginActionKey(row.offered);
+  return `${sectionId}:${own}`;
+}
+
+/** The words the search found, marked inside a result's line. */
+function Snippet({ text, query }: { text: string; query: string }) {
+  const at = query === "" ? -1 : text.toLowerCase().indexOf(query.toLowerCase());
+  if (at < 0) return <>{text}</>;
+  const end = at + query.length;
+  return <>{text.slice(0, at)}<mark>{text.slice(at, end)}</mark>{text.slice(end)}</>;
 }
 
 function lastSegment(path: string): string {
@@ -119,6 +156,11 @@ function childPath(parent: string, name: string): string {
 function storeRecent(recent: RecentPane[]): RecentPane[] {
   try { window.localStorage.setItem(RECENT_KEY, JSON.stringify(recent)); } catch { /* private mode: keep this page's history */ }
   return recent;
+}
+
+function storeRecentSearches(searches: string[]): string[] {
+  try { window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches)); } catch { /* private mode: keep this page's history */ }
+  return searches;
 }
 
 interface BranchInventory { signature: string; branches: ReadonlyMap<string, WorkspaceBranch> }
@@ -148,7 +190,8 @@ function ShortcutHint({ shortcutId }: { shortcutId?: ShortcutId }) {
   return <span className="palette-shortcut" aria-label={keys.join(" + ")}>{keys.map((key) => <kbd className="kbd" key={key}>{key}</kbd>)}</span>;
 }
 
-export function CommandPalette({ open, initialQuery = "", onClose, machines, onSelect, snapshot, online, selectedPaneId, view, actions }: CommandPaletteProps) {
+export function CommandPalette({ open, initialQuery = "", initialMode = "all", onClose, machines, onSelect, snapshot, online, selectedPaneId, view, actions }: CommandPaletteProps) {
+  const conversationOnly = initialMode === "messages";
   const t = useT();
   const machineId = useMachineId();
   const api = useMachineApi();
@@ -157,6 +200,10 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
   const [filter, setFilter] = useState<PaletteStatusFilter>("all");
   const [selection, setSelection] = useState<PaletteSelection>(NO_SELECTION);
   const [plugins, setPlugins] = useState<PluginActions[]>([]);
+  /** conversation matches across the connected PCs, newest first */
+  const [messages, setMessages] = useState<MachineMatch[]>([]);
+  /** conversation searches picked from (or asked for) before, newest first */
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => loadRecentSearches((key) => window.localStorage.getItem(key)));
   /** `<plugin_id>.<action_id>` of the plugin action under way; the palette stays open until it answers */
   const [running, setRunning] = useState<string | null>(null);
   const [pluginError, setPluginError] = useState<string | null>(null);
@@ -226,11 +273,12 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
     requestSettingsPage(null);
     setRecentPaneIds(loadRecent());
     setRecentFolders(recentDirectories.read(machineId));
+    setRecentSearches(loadRecentSearches((key) => window.localStorage.getItem(key)));
   }, [open]);
 
   // The folder a path-like query names, read from the selected PC as the query crosses a `/`: the
   // last segment only filters what is listed. A dot starting it asks for the hidden folders too.
-  const folder = open ? folderQuery(query) : null;
+  const folder = !conversationOnly && open ? folderQuery(query) : null;
   const folderDirectory = folder?.directory ?? null;
   const folderHidden = folder?.filter.startsWith(".") ?? false;
   // Try again after a failed listing asks for the same folder once more
@@ -332,13 +380,89 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
   const multiMachine = machines.length > 1;
   const selectedMachineName = machines.find((machine) => machine.id === machineId)?.name;
   const counts = useMemo(() => statusCounts(allPanes), [allPanes]);
-  const { actionsOnly, text } = parseQuery(query);
+  const parsed = parseQuery(query);
+  // conversation search has no `>` actions-only list and no path browse: every character is a word to look for
+  const actionsOnly = !conversationOnly && parsed.actionsOnly;
+  const text = parsed.text;
+  // the search the chat panes answer: no path browse, no `>` actions-only list, no status filter,
+  // and long enough to mean something
+  const searchText = conversationOnly ? query.trim() : (!actionsOnly && folder === null && filter === "all" ? text.trim() : "");
+  const messageQuery = searchText.length >= MESSAGE_MIN_CHARS ? searchText : "";
+  const machinesRef = useRef(machines);
+  machinesRef.current = machines;
+  // the PCs that can answer: a roster update alone must not send the same search again, so the
+  // effect depends on which PCs are connected, not on their snapshots
+  const connectedIds = machines.filter((machine) => machine.state === "connected").map((machine) => machine.id).join(",");
+  useEffect(() => {
+    if (!open || messageQuery === "") {
+      setMessages([]);
+      return;
+    }
+    const controller = new AbortController();
+    let alive = true;
+    let deepTimer = 0;
+    // per PC, so a deep ask that failed keeps what the quick ask found for that PC
+    const readAll = async (pages: number): Promise<{ id: string; matches: MachineMatch[] | null }[]> => {
+      const targets = machinesRef.current.filter((machine) => machine.state === "connected"
+        && (machine.snapshot?.panes ?? []).some((pane) => (pane.agent ?? "") !== ""));
+      return await Promise.all(targets.map(async (machine) => {
+        try {
+          const answer = await searchConversations(messageQuery, machine.id, controller.signal, pages);
+          return { id: machine.id, matches: answer.matches.map((match) => ({ ...match, machineId: machine.id })) };
+        } catch {
+          // a PC that is slow, gone or too old to know the route answers nothing; the others still show theirs
+          return { id: machine.id, matches: null };
+        }
+      }));
+    };
+    const timer = setTimeout(() => {
+      void readAll(1).then((answers) => {
+        if (!alive) return;
+        const newest = answers.flatMap((answer) => answer.matches ?? []);
+        setMessages(newest);
+        // typing has stopped: walk the older pages too, so a turn from days ago still turns up
+        deepTimer = window.setTimeout(() => {
+          void readAll(MESSAGE_DEEP_PAGES).then((deep) => {
+            if (!alive) return;
+            const held = new Map<string, MachineMatch[]>();
+            for (const match of newest) held.set(match.machineId, [...(held.get(match.machineId) ?? []), match]);
+            setMessages(deep.flatMap((answer) => answer.matches ?? held.get(answer.id) ?? []));
+          });
+        }, MESSAGE_DEEP_MS);
+      });
+    }, MESSAGE_DEBOUNCE_MS);
+    return () => { alive = false; clearTimeout(timer); clearTimeout(deepTimer); controller.abort(); };
+  }, [open, messageQuery, connectedIds]);
+
+  // a match whose pane left the roster (closed between the search and this draw) is dropped: the
+  // row would open nothing
+  const messageRows = useMemo<MessageRow[]>(() => {
+    if (messageQuery === "") return [];
+    const rows: MessageRow[] = [];
+    for (const hit of messages) {
+      const machine = machines.find((candidate) => candidate.id === hit.machineId);
+      const pane = machine?.snapshot?.panes.find((candidate) => candidate.pane_id === hit.pane_id);
+      if (!machine || !pane) continue;
+      rows.push({ kind: "message", machine, pane, hit });
+      if (rows.length === MESSAGES_SHOWN) break;
+    }
+    return rows;
+  }, [messages, machines, messageQuery]);
 
   // herdr's Goto picker: a row per pane under its workspace; `>` keeps the actions alone (T3 Code's
   // palette); a status filter is about panes, so it leaves the actions out, the plugins' with them;
   // the panes went to last lead an unsearched, unfiltered list
   const sections = useMemo<PaletteSectionView[]>(() => {
     const list: PaletteSectionView[] = [];
+    // conversation search lists the chats' words alone; blank, it offers what was searched before
+    if (conversationOnly) {
+      if (query.trim() === "") {
+        if (recentSearches.length > 0) list.push({ id: "recent-searches", heading: t("Recent searches"), branch: null, placeNamesWorkspace: false, rows: recentSearches.map((entry) => ({ kind: "recent-search", query: entry })) });
+      } else if (messageRows.length > 0) {
+        list.push({ id: "messages", heading: t("Messages"), branch: null, placeNamesWorkspace: false, rows: messageRows });
+      }
+      return list;
+    }
     // a path lists the selected PC's folders (T3 Code's browse mode): where it is, with Open in
     // Files and the way up, then the pinned and recent folders it leads to, then its folders
     if (folder !== null) {
@@ -373,6 +497,9 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
         list.push({ id: group.id, workspaceId: group.workspaceId, machineId: group.machine.id, machineName: multiMachine ? group.machine.name : undefined, heading, branch: branchBeside(heading, branches.get(group.machine.id)?.get(group.workspaceId)?.branch), placeNamesWorkspace: false, rows: group.panes.map((entry) => ({ kind: "pane", ...entry })) });
       }
     }
+    // what the agents said and were told, before the actions: a search for a word is usually a
+    // search for the conversation that held it
+    if (messageRows.length > 0) list.push({ id: "messages", heading: t("Messages"), branch: null, placeNamesWorkspace: false, rows: messageRows });
     if (actionsOnly || filter === "all") {
       // a name found only through an alias comes after the titles that hold the query
       const visible = rankByTitle(text, paletteActions.map((action) => ({ item: action, title: action.label, aliases: aliasesByAction[action.id] })));
@@ -383,7 +510,7 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
       if (offered.length > 0) list.push({ id: "plugins", heading: t("Plugin actions"), machineName: multiMachine ? selectedMachineName : undefined, branch: null, placeNamesWorkspace: false, rows: offered.map((item) => ({ kind: "plugin", offered: item })) });
     }
     return list;
-  }, [actionsOnly, text, filter, machines, multiMachine, selectedMachineName, machineId, branches, recentPaneIds, selectedPaneId, paletteActions, aliasesByAction, settingsActions, plugins, t, folder?.directory, folder?.filter, query, browse, home, pins, recentFolders, snapshot, actions]);
+  }, [actionsOnly, conversationOnly, recentSearches, text, filter, machines, multiMachine, selectedMachineName, machineId, branches, recentPaneIds, selectedPaneId, paletteActions, aliasesByAction, settingsActions, plugins, messageRows, t, folder?.directory, folder?.filter, query, browse, home, pins, recentFolders, snapshot, actions]);
 
   const rows = useMemo(() => sections.flatMap((section) => section.rows), [sections]);
   const rowKeys = useMemo(() => sections.flatMap((section) => section.rows.map((row) => rowKey(section.id, row))), [sections]);
@@ -455,11 +582,38 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
     const key = rowKeys[index] ?? null;
     setSelection((current) => (current.key === key && current.index === index ? current : { key, index }));
   };
+  const rememberSearch = (value: string): void => {
+    setRecentSearches((current) => storeRecentSearches(rememberRecentSearch(value, current)));
+  };
+  // a removed search leaves the keyboard in the box, not on the button that went with its row
+  const forgetSearch = (value: string): void => {
+    setRecentSearches((current) => storeRecentSearches(forgetRecentSearch(value, current)));
+    inputRef.current?.focus();
+  };
+  const clearSearches = (): void => {
+    setRecentSearches(storeRecentSearches([]));
+    inputRef.current?.focus();
+  };
+  // a recent search fills the box and searches at once, with the keyboard back in the box
+  const fillSearch = (value: string): void => {
+    setQuery(value);
+    setSelection(NO_SELECTION);
+    inputRef.current?.focus();
+  };
   const runPane = (target: MachinePane): void => {
     if (!availableTarget(machines, target)) return;
     setRecentPaneIds((current) => storeRecent(rememberTarget({ machineId: target.machineId, paneId: target.paneId }, current)));
     navigated.current = true;
     onSelect(target.machineId, target.paneId);
+    onClose();
+  };
+  const runMessage = (row: MessageRow): void => {
+    const target = { machineId: row.machine.id, paneId: row.pane.pane_id };
+    if (!availableTarget(machines, target)) return;
+    rememberSearch(messageQuery);
+    setRecentPaneIds((current) => storeRecent(rememberTarget(target, current)));
+    navigated.current = true;
+    onSelect(target.machineId, target.paneId, "chat");
     onClose();
   };
   const runAction = (action: PaletteAction): void => {
@@ -501,6 +655,8 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
     if (row.kind === "pane") runPane(row);
     else if (row.kind === "action") runAction(row.action);
     else if (row.kind === "folder") browseTo(row.path);
+    else if (row.kind === "message") runMessage(row);
+    else if (row.kind === "recent-search") fillSearch(row.query);
     else void runPluginAction(row.offered);
   };
   const adjacentSectionStart = (index: number, direction: -1 | 1): number => {
@@ -530,9 +686,17 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
       if (!collapsed || !atEdge) return;
       event.preventDefault();
       select(adjacentSectionStart(activeIndex, event.key === "ArrowLeft" ? -1 : 1));
+    } else if (event.key === "Delete") {
+      // forward Delete in a blank box takes the remembered search out, as its row button does
+      const row = rows[activeIndex];
+      if (row?.kind === "recent-search") { event.preventDefault(); forgetSearch(row.query); }
     } else if (event.key === "Enter" && itemCount > 0) {
       event.preventDefault();
       activate(activeIndex);
+    } else if (event.key === "Enter" && conversationOnly && messageQuery !== "") {
+      // a search that found nothing is still a search: Return remembers it for next time
+      event.preventDefault();
+      rememberSearch(messageQuery);
     }
   };
   // herdr's picker keys, over the list and the chips but never in the search field: b, w, i, d and a
@@ -540,7 +704,7 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
   const onSurfaceKeyDown = (event: ReactKeyboardEvent<HTMLElement>): void => {
     const target = event.target as HTMLElement;
     if (event.defaultPrevented || target === inputRef.current || event.ctrlKey || event.metaKey || event.altKey) return;
-    const filterKey = FILTER_KEYS[event.key];
+    const filterKey = conversationOnly ? undefined : FILTER_KEYS[event.key];
     if (filterKey) {
       event.preventDefault();
       applyFilter(filterKey);
@@ -597,11 +761,14 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
     ? [multiMachine ? activeRow.machine.name : null, activeWorkspace?.label ?? t("Unknown workspace"), activeTab?.tab ? tabLabel(activeTab.tab, t, activeTab.place) : null].filter(Boolean).join(" › ")
     : activeRow?.kind === "action" ? activeRow.action.label
     : activeRow?.kind === "folder" ? activeRow.label
+    : activeRow?.kind === "recent-search" ? activeRow.query
+    : activeRow?.kind === "message" ? [multiMachine ? activeRow.machine.name : null, placeLine(displayPaneTitle(activeRow.pane), activeRow.hit.role === "user" ? t("You") : t("Agent"))].filter(Boolean).join(" › ")
     : activeRow?.offered.action.title ?? "";
   const footerPath = activeRow?.kind === "pane" ? panePath(activeRow.pane) : activeRow?.kind === "folder" ? activeRow.path : "";
   const browseListing = folder !== null && browse.directory === folder.directory ? browse : null;
   const listingFailed = online && browseListing?.error === "failed";
-  const emptyText = folder === null ? t("No matching panes or actions")
+  const emptyText = conversationOnly ? t("No matching messages")
+    : folder === null ? t("No matching panes or actions")
     : browseListing?.error === "invalid" ? t("This folder cannot be opened.")
     : browseListing?.error === "failed" || !online ? t("Folders could not be loaded.")
     : browseListing?.listing ? t("No matching folders") : t("Loading…");
@@ -614,12 +781,12 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
   return (
     <div className="modal-scrim palette-scrim" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       {machines.filter((machine) => machine.state === "connected").map((machine) => <MachineContext.Provider key={machine.id} value={machine.id}><PaletteBranchReader machine={machine} onChange={onInventory} /></MachineContext.Provider>)}
-      <section ref={surface} className="orbit-menu command-palette" role="dialog" aria-modal="true" aria-label={t("Command palette")} onKeyDown={onSurfaceKeyDown} onFocus={onSurfaceFocus}>
+      <section ref={surface} className="orbit-menu command-palette" role="dialog" aria-modal="true" aria-label={conversationOnly ? t("Search conversations") : t("Command palette")} onKeyDown={onSurfaceKeyDown} onFocus={onSurfaceFocus}>
         <div className="palette-search">
-          <input ref={inputRef} className="input" type="search" value={query} placeholder={t("Search panes and actions…")} aria-label={t("Search panes and actions")} aria-controls="palette-results" aria-activedescendant={itemCount ? `palette-item-${activeIndex}` : undefined} onKeyDown={onInputKeyDown} onChange={(event) => { setQuery(event.target.value); setSelection(NO_SELECTION); }} />
+          <input ref={inputRef} className="input" type="search" value={query} placeholder={conversationOnly ? t("Search conversations…") : t("Search panes and actions…")} aria-label={conversationOnly ? t("Search conversations") : t("Search panes and actions")} aria-controls="palette-results" aria-activedescendant={itemCount ? `palette-item-${activeIndex}` : undefined} onKeyDown={onInputKeyDown} onChange={(event) => { setQuery(event.target.value); setSelection(NO_SELECTION); }} />
           <button type="button" className="icon-button" aria-label={t("Close command palette")} onClick={onClose}><X /></button>
         </div>
-        {!actionsOnly && folder === null && (
+        {!conversationOnly && !actionsOnly && folder === null && (
           <div className="palette-filters" role="radiogroup" aria-label={t("Filter panes by status")} onKeyDown={onChipsKeyDown}>
             {STATUS_FILTERS.map((status) => (
               <button key={status} type="button" role="radio" className="palette-filter" data-status={status} aria-checked={filter === status} tabIndex={filter === status ? 0 : -1} data-empty={counts[status] === 0 || undefined} title={status === "all" ? t("Every state") : t(STATUS_SENTENCE[status])} onClick={(event) => onChipClick(event, status)}>
@@ -638,6 +805,9 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
                 <span className="palette-section-name">{section.heading}</span>
                 {section.branch && <span className="palette-section-branch">{section.branch}</span>}
                 <span className="palette-section-count">{section.rows.length}</span>
+                {section.id === "recent-searches" && (
+                  <button type="button" className="palette-section-action" aria-label={t("Clear recent searches")} title={t("Clear recent searches")} onClick={clearSearches}>{t("Clear")}</button>
+                )}
               </div>
               {section.rows.map((row) => {
                 const index = rowIndex;
@@ -653,12 +823,38 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
                     </button>
                   );
                 }
+                if (row.kind === "recent-search") {
+                  const label = t("Remove {query} from recent searches", { query: row.query });
+                  return (
+                    <div key={`search:${row.query}`} className="palette-recent-row" role="presentation">
+                      <button id={`palette-item-${index}`} type="button" role="option" className="orbit-menu-item palette-recent-search" aria-selected={activeIndex === index} onFocus={() => select(index)} onMouseMove={() => select(index)} onClick={() => fillSearch(row.query)}>
+                        <History aria-hidden="true" />
+                        <span className="menu-item-main"><span className="palette-row-title">{row.query}</span></span>
+                      </button>
+                      <button type="button" className="palette-recent-remove" aria-label={label} title={label} onClick={() => forgetSearch(row.query)}><X aria-hidden="true" /></button>
+                    </div>
+                  );
+                }
                 if (row.kind === "folder") {
                   const Icon = row.icon;
                   return (
                     <button key={row.id} id={`palette-item-${index}`} type="button" role="option" className="orbit-menu-item palette-folder" title={row.path} aria-selected={activeIndex === index} onFocus={() => select(index)} onMouseMove={() => select(index)} onClick={() => browseTo(row.path)}>
                       <Icon aria-hidden="true" />
                       <span className="menu-item-main"><span className="palette-row-title">{row.label}</span>{row.detail !== null && <span className="palette-row-subtitle">{row.detail}</span>}</span>
+                    </button>
+                  );
+                }
+                if (row.kind === "message") {
+                  const { hit } = row;
+                  const selected = row.machine.id === machineId && hit.pane_id === selectedPaneId;
+                  const place = placeLine(displayPaneTitle(row.pane), hit.role === "user" ? t("You") : t("Agent"));
+                  return (
+                    <button key={`message:${messageKey(row.machine.id, hit)}`} id={`palette-item-${index}`} type="button" role="option" className="orbit-menu-item palette-message" aria-selected={activeIndex === index} aria-current={selected ? "true" : undefined} onFocus={() => select(index)} onMouseMove={() => select(index)} onClick={() => runMessage(row)}>
+                      <span className="palette-mark"><AgentMark agent={row.pane.agent ?? "shell"} /></span>
+                      <span className="menu-item-main">
+                        <span className="palette-row-title"><span className="palette-snippet"><Snippet text={hit.snippet} query={messageQuery} /></span></span>
+                        <span className="palette-row-subtitle">{multiMachine ? `${row.machine.name} › ${place}` : place}</span>
+                      </span>
                     </button>
                   );
                 }
@@ -684,7 +880,7 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
               })}
             </div>
           ))}
-          {(itemCount === 0 || listingFailed) && <p className="palette-empty" role="status">{emptyText}</p>}
+          {((itemCount === 0 && (!conversationOnly || messageQuery !== "")) || listingFailed) && <p className="palette-empty" role="status">{emptyText}</p>}
           {listingFailed && (
             <p className="palette-empty">
               <Button variant="secondary" onClick={(event) => {
@@ -700,10 +896,12 @@ export function CommandPalette({ open, initialQuery = "", onClose, machines, onS
             {footerPlace && <span className="palette-footer-place">{footerPlace}</span>}
             {footerPath && <span className="palette-footer-path" title={footerPath}>{footerPath}</span>}
           </div>
-          <div className="palette-footer-keys" aria-hidden="true">
-            <span className="palette-footer-key"><kbd className="kbd">←</kbd><kbd className="kbd">→</kbd>{t("Workspace")}</span>
-            <span className="palette-footer-key"><kbd className="kbd">&gt;</kbd>{t("Actions")}</span>
-          </div>
+          {!conversationOnly && (
+            <div className="palette-footer-keys" aria-hidden="true">
+              <span className="palette-footer-key"><kbd className="kbd">←</kbd><kbd className="kbd">→</kbd>{t("Workspace")}</span>
+              <span className="palette-footer-key"><kbd className="kbd">&gt;</kbd>{t("Actions")}</span>
+            </div>
+          )}
         </footer>
       </section>
     </div>
