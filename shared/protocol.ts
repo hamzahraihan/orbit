@@ -513,6 +513,30 @@ export interface ConversationResponse {
   abandoned?: { count: number; branches: number; summary: string | null };
 }
 
+/**
+ * One turn of a pane's conversation whose text holds the search's words, found by
+ * GET /api/conversation/search. `page` says where it came from, 0 being the newest page read
+ * and each older page one more; `turn` counts from that page's oldest turn. The pair names the
+ * turn for as long as the pages hold, and the page's own numbers shift only when it moves.
+ */
+export interface ConversationSearchMatch {
+  pane_id: string;
+  page: number;
+  turn: number;
+  role: "user" | "assistant";
+  /** The turn's own timestamp, or null for an agent that writes none. */
+  ts: string | null;
+  /** One line around the first occurrence, flattened to single spaces, with … where it was cut. */
+  snippet: string;
+}
+
+/** GET /api/conversation/search: matches across every chat pane on this PC, newest first; `pages` walks older pages too. */
+export interface ConversationSearchResponse {
+  matches: ConversationSearchMatch[];
+  /** Panes whose conversation could not be read this time (no session yet, a reader's error). */
+  unavailable: number;
+}
+
 /** Where a plugin manifest says an action applies. herdr may add more, so it stays open. */
 export type PluginActionContext = "global" | "workspace" | "tab" | "pane" | "selection" | (string & {});
 
