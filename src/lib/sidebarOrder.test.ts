@@ -104,14 +104,14 @@ describe("status groups", () => {
     expect(agentGroup({ agent_status: "done", background_wait: true })).toBe("active");
     expect(agentGroup({ agent_status: "idle" })).toBe("idle");
     expect(agentGroup({ agent_status: "done" })).toBe("idle");
-    expect(agentGroup({})).toBe("idle");
+    expect(agentGroup({ agent_status: "unknown" })).toBe("idle");
   });
 
   it("parts the rows without reordering either half", () => {
     const rows = [pane("ready", "idle"), pane("running", "working"), pane("finished", "done"), pane("asking", "blocked")];
     expect(groupAgentRows(rows, (row) => row)).toEqual({
-      active: [rows[1], rows[3]],
-      idle: [rows[0], rows[2]],
+      active: [rows[1]!, rows[3]!],
+      idle: [rows[0]!, rows[2]!],
     });
   });
 });

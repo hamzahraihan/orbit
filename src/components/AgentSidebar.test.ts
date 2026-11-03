@@ -37,11 +37,15 @@ const tooltips = (html: string): string[][] =>
   [...html.matchAll(/class="agent-select agent-row"[^>]* title="([^"]*)"/g)].map((match) => decode(match[1]!).split("\n"));
 /** the status groups, in order: their label, count and the titles inside them */
 const groups = (html: string): { label: string; count: number; titles: string[] }[] =>
-  [...html.matchAll(/<div class="agent-group[^"]*"><p class="agent-group-label"[^>]*><span>([^<]*)<\/span><span class="agent-group-count">(\d+)<\/span><\/p><ul[^>]*>(.*?)<\/ul><\/div>/g)].map((match) => ({
-    label: decode(match[1]!),
-    count: Number(match[2]),
-    titles: [...match[3]!.matchAll(/class="agent-title">([^<]*)</g)].map((title) => decode(title[1]!)),
-  }));
+  html.split('<div class="agent-group ').slice(1).map((part) => {
+    const body = part.slice(0, part.indexOf("</ul>"));
+    const label = /<span>([^<]*)<\/span><span class="agent-group-count">(\d+)<\/span>/.exec(body);
+    return {
+      label: decode(label?.[1] ?? ""),
+      count: Number(label?.[2] ?? 0),
+      titles: [...body.matchAll(/class="agent-title">([^<]*)</g)].map((title) => decode(title[1]!)),
+    };
+  });
 
 describe("AgentSidebar plugin tokens", () => {
   const saved = Object.getOwnPropertyDescriptor(globalThis, "window");
