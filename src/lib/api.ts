@@ -4,6 +4,7 @@ import type {
   AgentKind,
   AgentRenameRequest,
   ConversationResponse,
+  ConversationSearchResponse,
   CreateWorktreeRequest,
   CreateTabRequest,
   CreateWorkspaceRequest,
@@ -262,6 +263,17 @@ export async function fetchPaneConversation(paneId: string, machineId = "local",
     trimConversationAnswers(url);
   }
   return body;
+}
+
+/**
+ * GET /api/conversation/search: every chat pane on this PC whose conversation holds `query`.
+ * `pages` walks back through older pages (the newest is page 0); the palette asks for one page
+ * as the user types, then for more once typing pauses. The caller aborts an answer it no longer needs.
+ */
+export async function searchConversations(query: string, machineId = "local", signal?: AbortSignal, pages = 1): Promise<ConversationSearchResponse> {
+  const params = new URLSearchParams({ q: query, limit: "12" });
+  if (pages > 1) params.set("pages", String(pages));
+  return getJson<ConversationSearchResponse>(machinePath(machineId, `conversation/search?${params.toString()}`), { cache: "no-store", signal });
 }
 
 export interface HealthInfo {

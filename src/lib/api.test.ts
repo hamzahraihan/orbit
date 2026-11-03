@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "bun:test";
 import { MAX_ATTACHMENT_BYTES } from "../../shared/attachments.ts";
-import { AttachmentTooLargeError, uploadPaneImage } from "./api.ts";
+import { AttachmentTooLargeError, searchConversations, uploadPaneImage } from "./api.ts";
 
 const realFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = realFetch; });
@@ -21,6 +21,25 @@ it("refuses a file over the attachment limit before any of it is sent, and sends
   const atLimit = new File([new Uint8Array(MAX_ATTACHMENT_BYTES)], "site.zip", { type: "application/zip" });
   expect(await uploadPaneImage("p1", atLimit)).toBe("/work/.herdr-web-ui/site.zip");
   expect(requests).toEqual(["/api/pane/image"]);
+});
+
+it("asks each PC for its own conversation search, encoded, and passes the abort signal", async () => {
+  const calls: Array<{ url: string; signal?: AbortSignal | null }> = [];
+  globalThis.fetch = (async (url: string, init?: RequestInit) => {
+    calls.push({ url, signal: init?.signal });
+    return Response.json({ matches: [], unavailable: 0 });
+  }) as typeof fetch;
+
+  const controller = new AbortController();
+  await searchConversations("post /payments", "pc-2", controller.signal);
+  await searchConversations("export", "local");
+  await searchConversations("monday", "local", undefined, 20);
+  expect(calls.map((call) => call.url)).toEqual([
+    "/api/machines/pc-2/conversation/search?q=post+%2Fpayments&limit=12",
+    "/api/conversation/search?q=export&limit=12",
+    "/api/conversation/search?q=monday&limit=12&pages=20",
+  ]);
+  expect(calls[0]!.signal).toBe(controller.signal);
 });
 
 it("refuses a 40 MiB file in the browser with the 32 MB limit named, before upload (regression: 8 MB limit on main)", async () => {
