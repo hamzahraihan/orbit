@@ -381,17 +381,17 @@ try {
           return {
             shown: getComputedStyle(sidebar).display !== "none",
             width: sidebar.getBoundingClientRect().width,
-            /* the row's own mark: a workspace with worktrees also carries a hidden face in its fold */
-            mark: box(".sidebar .workspace-select .sidebar-mark")?.width ?? 0,
-            newWorkspace: box(".sidebar .sidebar-new")?.width ?? 0,
-            title: Boolean(document.querySelector<HTMLElement>(".sidebar .workspace-select")?.title),
+            /* a workspace row's mark: its own, or the face inside the fold it starts with */
+            mark: box('.sidebar .machine-workspaces .sidebar-row[role="button"] .sidebar-mark')?.width ?? 0,
+            machineMark: box(".sidebar .machine-title .sidebar-mark")?.width ?? 0,
+            title: Boolean(document.querySelector<HTMLElement>('.sidebar .machine-workspaces .sidebar-row[role="button"]')?.title),
             expanded: toggle.getAttribute("aria-pressed"),
           };
         });
         assert.ok(rail.shown, "the collapsed sidebar is still drawn");
         assert.ok(rail.width > 0 && rail.width < 80, `it takes a rail's width: ${JSON.stringify(rail)}`);
         assert.ok(rail.mark > 0, "a workspace's mark shows in the rail");
-        assert.ok(rail.newWorkspace > 0, "New workspace keeps its glyph");
+        assert.ok(rail.machineMark > 0, "each PC's mark keeps its place above its workspaces");
         assert.ok(rail.title, "a row's tooltip still says what it opens");
         assert.equal(rail.expanded, "false", "the toggle says the sidebar is collapsed");
         if (process.env.UI_EVIDENCE_DIR) await page.screenshot({ path: join(process.env.UI_EVIDENCE_DIR, "sidebar-rail-1280.png") });
@@ -637,7 +637,9 @@ try {
         await page.locator(`.agents-sidebar .agent-item[data-pane="${API}"] .agent-select`).evaluate((node) => (node as HTMLElement).click());
         await waitQuery(page, "pane", API);
         const atApi = await page.evaluate(() => history.length);
-        // the plan lives in the composer's background-task chip now (#846): its list is a phone dialog too
+        // The plan lives in the composer's background-task chip now (#846): its list is a phone
+        // dialog too. The chip is tapped cold, without focusing the box first: the first touch
+        // must not widen the status row and move the chip out from under its own click.
         await page.locator(".composer .bg-tasks-toggle").tap();
         const plan = page.locator(".bg-tasks-menu");
         await plan.waitFor();

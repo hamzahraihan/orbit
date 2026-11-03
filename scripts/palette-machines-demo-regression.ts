@@ -95,6 +95,7 @@ try {
           ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: "en-US" }
           : { viewport: { width: 1280, height: 900 }, locale: "en-US" });
         try {
+          await detachedContext.addInitScript(() => localStorage.setItem("herdr-web-ui:onboarded", "1"));
           const page = await detachedContext.newPage();
           const renderErrors: string[] = [];
           page.on("pageerror", (error) => renderErrors.push(error.message));
@@ -103,8 +104,8 @@ try {
           });
           await page.goto(`http://127.0.0.1:${server.port}/?machine=remote&pane=${encodeURIComponent(panes.api)}&view=chat&detached=1`);
           if (phone) await page.getByRole("button", { name: "Open workspace list", exact: true }).click();
-          await page.locator('.workspace-select[title*="Detached HEAD"]').first().waitFor({ state: "attached" });
-          assert.ok(await page.locator(".workspace-group").count() > 0, "workspace rows survive a remote detached worktree with no branch field");
+          await page.locator('.sidebar .sidebar-row[role="button"][title*="Detached HEAD"]').first().waitFor({ state: "attached" });
+          assert.ok(await page.locator('.sidebar .machine-workspaces .sidebar-row[role="button"]').count() > 0, "workspace rows survive a remote detached worktree with no branch field");
           assert.equal(await page.getByRole("alert").filter({ hasText: /can't be shown|Something went wrong/ }).count(), 0);
           assert.deepEqual(renderErrors, [], "caught render errors must fail the browser check too");
           console.log(`PASS ${phone ? "phone" : "desktop"} sidebar and detached branch render when the remote API omits branch`);
