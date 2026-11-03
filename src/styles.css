@@ -154,6 +154,10 @@
   --space-6: 24px;
   --space-8: 32px;
 
+  /* the app's scrollbar: its lane, and the inset that sets the thumb into it */
+  --scrollbar-lane: 10px;
+  --scrollbar-inset: 2px;
+
   /* radii */
   --radius-sm: 6px;
   --radius-md: 8px;
@@ -1850,46 +1854,20 @@ button {
   height: 18px;
 }
 
-/* The selected pane on one line: mark and title, then PC › workspace › folder. The title may
-   shorten; the crumb may not: when it does not fit whole beside a whole title it wraps to a second
-   line that the height clips, so it is all there or gone, and the title has the row. The full
-   location is in the tooltip and at the top of the More menu. */
-.context {
-  --context-line: calc(var(--fs-lg) * var(--lh-base));
+/* The bar names no pane: what is open is said by the sidebar's selected row and the tab strip
+   under it, while the header carries the way around the window — the workspace list's own
+   controls, the lens pair, and the actions at its end. The pane's title, its agent's mark and the
+   PC › workspace › path stay in the tab, the roster and the top of the More menu. The note (a link
+   landing or copied) takes the free room between them while it shows. */
+.header-note-slot {
   display: flex;
-  flex-flow: row wrap;
   align-items: center;
-  justify-content: flex-start;
-  column-gap: var(--space-3);
-  row-gap: var(--header-h);
   flex: 1 1 auto;
   min-width: 0;
-  max-height: var(--context-line);
-  /* the title never touches the lens switch */
-  margin-right: var(--space-1);
   overflow: hidden;
-  line-height: var(--lh-tight);
 }
 
-.context-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex: 0 1 auto;
-  min-width: 0;
-  max-width: 100%;
-  /* the first line is as tall as the box that clips the second: the title sits the same with
-     the crumb beside it or gone */
-  min-height: var(--context-line);
-  font-size: var(--fs-md);
-  font-weight: var(--fw-semibold);
-  color: var(--text-strong);
-  letter-spacing: var(--tracking-tight);
-}
-
-/* the header note's sentence (.header-note-text, App.tsx) is cut like the title it stands in for; its
-   own class keeps .context-title-text on the pane title alone (the browser checks measure it) */
-.context-title-text,
+/* the note's sentence is cut on a narrow bar, and its pill keeps the whole of it on its own line */
 .header-note-text {
   min-width: 0;
   overflow: hidden;
@@ -1897,25 +1875,10 @@ button {
   white-space: nowrap;
 }
 
-.context-sub {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex: 0 0 auto;
-  font-size: var(--fs-xs);
-  color: var(--text-dim);
-  white-space: nowrap;
-}
-
-/* the PC's name is whole in the crumb, like the rest of it: the crumb fits or is not drawn.
-   Its cap (Machines.css) is for the header with no pane, where it sits beside the brand. */
-.context-sub .machine-context-name {
-  max-width: none;
-  overflow: visible;
-}
-
-/* the switch keeps its size; the pane title (.context) is the header's one flexible item */
-.view-switch {
+/* The lenses are one quiet pair of words with their glyphs, the chosen one a filled plate: never a
+   track, never an accent underline. `.segmented` draws the track after this rule, so the bar's own
+   pair is named at the bar's specificity. The pair keeps its size; the note takes the room around it. */
+.app-header .view-switch {
   flex: 0 0 auto;
   background: transparent;
   border: 0;
@@ -1923,25 +1886,11 @@ button {
   gap: var(--space-1);
 }
 
-/* From 769px the lens switch is its two words and nothing around them: no track, no glyphs, the
-   chosen lens on a quiet plate. Files follows it as an action of its own, after a hairline. */
-@media (min-width: 769px) {
-  .app-header .view-switch {
-    padding: 0;
-    background: transparent;
-    border: 0;
-  }
-
-  .app-header .view-switch > button svg {
-    display: none;
-  }
-}
-
-/* the two lenses are one quiet pair on the bar: the chosen one a filled plate, the other a word */
 .view-switch > button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-1);
   height: calc(var(--control-h) - var(--space-2));
   background: transparent;
   border: 0;
@@ -1959,13 +1908,6 @@ button {
   color: var(--text-strong);
   background: var(--bg-chip);
   box-shadow: inset 0 0 0 var(--hairline) var(--border-strong);
-}
-
-.header-divider {
-  flex: 0 0 auto;
-  width: var(--hairline);
-  height: 16px;
-  background: var(--border);
 }
 
 /* the bar's own controls: small quiet glyphs that take a plate only under the pointer. A coarse
@@ -1996,14 +1938,63 @@ button {
   display: contents;
 }
 
-/* no plate of its own: the bar is the plate, and the More glyph joins the bar's other controls */
+/* no plate of its own: the bar is the plate. Files and More are the bar's actions, quieter than
+   the lens pair and set together at its end, far enough apart that their hover plates never meet */
 .header-meta {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-3);
   flex: 0 0 auto;
   margin-left: auto;
   font-size: var(--fs-xs);
+}
+
+/* Files and Changes are the bar's named actions: their glyphs and their words side by side, dim as
+   the bar's other controls until the pointer reaches them. The bar has the room the title gave back. */
+.app-header .icon-button.header-files-button,
+.app-header .icon-button.header-changes-button {
+  width: auto;
+  padding: 0 var(--space-2);
+  gap: var(--space-2);
+}
+
+.header-action-label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+}
+
+/* From 769px the bar carries the pane's tab strip at the pane side's start, and the pane's own
+   controls (its lenses, Files, Changes) after the free middle: the tabs open the bar's pane side,
+   the actions close it. The strip is the bar's surface, with none of the row's padding or rule */
+@media (min-width: 769px) {
+  .app-header .header-tabs {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-self: stretch;
+  }
+
+  .app-header .header-tabs > .tab-strip {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    padding: 0;
+    border-bottom: 0;
+    --strip-bg: var(--bg-panel);
+  }
+
+  /* under the chat lens the bar is the transcript's surface, and so is the strip in it */
+  .app-header.is-chat .header-tabs > .tab-strip {
+    --strip-bg: var(--bg);
+  }
+
+  /* the note keeps its own width now that the strip holds the middle */
+  .app-header .header-note-slot {
+    flex: 0 1 auto;
+    max-width: 40vw;
+  }
 }
 
 /* one chip for the connection, drawn only while the bridge is not live; the herdr version lives
@@ -2128,7 +2119,11 @@ button {
   }
 
   /* the bar's own top row, stretched over the header's top inset and as wide as the sidebar:
-     its toggle and the palette start the bar */
+     its toggle and the palette start the bar. The bar itself has no rule, so this is the one
+     hairline in it: the sidebar's column is the surface it divides, and its roster starts under
+     the line while the pane beside it keeps the bar flat. The row ends with the bar now (the -1px
+     it once carried covered the bar's old rule): its last pixel is the header's, so the line is
+     drawn above the roster and not under the sidebar's first row, which paints after the bar. */
   .app:not(.sidebar-collapsed) .header-side {
     display: flex;
     flex: 0 0 var(--sidebar-shown-w);
@@ -2136,9 +2131,10 @@ button {
     align-self: stretch;
     justify-content: flex-start;
     gap: var(--space-1);
-    margin: calc(-1 * env(safe-area-inset-top, 0px)) var(--space-2) calc(-1 * var(--hairline)) 0;
+    margin: calc(-1 * env(safe-area-inset-top, 0px)) var(--space-2) 0 0;
     padding: env(safe-area-inset-top, 0px) var(--space-3) 0 calc(var(--space-3) + env(safe-area-inset-left, 0px));
     background: var(--bg-panel);
+    border-bottom: var(--hairline) solid var(--sidebar-border);
   }
 }
 
@@ -2167,6 +2163,58 @@ button {
   /* the rail's toggle is centred on its column, clear of the window controls the bar leaves room for */
   .app.sidebar-collapsed .app-header.is-zoned {
     padding-left: calc((var(--sidebar-rail-w) - var(--control-h)) / 2 + env(titlebar-area-x, 0px));
+  }
+}
+
+/* ---------- scrollbars ---------- */
+
+/* One rail for every scroll area in the app: a transparent lane and a rounded thumb in the theme's
+   dim line, so a list, a transcript or a menu reads as the surface it scrolls on rather than as a
+   system widget laid over it. On the root and its descendants because menus and sheets are portals
+   on <body>, outside .app. The thumb is inset --scrollbar-inset on each side (a transparent border
+   with the background clipped to the padding box), which is what makes it set into the lane rather
+   than fill it. Styling the pseudo-elements also takes the engine's own arrow buttons away.
+   Containers that hide their scrollbar on purpose (the tab strip, the key bar, the palette's
+   filters, xterm's viewport) name `scrollbar-width: none` on themselves and keep it hidden. */
+html::-webkit-scrollbar,
+html ::-webkit-scrollbar {
+  width: var(--scrollbar-lane);
+  height: var(--scrollbar-lane);
+}
+
+html::-webkit-scrollbar-track,
+html ::-webkit-scrollbar-track,
+html::-webkit-scrollbar-corner,
+html ::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+html ::-webkit-scrollbar-thumb {
+  border: var(--scrollbar-inset) solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong) padding-box;
+}
+
+@media (hover: hover) {
+  html::-webkit-scrollbar-thumb:hover,
+  html ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted) padding-box;
+  }
+}
+
+/* Firefox, which draws its scrollbars from the standard properties instead: the same dim line, with
+   the platform's own thin bar. Only there, because a scrollbar-color or scrollbar-width value makes
+   Chromium drop the pseudo-element rail above. `scrollbar-width` is not inherited, so every
+   scroller is named. */
+@supports (-moz-appearance: none) {
+  html,
+  html * {
+    scrollbar-width: thin;
+  }
+
+  html {
+    scrollbar-color: var(--border-strong) transparent;
   }
 }
 
@@ -2874,13 +2922,13 @@ button {
   }
 }
 
-/* just above phone width the lens labels would squeeze the pane title to a glyph: icons only */
+/* the bar's two words would crowd a narrow window: the lenses are their glyphs alone, each still
+   named in its button's title */
 @media (max-width: 560px) {
   .view-switch .header-desktop-only { display: none; }
 }
 
-/* phones: every header control is a full thumb target, the lens buttons too (the track loses
-   its inset so the bar still holds them) */
+/* phones: every header control is a full thumb target, the lens buttons too */
 @media (max-width: 768px) {
   .app-header .icon-button {
     width: var(--touch-target-header);
