@@ -33,7 +33,8 @@ async function until(check: () => boolean | Promise<boolean>, label: string) {
 async function select(name: string) {
   const group = page.getByRole("region", { name: `PC ${name}`, exact: true });
   await group.locator(`.pane-select[title^="${paneId} —"]`).click();
-  await page.locator(".context .machine-context-name").filter({ hasText: name }).waitFor();
+  // the bar names no pane, so the row that opened it says which PC is in front
+  await group.locator(`.pane-select[title^="${paneId} —"][aria-current="true"]`).waitFor();
   await page.getByRole("button", { name: "Chat", exact: true }).click();
   await page.getByRole("textbox", { name: "Message", exact: true }).waitFor();
 }

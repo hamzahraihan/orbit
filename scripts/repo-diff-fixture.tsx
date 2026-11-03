@@ -16,6 +16,8 @@ declare global { interface Window { repoDiffQA: { openFiles: (machine: string, p
 /** The Files dialog, the diff above it and a file above that, wired as App.tsx wires them. */
 function Fixture() {
   const [files, setFiles] = useState<Files | null>(null);
+  // the list the dialog shows: App's, so its bar's Files and Changes buttons can each open one
+  const [filesTab, setFilesTab] = useState<"browse" | "changes">("browse");
   const { viewing: file, openFile, closeFile } = useFileViewer();
   const { viewing: diff, openDiff, closeDiff } = useRepoDiffViewer();
   const { update } = useSettings();
@@ -23,7 +25,7 @@ function Fixture() {
   return <main>
     <button type="button" id="outside">Outside</button>
     {files && <MachineContext.Provider value={files.machine}>
-      <FilesDialog start={files.directory} paneId={files.paneId} viewing={file !== null || diff !== null}
+      <FilesDialog start={files.directory} paneId={files.paneId} tab={filesTab} onTab={setFilesTab} viewing={file !== null || diff !== null}
         onOpenFile={(path) => openFile({ path, paneId: files.paneId, machineId: files.machine })}
         onOpenDiff={(comparison, entry) => openDiff({ machineId: files.machine, paneId: files.paneId, directory: files.directory, ...comparison, path: entry.path, oldPath: entry.old_path })}
         onBrowseFolders={() => {}}
