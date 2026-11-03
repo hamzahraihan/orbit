@@ -486,8 +486,6 @@
   overflow-y: auto;
   overflow-wrap: anywhere;
   scrollbar-gutter: stable;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) transparent;
   background: transparent;
   border: 0;
   outline: 0;
@@ -510,19 +508,6 @@
     font-size: calc(var(--fs-chat) * var(--chat-scale, 1));
     line-height: var(--lh-code);
   }
-}
-
-.composer-text::-webkit-scrollbar {
-  width: var(--space-2);
-}
-
-.composer-text::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.composer-text::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: var(--radius-pill);
 }
 
 .composer-text:focus-visible {
