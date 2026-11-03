@@ -4,6 +4,7 @@ import { createInputLane } from "./core/input.ts";
 import { type Client, connectionData, connectionOf, createConnections, presenceOf, send, type SocketData } from "./core/connections.ts";
 import { createStatusHub } from "./core/status.ts";
 import { handlePaneRequest, paneContext } from "./pane-routes.ts";
+import { MAX_SEARCH_PAGES, searchConversations } from "./conversation-search.ts";
 import { createScheduledPrompts, type ScheduledPrompts } from "./scheduled-prompts.ts";
 import { randomBytes } from "node:crypto";
 import { readHerdrProfiles, type HerdrMachineProfile } from "./herdr-profiles.ts";
@@ -1444,6 +1445,27 @@ export function createServer(
             (timeoutMs) => pluginLogList(pluginId, PLUGIN_LOG_LIMIT, undefined, timeoutMs),
             livePaneIds,
           ));
+        } catch (error) {
+          return errorResponse(error);
+        }
+      }
+
+      // the palette's search over every chat on this PC (server/conversation-search.ts): the
+      // newest page answers at once, and the palette's deeper ask after typing pauses walks the
+      // pages before it, bounded, so a turn from days ago can still be found
+      if (pathname === "/api/conversation/search") {
+        if (request.method !== "GET") return badRequest("method_not_allowed", "use GET");
+        const query = (url.searchParams.get("q") ?? "").trim();
+        if (query.length === 0 || query.length > 200) return badRequest("invalid_query", "q must be 1 to 200 characters");
+        const asked = Number(url.searchParams.get("limit") ?? "12");
+        const limit = Number.isFinite(asked) ? Math.min(20, Math.max(1, Math.trunc(asked))) : 12;
+        const askedPages = Number(url.searchParams.get("pages") ?? "1");
+        const pages = Number.isFinite(askedPages) ? Math.min(MAX_SEARCH_PAGES, Math.max(1, Math.trunc(askedPages))) : 1;
+        bunServer.timeout(request, 60);
+        try {
+          const snapshot = await sessionSnapshot();
+          // the transcripts behind this are local and change with every turn: never cached
+          return jsonResponse(await searchConversations({ panes: snapshot.panes, query, limit, pages, signal: request.signal, stores: options }), 200, { "cache-control": "private, no-store" });
         } catch (error) {
           return errorResponse(error);
         }
