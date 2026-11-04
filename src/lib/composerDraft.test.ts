@@ -127,6 +127,22 @@ it("names the draft another tab's edit or send concerns, and nothing else", () =
   expect(storageEventDraft(null)).toBeNull();
 });
 
+it("keeps each pane's draft across a worktree switch", () => {
+  const { store } = fixture();
+  const keyA = "herdr-web-ui:composer-draft:local:w1:p1";
+  const keyB = "herdr-web-ui:composer-draft:local:w2:p1";
+  // Type in pane A ("explore-api"), then switch to pane B ("implement-api")
+  store.set(keyA, "explore this API");
+  store.set(keyB, "implement that");
+  // Return to pane A — its draft is intact
+  expect(store.read(keyA).text).toBe("explore this API");
+  expect(store.read(keyB).text).toBe("implement that");
+  // Send in pane B — pane A's draft is untouched
+  store.begin(keyB); store.settle(keyB, "implement that"); store.end(keyB);
+  expect(store.read(keyB).text).toBe("");
+  expect(store.read(keyA).text).toBe("explore this API");
+});
+
 it("lets a tab send again once another tab's abandoned lease runs out, and tells its composer", () => {
   const data = new Map<string, string>();
   const storage = { getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => { data.set(key, value); }, removeItem: (key: string) => { data.delete(key); } };
