@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "./index.ts";
-import { workspaceCreate, workspaceClose, sessionSnapshot } from "./herdr/client.ts";
+import { workspaceClose, sessionSnapshot } from "./herdr/client.ts";
 
 describe("linked worktree fallback when source workspace missing", () => {
   let server: ReturnType<typeof createServer>;

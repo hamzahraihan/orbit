@@ -115,6 +115,15 @@ try {
     await page.waitForFunction((pane) => new URLSearchParams(location.search).get("pane") === pane, opened.pane_id, { timeout: 10_000 });
     assert.equal(await page.locator(".pane-frame.is-current").getAttribute("data-layout-pane"), opened.pane_id, "the checkout's pane is the one shown");
 
+    // Verify the launch landed in the new worktree. "Shell" is the no-agent choice.
+    // Selecting a pane in the browser does not move herdr's own focus (AGENTS.md),
+    // so herdr may keep focus on the parent workspace; the UI's focused pane and a
+    // live terminal are what prove the launch landed.
+    const fresh = await sessionSnapshot();
+    const newPane = fresh.panes.find((pane) => pane.pane_id === opened.pane_id);
+    assert.ok(newPane, "herdr lists the new worktree pane");
+    await page.locator(".pane-frame.is-current .xterm").first().waitFor({ timeout: 15_000 });
+
     // Verify no JS errors
     assert.deepEqual(errors, []);
 
