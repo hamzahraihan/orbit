@@ -103,6 +103,7 @@ describe("conversation search", () => {
   it("opens one reader per pane and reuses it for every page of the walk", async () => {
     const opened: string[] = [];
     const reads: string[] = [];
+    const timings: { pages: number; panes: number; elapsedMs: number }[] = [];
     const pages = [
       { turns: [turn("user", "start")], cursor: "c1" },
       { turns: [turn("user", "nothing here")], cursor: "c2" },
@@ -113,6 +114,7 @@ describe("conversation search", () => {
       query: "export",
       limit: 12,
       pages: 4,
+      onTiming: (timing) => timings.push(timing),
       open: async (paneId) => {
         opened.push(paneId);
         return async (before?: string) => {
@@ -123,6 +125,9 @@ describe("conversation search", () => {
     });
     expect(opened.sort()).toEqual(["w1:p1", "w1:p2"]);
     expect(reads).toHaveLength(6);
+    expect(timings).toHaveLength(1);
+    expect(timings[0]).toMatchObject({ pages: 6, panes: 2 });
+    expect(timings[0]!.elapsedMs).toBeGreaterThanOrEqual(0);
     expect(answer.matches.map((match) => [match.pane_id, match.page])).toEqual([
       ["w1:p1", 2], ["w1:p1", 2], ["w1:p2", 2], ["w1:p2", 2],
     ]);
