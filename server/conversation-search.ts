@@ -75,13 +75,24 @@ type ReadPage = (paneId: string, before?: string) => Promise<Page>;
 /** One pane's pages: opened once, then read newest first and backwards. */
 type PageReader = (before?: string) => Promise<Page>;
 
+/** What one search's walk cost, for the server's timing line. */
+export interface ConversationSearchTiming {
+  /** pages actually read, across every pane, not the page limit asked for */
+  pages: number;
+  /** panes with an agent that the search read */
+  panes: number;
+  /** wall time from opening the readers through the last page */
+  elapsedMs: number;
+}
+
 /**
  * One pane's matches: its newest page first, then the pages before it until its share is found.
  * A page the walk can no longer read (the transcript changed under it) ends the walk; the pages
  * already read still stand, and only a first page that fails makes the pane unavailable.
  */
-async function searchPane(read: ReadPage, paneId: string, query: string, pages: number, signal?: AbortSignal): Promise<ConversationSearchMatch[]> {
+async function searchPane(read: ReadPage, paneId: string, query: string, pages: number, signal?: AbortSignal): Promise<{ matches: ConversationSearchMatch[]; pages: number }> {
   const found: ConversationSearchMatch[] = [];
+  let readPages = 0;
   let before: string | undefined;
   for (let page = 0; page < pages && found.length < SEARCH_PER_PANE; page += 1) {
     if (signal?.aborted) break;
@@ -92,12 +103,13 @@ async function searchPane(read: ReadPage, paneId: string, query: string, pages: 
       if (page === 0) throw error;
       break;
     }
+    readPages += 1;
     found.push(...searchTurns(answer.turns, query, paneId, SEARCH_PER_PANE - found.length, page));
     const cursor = answer.cursor;
     if (cursor === null || cursor === undefined || cursor === before) break;
     before = cursor;
   }
-  return found;
+  return { matches: found, pages: readPages };
 }
 
 function pageCount(pages: number | undefined): number {
@@ -122,7 +134,10 @@ export async function searchConversations(input: {
   read?: ReadPage;
   /** opens a pane's reader; tests pass their own to count how often a pane's transcript is opened */
   open?: (paneId: string) => Promise<PageReader>;
+  /** receives what the walk cost when it finishes; the server's timing line logs it */
+  onTiming?: (timing: ConversationSearchTiming) => void;
 }): Promise<ConversationSearchResponse> {
+  const started = performance.now();
   const stores = input.stores ?? {};
   const open = input.open ?? (async (paneId: string) => {
     const reader = await openPaneConversation(
@@ -147,15 +162,17 @@ export async function searchConversations(input: {
   });
   const pages = pageCount(input.pages);
   const panes = input.panes.filter((pane) => (pane.agent ?? "") !== "").slice(0, SEARCH_PANE_LIMIT);
-  const answers = await Promise.all(panes.map(async (pane): Promise<{ matches: ConversationSearchMatch[]; unavailable: number }> => {
+  const answers = await Promise.all(panes.map(async (pane): Promise<{ matches: ConversationSearchMatch[]; pages: number; unavailable: number }> => {
     try {
-      return { matches: await searchPane(read, pane.pane_id, input.query, pages, input.signal), unavailable: 0 };
+      const answer = await searchPane(read, pane.pane_id, input.query, pages, input.signal);
+      return { matches: answer.matches, pages: answer.pages, unavailable: 0 };
     } catch {
-      return { matches: [], unavailable: 1 };
+      return { matches: [], pages: 0, unavailable: 1 };
     }
   }));
   const matches = answers.flatMap((answer) => answer.matches);
   const unavailable = answers.reduce((count, answer) => count + answer.unavailable, 0);
+  input.onTiming?.({ pages: answers.reduce((count, answer) => count + answer.pages, 0), panes: answers.length, elapsedMs: Math.round(performance.now() - started) });
   // newest first; a turn without a timestamp goes after the dated ones rather than ahead of them
   matches.sort((a, b) => (b.ts ?? "").localeCompare(a.ts ?? ""));
   return { matches: matches.slice(0, Math.max(0, input.limit)), unavailable };

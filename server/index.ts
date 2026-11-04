@@ -1465,7 +1465,10 @@ export function createServer(
         try {
           const snapshot = await sessionSnapshot();
           // the transcripts behind this are local and change with every turn: never cached
-          return jsonResponse(await searchConversations({ panes: snapshot.panes, query, limit, pages, signal: request.signal, stores: options }), 200, { "cache-control": "private, no-store" });
+          return jsonResponse(await searchConversations({
+            panes: snapshot.panes, query, limit, pages, signal: request.signal, stores: options,
+            onTiming: (timing) => console.log(`[conversation/search] asked_pages=${pages} read_pages=${timing.pages} panes=${timing.panes} elapsed_ms=${timing.elapsedMs}`),
+          }), 200, { "cache-control": "private, no-store" });
         } catch (error) {
           return errorResponse(error);
         }
