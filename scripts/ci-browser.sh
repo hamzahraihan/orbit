@@ -112,6 +112,7 @@ run_script scripts/render-crash-demo-regression.ts
 run_script scripts/phone-split-grid-demo-regression.ts
 run_script scripts/recent-folders-regression.ts
 run_script scripts/phone-worktree-sheet-regression.ts
+run_script scripts/worktree-agent-picker-browser.ts
 run_script scripts/preferences-sync-regression.ts
 run_script scripts/machine-dialog-regression.ts
 run_script scripts/machine-conflict-regression.ts
