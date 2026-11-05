@@ -165,3 +165,45 @@ describe("demo transport", () => {
       "Remove these entries from DEMO_IGNORES in scripts/conventions.test.ts: the demo handles them now, or the protocol no longer has them.");
   });
 });
+
+describe("browser test selectors", () => {
+  // Every DOM class a browser test script queries must exist in src/ components or styles.css:
+  // a sidebar redesign or theme restyle that renames a class breaks every regression that still
+  // names the old one, and CI learns about it only when the browser lane times out.
+  const TEST_SCRIPTS = [...files("scripts/*-regression.ts"), ...files("scripts/*-browser-qa.ts"), "scripts/ui-regression.ts", "scripts/ui-contexts-regression.ts"].sort();
+  // class selectors passed to Playwright locator(), e.g. page.locator(".workspace-name")
+  const CLASS_LOCATOR = /locator\s*\(\s*["'`](\.[a-zA-Z][\w-]*)["'`]/g;
+  // third-party library classes the app does not own
+  const THIRD_PARTY = new Set(["xterm-screen", "xterm-cursor", "xterm-cursor-pointer", "katex", "katex-mathml", "layout-map", "is-current"]);
+  const CLASS_IN_SOURCE = /className\s*=\s*["'`]([^"'`]+)["'`]/g;
+  const CSS_CLASS_IN_STYLES = /(?<![\w-])\.([a-zA-Z][\w-]*)/g;
+
+  /** All class names declared in src/ component files and styles.css. */
+  const definedClasses = new Set<string>();
+  for (const file of files("{src}/**/*.{tsx,ts,css}")) {
+    const code = stripComments(read(file));
+    for (const match of code.matchAll(CLASS_IN_SOURCE)) {
+      for (const cls of match[1]!.split(/\s+/)) if (cls) definedClasses.add(cls);
+    }
+    if (file.endsWith(".css")) {
+      for (const match of code.matchAll(CSS_CLASS_IN_STYLES)) definedClasses.add(match[1]!);
+    }
+  }
+
+  it("uses only classes that exist in src/", () => {
+    const offenders: string[] = [];
+    for (const file of TEST_SCRIPTS) {
+      const code = stripComments(read(file));
+      for (const match of code.matchAll(CLASS_LOCATOR)) {
+        const cls = match[1]!.slice(1);
+        if (!definedClasses.has(cls) && !THIRD_PARTY.has(cls)) offenders.push(`${file}:${lineOf(code, match.index)}: .${cls}`);
+      }
+    }
+    fail(offenders.sort(), "Browser test scripts query DOM classes that no longer exist in src/ components or styles.css. After a sidebar redesign, theme restyle, or any DOM rename, update scripts/*-regression.ts and scripts/*-browser-qa.ts to match the current class names, or add the removed class to src/styles.css if it is intentionally kept.");
+  });
+
+  it("lists only test scripts that exist", () => {
+    const missing = TEST_SCRIPTS.filter((file) => !existsSync(join(repo, file)));
+    fail(missing, "Remove these non-existent test scripts from the selector guardrail list in scripts/conventions.test.ts: " + missing.join(", "));
+  });
+});

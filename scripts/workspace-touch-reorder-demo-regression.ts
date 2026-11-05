@@ -113,7 +113,7 @@ async function checkPinned(page: Page, cdp?: CDPSession): Promise<void> {
   await page.locator(".conn-live").waitFor({ state: "attached" });
   const toggle = page.locator('button[aria-controls="workspace-drawer"]');
   if (cdp && await toggle.getAttribute("aria-expanded") !== "true") await toggle.click();
-  await page.locator(".workspace-list-pinned").waitFor();
+  await page.locator(".sidebar-pinned").waitFor();
   assert.deepEqual(await pinnedRows(page), expected, "pin order survives reload");
   console.log(`PASS ${cdp ? "touch long press" : "desktop drag"} and Alt+Up/Down reorder saved pins within the card, keep unpinned worktrees fixed outside, preserve herdr order and survive reload`);
 }
@@ -193,7 +193,7 @@ try {
       await workspaceSheet.getByRole("button", { name: "Cancel", exact: true }).click();
       await workspaceSheet.waitFor({ state: "detached" });
       // Keyboard reordering remains available on the row itself.
-      await movedRow.locator(".workspace-select").focus();
+      await movedRow.focus();
       await page.keyboard.press("Alt+ArrowUp");
       const stepped = [before[1]!, before[0]!, before[2]!, ...before.slice(3)];
       await page.waitForFunction((want) => [...document.querySelectorAll<HTMLElement>(".machine-workspaces .sidebar-list > .workspace-list > .workspace-group")].map((row) => row.dataset.workspace).join() === want.join(),

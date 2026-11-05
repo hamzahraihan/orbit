@@ -100,7 +100,7 @@ try {
           await chip.waitFor();
           assert.match(await chip.getAttribute("aria-label") ?? "", /^Plan: 1 of \d+ done/, "the chip names the plan's progress");
           assert.match((await chip.locator(".bg-tasks-plan").textContent())?.trim() ?? "", /^1\/\d+$/);
-          assert.equal(await page.locator(".plan-button").count(), 0, "no plan button in the header");
+          assert.equal(await page.locator(".bg-tasks-toggle").count(), 0, "no plan button in the header");
           await chip.click();
           const list = page.getByRole("dialog", { name: /^Plan/ });
           await list.locator(".bg-step").first().waitFor();
@@ -118,7 +118,7 @@ try {
           if (mobile) await page.locator('button[aria-controls="workspace-drawer"]').tap();
           // the repository's row opens the shell tab the page starts on, so it is found by its workspace
           const head = page.locator(`.workspace-group[data-workspace="${panes.api.split(":")[0]}"] > .workspace-header .workspace-select`);
-          const headId = await head.evaluate((row) => row.closest(".workspace-group")?.getAttribute("data-workspace"));
+          const headId = await head.evaluate((row) => row.closest(".sidebar-row")?.getAttribute("data-workspace"));
           assert.ok(headId);
           const worktrees = await page.evaluate(async (workspaceId) => {
             const made: { workspace_id: string; pane_id: string }[] = [];
@@ -133,9 +133,9 @@ try {
             return made;
           }, headId);
           for (const { pane_id } of worktrees) await page.locator(`.workspace-select[data-pane="${pane_id}"]`).waitFor();
-          const titles = () => page.locator(".machine-workspaces .workspace-name").allTextContents();
+          const titles = () => page.locator(".machine-workspaces .sidebar-row-title").allTextContents();
           const groupedOrder = await titles();
-          const headName = await head.locator(".workspace-name").textContent();
+          const headName = await head.locator(".sidebar-row-title").textContent();
           const setPin = async (pin: boolean) => {
             if (mobile) await page.locator(`.workspace-group[data-workspace="${headId}"] > .workspace-header .row-menu-toggle`).tap();
             else await head.click({ button: "right" });
@@ -148,7 +148,7 @@ try {
           await setPin(true);
           const card = page.locator(".machine-workspaces .sidebar-pinned");
           await card.waitFor();
-          assert.deepEqual(await card.locator(".workspace-name").allTextContents(), [headName], "pinning a repository pins only its own row, not its worktrees");
+          assert.deepEqual(await card.locator(".sidebar-row-title").allTextContents(), [headName], "pinning a repository pins only its own row, not its worktrees");
           assert.equal(await head.getAttribute("aria-keyshortcuts"), "Alt+ArrowUp Alt+ArrowDown", "the pinned repository keeps its within-card reorder shortcuts");
           assert.equal(await head.getAttribute("draggable"), mobile ? "false" : "true", "the pinned repository supports desktop drag while touch uses long-press");
           assert.deepEqual(await titles(), [headName, ...groupedOrder.filter((name) => name !== headName)], "worktrees keep the repository's position and their order");
@@ -207,10 +207,10 @@ try {
         await infraWorkspace.click({ button: "right" });
         const infraMenu = page.getByRole("menu");
         await infraMenu.getByRole("menuitem", { name: "Pin workspace", exact: true }).click();
-        const pinnedWorkspaces = page.getByRole("list", { name: "Pinned", exact: true }).filter({ has: page.locator(".workspace-group") });
+        const pinnedWorkspaces = page.getByRole("list", { name: "Pinned", exact: true }).filter({ has: page.locator(".sidebar-row") });
         await pinnedWorkspaces.waitFor();
-        const infraName = await infraWorkspace.locator(".workspace-name").textContent();
-        assert.deepEqual(await pinnedWorkspaces.locator(".workspace-name").allTextContents(), [infraName], "the pinned workspace stands in the card");
+        const infraName = await infraWorkspace.locator(".sidebar-row-title").textContent();
+        assert.deepEqual(await pinnedWorkspaces.locator(".sidebar-row-title").allTextContents(), [infraName], "the pinned workspace stands in the card");
         assert.deepEqual(await workspaceTitles(), [infraName, ...herdrOrder.filter((title) => title !== infraName)], "the rest keep herdr's order");
         // it is moved within its card (the pin order), not out of it: workspace-touch-reorder-demo-regression.ts
         assert.equal(await infraWorkspace.getAttribute("draggable"), "true", "a pinned workspace can be dragged within its card");

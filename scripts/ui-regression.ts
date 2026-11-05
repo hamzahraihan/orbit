@@ -546,7 +546,7 @@ try {
   const planChip = page.getByRole("button", { name: /^Plan: 1 of 4 done/ });
   await planChip.waitFor();
   assert.equal((await agentRow(paneA).locator("[data-testid=plan-progress]").textContent())?.trim(), "1/4");
-  assert.equal(await page.locator(".plan-button").count(), 0, "the header carries no plan button");
+  assert.equal(await page.locator(".bg-tasks-toggle").count(), 0, "the header carries no plan button");
   await planChip.click();
   const planList = page.getByRole("dialog", { name: /^Plan/ });
   await until(async () => await planList.locator(".bg-step").count() === 4, "the plan's steps");
@@ -1105,7 +1105,7 @@ try {
   assert.equal(await page.getByRole("button", { name: "Report a problem", exact: true }).count(), 0, "no report action");
 
   const selectPane = async (paneId: string) => {
-    await page.locator(`.pane-select[title^="${paneId} —"]`).click();
+    await page.locator(`[data-pane="${paneId}"][title^="${paneId} —"]`).click();
     await page.locator(`.pane-frame[data-layout-pane="${paneId}"]`).getByRole("log").waitFor();
   };
   await composer.fill("draft for A");
@@ -1537,8 +1537,8 @@ try {
   const childRow = page.locator(`.worktree-children .sidebar-row[data-workspace="${worktree.workspace_id}"]`);
   /** The row itself is its header: no separate .workspace-header element. */
   const childHeader = childRow;
-  assert.equal(await repoRow.locator(".sidebar-drag-handle").count(), 0, "the parent workspace has no reorder grip column");
-  assert.equal(await childHeader.locator(".sidebar-drag-handle").count(), 0, "the branch workspace has no reorder grip column");
+  assert.equal(await repoRow.locator(".sidebar-row-action").count(), 0, "the parent workspace has no reorder grip column");
+  assert.equal(await childHeader.locator(".sidebar-row-action").count(), 0, "the branch workspace has no reorder grip column");
   assert.equal(await repoRow.getAttribute("draggable"), "true", "the parent workspace row supports dragging");
   assert.equal(await childHeader.getAttribute("draggable"), "true", "the branch workspace row supports dragging");
   await until(async () => await childHeader.locator(".sidebar-row-title").textContent() === "Sidebar redesign", "a newly created child is titled by the name it was given");
