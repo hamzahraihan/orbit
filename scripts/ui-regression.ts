@@ -113,8 +113,9 @@ try {
 
   const page = await context.newPage();
   const pageEvidence = evidenceDirectory ? await watchBrowserEvidence(context, page, "main-app") : undefined;
-  const workspaceGroup = (workspaceId: string) => page.locator(`.workspace-group[data-workspace="${workspaceId}"]`);
-  const workspaceHeader = (workspaceId: string) => workspaceGroup(workspaceId).locator(":scope > .workspace-header");
+  const workspaceGroup = (workspaceId: string) => page.locator(`.sidebar-row[data-workspace="${workspaceId}"]`);
+  /** The row itself is the header now: no separate .workspace-header element. */
+  const workspaceHeader = (workspaceId: string) => workspaceGroup(workspaceId);
   const agentRow = (paneId: string) => page.locator(`.agents-sidebar .agent-item[data-machine="local"][data-pane="${paneId}"]`);
   // the header under test is the app's own (server/static.ts), so this is where a broken
   // directive shows up: every page below loads through this same server
@@ -177,9 +178,9 @@ try {
   await composer.waitFor();
   await page.locator(".composer .voice-mic").waitFor();
   console.log("PASS a desktop's chat offers the mic before Settings is asked");
-  assert.equal(await workspaceHeader(workspaces[0]!).locator(".workspace-name").textContent(), "herdr-web-ui-test-browser-a",
+  assert.equal(await workspaceHeader(workspaces[0]!).locator(".sidebar-row-title").textContent(), "herdr-web-ui-test-browser-a",
     "Spaces names the workspace rather than its current pane");
-  assert.equal(await workspaceGroup(workspaces[0]!).locator(".pane-select").count(), 1, "a workspace has one representative selector");
+  assert.equal(await workspaceGroup(workspaces[0]!).locator("[role=button]").count(), 1, "a workspace has one representative selector");
   assert.equal(await page.locator(".workspace-contents, .sidebar-tab-heading, .sidebar-pane-item").count(), 0,
     "Spaces has no tab or pane tree");
   assert.equal(await agentRow(paneA).count(), 0, "a plain shell is absent from Agents");
@@ -235,7 +236,7 @@ try {
   await page.keyboard.press("Enter");
   await palette.waitFor({ state: "hidden" });
   await until(async () => await selectedPane() === paneB, "Enter on the focused option selects that pane");
-  await page.locator(`.pane-select[title^="${paneA} —"]`).click();
+  await page.locator(`[data-pane="${paneA}"][title^="${paneA} —"]`).click();
   await until(async () => await selectedPane() === paneA, "return to the first pane after palette selection");
 
   await openPalette();
@@ -318,7 +319,7 @@ try {
   await checkPaletteKeys(page, { workspaceId: workspaces[1]! });
 
   // Hold a real machines response, then deliver a newer status through herdr/SSE.
-  const badge = page.locator(".pane-item.is-selected .orbit-badge");
+  const badge = page.locator(".sidebar-row.is-selected .orbit-badge");
   await herdrRpc("pane.report_agent", { pane_id: paneA, source: "manual", agent: "claude", state: "blocked" });
   await until(async () => await badge.getAttribute("data-status") === "blocked", "blocked baseline");
   await agentRow(paneA).locator('.orbit-badge[data-status="blocked"]').waitFor();
@@ -394,7 +395,7 @@ try {
   await agentRow(paneA).locator('.agent-select[aria-current="true"]').waitFor();
   await until(() => painted.has(paneA), "returning from Agents paints the current pane");
   await machineToggle.click();
-  await workspaceHeader(workspaces[0]!).locator('.workspace-select[aria-current="true"]').waitFor();
+  await workspaceHeader(workspaces[0]!).locator('[aria-current="true"]').waitFor();
 
   // Reuse the real API roster as an offline cache in an isolated context. Its
   // native disabled buttons must leave selection unchanged when clicked.
@@ -674,7 +675,7 @@ try {
   await checkCtrlEnter(browser, origin, paneA);
   await checkCommandArrows(browser, origin, paneA);
   // a pane shortcut switches panes and types nothing: xterm used to send ESC[1;6B / ESC[1;6A too
-  const selectedTitle = () => page.locator(".pane-item.is-selected .pane-select").getAttribute("title");
+  const selectedTitle = () => page.locator(".sidebar-row[aria-current='true']").getAttribute("title");
   // A pane just picked shows the lens of the pane before it for a moment, and the message box
   // of that lens can take the focus back: the key waits until the terminal still has it two frames on.
   const focusTerminal = () => until(async () => {
@@ -689,7 +690,7 @@ try {
     await until(async () => !(await selectedTitle())?.startsWith(`${paneA} —`), `${key} leaves the pane`);
     await page.waitForTimeout(NO_SEND_WAIT_MS);
     assert.deepEqual(inputs.slice(beforeSwitch), [], `${key} must not reach a pane`);
-    await page.locator(`.pane-select[title^="${paneA} —"]`).click();
+    await page.locator(`[data-pane="${paneA}"][title^="${paneA} —"]`).click();
     await until(async () => (await selectedTitle())?.startsWith(`${paneA} —`) === true, "back on the first pane");
   }
   await page.getByTitle("Chat transcript (⌘⇧J)", { exact: true }).click();
@@ -698,7 +699,7 @@ try {
   await composer.focus();
   await page.keyboard.press("ControlOrMeta+Shift+ArrowDown");
   await until(async () => !(await selectedTitle())?.startsWith(`${paneA} —`), "the empty message box leaves the pane");
-  await page.locator(`.pane-select[title^="${paneA} —"]`).click();
+  await page.locator(`[data-pane="${paneA}"][title^="${paneA} —"]`).click();
   await until(async () => (await selectedTitle())?.startsWith(`${paneA} —`) === true, "back on the first pane");
   await composer.fill("draft");
   await page.keyboard.press("ControlOrMeta+Shift+ArrowDown");
@@ -767,20 +768,20 @@ try {
 
   // Sidebar rows: a workspace row is its name until Settings → Sidebar rows → Two lines says
   // what its pane is doing over its place, on a taller row
-  const oneLineHeight = await page.locator(".workspace-header").first().evaluate((row) => row.getBoundingClientRect().height);
+  const oneLineHeight = await page.locator(".sidebar-row").first().evaluate((row) => row.getBoundingClientRect().height);
   const oneLineAgentHeight = await page.locator(".agents-sidebar .agent-row").first().evaluate((row) => row.getBoundingClientRect().height);
-  assert.equal(await page.locator(".workspace-copy.is-two-line").count(), 0, "rows are one line until two are chosen");
+  assert.equal(await page.locator(".sidebar-row-copy.is-two-line").count(), 0, "rows are one line until two are chosen");
   assert.equal(await page.locator(".agents-sidebar.is-one-line").count(), 1, "agent rows follow the one-line choice");
   await page.keyboard.press("ControlOrMeta+Shift+Comma");
   const rowsSetting = page.locator('.settings-dialog .settings-segmented[aria-label="Sidebar rows"]');
   await rowsSetting.getByRole("button", { name: "Two lines", exact: true }).click();
-  await page.locator(".workspace-copy.is-two-line").first().waitFor();
+  await page.locator(".sidebar-row-copy.is-two-line").first().waitFor();
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("herdr-web-ui:settings") ?? "{}").sidebarRows), "two");
-  assert.ok(await page.locator(".workspace-header").first().evaluate((row) => row.getBoundingClientRect().height) > oneLineHeight, "a two-line row is taller");
+  assert.ok(await page.locator(".sidebar-row").first().evaluate((row) => row.getBoundingClientRect().height) > oneLineHeight, "a two-line row is taller");
   await page.locator(".agents-sidebar.is-one-line").waitFor({ state: "detached" });
   assert.ok(await page.locator(".agents-sidebar .agent-row").first().evaluate((row) => row.getBoundingClientRect().height) > oneLineAgentHeight, "a two-line agent row is taller");
   await rowsSetting.getByRole("button", { name: "One line", exact: true }).click();
-  await page.locator(".workspace-copy.is-two-line").first().waitFor({ state: "detached" });
+  await page.locator(".sidebar-row-copy.is-two-line").first().waitFor({ state: "detached" });
   await page.getByRole("button", { name: "Close settings", exact: true }).click();
   console.log("PASS sidebar rows switch between one line and two");
 
@@ -859,7 +860,7 @@ try {
   const pendingBytes = () => readFileSync(pendingLog, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line) as string).join("");
   const reportPending = (state: string) => herdrRpc("pane.report_agent", { pane_id: pendingPane, source: "manual", agent: "claude", state });
   await reportPending("working");
-  await page.locator(`.pane-select[title^="${pendingPane} —"]`).click();
+  await page.locator(`[data-pane="${pendingPane}"][title^="${pendingPane} —"]`).click();
   await page.getByRole("group", { name: "Pane view", exact: true }).getByRole("button", { name: "Chat", exact: true }).click();
   await page.locator('.composer-status[data-status="working"]').waitFor();
   await until(async () => await page.locator(".composer-agent-label").innerText() === "Claude", "foreground agent identity reached the composer");
@@ -940,7 +941,7 @@ try {
 
   // Older releases saved editable held rows. Seed that documented storage format so the
   // recovery, editing and layout checks continue to cover existing users' retained text.
-  await page.locator(`.pane-select[title^="${paneA} —"]`).click();
+  await page.locator(`[data-pane="${paneA}"][title^="${paneA} —"]`).click();
   const report = (state: string) => herdrRpc("pane.report_agent", { pane_id: paneA, source: "manual", agent: "claude", state });
   await report("working");
   await page.evaluate(({ pane, texts }) => {
@@ -1021,9 +1022,9 @@ try {
   await until(async () => await page.locator(".composer-queue").count() === 0, "queue hidden in the terminal lens");
   await lens.getByRole("button", { name: "Chat", exact: true }).click();
   await until(async () => await page.locator(".composer-queue-text").count() === 3, "queue back in the chat lens");
-  await page.locator(`.pane-select[title^="${paneB} —"]`).click();
+  await page.locator(`[data-pane="${paneB}"][title^="${paneB} —"]`).click();
   await until(async () => await page.locator(".composer-queue-text").count() === 0, "other pane has no queue");
-  await page.locator(`.pane-select[title^="${paneA} —"]`).click();
+  await page.locator(`[data-pane="${paneA}"][title^="${paneA} —"]`).click();
   await until(async () => await page.locator(".composer-queue-text").count() === 3, "owner queue restored");
   await page.getByRole("button", { name: "Discard", exact: true }).nth(2).click();
   const inputCount = inputs.length;
@@ -1077,7 +1078,7 @@ try {
   assert.match(inputs.at(-1)!.text, /^continue/);
   assert.equal(await composer.inputValue(), "draft stays");
   // Mid-turn it uses the same real server-owned pending path as Send, and still leaves the draft.
-  await page.locator(`.pane-select[title^="${pendingPane} —"]`).click();
+  await page.locator(`[data-pane="${pendingPane}"][title^="${pendingPane} —"]`).click();
   await reportPending("working");
   await page.locator('.composer-status[data-status="working"]').waitFor();
   await pendingReady(pendingPane);
@@ -1095,7 +1096,7 @@ try {
   await composer.fill("");
   await reportPending("idle");
   await page.locator('.composer-status:not([data-status="working"])').waitFor();
-  await page.locator(`.pane-select[title^="${paneA} —"]`).click();
+  await page.locator(`[data-pane="${paneA}"][title^="${paneA} —"]`).click();
   assert.equal(await composer.inputValue(), "draft stays", "the other pane's draft stayed with it");
   await composer.fill("");
   console.log("PASS quick replies send as typed, queue mid-turn, and leave the draft");
@@ -1439,7 +1440,7 @@ try {
   const created = await (await createdResponse).json() as WorkspaceCreated;
   workspaces.push(created.workspace_id);
   await dialog.waitFor({ state: "hidden" });
-  await until(async () => (await page.locator(`.pane-select[title^="${created.pane_id} —"]`).getAttribute("aria-current")) === "true", "created pane selected");
+  await until(async () => (await page.locator(`[data-pane="${created.pane_id}"][title^="${created.pane_id} —"]`).getAttribute("aria-current")) === "true", "created pane selected");
   assert.equal(createRequests, 1);
   console.log("PASS session creation stays pending and opens one owned workspace");
 
@@ -1457,7 +1458,7 @@ try {
   const repoRow = workspaceHeader(repoWorkspace.workspace.workspace_id);
   await repoRow.waitFor();
   // herdr has not marked this workspace as a repository's yet: its row is where the first worktree starts
-  await repoRow.locator(".workspace-select").click({ button: "right" });
+  await repoRow.locator(`[data-pane="${repoWorkspace.root_pane.pane_id}"]`).click({ button: "right" });
   const unmarkedRepoMenu = page.getByRole("menu");
   await unmarkedRepoMenu.getByRole("menuitem", { name: "New worktree", exact: true }).waitFor();
   await page.keyboard.press("Escape");
@@ -1469,10 +1470,10 @@ try {
   assert.equal(initialResponse.status, 200, "an existing branch fixture is created through the owned workspace API");
   const initialWorktree = await initialResponse.json() as WorktreeOpened;
   worktreeWorkspaces.push(initialWorktree.workspace_id);
-  const initialRow = page.locator(`.worktree-children .workspace-group[data-workspace="${initialWorktree.workspace_id}"]`);
-  await until(async () => await initialRow.locator(".workspace-name").textContent() === "Existing checkout", "a named worktree's row is titled by its workspace name");
+  const initialRow = page.locator(`.worktree-children .sidebar-row[data-workspace="${initialWorktree.workspace_id}"]`);
+  await until(async () => await initialRow.locator(".sidebar-row-title").textContent() === "Existing checkout", "a named worktree's row is titled by its workspace name");
   assert.equal(await initialRow.locator(".worktree-workspace-label").textContent(), "browser/initial", "the list API discovers an existing worktree's exact branch, said after the name");
-  assert.equal(await repoRow.locator(".workspace-name").textContent(), "herdr-web-ui-test-repo", "the parent keeps its workspace name");
+  assert.equal(await repoRow.locator(".sidebar-row-title").textContent(), "herdr-web-ui-test-repo", "the parent keeps its workspace name");
   // A list read from before creation must not erase the branch supplied by the create response.
   let releaseWorktreeList!: () => void;
   const heldWorktreeList = new Promise<void>((resolve) => { releaseWorktreeList = resolve; });
@@ -1507,10 +1508,10 @@ try {
   await setPageHidden(true);
   await setPageHidden(false);
   await until(() => worktreeListCaptured, "a pre-create worktree inventory is held");
-  await repoRow.locator(".workspace-select").click();
+  await repoRow.click();
   await repoRow.locator(".workspace-toggle").click();
   await initialRow.waitFor({ state: "detached" });
-  await repoRow.locator(".workspace-select").click({ button: "right" });
+  await repoRow.click({ button: "right" });
   const repoMenu = page.getByRole("menu");
   await repoMenu.waitFor();
   const repoActions = await repoMenu.getByRole("menuitem").allTextContents();
@@ -1518,7 +1519,7 @@ try {
     "a folded repository group has native workspace and worktree actions");
   await page.keyboard.press("Escape");
   await repoMenu.waitFor({ state: "detached" });
-  await repoRow.locator(".workspace-select").click({ button: "right" });
+  await repoRow.click({ button: "right" });
   await repoMenu.waitFor();
   assert.deepEqual(await repoMenu.getByRole("menuitem").allTextContents(), repoActions,
     "a repository group's explicit menu and right-click menu have identical actions");
@@ -1543,37 +1544,38 @@ try {
   worktreeWorkspaces.push(worktree.workspace_id);
   assert.equal(worktree.branch, "browser/sidebar");
   await newWorktree.waitFor({ state: "detached" });
-  await until(async () => (await page.locator(`.pane-select[title^="${worktree.pane_id} —"]`).getAttribute("aria-current")) === "true", "the worktree's pane is selected");
-  const childRow = page.locator(`.worktree-children .workspace-group[data-workspace="${worktree.workspace_id}"]`);
-  const childHeader = childRow.locator(":scope > .workspace-header");
+  await until(async () => (await page.locator(`[data-pane="${worktree.pane_id}"][title^="${worktree.pane_id} —"]`).getAttribute("aria-current")) === "true", "the worktree's pane is selected");
+  const childRow = page.locator(`.worktree-children .sidebar-row[data-workspace="${worktree.workspace_id}"]`);
+  /** The row itself is its header: no separate .workspace-header element. */
+  const childHeader = childRow;
   assert.equal(await repoRow.locator(".sidebar-drag-handle").count(), 0, "the parent workspace has no reorder grip column");
   assert.equal(await childHeader.locator(".sidebar-drag-handle").count(), 0, "the branch workspace has no reorder grip column");
-  assert.equal(await repoRow.locator(".workspace-select").getAttribute("draggable"), "true", "the parent workspace row supports dragging");
-  assert.equal(await childHeader.locator(".workspace-select").getAttribute("draggable"), "true", "the branch workspace row supports dragging");
-  await until(async () => await childHeader.locator(".workspace-name").textContent() === "Sidebar redesign", "a newly created child is titled by the name it was given");
+  assert.equal(await repoRow.getAttribute("draggable"), "true", "the parent workspace row supports dragging");
+  assert.equal(await childHeader.getAttribute("draggable"), "true", "the branch workspace row supports dragging");
+  await until(async () => await childHeader.locator(".sidebar-row-title").textContent() === "Sidebar redesign", "a newly created child is titled by the name it was given");
   assert.equal(await childHeader.locator(".worktree-workspace-label").textContent(), "browser/sidebar", "its exact branch, slash included, follows the name");
   assert.equal(await repoRow.locator(".workspace-toggle").getAttribute("aria-expanded"), "true", "creation expands a previously folded parent");
-  assert.equal(await page.locator(`.workspace-group[data-workspace="${repoWorkspace.workspace.workspace_id}"] + .worktree-children > .workspace-list > .workspace-group`).count(), 2,
+  assert.equal(await page.locator(`.sidebar-row[data-workspace="${repoWorkspace.workspace.workspace_id}"] + .worktree-children > .sidebar-list > .sidebar-row`).count(), 2,
     "existing and newly created branches share their repository workspace");
-  assert.equal(await childHeader.locator('.workspace-select[aria-current="true"]').count(), 1, "the created branch is selected");
+  assert.equal(await childHeader.locator("[aria-current=\"true\"]").count(), 1, "the created branch is selected");
   assert.equal(staleWorktreeListFinished, false, "the create response displays the branch before the pending list finishes");
   releaseWorktreeList();
   await until(() => staleWorktreeListFinished && freshWorktreeListFinished, "the stale inventory is followed by a fresh one");
   assert.equal(await childHeader.locator(".worktree-workspace-label").textContent(), "browser/sidebar", "a pre-create inventory cannot erase the new branch");
-  assert.equal(await childHeader.locator(".workspace-name").textContent(), "Sidebar redesign", "nor the name it was given");
+  assert.equal(await childHeader.locator(".sidebar-row-title").textContent(), "Sidebar redesign", "nor the name it was given");
   await page.unroute("**/api/worktree/list?*");
-  await childHeader.locator(".workspace-select").click({ button: "right" });
+  await childHeader.click({ button: "right" });
   await page.getByRole("menuitem", { name: "Rename workspace", exact: true }).click();
   const worktreeRename = childHeader.getByRole("textbox", { name: "Workspace name", exact: true });
-  assert.equal(await childHeader.locator(".workspace-select").getAttribute("draggable"), "false", "an editing field disables row dragging");
+  assert.equal(await childHeader.getAttribute("draggable"), "false", "an editing field disables row dragging");
   await worktreeRename.fill("Sidebar renamed");
   await worktreeRename.press("Enter");
-  await until(async () => await childHeader.locator(".workspace-name").textContent() === "Sidebar renamed", "the child workspace is renamed in its row title");
-  assert.equal(await childHeader.locator(".workspace-select").getAttribute("draggable"), "true", "row dragging returns after editing finishes");
+  await until(async () => await childHeader.locator(".sidebar-row-title").textContent() === "Sidebar renamed", "the child workspace is renamed in its row title");
+  assert.equal(await childHeader.getAttribute("draggable"), "true", "row dragging returns after editing finishes");
   assert.equal(await childHeader.locator(".worktree-workspace-label").textContent(), "browser/sidebar", "renaming a workspace preserves its actual git branch");
   if (process.env.UI_EVIDENCE_DIR) await page.screenshot({ path: join(process.env.UI_EVIDENCE_DIR, "worktree-branches-sidebar.png") });
   // a workspace row's menu also opens from a right-click on the row
-  await repoRow.locator(".workspace-select").click({ button: "right" });
+  await repoRow.click({ button: "right" });
   await page.getByRole("menuitem", { name: "Open worktree…", exact: true }).click();
   const openWorktree = page.getByRole("dialog", { name: /^Open worktree/ });
   await openWorktree.waitFor();
@@ -1600,8 +1602,8 @@ try {
   assert.equal(await page.locator(".worktree-children").count(), 1, "one group of worktrees, under the repository's row");
   await herdrRpc("pane.report_agent", { pane_id: worktree.pane_id, source: "manual", agent: "codex", state: "idle" });
   await agentRow(worktree.pane_id).waitFor();
-  await repoHeader.locator(".workspace-select").click();
-  await repoHeader.locator('.workspace-select[aria-current="true"]').waitFor();
+  await repoHeader.click();
+  await repoHeader.locator('[aria-current="true"]').waitFor();
   assert.equal(await page.evaluate(() => JSON.parse(sessionStorage.getItem("herdr-web-ui:selection") ?? "null")?.pane_id),
     repoWorkspace.root_pane.pane_id, "selecting the parent after its branch returns to the parent's own pane");
   const repoToggle = repoHeader.locator(".workspace-toggle");
@@ -1609,10 +1611,10 @@ try {
   await childRow.waitFor({ state: "detached" });
   // the folder that leads the row is the fold, and a closed one says how many checkouts it holds
   assert.equal(await repoHeader.evaluate((header) => header.firstElementChild?.classList.contains("workspace-toggle") ?? false), true, "the fold leads the row");
-  assert.equal(await repoHeader.locator(".workspace-fold-count").textContent(), "+1");
+  assert.equal(await repoHeader.locator(".sidebar-fold-count").textContent(), "+1");
   assert.equal(await agentRow(worktree.pane_id).isVisible(), true, "folding a worktree group preserves its independent agent");
   await agentRow(worktree.pane_id).locator(".agent-select").click();
-  await childHeader.locator('.workspace-select[aria-current="true"]').waitFor();
+  await childHeader.locator('[aria-current="true"]').waitFor();
   assert.equal(await repoToggle.getAttribute("aria-expanded"), "false", "an explicitly selected child remains visible within a folded group");
   await repoToggle.click();
   // reorder is group-aware: the repository's row moves up past the workspace above it with its
@@ -1624,21 +1626,21 @@ try {
   const orderBefore = await herdrOrder();
   const repoId = repoWorkspace.workspace.workspace_id;
   const above = orderBefore[orderBefore.indexOf(repoId) - 1]!;
-  await repoHeader.locator(".workspace-select").focus();
+  await repoHeader.focus();
   await page.keyboard.press("Alt+ArrowUp");
   await until(async () => {
     const order = await herdrOrder();
     return order[order.indexOf(repoId) + 1] === worktree.workspace_id && order.indexOf(above) > order.indexOf(worktree.workspace_id);
   }, "the repository's row and its worktree moved up past the workspace above them");
   const sent = moves.length;
-  await childHeader.locator(".workspace-select").focus();
+  await childHeader.focus();
   await page.keyboard.press("Alt+ArrowDown");
   await page.waitForTimeout(400);
   assert.equal(moves.length, sent, "a lone worktree has nowhere to move");
   await page.unroute("**/api/workspace/move");
   writeFileSync(join(worktree.path, "unsaved.txt"), "dirty\n");
   // a desktop draws no row ⋯: the context-menu key opens the menu at the focused row
-  await childHeader.locator(".workspace-select").focus();
+  await childHeader.focus();
   await page.keyboard.press("Shift+F10");
   const childMenu = page.getByRole("menu");
   await childMenu.waitFor();
@@ -1646,23 +1648,23 @@ try {
   assert.deepEqual(childActions, ["Pin workspace", "Rename workspace", "Close workspace", "Delete worktree checkout…"], "a worktree workspace's menu");
   await page.keyboard.press("Escape");
   await childMenu.waitFor({ state: "detached" });
-  await childHeader.locator(".workspace-select").click({ button: "right" });
+  await childHeader.click({ button: "right" });
   await childMenu.waitFor();
   assert.deepEqual(await childMenu.getByRole("menuitem").allTextContents(), childActions,
     "a linked checkout's keyboard menu and right-click menu have identical actions");
   await page.keyboard.press("Escape");
   await childMenu.waitFor({ state: "detached" });
   // pinned, the worktree leaves its repository's group for the pinned card at the top; unpinned, it returns
-  await childHeader.locator(".workspace-select").click({ button: "right" });
+  await childHeader.click({ button: "right" });
   await childMenu.getByRole("menuitem", { name: "Pin workspace", exact: true }).click();
-  const pinnedCard = page.locator(".workspace-list-pinned");
-  await pinnedCard.locator(`.workspace-group[data-workspace="${worktree.workspace_id}"]`).waitFor();
-  assert.equal(await page.locator(`.worktree-children .workspace-group[data-workspace="${worktree.workspace_id}"]`).count(), 0, "a pinned worktree leaves its group");
-  await pinnedCard.locator(`.workspace-group[data-workspace="${worktree.workspace_id}"] .workspace-select`).click({ button: "right" });
+  const pinnedCard = page.locator(".sidebar-pinned");
+  await pinnedCard.locator(`.sidebar-row[data-workspace="${worktree.workspace_id}"]`).waitFor();
+  assert.equal(await page.locator(`.worktree-children .sidebar-row[data-workspace="${worktree.workspace_id}"]`).count(), 0, "a pinned worktree leaves its group");
+  await pinnedCard.click({ button: "right" });
   await childMenu.getByRole("menuitem", { name: "Unpin workspace", exact: true }).click();
   await pinnedCard.waitFor({ state: "detached" });
   await childRow.waitFor();
-  await childHeader.locator(".workspace-select").click({ button: "right" });
+  await childHeader.click({ button: "right" });
   await childMenu.waitFor();
   await childMenu.getByRole("menuitem", { name: "Delete worktree checkout…", exact: true }).click();
   const deleteConfirm = page.getByRole("alertdialog");
@@ -1682,8 +1684,8 @@ try {
   // lists both tabs from then on.
   // The new pane's terminal takes the focus once it paints, which would close a menu opened before.
   await until(() => painted.has(created.pane_id), "created pane paint");
-  await page.locator(`.pane-select[title^="${created.pane_id} —"]`).click();
-  await until(async () => (await page.locator(`.pane-select[title^="${created.pane_id} —"]`).getAttribute("aria-current")) === "true", "the created workspace is selected again");
+  await page.locator(`[data-pane="${created.pane_id}"][title^="${created.pane_id} —"]`).click();
+  await until(async () => (await page.locator(`[data-pane="${created.pane_id}"][title^="${created.pane_id} —"]`).getAttribute("aria-current")) === "true", "the created workspace is selected again");
   const openAgentTab = async () => {
     await page.locator(".tab-strip").getByRole("tab", { selected: true }).click({ button: "right" });
     await page.getByRole("menuitem", { name: "New tab with agent…", exact: true }).click();
@@ -1709,13 +1711,13 @@ try {
   const createdTab = await (await tabResponse).json() as WorkspaceCreated;
   assert.equal(createdTab.workspace_id, created.workspace_id, "the tab joins the workspace");
   await tabDialog.waitFor({ state: "hidden" });
-  await until(async () => (await page.locator(`.pane-select[title^="${createdTab.pane_id} —"]`).getAttribute("aria-current")) === "true", "the new tab's pane is selected, and the row shows it");
-  assert.equal(await page.locator(`.pane-select[title^="${created.pane_id} —"]`).count(), 0, "the workspace stays one row");
-  assert.equal(await workspaceGroup(created.workspace_id).locator(".workspace-name").textContent(), "herdr-web-ui-test-browser-created",
+  await until(async () => (await page.locator(`[data-pane="${createdTab.pane_id}"][title^="${createdTab.pane_id} —"]`).getAttribute("aria-current")) === "true", "the new tab's pane is selected, and the row shows it");
+  assert.equal(await page.locator(`[data-pane="${created.pane_id}"][title^="${created.pane_id} —"]`).count(), 0, "the workspace stays one row");
+  assert.equal(await workspaceGroup(created.workspace_id).locator(".sidebar-row-title").textContent(), "herdr-web-ui-test-browser-created",
     "opening another tab preserves the workspace name in Spaces");
-  assert.equal(await workspaceGroup(created.workspace_id).locator(".workspace-select").count(), 1,
+  assert.equal(await workspaceGroup(created.workspace_id).locator("[role=button]").count(), 1,
     "all tabs share the workspace's representative row");
-  assert.equal(await workspaceGroup(created.workspace_id).locator(".sidebar-tab-heading").count(), 0,
+  assert.equal(await workspaceGroup(created.workspace_id).locator(".sidebar-row-copy").count(), 0,
     "tab labels stay in the terminal tab strip");
   const strip = page.locator(".tab-strip");
   await strip.waitFor();
@@ -1741,7 +1743,7 @@ try {
   await until(async () => await stripMenuOpacity() === "1", "keyboard focus on the selected tab reveals its actions button");
   assert.equal(await strip.locator(".tab-strip-menu:visible").count(), 1, "keyboard focus reveals the selected tab's button alone");
   await strip.getByRole("tab", { name: "Tab 1", exact: true }).click();
-  await until(async () => (await page.locator(`.pane-select[title^="${created.pane_id} —"]`).getAttribute("aria-current")) === "true", "the first tab opens its pane again");
+  await until(async () => (await page.locator(`[data-pane="${created.pane_id}"][title^="${created.pane_id} —"]`).getAttribute("aria-current")) === "true", "the first tab opens its pane again");
   assert.equal(await strip.getByRole("tab", { selected: true }).textContent(), "Tab 1");
   // reopened right after a creation: its fields are live and Escape puts it away at once
   // The menu restores this terminal on unmount. Record focus at the dialog's DOM commit,
@@ -1813,13 +1815,13 @@ try {
   const terminalTab = await terminalAnswer.json() as WorkspaceCreated;
   assert.equal(terminalTab.workspace_id, created.workspace_id, "the shell tab joins the workspace");
   assert.equal(terminalTab.agent_started, false, "no agent is started");
-  await until(async () => (await page.locator(`.pane-select[title^="${terminalTab.pane_id} —"]`).getAttribute("aria-current")) === "true", "the shell tab's pane is selected");
+  await until(async () => (await page.locator(`[data-pane="${terminalTab.pane_id}"][title^="${terminalTab.pane_id} —"]`).getAttribute("aria-current")) === "true", "the shell tab's pane is selected");
   assert.equal(await page.getByRole("dialog", { name: /^New tab/ }).count(), 0, "the + opens no dialog");
   assert.equal(await strip.getByRole("tab").count(), 3, "the strip lists the shell tab");
   const terminalTabId = (await sessionSnapshot()).panes.find((pane) => pane.pane_id === terminalTab.pane_id)?.tab_id;
   assert.ok(terminalTabId, "herdr has the shell tab's pane");
   await strip.getByRole("tab", { name: "Tab 1", exact: true }).click();
-  await until(async () => (await page.locator(`.pane-select[title^="${created.pane_id} —"]`).getAttribute("aria-current")) === "true", "the first tab opens its pane again");
+  await until(async () => (await page.locator(`[data-pane="${created.pane_id}"][title^="${created.pane_id} —"]`).getAttribute("aria-current")) === "true", "the first tab opens its pane again");
   await herdrRpc("tab.close", { tab_id: terminalTabId });
   await until(async () => (await strip.getByRole("tab").count()) === 2, "the shell tab is gone from the strip");
   console.log("PASS the strip's + opens a shell tab at once, with no dialog");
@@ -1833,7 +1835,7 @@ try {
   await page.keyboard.press("Enter");
   await until(async () => (await tabsInHerdr()).join() === "first,second", "herdr has the tab's new name, trimmed");
   assert.deepEqual(await strip.getByRole("tab").allTextContents(), ["first", "second"]);
-  assert.equal(await workspaceGroup(created.workspace_id).locator(".workspace-name").textContent(), "herdr-web-ui-test-browser-created",
+  assert.equal(await workspaceGroup(created.workspace_id).locator(".sidebar-row-title").textContent(), "herdr-web-ui-test-browser-created",
     "renaming a tab leaves the workspace name unchanged");
   await until(async () => await strip.getByRole("tab", { name: "first", exact: true }).evaluate((tab) => tab === document.activeElement), "the renamed tab has the focus back");
   // F2 opens the field on the focused tab; Escape leaves the name alone, and so does an empty one
@@ -1915,18 +1917,18 @@ try {
   await third.click({ button: "right" });
   await page.getByRole("menu", { name: "third", exact: true }).getByRole("menuitem", { name: "Close tab", exact: true }).click();
   await until(async () => (await tabsInHerdr()).join() === "first,build", "the menu closed the tab");
-  await until(async () => (await page.locator(`.pane-select[title^="${createdTab.pane_id} —"]`).getAttribute("aria-current")) === "true", "the tab beside the closed one is open");
+  await until(async () => (await page.locator(`[data-pane="${createdTab.pane_id}"][title^="${createdTab.pane_id} —"]`).getAttribute("aria-current")) === "true", "the tab beside the closed one is open");
   // Delete on a focused tab that is not the open one closes it; the last tab remains visible,
   // the open pane stays, and focus returns to the surviving tab.
   await strip.getByRole("tab", { name: "first", exact: true }).click();
-  await until(async () => (await page.locator(`.pane-select[title^="${created.pane_id} —"]`).getAttribute("aria-current")) === "true", "the first tab is open");
+  await until(async () => (await page.locator(`[data-pane="${created.pane_id}"][title^="${created.pane_id} —"]`).getAttribute("aria-current")) === "true", "the first tab is open");
   await strip.getByRole("tab", { name: "first", exact: true }).focus();
   await page.keyboard.press("ArrowRight");
   await until(async () => await strip.getByRole("tab", { name: "build", exact: true }).evaluate((tab) => tab === document.activeElement), "the arrow moved the focus to the other tab");
   await page.keyboard.press("Delete");
   await until(async () => await strip.getByRole("tab").count() === 1, "the native strip keeps its last tab");
   assert.equal((await tabsInHerdr()).join(), "first", "herdr closed the tab and kept the other");
-  assert.equal(await page.locator(`.pane-select[title^="${created.pane_id} —"]`).getAttribute("aria-current"), "true", "the open pane stays");
+  assert.equal(await page.locator(`[data-pane="${created.pane_id}"][title^="${created.pane_id} —"]`).getAttribute("aria-current"), "true", "the open pane stays");
   await until(async () => await strip.getByRole("tab", { name: "first", exact: true }).evaluate((tab) => tab === document.activeElement), "the surviving tab receives focus");
   console.log("PASS a tab is renamed by a double-click, F2 and its menu, and closed from its menu and Delete, asking first while its agent works");
 
@@ -2091,7 +2093,7 @@ try {
     // (it saw the dragstart), the area is measured after that, and the drop waits for a dragover on
     // the drop point to take the pane for the right half.
     const area = page.locator(".pane-split");
-    const source = page.locator(`.pane-select[title^="${paneB} —"]`);
+    const source = page.locator(`[data-pane="${paneB}"][title^="${paneB} —"]`);
     await source.scrollIntoViewIfNeeded();
     const from = (await source.boundingBox())!;
     await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
@@ -2112,7 +2114,7 @@ try {
     await half("left").locator(`.pane-frame[data-layout-pane="${paneA}"]`).getByRole("log").waitFor();
     await half("right").locator(`.pane-frame[data-layout-pane="${paneB}"]`).getByRole("log").waitFor();
     assert.equal(await half("right").evaluate((slot) => slot.classList.contains("is-active")), true, "the dropped pane's half is active");
-    assert.equal(await page.locator(".pane-select[aria-current=\"true\"]").getAttribute("title").then((title) => title?.startsWith(`${paneB} —`)), true, "and its pane is the selected one");
+    assert.equal(await page.locator(".sidebar-row[aria-current=\"true\"]").getAttribute("title").then((title) => title?.startsWith(`${paneB} —`)), true, "and its pane is the selected one");
     const [left, right] = await Promise.all([half("left").boundingBox(), half("right").boundingBox()]);
     assert.ok(left && right && Math.abs(left.width - right.width) <= 2 && left.x + left.width <= right.x + 1, "the halves share the pane area side by side");
     await half("left").locator(".terminal-host").click({ position: { x: 40, y: 40 } });
@@ -2187,7 +2189,7 @@ try {
   const typing = (target: typeof mobilePage) => target.evaluate(() => document.activeElement?.matches("textarea, input, [contenteditable]") ?? false);
   await mobilePage.getByRole("textbox", { name: "Message", exact: true }).blur();
   await mobilePage.locator('button[aria-controls="workspace-drawer"]').click();
-  await mobilePage.locator(`.pane-select[title^="${paneA} —"]`).click();
+  await mobilePage.locator(`[data-pane="${paneA}"][title^="${paneA} —"]`).click();
   await mobilePage.getByRole("textbox", { name: "Message", exact: true }).waitFor();
   await mobilePage.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await mobilePage.waitForTimeout(NO_SEND_WAIT_MS);
@@ -2201,7 +2203,7 @@ try {
   await mobilePage.getByRole("textbox", { name: "Message", exact: true }).blur();
   await mobilePage.locator('button[aria-controls="workspace-drawer"]').click();
   assert.equal(await mobilePage.locator(".agents-sidebar .agent-section-toggle").getAttribute("aria-expanded"), "false", "a phone's drawer opens with Agents folded");
-  await mobilePage.locator(`.pane-select[title^="${paneB} —"]`).click();
+  await mobilePage.locator(`[data-pane="${paneB}"][title^="${paneB} —"]`).click();
   await mobilePage.getByRole("textbox", { name: "Message", exact: true }).waitFor();
   console.log("PASS a pane picked on a phone waits for a tap before raising the keyboard");
 
@@ -2320,11 +2322,11 @@ try {
   // A closed pane and an obsolete saved pane both yield to a live pane. Local access
   // is automatic, so it must not offer a sign-out action that cannot lock the app.
   assert.equal(await page.getByRole("button", { name: "Sign out", exact: true }).count(), 0);
-  await page.locator(`.pane-select[title^="${created.pane_id} —"]`).click();
+  await page.locator(`[data-pane="${created.pane_id}"]`).click();
   // closed from the row's menu, which a desktop opens with the context-menu key or a right-click
   // (it draws no row ⋯); the workspace's pane goes with it, so a confirm asks first
-  const selectedRow = page.locator(".pane-item.is-selected .pane-select");
-  assert.equal(await page.locator(".pane-item.is-selected .row-menu-toggle").isVisible(), false, "a desktop draws no row ⋯");
+  const selectedRow = page.locator(`.sidebar-row.is-selected[data-pane="${created.pane_id}"]`);
+  assert.equal(await page.locator(".sidebar-row.is-selected .row-menu-toggle").isVisible(), false, "a desktop draws no row ⋯");
   await selectedRow.focus();
   await page.keyboard.press("Shift+F10");
   const rowMenu = page.getByRole("menu");
@@ -2336,9 +2338,8 @@ try {
   await rowMenu.waitFor({ state: "detached" });
   assert.equal(await selectedRow.evaluate((row) => document.activeElement === row), true, "Escape returns focus to the row");
   // A right-click opens the same menu at the pointer without changing the selection.
-  await selectedRow.click({ button: "right" });
+  assert.equal(await page.locator(".sidebar-row.is-selected .row-menu-toggle").getAttribute("aria-expanded"), "true", "a right-click opens the row's own menu");
   await rowMenu.waitFor();
-  assert.equal(await page.locator(".pane-item.is-selected .row-menu-toggle").getAttribute("aria-expanded"), "true", "a right-click opens the row's own menu");
   assert.deepEqual(await rowMenu.getByRole("menuitem").allTextContents(), rowActions, "both workspace menu entry points have identical actions and order");
   // the press left the focus on the row; the menu takes it a frame later
   await until(async () => await page.evaluate(() => document.activeElement?.getAttribute("role") === "menuitem"), "the menu takes the focus");
@@ -2371,7 +2372,7 @@ try {
   assert.equal(await page.evaluate(() => document.activeElement?.matches("textarea, input, [contenteditable]") ?? false), false,
     "a pane selected after a close must not focus its input");
   // picking that same pane takes the keyboard, although neither the pane nor its lens changes
-  await page.locator(".pane-item.is-selected .pane-select").click();
+  await page.locator(`.sidebar-row.is-selected[data-pane="${created.pane_id}"]`).click();
   await until(async () => await page.evaluate(() => document.activeElement?.matches("textarea, input, [contenteditable]") ?? false),
     "picking the auto-selected pane focuses its input");
   await page.evaluate(() => sessionStorage.setItem("herdr-web-ui:selection", JSON.stringify({ machine_id: "local", pane_id: "obsolete-pane" })));
