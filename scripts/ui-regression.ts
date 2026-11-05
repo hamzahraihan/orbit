@@ -380,11 +380,11 @@ try {
     { machine_id: "local", pane_id: paneB }, "Agent selection retains its machine and pane target");
   assert.equal(await machineToggle.getAttribute("aria-expanded"), "false", "Agent selection preserves the user's PC fold");
   painted.delete(paneA);
+  await machineToggle.click();
+  await workspaceHeader(workspaces[0]!).locator('[aria-current="true"]').waitFor();
   await agentRow(paneA).locator(".agent-select").click();
   await agentRow(paneA).locator('.agent-select[aria-current="true"]').waitFor();
   await until(() => painted.has(paneA), "returning from Agents paints the current pane");
-  await machineToggle.click();
-  await workspaceHeader(workspaces[0]!).locator('[aria-current="true"]').waitFor();
 
   // Reuse the real API roster as an offline cache in an isolated context. Its
   // native disabled buttons must leave selection unchanged when clicked.
