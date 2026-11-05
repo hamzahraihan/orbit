@@ -37,6 +37,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { closeSync, openSync, readFileSync, readSync, realpathSync, statSync } from "node:fs";
 import nodePath, { type PlatformPath } from "node:path";
 
+import { ConversationCache, PI_PAGE_CACHE_BYTES } from "./conversation-cache.ts";
+
 import type { ConversationMetadata, ConversationPart, ConversationTurn, HerdrPane, SessionSnapshot } from "../shared/protocol.ts";
 import { herdrRpc, paneRead, sessionSnapshot } from "./herdr/client.ts";
 import { codexHistorySegments, createCodexTranscriptParser, codexOutputText, codexTranscriptPath, defaultCodexHome, forgetAllCodexState, forgetCodexStateFor, paneCodexHome, parseCodexTranscript, readRange } from "./codex.ts";
@@ -74,8 +76,10 @@ export { isOmoProcess } from "./omo.ts";
  * and 1.7GB of memory to parse whole). 16MB still holds dozens of turns of a
  * tool-heavy session; the chat asks for the pages before it as the reader scrolls up.
  */
+
+/** Singleton conversation cache backing every pane reader. */
+export const conversationCache = new ConversationCache();
 export const TRANSCRIPT_WINDOW_BYTES = 16 * 1024 * 1024;
-const PI_PAGE_CACHE_BYTES = 4 * 1024 * 1024;
 
 /** A page never holds more prompts than this (each opens a user + assistant pair). */
 const MAX_PAGE_PROMPTS = MAX_TURNS / 2;
@@ -463,10 +467,8 @@ export function parseClaudeTranscript(text: string, maxTurns = MAX_TURNS, option
 }
 
 /** Read sessions by source and canonical path (Claude uses its unique session id): a removed file is not unwritten. */
-const writtenSessions = new Set<string>();
 
 /** Re-parse on file changes, including replacement and same-size rewrites. */
-const cache = new Map<string, { source: RecognizedConversation["source"]; signature: string; turns: ConversationTurn[]; metadata: ConversationMetadata; cursor: string | null; abandoned?: { count: number; branches: number; summary: string | null } }>();
 
 export class ConversationUnavailable extends Error {
   constructor(reason: string) {
@@ -514,10 +516,9 @@ export type RecognizedConversation = {
 type StreamSource = Exclude<RecognizedConversation["source"], "opencode-transcript" | "devin-transcript" | "hermes-transcript">;
 
 /** A restart may parse the same files differently: its answers never match an earlier ETag. */
-const PROCESS_VERSION = randomUUID();
 
 export function answerVersion(key: string, signature: string): string {
-  return createHash("sha256").update(`${PROCESS_VERSION}\0${key}\0${signature}`).digest("base64url").slice(0, 22);
+  return createHash("sha256").update(`${conversationCache.processVersion}\0${key}\0${signature}`).digest("base64url").slice(0, 22);
 }
 
 /**
@@ -545,14 +546,13 @@ interface TranscriptStream {
 
 // In-place rewrites keep the inode. Change the cursor generation when observed,
 // invalidating settled turns and incremental parsers as well as the response cache.
-const transcriptRevisions = new Map<string, { identity: string; size: number; changed: string; generation: string }>();
 function transcriptGeneration(path: string, stat: { dev: number; ino: number; size: number; mtimeMs: number; ctimeMs: number }): string {
   const identity = `${stat.dev}:${stat.ino}`;
   const changed = `${stat.mtimeMs}:${stat.ctimeMs}`;
-  const previous = transcriptRevisions.get(path);
+  const previous = conversationCache.transcriptRevisions.get(path);
   const rewritten = previous && previous.identity === identity && (stat.size < previous.size || (stat.size === previous.size && changed !== previous.changed));
   const generation = rewritten ? randomUUID() : previous?.identity === identity ? previous.generation : "";
-  remember(transcriptRevisions, path, { identity, size: stat.size, changed, generation }, 64);
+  remember(conversationCache.transcriptRevisions, path, { identity, size: stat.size, changed, generation }, 64);
   return generation ? `-${generation}` : "";
 }
 
@@ -628,10 +628,9 @@ function readStream(stream: TranscriptStream, from: number, to: number): Buffer 
  * records (small lines): a change between the metadata head and the newest page
  * is otherwise never read, and the chat showed the level the session started at. */
 const SETTING_TYPES = ['"model_change"', '"thinking_level_change"'];
-const clearScans = new Map<string, { id: string; scanned: number; floor: number; tail: string; settings: Partial<Record<"model_change" | "thinking_level_change", { offset: number; end: number; line: string }>> }>();
 function applyHistoryBoundary(path: string, stream: TranscriptStream, source: RecognizedConversation["source"]): void {
   if (source === "codex-transcript" || source === "grok-transcript" || source === "agy-transcript") return;
-  let scan = clearScans.get(path);
+  let scan = conversationCache.clearScans.get(path);
   if (!scan || scan.id !== stream.id || scan.scanned > stream.length || bytesBefore(stream, scan.scanned) !== scan.tail) {
     scan = { id: stream.id, scanned: 0, floor: 0, tail: "", settings: {} };
   }
@@ -666,7 +665,7 @@ function applyHistoryBoundary(path: string, stream: TranscriptStream, source: Re
     position = end;
   }
   scan.tail = bytesBefore(stream, scan.scanned);
-  remember(clearScans, path, scan, 32);
+  remember(conversationCache.clearScans, path, scan, 32);
   // A valid final JSON object is visible before its newline; rescan it on append.
   stream.floor = !skipping && carry.length > 0 && isClear(carry) ? stream.length - carry.length : scan.floor;
   if (stream.floor > 0) stream.id += `-clear-${stream.floor.toString(36)}`;
@@ -761,14 +760,6 @@ function turnStarts(bytes: Buffer, source: StreamSource, chain: PromptChain = { 
  * starts are the unparsed lines a page can begin on, so the same bytes still parse once, when the
  * page that needs them is read.
  */
-interface PageWindowScan {
-  id: string;
-  source: StreamSource;
-  from: number;
-  to: number;
-  starts: number[];
-}
-const pageWindowScans = new Map<string, PageWindowScan>();
 const WINDOW_LINE_LOOKBACK = 4096;
 
 /**
@@ -792,8 +783,8 @@ function pageWindowStarts(stream: TranscriptStream, source: StreamSource, path: 
     const bytes = readStream(stream, from, to);
     return { starts: turnStarts(bytes, source).map((at) => from + at), bytes };
   }
-  const keep = (starts: number[], aligned: number) => remember(pageWindowScans, path, { id: stream.id, source, from: aligned, to, starts }, 8);
-  const cached = pageWindowScans.get(path);
+  const keep = (starts: number[], aligned: number) => remember(conversationCache.pageWindowScans, path, { id: stream.id, source, from: aligned, to, starts }, 8);
+  const cached = conversationCache.pageWindowScans.get(path);
   if (cached !== undefined && cached.id === stream.id && cached.source === source && cached.to >= to) {
     // the window lies inside the cached one, as a backward walk's does: no bytes to read or scan
     if (cached.from <= from) return { starts: cached.starts.filter((at) => at >= from && at < to), bytes: null };
@@ -857,19 +848,6 @@ function pageBefore(stream: TranscriptStream, source: StreamSource, path: string
  * - the turns before the page's last turn start are kept (a later append cannot change a
  *   turn that another has followed), and only the last turn is parsed again.
  */
-interface LiveScan {
-  id: string;
-  source: StreamSource;
-  /** complete lines up to here are scanned */
-  scanned: number;
-  /** turn starts in the scanned bytes, ascending, none before the window */
-  starts: number[];
-  /** the bytes just before `scanned`: a file rewritten rather than appended to no longer has them */
-  tail: string;
-  /** the prompt chain the scanned lines end on, which the next appended lines continue */
-  chain: PromptChain;
-}
-const liveScans = new Map<string, LiveScan>();
 
 interface SettledTurns {
   source: RecognizedConversation["source"];
@@ -890,7 +868,6 @@ interface SettledTurns {
   /** End of the live turn the last poll actually read; replay never scans unseen skipped history. */
   observedEnd: number;
 }
-const settledTurns = new Map<string, SettledTurns>();
 
 function bytesBefore(stream: TranscriptStream, offset: number): string {
   return readStream(stream, Math.max(0, offset - 64), offset).toString("latin1");
@@ -912,29 +889,28 @@ function remember<T>(map: Map<string, T>, key: string, value: T, limit: number):
  */
 interface DevinPaneRead { sessionId: string; cwd: string; dbPath?: string }
 interface PaneReads { paths: Set<string>; sessions: Set<string>; devin: Map<string, DevinPaneRead> }
-const paneReads = new Map<string, PaneReads>();
 /** panes remembered; past this a pane that closed long ago is the one whose release is lost */
 const PANE_READS_MAX = 128;
 
 function emptyPaneReads(): PaneReads { return { paths: new Set<string>(), sessions: new Set<string>(), devin: new Map<string, DevinPaneRead>() }; }
 
 function rememberPaneRead(paneId: string, path: string): void {
-  const reads = paneReads.get(paneId) ?? emptyPaneReads();
+  const reads = conversationCache.paneReads.get(paneId) ?? emptyPaneReads();
   reads.paths.add(path);
-  remember(paneReads, paneId, reads, PANE_READS_MAX);
+  remember(conversationCache.paneReads, paneId, reads, PANE_READS_MAX);
 }
 
 function rememberPaneSession(paneId: string, session: string): void {
-  const reads = paneReads.get(paneId) ?? emptyPaneReads();
+  const reads = conversationCache.paneReads.get(paneId) ?? emptyPaneReads();
   reads.sessions.add(session);
-  remember(paneReads, paneId, reads, PANE_READS_MAX);
+  remember(conversationCache.paneReads, paneId, reads, PANE_READS_MAX);
 }
 
 function rememberPaneDevin(paneId: string, sessionId: string, cwd: string, dbPath?: string): void {
-  const reads = paneReads.get(paneId) ?? emptyPaneReads();
+  const reads = conversationCache.paneReads.get(paneId) ?? emptyPaneReads();
   const key = JSON.stringify([dbPath ?? defaultDevinDbPath(), sessionId, cwd]);
   reads.devin.set(key, { sessionId, cwd, dbPath });
-  remember(paneReads, paneId, reads, PANE_READS_MAX);
+  remember(conversationCache.paneReads, paneId, reads, PANE_READS_MAX);
 }
 
 /** Pi retains at most four small parsed pages per cache; oversized pages remain readable uncached. */
@@ -954,7 +930,7 @@ function newestPage(path: string, stream: TranscriptStream, source: StreamSource
     const start = starts.length > MAX_PAGE_PROMPTS ? starts[starts.length - MAX_PAGE_PROMPTS] : from === stream.floor ? stream.floor : starts[0];
     return start === undefined ? null : { start, starts };
   }
-  let scan = liveScans.get(path);
+  let scan = conversationCache.liveScans.get(path);
   // a window that slid past the scanned bytes starts over at its edge (a line may be cut
   // there, as in pageBefore, and never counts as a start)
   if (!scan || scan.id !== stream.id || scan.source !== source || scan.scanned > stream.length || scan.scanned < from
@@ -974,7 +950,7 @@ function newestPage(path: string, stream: TranscriptStream, source: StreamSource
   }
   const stale = scan.starts.findIndex((offset) => offset >= from);
   if (stale !== 0) scan.starts.splice(0, stale === -1 ? scan.starts.length : stale);
-  remember(liveScans, path, scan, 32);
+  remember(conversationCache.liveScans, path, scan, 32);
   const starts = pending.length > 0 ? [...scan.starts, ...pending] : scan.starts;
   const start = starts.length > MAX_PAGE_PROMPTS ? starts[starts.length - MAX_PAGE_PROMPTS] : from === stream.floor ? stream.floor : starts[0];
   return start === undefined ? null : { start, starts };
@@ -1004,19 +980,10 @@ function parseTurns(source: RecognizedConversation["source"], path: string, text
       : parseOmpTranscript(text, Infinity, { toolImages: source === "pi-transcript", taskTitles });
 }
 
-interface LiveCodexTurn {
-  id: string;
-  start: number;
-  scanned: number;
-  boundary: string;
-  parser: ReturnType<typeof createCodexTranscriptParser>;
-  metadata: ConversationMetadata;
-}
-const codexTurns = new Map<string, LiveCodexTurn>();
 
 /** Incremental within a long Codex task, including results for tools from earlier polls. */
 function codexLiveTurn(path: string, stream: TranscriptStream, start: number, before: ConversationMetadata): { turns: ConversationTurn[]; metadata: ConversationMetadata } {
-  let cached = codexTurns.get(path);
+  let cached = conversationCache.codexTurns.get(path);
   if (!cached || cached.id !== stream.id || cached.start !== start || cached.scanned > stream.length
     || bytesBefore(stream, cached.scanned) !== cached.boundary) {
     cached = { id: stream.id, start, scanned: start, boundary: bytesBefore(stream, start), parser: createCodexTranscriptParser(), metadata: before };
@@ -1032,11 +999,11 @@ function codexLiveTurn(path: string, stream: TranscriptStream, start: number, be
   }
   const tail = bytes.subarray(complete).toString("utf8");
   // Both record count and retained source bytes are bounded, independent of session length.
-  remember(codexTurns, path, cached, 8);
-  let retained = [...codexTurns.values()].reduce((sum, turn) => sum + turn.scanned - turn.start, 0);
-  for (const [key, turn] of codexTurns) {
+  remember(conversationCache.codexTurns, path, cached, 8);
+  let retained = [...conversationCache.codexTurns.values()].reduce((sum, turn) => sum + turn.scanned - turn.start, 0);
+  for (const [key, turn] of conversationCache.codexTurns) {
     if (retained <= 2 * TRANSCRIPT_WINDOW_BYTES) break;
-    codexTurns.delete(key);
+    conversationCache.codexTurns.delete(key);
     retained -= turn.scanned - turn.start;
   }
   return { turns: cached.parser.snapshot(tail), metadata: parseConversationMetadata(tail, "codex-transcript", cached.metadata) };
@@ -1047,7 +1014,7 @@ function codexLiveTurn(path: string, stream: TranscriptStream, start: number, be
 function metadataHead(path: string, stream: TranscriptStream, source: RecognizedConversation["source"], start: number): string {
   if (source === "codex-transcript") return readRange(path, 0, METADATA_HEAD_BYTES);
   const end = Math.min(start, stream.floor + METADATA_HEAD_BYTES);
-  const later = Object.values(clearScans.get(path)?.settings ?? {})
+  const later = Object.values(conversationCache.clearScans.get(path)?.settings ?? {})
     // a record the head cuts in two is read whole here
     .filter((setting) => setting.end > end && setting.offset < start)
     .sort((a, b) => a.offset - b.offset)
@@ -1063,14 +1030,14 @@ function liveTurns(path: string, stream: TranscriptStream, source: RecognizedCon
   // starts ascend: the last one, when it lies past the page start
   const last = Math.max(start, starts[starts.length - 1] ?? start);
   const key = `${path}\0${start}`;
-  let settled = settledTurns.get(key);
+  let settled = conversationCache.settledTurns.get(key);
   if (!settled || settled.id !== stream.id || settled.end > last || bytesBefore(stream, settled.end) !== settled.tail) {
     const head = start > stream.floor ? metadataHead(path, stream, source, start) : "";
     // a page that starts past the turn that started a task keeps the title that turn gave it,
     // as long as this stream was watched while the title was on a page (a cold read cannot).
     // Only this file's pages count: another file can come to have its inode once it is gone.
     let kept: SettledTurns | undefined;
-    for (const [other, page] of settledTurns) {
+    for (const [other, page] of conversationCache.settledTurns) {
       if (other.startsWith(`${path}\0`) && page.id === stream.id && page.start < start && page.start > (kept?.start ?? -1)) kept = page;
     }
     const inherited = new Map(kept === undefined ? [] : kept.end <= start ? kept.taskTitles : kept.inherited);
@@ -1089,7 +1056,7 @@ function liveTurns(path: string, stream: TranscriptStream, source: RecognizedCon
     settled = { ...settled, end: last, turns: [...settled.turns, ...parseTurns(source, path, text, settled.taskTitles, settled.noticed)], metadata: parseConversationMetadata(text, source, settled.metadata), tail: bytesBefore(stream, last) };
   }
   settled.observedEnd = stream.length;
-  rememberPage(settledTurns, key, settled, 8);
+  rememberPage(conversationCache.settledTurns, key, settled, 8);
   if (source === "codex-transcript") {
     const live = codexLiveTurn(path, stream, last, settled.metadata);
     return { turns: [...settled.turns, ...live.turns], metadata: live.metadata };
@@ -1102,27 +1069,27 @@ function liveTurns(path: string, stream: TranscriptStream, source: RecognizedCon
 
 /** Retention diagnostics only: counts/budget adherence, never transcript contents. */
 export function piPageCacheUsage(): { pages: number; settled: number; withinBudget: boolean } {
-  const pages = [...cache.values()].filter(item => item.source === "pi-transcript");
-  const settled = [...settledTurns.values()].filter(item => item.source === "pi-transcript");
+  const pages = [...conversationCache.pages.values()].filter(item => item.source === "pi-transcript");
+  const settled = [...conversationCache.settledTurns.values()].filter(item => item.source === "pi-transcript");
   return { pages: pages.length, settled: settled.length, withinBudget: [...pages, ...settled].every(item => withinRetentionBudget(item, PI_PAGE_CACHE_BYTES)) };
 }
 
 /** Forget every scan and parse kept between polls (tests compare against a cold read). */
 export function forgetTranscriptState(): void {
   launchedAgents.clear();
-  cache.clear();
-  writtenSessions.clear();
+  conversationCache.pages.clear();
+  conversationCache.writtenSessions.clear();
   forgetClaudeSessions();
   forgetGjcState();
   forgetSubagents();
   forgetOpencodeState();
-  liveScans.clear();
-  pageWindowScans.clear();
-  settledTurns.clear();
-  codexTurns.clear();
-  transcriptRevisions.clear();
-  clearScans.clear();
-  paneReads.clear();
+  conversationCache.liveScans.clear();
+  conversationCache.pageWindowScans.clear();
+  conversationCache.settledTurns.clear();
+  conversationCache.codexTurns.clear();
+  conversationCache.transcriptRevisions.clear();
+  conversationCache.clearScans.clear();
+  conversationCache.paneReads.clear();
   forgetAllCodexState();
   forgetAllPiIndexes();
   forgetGrokState();
@@ -1139,26 +1106,26 @@ export function forgetTranscriptState(): void {
  * of a live pane re-derives it, and a file nobody reads again costs nothing to forget.
  */
 export function forgetPaneTranscriptState(paneId: string): void {
-  const reads = paneReads.get(paneId);
-  paneReads.delete(paneId);
+  const reads = conversationCache.paneReads.get(paneId);
+  conversationCache.paneReads.delete(paneId);
   launchedAgents.forget(paneId);
   if (reads === undefined) return;
   // two panes can read one transcript (a resumed session, a shared store): what another pane
   // still reads stays
-  const shared = (pick: (other: PaneReads) => Set<string>, value: string): boolean => [...paneReads.values()].some((other) => pick(other).has(value));
-  for (const session of reads.sessions) if (!shared((other) => other.sessions, session)) writtenSessions.delete(session);
+  const shared = (pick: (other: PaneReads) => Set<string>, value: string): boolean => [...conversationCache.paneReads.values()].some((other) => pick(other).has(value));
+  for (const session of reads.sessions) if (!shared((other) => other.sessions, session)) conversationCache.writtenSessions.delete(session);
   for (const [key, session] of reads.devin) {
-    if (![...paneReads.values()].some((other) => other.devin.has(key))) forgetDevinState(session.sessionId, session.cwd, session.dbPath);
+    if (![...conversationCache.paneReads.values()].some((other) => other.devin.has(key))) forgetDevinState(session.sessionId, session.cwd, session.dbPath);
   }
   for (const path of reads.paths) {
     if (shared((other) => other.paths, path)) continue;
-    for (const key of [...cache.keys()]) if (key.startsWith(`${path}\0`)) cache.delete(key);
-    transcriptRevisions.delete(path);
-    liveScans.delete(path);
-    pageWindowScans.delete(path);
-    for (const key of [...settledTurns.keys()]) if (key.startsWith(`${path}\0`)) settledTurns.delete(key);
-    codexTurns.delete(path);
-    clearScans.delete(path);
+    for (const key of [...conversationCache.pages.keys()]) if (key.startsWith(`${path}\0`)) conversationCache.pages.delete(key);
+    conversationCache.transcriptRevisions.delete(path);
+    conversationCache.liveScans.delete(path);
+    conversationCache.pageWindowScans.delete(path);
+    for (const key of [...conversationCache.settledTurns.keys()]) if (key.startsWith(`${path}\0`)) conversationCache.settledTurns.delete(key);
+    conversationCache.codexTurns.delete(path);
+    conversationCache.clearScans.delete(path);
     forgetCodexStateFor(path);
     forgetPiIndex(path);
     forgetGrokState(path);
@@ -1608,7 +1575,7 @@ export async function openPaneConversation(paneId: string, codexHome?: string, d
 
   const notStarted = (error: ConversationNotStarted, page: ConversationPage): Promise<RecognizedConversation> => {
     // a file read before and gone since is no conversation not begun: the terminal stands in for it
-    if (writtenSessions.has(`${error.source}\0${error.identity}`)) throw new ConversationUnavailable("transcript_missing");
+    if (conversationCache.writtenSessions.has(`${error.source}\0${error.identity}`)) throw new ConversationUnavailable("transcript_missing");
     // nothing comes before a conversation not begun: a cursor into it is another one's
     if (page.before !== undefined || page.since !== undefined || page.from !== undefined) throw new HistoryChanged();
     // an agent at work on its first turn has written nothing yet, but its terminal shows the turn
@@ -1653,7 +1620,7 @@ export async function paneConversation(paneId: string, codexHome?: string, page:
 
 async function readConversation(paneId: string, resolved: NativeTranscript, snapshot: SessionSnapshot, page: ConversationPage, codexHome: string | undefined, devinDbPath: string | undefined, opencodeDb: string | undefined, hermesHome: string | undefined, grokHome: string | undefined, reuse: TranscriptStreamReuse): Promise<RecognizedConversation> {
   const onNotStarted = (error: ConversationNotStarted): Promise<RecognizedConversation> => {
-    if (writtenSessions.has(`${error.source}\0${error.identity}`)) throw new ConversationUnavailable("transcript_missing");
+    if (conversationCache.writtenSessions.has(`${error.source}\0${error.identity}`)) throw new ConversationUnavailable("transcript_missing");
     if (page.before !== undefined || page.since !== undefined || page.from !== undefined) throw new HistoryChanged();
     const status = snapshot.panes.find((pane) => pane.pane_id === paneId)?.agent_status;
     if (status === "working" || status === "blocked") throw error;
@@ -1684,7 +1651,7 @@ async function readConversation(paneId: string, resolved: NativeTranscript, snap
     rememberPaneRead(paneId, resolved.path);
     try {
       const answer = hermesConversationPage(resolved.sessionId, resolved.path, page);
-      writtenSessions.add(`${resolved.source}\0${resolved.sessionId}`);
+      conversationCache.writtenSessions.add(`${resolved.source}\0${resolved.sessionId}`);
       rememberPaneSession(paneId, `${resolved.source}\0${resolved.sessionId}`);
       return answer;
     } catch (error) {
@@ -1706,7 +1673,7 @@ async function readConversation(paneId: string, resolved: NativeTranscript, snap
     if (revision === null || revision === "0") throw new ConversationUnavailable("transcript_missing");
   }
   if (resolved.agy && !sameAgyStore(resolved.agy, await resolveAgyStore(snapshot.panes.find((pane) => pane.pane_id === paneId)!))) throw new ConversationUnavailable("no_session_path");
-  if (identity !== null) { writtenSessions.add(`${resolved.source}\0${identity}`); rememberPaneSession(paneId, `${resolved.source}\0${identity}`); }
+  if (identity !== null) { conversationCache.writtenSessions.add(`${resolved.source}\0${identity}`); rememberPaneSession(paneId, `${resolved.source}\0${identity}`); }
   if (resolved.source === "grok-transcript") {
     try { return { ...answer, activity: grokProjection(resolved.path, statSync(resolved.path)).activity }; }
     catch { throw new ConversationUnavailable("transcript_missing"); }
@@ -1765,7 +1732,7 @@ function transcriptPageRead(source: StreamSource, path: string, page: Conversati
   // (the stream's id names both); the newest one changes with every append
   const key = page.before !== undefined ? `${path}\0before:${page.before}:${page.since ?? ""}` : `${path}\0from:${page.from ?? ""}`;
   const signature = page.before !== undefined ? stream.id : `${stream.id}:${stream.length}:${stat.size}:${stat.mtimeMs}:${stat.ctimeMs}`;
-  const cached = cache.get(key);
+  const cached = conversationCache.pages.get(key);
   // the answer is a function of the page asked for and the file's state, so they name it
   const version = answerVersion(key, signature);
   if (cached?.signature === signature) {
@@ -1817,11 +1784,11 @@ function transcriptPageRead(source: StreamSource, path: string, page: Conversati
   const metadata = live?.metadata ?? parseConversationMetadata(`${head}\n${text}`, source);
   // Record the stat from BEFORE the read: an append during parsing must cause
   // another read on the next poll, not permanently cache a torn tail.
-  cache.delete(key);
+  conversationCache.pages.delete(key);
   // the abandoned turns live outside the branch's byte ranges, so the page cannot see them: a
   // straight line answers { count: 0 }, which is most sessions and costs the client nothing
   const abandoned = source === "pi-transcript" ? piAbandonedTurns(path, stat.size) ?? undefined : undefined;
-  rememberPage(cache, key, { source, signature, turns, metadata, cursor, abandoned }, 32);
+  rememberPage(conversationCache.pages, key, { source, signature, turns, metadata, cursor, abandoned }, 32);
   return { source, turns, metadata, cursor, abandoned, history_id: stream.id, version };
 }
 
