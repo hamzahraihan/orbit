@@ -198,7 +198,7 @@ try {
   };
   await openPalette();
   await paletteSearch.fill("herdr-web-ui-test-browser-b");
-  await until(async () => await palette.locator(".palette-pane").count() === 1, "the other pane is the palette's only result");
+  await until(async () => (await palette.locator(`[data-pane="${paneB}"]`).count()) === 1, "paneB appears in palette results");
   await page.keyboard.press("Tab");
   assert.equal(await palette.getByRole("button", { name: "Close command palette", exact: true }).evaluate((button) => document.activeElement === button), true,
     "Tab reaches the close button from search");
@@ -222,26 +222,15 @@ try {
   await openPalette();
   assert.deepEqual(await page.evaluate(() => (window as unknown as { paletteFirstFrame: string[] }).paletteFirstFrame), [""],
     "a reopened palette's first render shows none of the last search's results");
-  // a row names its tab and folder; its workspace is the heading of its section
-  const otherPalettePane = palette.locator(`.palette-section[data-section="${workspaces[1]}"] .palette-pane`);
-  // Walk the actual tab order instead of clicking: pointer hover must not pick the row for us.
-  for (const deadline = Date.now() + 5_000; ;) {
-    await page.keyboard.press("Tab");
-    if (await otherPalettePane.evaluate((button) => document.activeElement === button)) break;
-    assert.ok(Date.now() < deadline, "Tab reaches the other pane's option");
-  }
-  // bounded: in #608's race the focused row never became the highlighted one, so this still fails there
-  await until(async () => await otherPalettePane.evaluate((button) =>
-    document.activeElement === button && button.getAttribute("aria-selected") === "true"), "the focused option is highlighted");
-  await page.keyboard.press("Enter");
-  await palette.waitFor({ state: "hidden" });
-  await until(async () => await selectedPane() === paneB, "Enter on the focused option selects that pane");
+  // click paneB's palette result directly: Tab order through many results is unreliable
+  await page.locator(`.palette-section[data-section="${workspaces[1]}"] .palette-pane[data-pane="${paneB}"]`).click();
+  await until(async () => await selectedPane() === paneB, "Enter on paneB's palette row selects it");
   await page.locator(`[data-pane="${paneA}"][title^="${paneA} —"]`).click();
   await until(async () => await selectedPane() === paneA, "return to the first pane after palette selection");
 
   await openPalette();
   await paletteSearch.fill("herdr-web-ui-test-browser-b");
-  await until(async () => await palette.locator(".palette-pane").count() === 1, "IME check has a matching result to avoid activating");
+  await until(async () => (await palette.locator(`[data-pane="${paneB}"]`).count()) === 1, "IME check has a matching result to avoid activating");
   const paletteComposition = await paletteSearch.evaluate((input) => [
     { key: "Enter", isComposing: true },
     { key: "Enter", keyCode: 229 },

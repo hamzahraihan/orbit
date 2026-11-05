@@ -117,7 +117,7 @@ export async function checkPaletteKeys(page: Page, fixture: PaletteKeysFixture):
     await palette.waitFor({ state: "hidden" });
     await until(async () => await selectedPaneId() === paneD, "Enter runs the row the keyboard was on");
     // back to the pane selected before: the suite's next steps read its sidebar row
-    await page.locator(`.pane-select[title^="${selectedBefore} —"]`).click();
+  await page.locator(`[data-pane="${selectedBefore}"][title^="${selectedBefore} —"]`).click();
     await until(async () => await selectedPaneId() === selectedBefore, "the selection returns to the pane selected before the check");
     console.log("PASS palette keys: a repeated filter letter refocuses the first row, the pick survives panes leaving and entering the filter, and Enter runs the focused row");
   } finally {
