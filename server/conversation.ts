@@ -37,7 +37,11 @@ import { createHash, randomUUID } from "node:crypto";
 import { closeSync, openSync, readFileSync, readSync, realpathSync, statSync } from "node:fs";
 import nodePath, { type PlatformPath } from "node:path";
 
-import { ConversationCache, PI_PAGE_CACHE_BYTES } from "./conversation-cache.ts";
+import { PI_PAGE_CACHE_BYTES } from "./conversation-cache.ts";
+import { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, TRANSCRIPT_WINDOW_BYTES, type ConversationPage, type NativeTranscript, type PaneConversationReader, type RecognizedConversation, type ResolvedTranscript, type StreamSource, type TranscriptStream, type TranscriptStreamReuse } from "./conversation-shared.ts";
+
+export { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, TRANSCRIPT_WINDOW_BYTES } from "./conversation-shared.ts";
+export type { ConversationPage, NativeTranscript, PaneConversationReader, RecognizedConversation, ResolvedTranscript, StreamSource, TranscriptSources, TranscriptStream, TranscriptStreamReuse, TurnSource } from "./conversation-shared.ts";
 
 import type { ConversationMetadata, ConversationPart, ConversationTurn, HerdrPane, SessionSnapshot } from "../shared/protocol.ts";
 import { herdrRpc, paneRead, sessionSnapshot } from "./herdr/client.ts";
@@ -54,7 +58,7 @@ import { defaultDevinDbPath, DevinHistoryUnavailable, devinConversation, forgetD
 import { forgetGrokState, grokProjection, grokToolOutput, parseGrokTranscript, GrokUnavailable } from "./grok.ts";
 import { resolveGrokStore } from "./grok-store.ts";
 import { AgyUnavailable, agyCatalog, agyToolOutput, forgetAgyState, parseAgyTranscript, withAgyHistory, type AgyProjection } from "./agy.ts";
-import { resolveAgyStore, sameAgyStore, type AgyStore } from "./agy-store.ts";
+import { resolveAgyStore, sameAgyStore } from "./agy-store.ts";
 import { withinRetentionBudget } from "./retention-budget.ts";
 import { forgetAllPiIndexes, forgetPiIndex, piAbandonedTurns, piBranchRecords, piBranchSegments } from "./pi-tree.ts";
 import { trimOutput } from "./tool-output.ts";
@@ -69,17 +73,6 @@ import { launchedAgents } from "./launched-agents.ts";
 import { readsStartScreen, startScreenMetadata } from "./start-screen.ts";
 
 export { isOmoProcess } from "./omo.ts";
-
-/**
- * A transcript is read a page at a time, the newest page re-read on every append
- * while an agent works: Codex rollouts reach hundreds of MB (a 400MB one took 1.1s
- * and 1.7GB of memory to parse whole). 16MB still holds dozens of turns of a
- * tool-heavy session; the chat asks for the pages before it as the reader scrolls up.
- */
-
-/** Singleton conversation cache backing every pane reader. */
-export const conversationCache = new ConversationCache();
-export const TRANSCRIPT_WINDOW_BYTES = 16 * 1024 * 1024;
 
 /** A page never holds more prompts than this (each opens a user + assistant pair). */
 const MAX_PAGE_PROMPTS = MAX_TURNS / 2;
@@ -469,80 +462,6 @@ export function parseClaudeTranscript(text: string, maxTurns = MAX_TURNS, option
 /** Read sessions by source and canonical path (Claude uses its unique session id): a removed file is not unwritten. */
 
 /** Re-parse on file changes, including replacement and same-size rewrites. */
-
-export class ConversationUnavailable extends Error {
-  constructor(reason: string) {
-    super(reason);
-    this.name = "ConversationUnavailable";
-  }
-}
-
-/** The pane's agent holds a session it has not written yet: a conversation with no turns, not a missing one. */
-export class ConversationNotStarted extends ConversationUnavailable {
-  constructor(readonly sessionId: string, readonly source: RecognizedConversation["source"] = "omo-transcript", readonly identity: string = sessionId) {
-    super("session_not_written");
-    this.name = "ConversationNotStarted";
-  }
-}
-
-/** A cursor from another transcript: the pane started a new session, or a Codex backtrack replaced the file. */
-export class HistoryChanged extends Error {
-  constructor() {
-    super("the conversation's transcript changed; reload it from its newest turns");
-    this.name = "HistoryChanged";
-  }
-}
-
-/** What paneConversation resolved: which store the turns came from, and where they start. */
-export type RecognizedConversation = {
-  activity?: "thinking" | "working" | "idle";
-  source: "grok-transcript" | "agy-transcript" | "claude-transcript" | "omp-transcript" | "omo-transcript" | "gjc-transcript" | "pi-transcript" | "codex-transcript" | "devin-transcript" | "opencode-transcript" | "hermes-transcript";
-  turns: ConversationTurn[];
-  metadata: ConversationMetadata;
-  /** the first turn's position, for the page before it; null at the conversation's beginning */
-  cursor: string | null;
-  /**
-   * Turns the file holds on paths a `/tree` walked away from, which no page of this conversation
-   * can reach; absent for every agent that keeps no entry tree. pi moves its leaf without writing
-   * anything, so the chat would otherwise drop those turns with no sign they were ever there.
-   */
-  abandoned?: { count: number; branches: number; summary: string | null };
-  history_id: string;
-  /** changes whenever the answer could: the route's ETag, so an unchanged poll costs no body */
-  version: string;
-};
-
-/** The stores read as one append-only file: OpenCode's and Devin's databases are paged by opencode.ts and devin.ts. */
-type StreamSource = Exclude<RecognizedConversation["source"], "opencode-transcript" | "devin-transcript" | "hermes-transcript">;
-
-/** A restart may parse the same files differently: its answers never match an earlier ETag. */
-
-export function answerVersion(key: string, signature: string): string {
-  return createHash("sha256").update(`${conversationCache.processVersion}\0${key}\0${signature}`).digest("base64url").slice(0, 22);
-}
-
-/**
- * Which turns: without `before`, the newest page (with `from`, from that held start
- * while it is still inside the newest page); with `before`, the page ending there,
- * never reaching back past `since`.
- */
-export type ConversationPage = { before?: string; since?: string; from?: string };
-
-/**
- * A transcript as one byte stream: for a paginated Codex rollout the history it
- * continues comes first (codexHistorySegments). Transcripts only grow at the end,
- * so a position in it keeps naming the same turn for as long as the file does.
- */
-interface TranscriptStream {
-  /** the live file's identity: cursors from any other file are refused */
-  id: string;
-  /** `offset` is where the segment starts in its file: equal to `start` for a whole prefix */
-  files: { path: string; start: number; length: number; offset: number }[];
-  length: number;
-  floor: number;
-  promptStarts?: number[];
-  fd?: number;
-}
 
 // In-place rewrites keep the inode. Change the cursor generation when observed,
 // invalidating settled turns and incremental parsers as well as the response cache.
@@ -1353,17 +1272,6 @@ async function ompTranscriptPath(paneId: string, cwd: string): Promise<string> {
   return inStore;
 }
 
-/** Where a pane's conversation is: a transcript file, or a session in OpenCode's database. */
-type ResolvedTranscript =
-  | { source: StreamSource; path: string; codexHome?: string; agy?: AgyStore }
-  | { source: "opencode-transcript"; path: string; session: string }
-  | { source: "hermes-transcript"; path: string; sessionId: string };
-
-/** A native file or database session, resolved without parsing conversation turns. */
-export type NativeTranscript =
-  | ResolvedTranscript
-  | { source: "devin-transcript"; path: string; session: string; cwd: string };
-
 /**
  * The store a pane's transcript lives in. herdr's agent label follows the
  * pane's foreground processes, so an omo pane reads as `pi` while it waits and
@@ -1527,15 +1435,6 @@ export async function paneTranscript(paneId: string, codexHome?: string, snapsho
   return resolveTranscript(pane, pane.cwd, codexHome, panes, opencodeDb, hermesHome, grokHome);
 }
 
-/**
- * One pane's conversation, opened once and read page by page: the transcript behind it is
- * resolved (and, for a transcript file, its stream is kept) when the reader opens. A search that
- * walks many pages of one pane reuses that work instead of resolving the same session per page.
- */
-export interface PaneConversationReader {
-  read(page?: ConversationPage): Promise<RecognizedConversation>;
-}
-
 /** no transcript states the model yet: the agent's own screen does (start-screen.ts). A screen
  * that cannot be read leaves it unknown, as it was */
 async function notBegunConversation(paneId: string, source: RecognizedConversation["source"], id: string): Promise<RecognizedConversation> {
@@ -1679,14 +1578,6 @@ async function readConversation(paneId: string, resolved: NativeTranscript, snap
     catch { throw new ConversationUnavailable("transcript_missing"); }
   }
   return answer;
-}
-
-/** A reader's last transcript stream, kept while its file stays the same (see paneConversationReader). */
-export interface TranscriptStreamReuse {
-  source?: StreamSource;
-  path?: string;
-  stat?: { dev: number; ino: number; size: number; mtimeMs: number; ctimeMs: number };
-  stream?: TranscriptStream;
 }
 
 /** One page of a resolved transcript (paneConversation's `page`). */
