@@ -8,7 +8,8 @@ import type { AgentRenameRequest, PaneDirection, PaneResized, PaneSplit, PaneSwa
 import { paneCommands } from "./commands.ts";
 import { clearFileCache, paneFiles } from "./files.ts";
 import { badRequest, conflictResponse, errorResponse, isCount, isJsonObject, jsonResponse, readJsonObject } from "./http.ts";
-import { conversationImage, ConversationUnavailable, forgetPaneTranscriptState, HistoryChanged, paneConversation, paneProcessRoots, toolOutput } from "./conversation.ts";
+import { ConversationUnavailable, HistoryChanged } from "./conversation-shared.ts";
+import { conversationImage, forgetPaneTranscriptState, paneConversation, paneProcessRoots, toolOutput } from "./conversation.ts";
 import { OPENCODE_TOOL_REF } from "./opencode.ts";
 import { DevinHistoryChanged } from "./devin.ts";
 import { GjcSdkLookupError } from "./gjc-sdk.ts";

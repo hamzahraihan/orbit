@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 import { statSync } from "node:fs";
 import type { SessionSnapshot } from "../shared/protocol.ts";
-import { ConversationNotStarted, ConversationUnavailable, paneTranscript, type NativeTranscript } from "./conversation.ts";
+import { ConversationNotStarted, ConversationUnavailable, type NativeTranscript } from "./conversation-shared.ts";
+import { paneTranscript } from "./conversation.ts";
 import { agyDatabasePath } from "./agy.ts";
 import { sessionSnapshot } from "./herdr/client.ts";
 

@@ -1,5 +1,5 @@
 import type { AgentStatus } from "../shared/protocol.ts";
-import type { RecognizedConversation } from "./conversation.ts";
+import type { RecognizedConversation } from "./conversation-shared.ts";
 
 /**
  * Panes this server started an agent in (New workspace, New tab, New worktree), until their

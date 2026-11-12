@@ -15,7 +15,8 @@ import * as herdr from "./herdr/client.ts";
 import { forgetHistoryChains } from "./codex.ts";
 import { DevinHistoryChanged } from "./devin.ts";
 import * as omo from "./omo.ts";
-import { ConversationUnavailable, conversationImage, devinSessionForPane, forgetPaneTranscriptState, forgetTranscriptState, gjcTranscriptPath, HistoryChanged, isDevinProcess, isOmoProcess, ompSessionStore, openPaneConversation, paneConversation, paneProcessRoots, paneTranscript, parseClaudeTranscript, toolOutput, unwrapPastes, transcriptImage, transcriptPage, transcriptToolOutput } from "./conversation.ts";
+import { ConversationUnavailable, HistoryChanged } from "./conversation-shared.ts";
+import { conversationImage, devinSessionForPane, forgetPaneTranscriptState, forgetTranscriptState, gjcTranscriptPath, isDevinProcess, isOmoProcess, ompSessionStore, openPaneConversation, paneConversation, paneProcessRoots, paneTranscript, parseClaudeTranscript, toolOutput, unwrapPastes, transcriptImage, transcriptPage, transcriptToolOutput } from "./conversation.ts";
 
 describe("omo skill roots", () => {
   it("finds the bundled plugin from a Windows canonical launcher path", async () => {

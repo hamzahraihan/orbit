@@ -4,7 +4,8 @@ import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, read
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { herdrRpc, herdrSocketPath, sessionSnapshot, workspaceClose, workspaceCreate, paneRead } from "./herdr/client.ts";
-import { ConversationUnavailable, forgetTranscriptState, gjcTranscriptPath, paneConversation } from "./conversation.ts";
+import { ConversationUnavailable } from "./conversation-shared.ts";
+import { forgetTranscriptState, gjcTranscriptPath, paneConversation } from "./conversation.ts";
 import { isGjcProcess } from "./gjc-runtime.ts";
 import { startShellAgent } from "./shell-agent.ts";
 import { createServer } from "./index.ts";
