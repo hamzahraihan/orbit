@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { statSync } from "node:fs";
 import type { SessionSnapshot } from "../shared/protocol.ts";
-import { ConversationNotStarted, ConversationUnavailable, type NativeTranscript } from "./conversation-shared.ts";
+import { ConversationNotStarted, ConversationUnavailable, type NativeTranscript, type TranscriptSources } from "./conversation-shared.ts";
 import { paneTranscript } from "./conversation.ts";
 import { agyDatabasePath } from "./agy.ts";
 import { sessionSnapshot } from "./herdr/client.ts";
@@ -34,11 +34,7 @@ export class ConversationMonitor {
 
   constructor(
     private readonly changed: (paneId: string, signature: string) => void,
-    private readonly codexHome?: string,
-    private readonly devinDbPath?: string,
-    private readonly opencodeDb?: string,
-    private readonly hermesHome?: string,
-    private readonly grokHome?: string,
+    private readonly sources: TranscriptSources = {},
   ) {}
 
   get size(): number { return this.panes.size; }
@@ -109,7 +105,7 @@ export class ConversationMonitor {
       this.snapshot ??= sessionSnapshot().finally(() => { this.snapshot = null; });
       const snapshot = await this.snapshot;
       if (this.panes.get(paneId) !== state) return;
-      const transcript = await paneTranscript(paneId, this.codexHome, snapshot, this.devinDbPath, this.opencodeDb, this.hermesHome, this.grokHome);
+      const transcript = await paneTranscript(paneId, { ...this.sources, snapshot });
       if (this.panes.get(paneId) !== state) return;
       state.transcript = transcript;
       present = this.read(paneId, state);

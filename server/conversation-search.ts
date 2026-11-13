@@ -11,6 +11,7 @@
  * keeps the transcript stream it resolved, so the pages share that one read.
  */
 import type { ConversationSearchMatch, ConversationSearchResponse, ConversationTurn, HerdrPane } from "../shared/protocol.ts";
+import type { TranscriptSources } from "./conversation-shared.ts";
 import { openPaneConversation } from "./conversation.ts";
 
 /** Characters kept around a match, before it and after it. */
@@ -21,15 +22,6 @@ export const SEARCH_PANE_LIMIT = 32;
 export const SEARCH_PER_PANE = 2;
 /** Pages one request may read per pane, the newest page counted as page 0. */
 export const MAX_SEARCH_PAGES = 50;
-
-/** The stores createServer was given; unset, each reader finds its own. */
-export interface ConversationSearchStores {
-  codexHome?: string;
-  devinDbPath?: string;
-  opencodeDb?: string;
-  hermesHome?: string;
-  grokHome?: string;
-}
 
 /**
  * The prose of one turn: what the user or the agent wrote. Tool calls, reasoning and images stay
@@ -129,7 +121,7 @@ export async function searchConversations(input: {
   pages?: number;
   /** the request's abort signal: a keystroke that superseded this search stops its walk */
   signal?: AbortSignal;
-  stores?: ConversationSearchStores;
+  stores?: TranscriptSources;
   /** the page reader; tests pass their own so the search is checked without herdr */
   read?: ReadPage;
   /** opens a pane's reader; tests pass their own to count how often a pane's transcript is opened */
@@ -140,14 +132,7 @@ export async function searchConversations(input: {
   const started = performance.now();
   const stores = input.stores ?? {};
   const open = input.open ?? (async (paneId: string) => {
-    const reader = await openPaneConversation(
-      paneId,
-      stores.codexHome,
-      stores.devinDbPath,
-      stores.opencodeDb,
-      stores.hermesHome,
-      stores.grokHome,
-    );
+    const reader = await openPaneConversation(paneId, stores);
     return (before?: string) => reader.read(before === undefined ? {} : { before });
   });
   // A pane's transcript is opened on its first page and shared by every page after it.

@@ -38,7 +38,7 @@ import { readFileSync, realpathSync, statSync } from "node:fs";
 import nodePath from "node:path";
 
 import { PI_PAGE_CACHE_BYTES } from "./conversation-cache.ts";
-import { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, type ConversationPage, type NativeTranscript, type PaneConversationReader, type RecognizedConversation, type StreamSource, type TranscriptStreamReuse } from "./conversation-shared.ts";
+import { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, type ConversationPage, type NativeTranscript, type PaneConversationReader, type RecognizedConversation, type StreamSource, type TranscriptSources, type TranscriptStreamReuse } from "./conversation-shared.ts";
 import { activeHistoryText, METADATA_HEAD_BYTES, readTranscriptPage, remember, resolveStream, streamFiles, type PageSource, type StreamSpec, type StreamStat } from "./conversation-reader.ts";
 import { claudeToolResult, IMAGE_REF, parseClaudeTranscript, subagentsOnPage } from "./claude-transcript.ts";
 import { providerForAgent, providerForSource, type ProviderContext } from "./conversation-providers.ts";
@@ -351,7 +351,8 @@ async function resolveTranscript(pane: HerdrPane, cwd: string, codexHome?: strin
 
 
 /** Resolve the native live file or database session without reading conversation turns. */
-export async function paneTranscript(paneId: string, codexHome?: string, snapshot?: SessionSnapshot, devinDbPath?: string, opencodeDb?: string, hermesHome?: string, grokHome?: string): Promise<NativeTranscript> {
+export async function paneTranscript(paneId: string, sources?: TranscriptSources): Promise<NativeTranscript> {
+  const { codexHome, devinDbPath, opencodeDb, hermesHome, grokHome, snapshot } = sources ?? {};
   const panes = (snapshot ?? await sessionSnapshot()).panes;
   const pane = panes.find((candidate) => candidate.pane_id === paneId);
   if (pane === undefined) throw new ConversationUnavailable("pane_not_found");
@@ -382,11 +383,11 @@ type ConversationOpening =
   // an agent this server started writes no session before its first message (launched-agents.ts)
   | { kind: "launched"; source: RecognizedConversation["source"]; historyId: string; snapshot: SessionSnapshot };
 
-export async function openPaneConversation(paneId: string, codexHome?: string, devinDbPath?: string, opencodeDb?: string, hermesHome?: string, grokHome?: string): Promise<PaneConversationReader> {
+export async function openPaneConversation(paneId: string, sources?: TranscriptSources): Promise<PaneConversationReader> {
   const snapshot = await sessionSnapshot();
   let opening: ConversationOpening;
   try {
-    const resolved = await paneTranscript(paneId, codexHome, snapshot, devinDbPath, opencodeDb, hermesHome, grokHome);
+    const resolved = await paneTranscript(paneId, { ...sources, snapshot });
     launchedAgents.forget(paneId);
     opening = { kind: "resolved", resolved, snapshot };
   } catch (error) {
@@ -426,7 +427,7 @@ export async function openPaneConversation(paneId: string, codexHome?: string, d
         if (page.before !== undefined || page.since !== undefined || page.from !== undefined) throw new HistoryChanged();
         return notBegunConversation(paneId, opening.source, opening.historyId);
       }
-      return readConversation(paneId, opening.resolved, opening.snapshot, page, codexHome, devinDbPath, opencodeDb, hermesHome, grokHome, reuse ??= {});
+      return readConversation(paneId, opening.resolved, opening.snapshot, page, sources ?? {}, reuse ??= {});
     },
   };
 }
@@ -444,12 +445,12 @@ export async function openPaneConversation(paneId: string, codexHome?: string, d
  * shows the pages before it. A cursor from another file throws HistoryChanged.
  * `opencodeDb` is OpenCode's store, unset where OpenCode itself would find it.
  */
-export async function paneConversation(paneId: string, codexHome?: string, page: ConversationPage = {}, devinDbPath?: string, opencodeDb?: string, hermesHome?: string, grokHome?: string): Promise<RecognizedConversation> {
-  const reader = await openPaneConversation(paneId, codexHome, devinDbPath, opencodeDb, hermesHome, grokHome);
+export async function paneConversation(paneId: string, page: ConversationPage = {}, sources?: TranscriptSources): Promise<RecognizedConversation> {
+  const reader = await openPaneConversation(paneId, sources);
   return reader.read(page);
 }
 
-async function readConversation(paneId: string, resolved: NativeTranscript, snapshot: SessionSnapshot, page: ConversationPage, codexHome: string | undefined, devinDbPath: string | undefined, opencodeDb: string | undefined, hermesHome: string | undefined, grokHome: string | undefined, reuse: TranscriptStreamReuse): Promise<RecognizedConversation> {
+async function readConversation(paneId: string, resolved: NativeTranscript, snapshot: SessionSnapshot, page: ConversationPage, sources: TranscriptSources, reuse: TranscriptStreamReuse): Promise<RecognizedConversation> {
   const onNotStarted = (error: ConversationNotStarted): Promise<RecognizedConversation> => {
     if (conversationCache.writtenSessions.has(`${error.source}\0${error.identity}`)) throw new ConversationUnavailable("transcript_missing");
     if (page.before !== undefined || page.since !== undefined || page.from !== undefined) throw new HistoryChanged();
@@ -458,7 +459,6 @@ async function readConversation(paneId: string, resolved: NativeTranscript, snap
     return notBegunConversation(paneId, error.source, `unwritten:${error.sessionId}`);
   };
 
-  const sources = { codexHome, devinDbPath, opencodeDb, hermesHome, grokHome };
   const call: ProviderContext = {
     resolved,
     sources,
@@ -588,16 +588,16 @@ function transcriptPageRead(source: StreamSource, path: string, page: Conversati
  * here rather than sent with every poll of the conversation. Null when there is no such
  * image. Codex uses a hash of the native attachment and searches only the bound history.
  */
-export async function conversationImage(paneId: string, ref: string, codexHome?: string, opencodeDb?: string): Promise<{ mediaType: string; bytes: Uint8Array<ArrayBuffer> } | null> {
+export async function conversationImage(paneId: string, ref: string, sources?: TranscriptSources): Promise<{ mediaType: string; bytes: Uint8Array<ArrayBuffer> } | null> {
   if (!IMAGE_REF.test(ref) && !CODEX_IMAGE_REF.test(ref) && !PI_IMAGE_REF.test(ref) && !OPENCODE_IMAGE_REF.test(ref)) return null;
   const snapshot = await sessionSnapshot();
   const pane = snapshot.panes.find((candidate) => candidate.pane_id === paneId);
   if (pane === undefined || typeof pane.cwd !== "string" || pane.cwd.length === 0) return null;
+  const store = sources ?? {};
   let resolved: NativeTranscript;
-  try { resolved = await resolveTranscript(pane, pane.cwd, codexHome, snapshot.panes, opencodeDb); }
+  try { resolved = await resolveTranscript(pane, pane.cwd, sources?.codexHome, snapshot.panes, sources?.opencodeDb); }
   catch (error) { if (error instanceof ConversationUnavailable) return null; throw error; }
-  const sources = { codexHome, opencodeDb };
-  const call: ProviderContext = { resolved, sources, cwd: pane.cwd, paneId };
+  const call: ProviderContext = { resolved, sources: store, cwd: pane.cwd, paneId };
   // OpenCode's store is read per request and keeps nothing for the pane to release
   if (resolved.source === "opencode-transcript") return providerForSource(resolved.source).readImage(call, ref);
   rememberPaneRead(paneId, resolved.path);
@@ -608,16 +608,16 @@ export async function conversationImage(paneId: string, ref: string, codexHome?:
 }
 
 /** The whole output of a tool call whose page output was cut, by its id; null when there is none. */
-export async function toolOutput(paneId: string, ref: string, codexHome?: string, opencodeDb?: string, hermesHome?: string, grokHome?: string): Promise<string | null> {
+export async function toolOutput(paneId: string, ref: string, sources?: TranscriptSources): Promise<string | null> {
   if (!TOOL_REF.test(ref)) return null;
   const snapshot = await sessionSnapshot();
   const pane = snapshot.panes.find((candidate) => candidate.pane_id === paneId);
   if (pane === undefined || typeof pane.cwd !== "string" || pane.cwd.length === 0) return null;
+  const store = sources ?? {};
   let resolved: NativeTranscript;
-  try { resolved = await resolveTranscript(pane, pane.cwd, codexHome, snapshot.panes, opencodeDb, hermesHome, grokHome); }
+  try { resolved = await resolveTranscript(pane, pane.cwd, sources?.codexHome, snapshot.panes, sources?.opencodeDb, sources?.hermesHome, sources?.grokHome); }
   catch (error) { if (error instanceof ConversationUnavailable) return null; throw error; }
-  const sources = { codexHome, opencodeDb, hermesHome, grokHome };
-  const call: ProviderContext = { resolved, sources, cwd: pane.cwd, paneId };
+  const call: ProviderContext = { resolved, sources: store, cwd: pane.cwd, paneId };
   if (resolved.source === "opencode-transcript") {
     return providerForSource(resolved.source).readToolOutput(call, ref);
   }
