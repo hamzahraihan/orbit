@@ -27,10 +27,30 @@
  *   session in its own SQLite store (opencode.ts), read by `seq` rather than by
  *   byte offset: its cursors name rows, and it pages and caches on its own.
  *
+ * This module is the hub: pane/session resolution through the registry (`providerForAgent`
+ * in server/conversation-providers.ts), the omo process-tree precedence and gjc-under-shell
+ * detection that run before it, the public seam the routes and monitor call
+ * (`paneTranscript`, `openPaneConversation`, `paneConversation`, `toolOutput`,
+ * `conversationImage`), and the pane-read/cache bookkeeping. Where each concern lives:
+ * - Shared vocabulary (errors, page/stream types, `conversationCache`, `TranscriptSources`):
+ *   server/conversation-shared.ts.
+ * - Stream assembly, windowing, cursors and page assembly: server/conversation-reader.ts.
+ * - The provider contract and the exhaustive 11-source registry: server/conversation-providers.ts.
+ * - One module per source (`codex.ts`, `grok.ts`, `agy.ts`, `pi.ts`, `claude-transcript.ts`,
+ *   `omp.ts`, `omo.ts`, `gjc-runtime.ts`, `hermes.ts`, `opencode.ts`, `devin.ts`); each exports
+ *   its `TranscriptProvider` implementation.
+ * The exports from this module (see the list below) re-export symbols whose importers have not
+ * moved to their own modules yet; the rest are defined here.
+ *
+ * Adding a provider:
+ * 1. Create server/<agent>.ts exporting `<agent>Provider: TranscriptProvider` (copy
+ *    server/claude-transcript.ts; build a StreamSpec + parse callback; `page` is synchronous).
+ * 2. Register it in `providerBySource` and `providerForAgent` in server/conversation-providers.ts.
+ * 3. Keep the provider off this hub — no `./conversation.ts` imports (server/conventions.test.ts
+ *    enforces it) — and its store layout unchanged.
+ *
  * This module turns those files into the conversation the chat lens renders;
- * the pty stays the input path. Pure parsing lives in parseClaudeTranscript
- * (claude-transcript.ts) / parseOmpTranscript (unit-tested); pane/session/file
- * resolution is integration and lives in paneTranscript.
+ * the pty stays the input path.
  */
 
 import { createHash } from "node:crypto";
@@ -43,10 +63,7 @@ import { activeHistoryText, METADATA_HEAD_BYTES, readTranscriptPage, remember, r
 import { claudeToolResult, IMAGE_REF, parseClaudeTranscript, subagentsOnPage } from "./claude-transcript.ts";
 import { providerForAgent, providerForSource, type ProviderContext } from "./conversation-providers.ts";
 
-export { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, TRANSCRIPT_WINDOW_BYTES } from "./conversation-shared.ts";
-export type { ConversationPage, NativeTranscript, PaneConversationReader, RecognizedConversation, ResolvedTranscript, StreamSource, TranscriptSources, TranscriptStream, TranscriptStreamReuse, TurnSource } from "./conversation-shared.ts";
-export { buildStream, readTranscriptPage, resolveStream, streamFiles } from "./conversation-reader.ts";
-export type { PageSource, ParseTurns, StreamSpec, StreamStat } from "./conversation-reader.ts";
+export { ConversationUnavailable } from "./conversation-shared.ts";
 export { claudePanePid, claudePaneSession, parseClaudeTranscript, transcriptImage, unwrapPastes } from "./claude-transcript.ts";
 
 import type { ConversationTurn, HerdrPane, SessionSnapshot } from "../shared/protocol.ts";
