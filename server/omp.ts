@@ -129,7 +129,9 @@ function ompPath(resolved: NativeTranscript): string {
  */
 export const ompProvider: TranscriptProvider = {
   async resolve(pane: HerdrPane, cwd: string, _sources: TranscriptSources, _panes?: HerdrPane[]): Promise<NativeTranscript> {
-    return { source: "omp-transcript", path: await ompTranscriptPath(pane.pane_id, cwd) };
+    // omp and GJC can change their own cwd without changing the pane's shell directory; their session headers name the one they run in
+    const sessionCwd = typeof pane.foreground_cwd === "string" && pane.foreground_cwd.length > 0 ? pane.foreground_cwd : cwd;
+    return { source: "omp-transcript", path: await ompTranscriptPath(pane.pane_id, sessionCwd) };
   },
 
   page(call: ProviderContext, page: ConversationPage): RecognizedConversation {

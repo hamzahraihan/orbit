@@ -37,6 +37,17 @@ import type {
   TranscriptStreamReuse,
   TurnSource,
 } from "./conversation-shared.ts";
+import { codexProvider } from "./codex.ts";
+import { grokProvider } from "./grok.ts";
+import { agyProvider } from "./agy.ts";
+import { piProvider } from "./pi.ts";
+import { ompProvider } from "./omp.ts";
+import { omoProvider } from "./omo.ts";
+import { gjcProvider } from "./gjc-runtime.ts";
+import { claudeProvider } from "./claude-transcript.ts";
+import { devinProvider } from "./devin.ts";
+import { opencodeProvider } from "./opencode.ts";
+import { hermesProvider } from "./hermes.ts";
 
 /**
  * What a page, image or tool-output call carries: the transcript the hub already
@@ -149,3 +160,44 @@ export function providerForRequired(source: TurnSource): ProviderDescriptor {
 export type { TranscriptSources };
 /** Export the exhaustive registry for compile-time checking. */
 export { transcriptProviderRegistry };
+
+/** The runtime registry: one provider implementation per recognized source. The hub dispatches through this, never through `if (agent === ...)` branches. */
+export const providerBySource: Record<TurnSource, TranscriptProvider> = {
+  "grok-transcript": grokProvider,
+  "agy-transcript": agyProvider,
+  "claude-transcript": claudeProvider,
+  "omp-transcript": ompProvider,
+  "omo-transcript": omoProvider,
+  "gjc-transcript": gjcProvider,
+  "pi-transcript": piProvider,
+  "codex-transcript": codexProvider,
+  "devin-transcript": devinProvider,
+  "opencode-transcript": opencodeProvider,
+  "hermes-transcript": hermesProvider,
+};
+
+/** The recognized source's provider, or an error the caller can answer with. */
+export function providerForSource(source: TurnSource): TranscriptProvider {
+  return providerBySource[source];
+}
+
+/**
+ * The `agent` label herdr gives a pane to its provider: the pane's label is the
+ * dispatch key, not the transcript shape. Returns undefined for an agent with no
+ * provider — the hub answers that case with `no_recognized_transcript`.
+ */
+export function providerForAgent(agent: string): TranscriptProvider | undefined {
+  switch (agent) {
+    case "grok": return grokProvider;
+    case "agy": return agyProvider;
+    case "claude": return claudeProvider;
+    case "omp": return ompProvider;
+    case "omo": return omoProvider;
+    case "gjc": return gjcProvider;
+    case "pi": return piProvider;
+    case "codex": return codexProvider;
+    case "opencode": return opencodeProvider;
+    case "hermes": return hermesProvider;
+    default: return undefined;
+  }
+}

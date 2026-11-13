@@ -456,7 +456,9 @@ function gjcPath(resolved: NativeTranscript): string {
  */
 export const gjcProvider: TranscriptProvider = {
   async resolve(pane: HerdrPane, cwd: string, _sources: TranscriptSources, _panes?: HerdrPane[]): Promise<NativeTranscript> {
-    const found = await gjcTranscriptForPane(pane.pane_id, cwd);
+    // omp and GJC can change their own cwd without changing the pane's shell directory; their session headers name the one they run in
+    const sessionCwd = typeof pane.foreground_cwd === "string" && pane.foreground_cwd.length > 0 ? pane.foreground_cwd : cwd;
+    const found = await gjcTranscriptForPane(pane.pane_id, sessionCwd);
     if (!found) throw new ConversationUnavailable("no_session_path");
     return { source: "gjc-transcript", path: found };
   },

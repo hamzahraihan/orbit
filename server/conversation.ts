@@ -38,9 +38,10 @@ import { readFileSync, realpathSync, statSync } from "node:fs";
 import nodePath from "node:path";
 
 import { PI_PAGE_CACHE_BYTES } from "./conversation-cache.ts";
-import { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, type ConversationPage, type NativeTranscript, type PaneConversationReader, type RecognizedConversation, type ResolvedTranscript, type StreamSource, type TranscriptStreamReuse } from "./conversation-shared.ts";
+import { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, type ConversationPage, type NativeTranscript, type PaneConversationReader, type RecognizedConversation, type StreamSource, type TranscriptStreamReuse } from "./conversation-shared.ts";
 import { activeHistoryText, METADATA_HEAD_BYTES, readTranscriptPage, remember, resolveStream, streamFiles, type PageSource, type StreamSpec, type StreamStat } from "./conversation-reader.ts";
-import { claudeToolResult, claudeTranscriptPath, IMAGE_REF, parseClaudeTranscript, subagentsOnPage, transcriptImage } from "./claude-transcript.ts";
+import { claudeToolResult, IMAGE_REF, parseClaudeTranscript, subagentsOnPage } from "./claude-transcript.ts";
+import { providerForAgent, providerForSource, type ProviderContext } from "./conversation-providers.ts";
 
 export { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, TRANSCRIPT_WINDOW_BYTES } from "./conversation-shared.ts";
 export type { ConversationPage, NativeTranscript, PaneConversationReader, RecognizedConversation, ResolvedTranscript, StreamSource, TranscriptSources, TranscriptStream, TranscriptStreamReuse, TurnSource } from "./conversation-shared.ts";
@@ -50,26 +51,24 @@ export { claudePanePid, claudePaneSession, parseClaudeTranscript, transcriptImag
 
 import type { ConversationTurn, HerdrPane, SessionSnapshot } from "../shared/protocol.ts";
 import { herdrRpc, paneRead, sessionSnapshot } from "./herdr/client.ts";
-import { codexHistorySegments, codexOutputText, codexTranscriptPath, defaultCodexHome, forgetAllCodexState, forgetCodexStateFor, paneCodexHome, parseCodexTranscript, readRange, codexLiveTurn } from "./codex.ts";
-import { CODEX_IMAGE_REF, codexTranscriptImage } from "./codex-images.ts";
+import { codexHistorySegments, codexOutputText, defaultCodexHome, forgetAllCodexState, forgetCodexStateFor, parseCodexTranscript, readRange, codexLiveTurn } from "./codex.ts";
+import { CODEX_IMAGE_REF } from "./codex-images.ts";
 import { forgetClaudeSessionFile, forgetClaudeSessions } from "./claude-store.ts";
 import { forgetGjcState, gjcPidUnderShell, gjcTranscriptForPane, isGjcProcess } from "./gjc-runtime.ts";
-import { omoProcessIdentity, omoSessionForPane, processEnviron } from "./omo.ts";
-import { ompTranscriptPath } from "./omp.ts";
+import { omoProcessIdentity, omoTranscriptPath, processEnviron } from "./omo.ts";
 export { ompSessionStore } from "./omp.ts";
-import { forgetOpencodeRead, forgetOpencodeState, OPENCODE_IMAGE_REF, opencodeConversation, opencodeDatabasePath, opencodeImage, opencodeReadKey, opencodeSessionId, opencodeToolOutput } from "./opencode.ts";
-import { piTranscriptImage, piTranscriptPath, piToolOutput, PI_IMAGE_REF } from "./pi.ts";
+import { forgetOpencodeRead, forgetOpencodeState, OPENCODE_IMAGE_REF, opencodeReadKey } from "./opencode.ts";
+import { piToolOutput, PI_IMAGE_REF } from "./pi.ts";
 export { piTranscriptImage } from "./pi.ts";
-import { DevinHistoryUnavailable, devinConversation, forgetDevinState, isDevinProcess, devinSessionForPane, defaultDevinDbPath } from "./devin.ts";
+import { forgetDevinState, defaultDevinDbPath, devinProvider } from "./devin.ts";
 export { isDevinProcess, devinSessionForPane } from "./devin.ts";
 import { forgetGrokState, grokProjection, grokToolOutput, parseGrokTranscript, GrokUnavailable } from "./grok.ts";
-import { resolveGrokStore } from "./grok-store.ts";
-import { AgyUnavailable, agyCatalog, agyToolOutput, forgetAgyState, parseAgyTranscript, withAgyHistory, type AgyProjection } from "./agy.ts";
+import { AgyUnavailable, agyToolOutput, forgetAgyState, parseAgyTranscript, withAgyHistory, type AgyProjection } from "./agy.ts";
 import { resolveAgyStore, sameAgyStore } from "./agy-store.ts";
 import { withinRetentionBudget } from "./retention-budget.ts";
 import { forgetAllPiIndexes, forgetPiIndex, piAbandonedTurns, piBranchSegments } from "./pi-tree.ts";
 import { TOOL_OUTPUT_MAX, TOOL_REF } from "./tool-output.ts";
-import { forgetHermesTranscriptState, hermesConversationPage, hermesToolOutput, hermesTranscriptForPane } from "./hermes.ts";
+import { forgetHermesTranscriptState } from "./hermes.ts";
 
 import { parseOmpTranscript, piMessage, piResults } from "./transcript-records.ts";
 import { forgetSubagents } from "./claude-subagents.ts";
@@ -319,7 +318,7 @@ export async function labelOmoPanes(snapshot: SessionSnapshot): Promise<SessionS
  * label: omo's own store is read only when omo is really running
  * in that pane, never on a matching cwd alone.
  */
-async function resolveTranscript(pane: HerdrPane, cwd: string, codexHome?: string, panes?: HerdrPane[], opencodeDb?: string, hermesHome?: string, grokHome?: string): Promise<ResolvedTranscript> {
+async function resolveTranscript(pane: HerdrPane, cwd: string, codexHome?: string, panes?: HerdrPane[], opencodeDb?: string, hermesHome?: string, grokHome?: string): Promise<NativeTranscript> {
   const paneId = pane.pane_id;
   let agent = pane.agent ?? pane.agent_session?.agent ?? "";
   // herdr names no agent for this pane: a session report an earlier agent left behind says
@@ -338,70 +337,16 @@ async function resolveTranscript(pane: HerdrPane, cwd: string, codexHome?: strin
   if (await paneRunsOmo(paneId)) {
     return { source: "omo-transcript", path: await omoTranscriptPath(paneId, cwd, panes) };
   }
-  // omp and GJC can change their own cwd without changing the pane's shell directory; their
-  // session headers name the one they run in
-  const sessionCwd = typeof pane.foreground_cwd === "string" && pane.foreground_cwd.length > 0 ? pane.foreground_cwd : cwd;
+  const sources = { codexHome, opencodeDb, hermesHome, grokHome };
+  const provider = providerForAgent(agent);
+  if (provider === undefined) throw new ConversationUnavailable("no_recognized_transcript");
   try {
-    if (agent === "grok") {
-      const found = await resolveGrokStore(pane, grokHome);
-      if (!found) throw new ConversationUnavailable("no_session_path");
-      return { source: "grok-transcript", path: found };
-    }
-    if (agent === "agy") {
-      const found = await resolveAgyStore(pane);
-      if (!found) throw new ConversationUnavailable("no_session_path");
-      let transcriptExists: boolean;
-      try { transcriptExists = !!statSync(found.path, { throwIfNoEntry: false }); }
-      catch { throw new ConversationUnavailable("transcript_missing"); }
-      if (!transcriptExists) {
-        if (agyCatalog(found.path).size !== 0 || !sameAgyStore(found, await resolveAgyStore(pane))) throw new ConversationUnavailable("transcript_missing");
-        throw new ConversationNotStarted(found.session, "agy-transcript", found.path);
-      }
-      return { source: "agy-transcript", path: found.path, agy: found };
-    }
-    if (agent === "codex") {
-      // the pane's own store: the rollout, its history and its images are all read from there
-      const home = await paneCodexHome(paneId, codexHome);
-      const path = await codexTranscriptPath(paneId, cwd, home, panes);
-      if (!path) throw new ConversationUnavailable("no_session_path");
-      return { source: "codex-transcript", path, codexHome: home };
-    }
-    // Claude's project is the directory it started in, the process's own cwd more often than the pane's
-    if (agent === "claude") return { source: "claude-transcript", path: await claudeTranscriptPath(paneId, [cwd, pane.foreground_cwd]) };
-    if (agent === "omp") return { source: "omp-transcript", path: await ompTranscriptPath(paneId, sessionCwd) };
-    if (agent === "gjc") return { source: "gjc-transcript", path: await gjcTranscriptPath(paneId, sessionCwd) };
-    // pi's own label only routes pi: an omo pane was taken above, by its process tree.
-    if (agent === "pi") {
-      const found = await piTranscriptPath(paneId);
-      if (found === null) throw new ConversationUnavailable("no_session_path");
-      if ("unwritten" in found) throw new ConversationNotStarted(found.unwritten.id, "pi-transcript", found.unwritten.path);
-      return { source: "pi-transcript", path: found.path };
-    }
-    if (agent === "opencode") {
-      // herdr's integration names the session the TUI shows; at its home screen there is none
-      const session = opencodeSessionId(pane);
-      if (session === null) throw new ConversationUnavailable("no_session_id");
-      const path = opencodeDb ?? opencodeDatabasePath();
-      if (path === null) throw new ConversationUnavailable("no_session_path");
-      return { source: "opencode-transcript", path, session };
-    }
-    if (agent === "hermes") {
-      const resolved = await hermesTranscriptForPane(pane, cwd, hermesHome);
-      return { source: "hermes-transcript", path: resolved.dbPath, sessionId: resolved.sessionId };
-    }
-    throw new ConversationUnavailable("no_recognized_transcript");
+    return await provider.resolve(pane, cwd, sources, panes);
   } catch (error) {
     if (error instanceof AgyUnavailable) throw new ConversationUnavailable("transcript_missing");
     if (!(error instanceof ConversationUnavailable) || !(await paneRunsOmo(paneId))) throw error;
     return { source: "omo-transcript", path: await omoTranscriptPath(paneId, cwd, panes) };
   }
-}
-
-async function omoTranscriptPath(paneId: string, cwd: string, panes?: HerdrPane[]): Promise<string> {
-  const session = await omoSessionForPane(paneId, cwd, panes ?? (await sessionSnapshot()).panes);
-  if (session.pending !== null) throw new ConversationNotStarted(session.pending);
-  if (!session.path) throw new ConversationUnavailable("no_session_path");
-  return session.path;
 }
 
 
@@ -412,23 +357,11 @@ export async function paneTranscript(paneId: string, codexHome?: string, snapsho
   if (pane === undefined) throw new ConversationUnavailable("pane_not_found");
   if (typeof pane.cwd !== "string" || pane.cwd.length === 0) throw new ConversationUnavailable("no_recognized_transcript");
 
+  // Devin is dispatched here and not through resolveTranscript because conversationImage and
+  // toolOutput call resolveTranscript directly and must not resolve Devin for a pane it never
+  // confirmed; today they answer null there.
   if (pane.agent === "devin" && !(await paneRunsOmo(paneId))) {
-    const cwd = pane.foreground_cwd || pane.cwd;
-    const storePath = devinDbPath ?? defaultDevinDbPath();
-    const info = await herdrRpc<{ process_info?: { foreground_processes?: { argv?: unknown }[] } }>(
-      "pane.process_info", { pane_id: paneId },
-    ).catch(() => null);
-    const processes = (info?.process_info?.foreground_processes ?? []).filter((process) =>
-      Array.isArray(process.argv) && process.argv.every((arg) => typeof arg === "string") &&
-      isDevinProcess(process.argv as string[]) && process.argv[1] !== "acp",
-    );
-    if (processes.length > 1) throw new ConversationUnavailable("transcript_missing");
-    // No Devin runs under the label: what does run is resolved below, as it was before this
-    // reader (an omo is found by its process tree, whatever herdr calls the pane).
-    if (processes.length === 1) {
-      const session = devinSessionForPane(pane, panes, processes[0]!.argv as string[]);
-      return { source: "devin-transcript", path: storePath, session, cwd };
-    }
+    return devinProvider.resolve(pane, pane.cwd, { codexHome, devinDbPath, opencodeDb, hermesHome, grokHome, snapshot }, panes);
   }
 
   return resolveTranscript(pane, pane.cwd, codexHome, panes, opencodeDb, hermesHome, grokHome);
@@ -525,30 +458,30 @@ async function readConversation(paneId: string, resolved: NativeTranscript, snap
     return notBegunConversation(paneId, error.source, `unwritten:${error.sessionId}`);
   };
 
+  const sources = { codexHome, devinDbPath, opencodeDb, hermesHome, grokHome };
+  const call: ProviderContext = {
+    resolved,
+    sources,
+    cwd: snapshot.panes.find((pane) => pane.pane_id === paneId)?.cwd ?? "",
+    paneId,
+    reuse,
+  };
+  const provider = providerForSource(resolved.source);
+
   if (resolved.source === "devin-transcript") {
-    try {
-      const answer = devinConversation(resolved.session, resolved.cwd, page, resolved.path);
-      rememberPaneDevin(paneId, resolved.session, resolved.cwd, resolved.path);
-      return answer;
-    } catch (error) {
-      if (error instanceof DevinHistoryUnavailable) throw new ConversationUnavailable("transcript_missing");
-      throw error;
-    }
+    const answer = provider.page(call, page);
+    rememberPaneDevin(paneId, resolved.session, resolved.cwd, resolved.path);
+    return answer;
   }
   if (resolved.source === "opencode-transcript") {
     // its caches are keyed by store and session, which is what the pane is remembered against
     rememberPaneRead(paneId, opencodeReadKey(resolved.path, resolved.session));
-    const answer = opencodeConversation(resolved.path, resolved.session, page);
-    if (answer.kind === "history_changed") throw new HistoryChanged();
-    if (answer.kind === "unavailable") throw new ConversationUnavailable(answer.reason);
-    const { kind: _kind, signature, ...conversation } = answer;
-    const key = `opencode\0${resolved.path}\0${resolved.session}\0${page.before ?? ""}\0${page.since ?? ""}\0${page.from ?? ""}`;
-    return { source: resolved.source, ...conversation, version: answerVersion(key, signature) };
+    return provider.page(call, page);
   }
   if (resolved.source === "hermes-transcript") {
     rememberPaneRead(paneId, resolved.path);
     try {
-      const answer = hermesConversationPage(resolved.sessionId, resolved.path, page);
+      const answer = provider.page(call, page);
       conversationCache.writtenSessions.add(`${resolved.source}\0${resolved.sessionId}`);
       rememberPaneSession(paneId, `${resolved.source}\0${resolved.sessionId}`);
       return answer;
@@ -561,7 +494,7 @@ async function readConversation(paneId: string, resolved: NativeTranscript, snap
     : resolved.source === "claude-transcript" ? nodePath.basename(resolved.path, ".jsonl")
     : resolved.source === "pi-transcript" || resolved.source === "omp-transcript" ? realpathSync(resolved.path) : null;
   rememberPaneRead(paneId, resolved.path);
-  const answer = transcriptPage(resolved.source, resolved.path, page, resolved.codexHome ?? codexHome, reuse);
+  const answer = provider.page(call, page);
   const status = snapshot.panes.find((pane) => pane.pane_id === paneId)?.agent_status;
   if (resolved.source === "grok-transcript" && answer.turns.length === 0 && page.before === undefined
     && (status === "working" || status === "blocked")) {
@@ -570,12 +503,8 @@ async function readConversation(paneId: string, resolved: NativeTranscript, snap
     try { revision = grokProjection(resolved.path, statSync(resolved.path)).revision; } catch { /* unreadable now */ }
     if (revision === null || revision === "0") throw new ConversationUnavailable("transcript_missing");
   }
-  if (resolved.agy && !sameAgyStore(resolved.agy, await resolveAgyStore(snapshot.panes.find((pane) => pane.pane_id === paneId)!))) throw new ConversationUnavailable("no_session_path");
+  if ("agy" in resolved && resolved.agy !== undefined && !sameAgyStore(resolved.agy, await resolveAgyStore(snapshot.panes.find((pane) => pane.pane_id === paneId)!))) throw new ConversationUnavailable("no_session_path");
   if (identity !== null) { conversationCache.writtenSessions.add(`${resolved.source}\0${identity}`); rememberPaneSession(paneId, `${resolved.source}\0${identity}`); }
-  if (resolved.source === "grok-transcript") {
-    try { return { ...answer, activity: grokProjection(resolved.path, statSync(resolved.path)).activity }; }
-    catch { throw new ConversationUnavailable("transcript_missing"); }
-  }
   return answer;
 }
 
@@ -664,15 +593,18 @@ export async function conversationImage(paneId: string, ref: string, codexHome?:
   const snapshot = await sessionSnapshot();
   const pane = snapshot.panes.find((candidate) => candidate.pane_id === paneId);
   if (pane === undefined || typeof pane.cwd !== "string" || pane.cwd.length === 0) return null;
-  let resolved: ResolvedTranscript;
+  let resolved: NativeTranscript;
   try { resolved = await resolveTranscript(pane, pane.cwd, codexHome, snapshot.panes, opencodeDb); }
   catch (error) { if (error instanceof ConversationUnavailable) return null; throw error; }
+  const sources = { codexHome, opencodeDb };
+  const call: ProviderContext = { resolved, sources, cwd: pane.cwd, paneId };
   // OpenCode's store is read per request and keeps nothing for the pane to release
-  if (resolved.source === "opencode-transcript") return opencodeImage(resolved.path, resolved.session, ref);
+  if (resolved.source === "opencode-transcript") return providerForSource(resolved.source).readImage(call, ref);
   rememberPaneRead(paneId, resolved.path);
-  if (resolved.source === "codex-transcript") return codexTranscriptImage(codexHistorySegments(resolved.path, resolved.codexHome ?? codexHome), ref, pane.cwd);
-  if (resolved.source === "pi-transcript") return piTranscriptImage(resolved.path, ref);
-  return resolved.source === "claude-transcript" ? transcriptImage(resolved.path, ref) : null;
+  if (resolved.source === "codex-transcript" || resolved.source === "pi-transcript" || resolved.source === "claude-transcript") {
+    return providerForSource(resolved.source).readImage(call, ref);
+  }
+  return null;
 }
 
 /** The whole output of a tool call whose page output was cut, by its id; null when there is none. */
@@ -681,17 +613,18 @@ export async function toolOutput(paneId: string, ref: string, codexHome?: string
   const snapshot = await sessionSnapshot();
   const pane = snapshot.panes.find((candidate) => candidate.pane_id === paneId);
   if (pane === undefined || typeof pane.cwd !== "string" || pane.cwd.length === 0) return null;
-  let resolved: ResolvedTranscript;
+  let resolved: NativeTranscript;
   try { resolved = await resolveTranscript(pane, pane.cwd, codexHome, snapshot.panes, opencodeDb, hermesHome, grokHome); }
   catch (error) { if (error instanceof ConversationUnavailable) return null; throw error; }
+  const sources = { codexHome, opencodeDb, hermesHome, grokHome };
+  const call: ProviderContext = { resolved, sources, cwd: pane.cwd, paneId };
   if (resolved.source === "opencode-transcript") {
-    const output = opencodeToolOutput(resolved.path, resolved.session, ref);
-    return output !== null && output.length > TOOL_OUTPUT_MAX ? `${output.slice(0, TOOL_OUTPUT_MAX)}\n… trimmed` : output;
+    return providerForSource(resolved.source).readToolOutput(call, ref);
   }
   rememberPaneRead(paneId, resolved.path);
-  if (resolved.source === "hermes-transcript") return hermesToolOutput(resolved.sessionId, resolved.path, ref, TOOL_OUTPUT_MAX);
-  const output = transcriptToolOutput(resolved.source, resolved.path, ref, resolved.codexHome ?? codexHome);
-  if (resolved.agy && !sameAgyStore(resolved.agy, await resolveAgyStore(pane))) return null;
+  if (resolved.source === "hermes-transcript") return providerForSource(resolved.source).readToolOutput(call, ref);
+  const output = providerForSource(resolved.source).readToolOutput(call, ref);
+  if ("agy" in resolved && resolved.agy !== undefined && !sameAgyStore(resolved.agy, await resolveAgyStore(pane))) return null;
   return output;
 }
 
