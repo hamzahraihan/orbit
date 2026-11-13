@@ -1,12 +1,14 @@
 /**
- * Transcript provider interface and exhaustive 11-source registry.
+ * The transcript provider contract: the `TranscriptProvider` interface, the
+ * `ProviderContext` every page/image/tool-output call carries, and the
+ * exhaustive 11-source descriptor registry.
  *
- * This module defines the `TranscriptProvider` interface that every vendor
- * provider implements (todos 6-7) and the exhaustive registry that replaces the
- * `if (agent === ...)` chain in `resolveTranscript`.
+ * This module defines the shapes that every vendor provider implements in todo
+ * 6 and the exhaustive registry that replaces the `if (agent === ...)` chain in
+ * `resolveTranscript`.
  *
  * The interface declares shapes only: an interface has no bodies, and every
- * implementation arrives in todos 6-7. Until then the registry holds descriptors
+ * implementation arrives in todo 6. Until then the registry holds descriptors
  * (source plus name), not placeholder providers, so nothing here claims to read
  * a store it cannot.
  *
@@ -17,7 +19,7 @@
  *     without pulling the reader module in behind them.
  *
  * Must NOT:
- *   - Implement any provider behavior (todos 6-7 own that).
+ *   - Implement any provider behavior (todo 6 owns that).
  *   - Include a per-provider `stat` operation; ConversationMonitor stats are
  *     generic (server/conversation-monitor.ts).
  *   - Import server/conversation.ts (the hub), directly or transitively.
@@ -29,15 +31,37 @@ import { ConversationUnavailable } from "./conversation-shared.ts";
 import type {
   ConversationNotStarted,
   ConversationPage,
+  NativeTranscript,
   RecognizedConversation,
-  ResolvedTranscript,
   TranscriptSources,
   TranscriptStreamReuse,
   TurnSource,
 } from "./conversation-shared.ts";
 
 /**
- * The interface every provider implements (todos 6-7).
+ * What a page, image or tool-output call carries: the transcript the hub already
+ * resolved, the store paths and snapshot it resolved with, the pane's working
+ * directory, and optionally the pane id and the stream reuse token.
+ *
+ * One object instead of loose arguments because opencode and hermes need their
+ * session/session id (only `resolved` has it), and codex's image ref must stay
+ * inside the pane's cwd (only `cwd` says where that is).
+ */
+export interface ProviderContext {
+  /** The transcript this call reads, resolved by the hub. */
+  resolved: NativeTranscript;
+  /** The store paths and the snapshot the hub read this conversation with. */
+  sources: TranscriptSources;
+  /** The pane's working directory: codex's image ref must not escape it. */
+  cwd: string;
+  /** The pane's id, for a provider that must remember what it read. */
+  paneId?: string;
+  /** The stream reuse token for this conversation, so pages after the first reuse the stream. */
+  reuse?: TranscriptStreamReuse;
+}
+
+/**
+ * The interface every provider implements (todo 6).
  *
  * Covers what the hub does per vendor today: resolve a pane to a transcript,
  * page it, read an image, read a tool output, invalidate its cache, expose
@@ -49,16 +73,16 @@ import type {
  */
 export interface TranscriptProvider {
   /** Mirrors resolveTranscript: the pane, its cwd, the store paths, and the panes to search for a session id. */
-  resolve(pane: HerdrPane, cwd: string, sources: TranscriptSources, panes?: HerdrPane[]): Promise<ResolvedTranscript>;
+  resolve(pane: HerdrPane, cwd: string, sources: TranscriptSources, panes?: HerdrPane[]): Promise<NativeTranscript>;
 
   /** Mirrors transcriptPage: one page of this provider's transcript, reusing the hub's stream when handed one. */
-  page(path: string, page: ConversationPage, sources: TranscriptSources, reuse?: TranscriptStreamReuse): RecognizedConversation;
+  page(call: ProviderContext, page: ConversationPage): RecognizedConversation;
 
   /** Mirrors transcriptImage: the image bytes behind a ref, or null when the transcript has none. */
-  readImage(path: string, ref: string, sources: TranscriptSources): { mediaType: string; bytes: Uint8Array<ArrayBuffer> } | null;
+  readImage(call: ProviderContext, ref: string): Promise<{ mediaType: string; bytes: Uint8Array<ArrayBuffer> } | null>;
 
   /** Mirrors transcriptToolOutput: the tool result text behind a ref, or null when it is not there. */
-  readToolOutput(path: string, ref: string, sources: TranscriptSources): string | null;
+  readToolOutput(call: ProviderContext, ref: string): string | null;
 
   /** Mirrors the per-provider forget*State calls: one path's cache, or all of it when no path is given. */
   invalidateCache(path?: string): void;

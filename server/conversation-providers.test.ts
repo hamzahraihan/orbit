@@ -6,6 +6,7 @@ import {
   providerForRequired,
   transcriptProviderRegistry,
 } from "./conversation-providers.ts";
+import type { ProviderContext } from "./conversation-providers.ts";
 
 // The 11 source literals in RecognizedConversation["source"]
 const ALL_SOURCES: ReadonlyArray<TurnSource> = [
@@ -49,5 +50,18 @@ describe("transcript provider registry", () => {
     expect(() => providerForRequired("unknown-transcript" as TurnSource)).toThrow(
       ConversationUnavailable,
     );
+  });
+
+  it("carries the resolved transcript, sources and cwd in one context", () => {
+    const call: ProviderContext = {
+      resolved: { source: "hermes-transcript", path: "/tmp/hermes/session.json", sessionId: "sess-42" },
+      sources: { hermesHome: "/tmp/hermes" },
+      cwd: "/tmp/worktree",
+    };
+
+    expect(call.cwd).toBe("/tmp/worktree");
+    expect(call.sources.hermesHome).toBe("/tmp/hermes");
+    if (call.resolved.source !== "hermes-transcript") throw new Error("expected a hermes transcript");
+    expect(call.resolved.sessionId).toBe("sess-42");
   });
 });
