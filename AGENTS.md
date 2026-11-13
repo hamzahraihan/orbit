@@ -98,3 +98,20 @@ to change. Also read [server/AGENTS.md](server/AGENTS.md) and [src/AGENTS.md](sr
   in a comment that CodeRabbit did not review it, and merges on its checks and the maintainer.
 - Changelog entries go in `changelog.d/` fragments ([format](changelog.d/README.md)), not
   CHANGELOG.md; only a release folds them in.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues in `hamzahraihan/orbit` and are read and written with the `gh` CLI. See
+`docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles use the default label strings `needs-triage`, `needs-info`,
+`ready-for-agent`, `ready-for-human` and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and one `docs/adr/` at the repo root. See
+`docs/agents/domain.md`.
