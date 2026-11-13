@@ -39,23 +39,22 @@ import nodePath, { type PlatformPath } from "node:path";
 
 import { PI_PAGE_CACHE_BYTES } from "./conversation-cache.ts";
 import { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, TRANSCRIPT_WINDOW_BYTES, type ConversationPage, type NativeTranscript, type PaneConversationReader, type RecognizedConversation, type ResolvedTranscript, type StreamSource, type TranscriptStream, type TranscriptStreamReuse } from "./conversation-shared.ts";
-import { bytesBefore, METADATA_HEAD_BYTES, readStream, readTranscriptPage, remember, resolveStream, streamFiles, type PageSource, type StreamSpec, type StreamStat, type TranscriptEntry } from "./conversation-reader.ts";
-import { claudeResultText, IMAGE_TYPES, parseClaudeTranscript, subagentsOnPage } from "./claude-transcript.ts";
+import { bytesBefore, activeHistoryText, METADATA_HEAD_BYTES, readStream, readTranscriptPage, remember, resolveStream, streamFiles, type PageSource, type StreamSpec, type StreamStat } from "./conversation-reader.ts";
+import { claudeToolResult, claudeTranscriptPath, IMAGE_REF, parseClaudeTranscript, subagentsOnPage, transcriptImage } from "./claude-transcript.ts";
 
 export { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, TRANSCRIPT_WINDOW_BYTES } from "./conversation-shared.ts";
 export type { ConversationPage, NativeTranscript, PaneConversationReader, RecognizedConversation, ResolvedTranscript, StreamSource, TranscriptSources, TranscriptStream, TranscriptStreamReuse, TurnSource } from "./conversation-shared.ts";
 export { buildStream, readTranscriptPage, resolveStream, streamFiles } from "./conversation-reader.ts";
 export type { PageSource, ParseTurns, StreamSpec, StreamStat } from "./conversation-reader.ts";
-export { parseClaudeTranscript, unwrapPastes } from "./claude-transcript.ts";
+export { claudePanePid, claudePaneSession, parseClaudeTranscript, transcriptImage, unwrapPastes } from "./claude-transcript.ts";
 
 import type { ConversationMetadata, ConversationTurn, HerdrPane, SessionSnapshot } from "../shared/protocol.ts";
 import { herdrRpc, paneRead, sessionSnapshot } from "./herdr/client.ts";
 import { codexHistorySegments, createCodexTranscriptParser, codexOutputText, codexTranscriptPath, defaultCodexHome, forgetAllCodexState, forgetCodexStateFor, paneCodexHome, parseCodexTranscript, readRange } from "./codex.ts";
 import { CODEX_IMAGE_REF, codexTranscriptImage } from "./codex-images.ts";
-import { AmbiguousClaudeStore, claudeProcessSession, claudeTranscriptFile, defaultClaudeConfigDir, forgetClaudeSessionFile, forgetClaudeSessions, isClaudeProcess, processClaudeConfigDir } from "./claude-store.ts";
+import { forgetClaudeSessionFile, forgetClaudeSessions } from "./claude-store.ts";
 import { forgetGjcState, gjcPidUnderShell, gjcTranscriptForPane, isGjcProcess, storeRelative } from "./gjc-runtime.ts";
 import { omoProcessIdentity, omoSessionForPane, processEnviron } from "./omo.ts";
-import { processStartedAt } from "./process-start.ts";
 import { ompHeldTranscript } from "./omp.ts";
 import { forgetOpencodeRead, forgetOpencodeState, OPENCODE_IMAGE_REF, opencodeConversation, opencodeDatabasePath, opencodeImage, opencodeReadKey, opencodeSessionId, opencodeToolOutput } from "./opencode.ts";
 import { piTranscriptInStore, piTranscriptPath, unwrittenSession } from "./pi.ts";
@@ -67,6 +66,7 @@ import { resolveAgyStore, sameAgyStore } from "./agy-store.ts";
 import { withinRetentionBudget } from "./retention-budget.ts";
 import { forgetAllPiIndexes, forgetPiIndex, piAbandonedTurns, piBranchRecords, piBranchSegments } from "./pi-tree.ts";
 import { parseConversationMetadata } from "./conversation-metadata.ts";
+import { TOOL_OUTPUT_MAX, TOOL_REF } from "./tool-output.ts";
 import { forgetHermesTranscriptState, hermesConversationPage, hermesToolOutput, hermesTranscriptForPane } from "./hermes.ts";
 
 import { isContextClear, parseOmpTranscript, piImageBlock, piMessage, piResults } from "./transcript-records.ts";
@@ -75,9 +75,6 @@ import { launchedAgents } from "./launched-agents.ts";
 import { readsStartScreen, startScreenMetadata } from "./start-screen.ts";
 
 export { isOmoProcess } from "./omo.ts";
-
-/** Session ids are uuids; refusing anything else keeps the path traversal-free. */
-const SESSION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Read sessions by source and canonical path (Claude uses its unique session id): a removed file is not unwritten. */
 
@@ -336,62 +333,6 @@ export async function labelOmoPanes(snapshot: SessionSnapshot): Promise<SessionS
     panes: snapshot.panes.map((pane) => omo.has(pane.pane_id) ? { ...pane, agent: "omo" } : pane),
     agents: snapshot.agents.map((agent) => omo.has(agent.pane_id) ? { ...agent, agent: "omo" } : agent),
   };
-}
-
-/** The Claude processes in a pane's foreground; none when herdr cannot say. */
-async function claudeProcesses(paneId: string): Promise<{ pid: number; name?: string; argv0?: string; argv?: string[] }[]> {
-  try {
-    const processInfo = await herdrRpc<{ process_info?: { foreground_processes?: { pid: number; name?: string; argv0?: string; argv?: string[] }[] } }>(
-      "pane.process_info", { pane_id: paneId },
-    );
-    return processInfo.process_info?.foreground_processes?.filter(isClaudeProcess) ?? [];
-  } catch { return []; /* herdr busy: the default store */ }
-}
-
-/** The pid of the one Claude process in a pane's foreground, or null. */
-export async function claudePanePid(pane: HerdrPane): Promise<number | null> {
-  const processes = await claudeProcesses(pane.pane_id);
-  return processes.length === 1 ? processes[0]!.pid : null;
-}
-
-/**
- * Claude's transcript: Herdr's hook, or a unique live Claude's native PID record, in the config dir
- * of the pane's Claude process (a launcher can give each environment its own CLAUDE_CONFIG_DIR).
- */
-async function claudeTranscriptPath(paneId: string, cwds: readonly (string | null | undefined)[], onProcess?: (pid: number) => void): Promise<string> {
-  const info = await herdrRpc<{ agent: { agent_session?: { value?: unknown } } }>("agent.get", { target: paneId });
-  let session = info.agent.agent_session?.value;
-  const home = process.env["HOME"] ?? "";
-  const processes = await claudeProcesses(paneId);
-  const only = processes.length === 1 ? processes[0] : undefined;
-  if (only) onProcess?.(only.pid);
-  let processDir: string | null = null;
-  try {
-    processDir = only ? await processClaudeConfigDir(only.pid, only.argv ?? [only.argv0 ?? only.name ?? ""], home) : null;
-  } catch (error) {
-    // two stores claim the process: ~/.claude would be a guess, maybe another account's session (#586)
-    if (error instanceof AmbiguousClaudeStore) throw new ConversationUnavailable("no_session_id");
-    throw error;
-  }
-  const configDir = processDir || defaultClaudeConfigDir(home);
-  if ((typeof session !== "string" || !SESSION_ID.test(session)) && only) session = await claudeProcessSession(home, only.pid, configDir);
-  if (typeof session !== "string" || !SESSION_ID.test(session)) throw new ConversationUnavailable("no_session_id");
-  const path = await claudeTranscriptFile(home, session, cwds, configDir);
-  // Claude writes the file with its first message: until then the session it reports holds nothing
-  if (!path) throw new ConversationNotStarted(session, "claude-transcript");
-  return path;
-}
-
-/** A Claude pane's transcript and when its Claude process started (null when it cannot be told), or null while it has no transcript. */
-export async function claudePaneSession(pane: HerdrPane): Promise<{ path: string; startedAt: number | null; pid: number | null } | null> {
-  let pid: number | null = null;
-  try {
-    const path = await claudeTranscriptPath(pane.pane_id, [pane.cwd, pane.foreground_cwd], (found) => { pid = found; });
-    return { path, startedAt: pid === null ? null : processStartedAt(pid), pid };
-  } catch (error) {
-    if (error instanceof ConversationUnavailable) return null;
-    throw error;
-  }
 }
 
 /**
@@ -838,35 +779,6 @@ export async function conversationImage(paneId: string, ref: string, codexHome?:
   return resolved.source === "claude-transcript" ? transcriptImage(resolved.path, ref) : null;
 }
 
-const IMAGE_REF = /^([0-9a-f-]{8,64}):(\d{1,3})$/i;
-
-/** The image an image part's ref names in a Claude transcript file, decoded; null when there is none. */
-export function transcriptImage(path: string, ref: string): { mediaType: string; bytes: Uint8Array<ArrayBuffer> } | null {
-  const match = IMAGE_REF.exec(ref);
-  if (match === null) return null;
-  const [, uuid, index] = match;
-  let text: string;
-  try { text = readFileSync(path, "utf8"); } catch { return null; }
-  text = activeHistoryText(text, "claude-transcript");
-  const needle = JSON.stringify(uuid);
-  for (const line of text.split("\n")) {
-    if (!line.includes(needle)) continue;
-    let entry: TranscriptEntry;
-    try { entry = JSON.parse(line) as TranscriptEntry; } catch { continue; }
-    if (entry.uuid !== uuid || !Array.isArray(entry.message?.content)) continue;
-    const block = entry.message.content[Number(index)] as { type?: unknown; source?: { type?: unknown; media_type?: unknown; data?: unknown } } | undefined;
-    if (block?.type !== "image" || block.source?.type !== "base64" || typeof block.source.data !== "string") return null;
-    const mediaType = String(block.source.media_type);
-    if (!IMAGE_TYPES.has(mediaType)) return null;
-    return { mediaType, bytes: new Uint8Array(Buffer.from(block.source.data, "base64")) };
-  }
-  return null;
-}
-
-const TOOL_REF = /^[A-Za-z0-9_:.-]{1,128}$/;
-/** A whole output is still bounded: a page of it, not a log file. */
-const TOOL_OUTPUT_MAX = 2_000_000;
-
 /** The whole output of a tool call whose page output was cut, by its id; null when there is none. */
 export async function toolOutput(paneId: string, ref: string, codexHome?: string, opencodeDb?: string, hermesHome?: string, grokHome?: string): Promise<string | null> {
   if (!TOOL_REF.test(ref)) return null;
@@ -971,9 +883,7 @@ function outputInText(source: RecognizedConversation["source"], text: string, re
     try { entry = JSON.parse(line) as Record<string, unknown>; } catch { continue; }
     let output: string | null = null;
     if (source === "claude-transcript") {
-      const content = (entry.message as { content?: unknown } | undefined)?.content;
-      const result = Array.isArray(content) ? content.find((block) => (block as { type?: unknown; tool_use_id?: unknown } | null)?.type === "tool_result" && (block as { tool_use_id?: unknown }).tool_use_id === ref) : undefined;
-      if (result !== undefined) output = claudeResultText((result as { content?: unknown }).content);
+      output = claudeToolResult(entry, ref);
     } else if (source === "codex-transcript") {
       const payload = entry.payload as { type?: unknown; call_id?: unknown; output?: unknown } | undefined;
       if ((payload?.type === "function_call_output" || payload?.type === "custom_tool_call_output") && payload.call_id === ref) output = codexOutputText(payload.output);
@@ -986,15 +896,3 @@ function outputInText(source: RecognizedConversation["source"], text: string, re
   return null;
 }
 
-/** Asset reads share the reset boundary even when their ref predates /clear. */
-function activeHistoryText(text: string, source: RecognizedConversation["source"]): string {
-  if (source === "codex-transcript") return text;
-  let start = 0, offset = 0;
-  for (const line of text.split("\n")) {
-    if (line.includes("context_clear") || line.includes("/clear")) {
-      try { if (isContextClear(JSON.parse(line), source)) start = offset + line.length + 1; } catch { /* torn line */ }
-    }
-    offset += line.length + 1;
-  }
-  return text.slice(start);
-}

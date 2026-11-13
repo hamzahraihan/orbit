@@ -181,6 +181,7 @@ describe("herdr socket", () => {
   // open PRs change them; a follow-up PR moves them to the wrappers once those PRs land.
   const HERDR_RPC_ALLOWED: Record<string, string> = {
     "server/conversation.ts": "open PRs #869 #912 #923 change it",
+    "server/claude-transcript.ts": "todo 7 moved Claude's pane.process_info and agent.get calls out of server/conversation.ts",
     "server/gjc-runtime.ts": "open PR #912 changes it",
     "server/hermes.ts": "open PR #910 changes it",
     "server/omo.ts": "open PR #923 changes it",

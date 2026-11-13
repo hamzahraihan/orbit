@@ -229,6 +229,25 @@ export function isCommandEntry(text: string): boolean {
   return text.startsWith("<command-") || text.startsWith("<local-command") || text.startsWith("<task-");
 }
 
+/**
+ * Asset reads share the reset boundary even when their ref predates /clear: the text a tool
+ * output or an image is looked up in is the text after the last clear, as the page reads it.
+ *
+ * The text-level twin of `applyHistoryBoundary`, which draws the same boundary on the stream
+ * a page is read from: an asset read has no stream, only the whole file.
+ */
+export function activeHistoryText(text: string, source: TurnSource): string {
+  if (source === "codex-transcript") return text;
+  let start = 0, offset = 0;
+  for (const line of text.split("\n")) {
+    if (line.includes("context_clear") || line.includes("/clear")) {
+      try { if (isContextClear(JSON.parse(line), source)) start = offset + line.length + 1; } catch { /* torn line */ }
+    }
+    offset += line.length + 1;
+  }
+  return text.slice(start);
+}
+
 /** Bytes that every line opening a turn contains: a cheap filter before JSON.parse. */
 /** the mark of another session's message in a Claude record, in either of its forms (claudePeerNotice) */
 const PEER_MARK = Buffer.from('"kind":"peer"');

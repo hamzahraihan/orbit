@@ -1,6 +1,6 @@
 /**
  * Claude Code's own transcript: the parser that turns one session file into turns, and
- * the helpers that read what Claude Code writes besides an answer.
+ * the provider that reads the store it lives in.
  *
  * The file is `<config dir>/projects/<project>/<session>.jsonl` (claude-store.ts finds it).
  * Inside it Claude Code records the prompts, the answers, the tool calls and their results,
@@ -9,7 +9,7 @@
  *
  * The parser here is pure: text in, turns out. Which file a pane's session is in, and when
  * that session has written nothing yet, is the store's business (claude-store.ts), and the
- * provider below is what the hub asks for a page, an image or a tool output.
+ * `claudeProvider` below is what the hub asks for a page, an image or a tool output.
  *
  * Must NOT:
  *   - Import server/conversation.ts (the hub): a provider module that imports the hub back
@@ -18,12 +18,20 @@
  *     `noticed`) and every reason code stay exactly as they were.
  */
 
-import type { ConversationPart, ConversationTurn } from "../shared/protocol.ts";
+import { readFileSync, statSync } from "node:fs";
+
+import type { ConversationPart, ConversationTurn, HerdrPane } from "../shared/protocol.ts";
 import { lineNotifications, subagentDetails, taskNotification, type SubagentDetail } from "./claude-subagents.ts";
-import { isCommandEntry, type TranscriptEntry } from "./conversation-reader.ts";
+import { AmbiguousClaudeStore, claudeProcessSession, claudeTranscriptFile, defaultClaudeConfigDir, forgetClaudeSessionFile, forgetClaudeSessions, isClaudeProcess, processClaudeConfigDir } from "./claude-store.ts";
+import { ConversationNotStarted, ConversationUnavailable, type ConversationPage, type NativeTranscript, type TranscriptSources } from "./conversation-shared.ts";
+import type { ProviderContext, TranscriptProvider } from "./conversation-providers.ts";
+import { activeHistoryText, isCommandEntry, readTranscriptPage, resolveStream, type ParseTurns, type StreamSpec, type StreamStat, type TranscriptEntry } from "./conversation-reader.ts";
+import { herdrRpc } from "./herdr/client.ts";
+import { processStartedAt } from "./process-start.ts";
 import { invokedSkill } from "./skill-activity.ts";
 import { claudeCommandEcho } from "./skill-invocations/claude.ts";
-import { trimOutput } from "./tool-output.ts";
+import { startScreenMetadata } from "./start-screen.ts";
+import { TOOL_OUTPUT_MAX, TOOL_REF, trimOutput } from "./tool-output.ts";
 import { agentTaskResult, claudePeerId, claudePeerNotice, isContextClear, MAX_TURNS, toolSummary } from "./transcript-records.ts";
 
 /** A command's answer is a notice, not a log: the rest of a long one stays in the terminal. */
@@ -384,3 +392,184 @@ export function subagentsOnPage(path: string, text: string): ReadonlyMap<string,
   for (const line of text.split("\n")) for (const notice of lineNotifications(line)) if (notice.agent) ids.add(notice.taskId);
   return ids.size === 0 ? undefined : subagentDetails(path, ids);
 }
+
+/** Session ids are uuids; refusing anything else keeps the path traversal-free. */
+const SESSION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** The Claude processes in a pane's foreground; none when herdr cannot say. */
+async function claudeProcesses(paneId: string): Promise<{ pid: number; name?: string; argv0?: string; argv?: string[] }[]> {
+  try {
+    const processInfo = await herdrRpc<{ process_info?: { foreground_processes?: { pid: number; name?: string; argv0?: string; argv?: string[] }[] } }>(
+      "pane.process_info", { pane_id: paneId },
+    );
+    return processInfo.process_info?.foreground_processes?.filter(isClaudeProcess) ?? [];
+  } catch { return []; /* herdr busy: the default store */ }
+}
+
+/** The pid of the one Claude process in a pane's foreground, or null. */
+export async function claudePanePid(pane: HerdrPane): Promise<number | null> {
+  const processes = await claudeProcesses(pane.pane_id);
+  return processes.length === 1 ? processes[0]!.pid : null;
+}
+
+/**
+ * Claude's transcript: Herdr's hook, or a unique live Claude's native PID record, in the config dir
+ * of the pane's Claude process (a launcher can give each environment its own CLAUDE_CONFIG_DIR).
+ */
+export async function claudeTranscriptPath(paneId: string, cwds: readonly (string | null | undefined)[], onProcess?: (pid: number) => void): Promise<string> {
+  const info = await herdrRpc<{ agent: { agent_session?: { value?: unknown } } }>("agent.get", { target: paneId });
+  let session = info.agent.agent_session?.value;
+  const home = process.env["HOME"] ?? "";
+  const processes = await claudeProcesses(paneId);
+  const only = processes.length === 1 ? processes[0] : undefined;
+  if (only) onProcess?.(only.pid);
+  let processDir: string | null = null;
+  try {
+    processDir = only ? await processClaudeConfigDir(only.pid, only.argv ?? [only.argv0 ?? only.name ?? ""], home) : null;
+  } catch (error) {
+    // two stores claim the process: ~/.claude would be a guess, maybe another account's session (#586)
+    if (error instanceof AmbiguousClaudeStore) throw new ConversationUnavailable("no_session_id");
+    throw error;
+  }
+  const configDir = processDir || defaultClaudeConfigDir(home);
+  if ((typeof session !== "string" || !SESSION_ID.test(session)) && only) session = await claudeProcessSession(home, only.pid, configDir);
+  if (typeof session !== "string" || !SESSION_ID.test(session)) throw new ConversationUnavailable("no_session_id");
+  const path = await claudeTranscriptFile(home, session, cwds, configDir);
+  // Claude writes the file with its first message: until then the session it reports holds nothing
+  if (!path) throw new ConversationNotStarted(session, "claude-transcript");
+  return path;
+}
+
+/** A Claude pane's transcript and when its Claude process started (null when it cannot be told), or null while it has no transcript. */
+export async function claudePaneSession(pane: HerdrPane): Promise<{ path: string; startedAt: number | null; pid: number | null } | null> {
+  let pid: number | null = null;
+  try {
+    const path = await claudeTranscriptPath(pane.pane_id, [pane.cwd, pane.foreground_cwd], (found) => { pid = found; });
+    return { path, startedAt: pid === null ? null : processStartedAt(pid), pid };
+  } catch (error) {
+    if (error instanceof ConversationUnavailable) return null;
+    throw error;
+  }
+}
+
+/** The ref an image part carries in a Claude transcript (`<entry uuid>:<block index>`). */
+export const IMAGE_REF = /^([0-9a-f-]{8,64}):(\d{1,3})$/i;
+
+/**
+ * One image a user pasted into a Claude prompt, by the ref its image part carries
+ * (`<entry uuid>:<block index>`): the transcript holds it as base64, so it is decoded
+ * here rather than sent with every poll of the conversation. Null when there is no such
+ * image.
+ */
+export function transcriptImage(path: string, ref: string): { mediaType: string; bytes: Uint8Array<ArrayBuffer> } | null {
+  const match = IMAGE_REF.exec(ref);
+  if (match === null) return null;
+  const [, uuid, index] = match;
+  let text: string;
+  try { text = readFileSync(path, "utf8"); } catch { return null; }
+  text = activeHistoryText(text, "claude-transcript");
+  const needle = JSON.stringify(uuid);
+  for (const line of text.split("\n")) {
+    if (!line.includes(needle)) continue;
+    let entry: TranscriptEntry;
+    try { entry = JSON.parse(line) as TranscriptEntry; } catch { continue; }
+    if (entry.uuid !== uuid || !Array.isArray(entry.message?.content)) continue;
+    const block = entry.message.content[Number(index)] as { type?: unknown; source?: { type?: unknown; media_type?: unknown; data?: unknown } } | undefined;
+    if (block?.type !== "image" || block.source?.type !== "base64" || typeof block.source.data !== "string") return null;
+    const mediaType = String(block.source.media_type);
+    if (!IMAGE_TYPES.has(mediaType)) return null;
+    return { mediaType, bytes: new Uint8Array(Buffer.from(block.source.data, "base64")) };
+  }
+  return null;
+}
+
+/** The result a Claude transcript entry carries for one tool_use id; null when it carries none. */
+export function claudeToolResult(entry: unknown, ref: string): string | null {
+  const content = (entry as { message?: { content?: unknown } } | undefined)?.message?.content;
+  const result = Array.isArray(content)
+    ? content.find((block) => (block as { type?: unknown; tool_use_id?: unknown } | null)?.type === "tool_result" && (block as { tool_use_id?: unknown }).tool_use_id === ref)
+    : undefined;
+  if (result === undefined) return null;
+  return claudeResultText((result as { content?: unknown }).content);
+}
+
+/**
+ * The whole output of a tool call a Claude transcript answers, by its tool_use id; null when
+ * the transcript answers none. The output is bounded: a page of it, not a log file.
+ */
+export function claudeToolOutput(path: string, ref: string): string | null {
+  if (!TOOL_REF.test(ref)) return null;
+  let text: string;
+  try { text = readFileSync(path, "utf8"); } catch { return null; }
+  text = activeHistoryText(text, "claude-transcript");
+  const needle = JSON.stringify(ref);
+  for (const line of text.split("\n")) {
+    if (!line.includes(needle)) continue;
+    let entry: unknown;
+    try { entry = JSON.parse(line); } catch { continue; }
+    const output = claudeToolResult(entry, ref);
+    if (output !== null) return output.length > TOOL_OUTPUT_MAX ? `${output.slice(0, TOOL_OUTPUT_MAX)}\n… trimmed` : output;
+  }
+  return null;
+}
+
+/** How a Claude page is parsed: the subagents its notifications name, and the completions already drawn. */
+const claudeParse: ParseTurns = (_source, path, text, _taskTitles, noticed) =>
+  parseClaudeTranscript(text, Infinity, { subagents: subagentsOnPage(path, text), noticed });
+
+/** The transcript file this provider reads: its own source, or the answer the hub gives for one it does not know. */
+function claudePath(resolved: NativeTranscript): string {
+  if (resolved.source !== "claude-transcript") throw new ConversationUnavailable("no_recognized_transcript");
+  return resolved.path;
+}
+
+/**
+ * Claude Code's provider: the store it writes, read through the generic reader.
+ *
+ * Every method mirrors what the hub does for a Claude pane today, one for one: the same
+ * calls, the same reads, the same reason codes.
+ */
+export const claudeProvider: TranscriptProvider = {
+  /** The session herdr names, or the one live Claude's own record names, and the file it writes. */
+  async resolve(pane: HerdrPane, cwd: string, _sources: TranscriptSources, _panes?: HerdrPane[]): Promise<NativeTranscript> {
+    return { source: "claude-transcript", path: await claudeTranscriptPath(pane.pane_id, [cwd, pane.foreground_cwd]) };
+  },
+
+  /** One page of the transcript: the whole file as one stream, parsed by Claude's own parser. */
+  page(call: ProviderContext, page: ConversationPage) {
+    const path = claudePath(call.resolved);
+    let stat: StreamStat;
+    try { stat = statSync(path); } catch { throw new ConversationUnavailable("transcript_missing"); }
+    const spec: StreamSpec = { segments: [{ path, start: 0, end: stat.size }], chain: "" };
+    const stream = resolveStream(call.reuse, "claude-transcript", path, stat, spec);
+    return readTranscriptPage(stream, "claude-transcript", path, stat, page, claudeParse);
+  },
+
+  /** The image a pasted image part's ref names, decoded from the transcript's own base64. */
+  async readImage(call: ProviderContext, ref: string) {
+    return transcriptImage(claudePath(call.resolved), ref);
+  },
+
+  /** The whole output of the tool call a ref names, read from the transcript. */
+  readToolOutput(call: ProviderContext, ref: string) {
+    return claudeToolOutput(claudePath(call.resolved), ref);
+  },
+
+  /** What one scan remembered about the store (one file), or all of it when no file is named. */
+  invalidateCache(path?: string): void {
+    if (path === undefined) forgetClaudeSessions();
+    else forgetClaudeSessionFile(path);
+  },
+
+  /** The model and effort Claude Code's own screen states before its first turn. */
+  startScreenMetadata(screen: string) {
+    return startScreenMetadata("claude-transcript", screen);
+  },
+
+  /** Claude's own errors: two stores claiming one process, and the errors the hub already speaks. */
+  mapError(error: unknown): ConversationUnavailable | ConversationNotStarted | null {
+    if (error instanceof AmbiguousClaudeStore) return new ConversationUnavailable("no_session_id");
+    if (error instanceof ConversationUnavailable) return error;
+    return null;
+  },
+};
