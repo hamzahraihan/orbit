@@ -2,7 +2,8 @@ import { afterEach, expect, test } from "bun:test";
 import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { forgetTranscriptState, HistoryChanged, parseClaudeTranscript, transcriptPage, transcriptToolOutput, TRANSCRIPT_WINDOW_BYTES, type TranscriptStreamReuse } from "./conversation.ts";
+import { HistoryChanged, TRANSCRIPT_WINDOW_BYTES, type TranscriptStreamReuse } from "./conversation-shared.ts";
+import { forgetTranscriptState, parseClaudeTranscript, transcriptPage, transcriptToolOutput } from "./conversation.ts";
 import { parseConversationMetadata } from "./conversation-metadata.ts";
 import { isContextClear, parseOmpTranscript } from "./transcript-records.ts";
 

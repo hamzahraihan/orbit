@@ -195,7 +195,7 @@ it("notifies a watched Hermes conversation when its SQLite WAL changes", async (
   const changes: string[] = [];
   const monitor = new ConversationMonitor((id, signature) => {
     if (id === paneId) changes.push(signature);
-  }, undefined, undefined, undefined, root);
+  }, { hermesHome: root });
   const until = async (count: number): Promise<void> => {
     const deadline = Date.now() + 5_000;
     while (changes.length < count) {

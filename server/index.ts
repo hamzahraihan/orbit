@@ -361,7 +361,7 @@ export function createServer(
         send(client, { type: "conversation-changed", pane_id: paneId, signature });
       }
     }
-  }, options.codexHome, options.devinDbPath, options.opencodeDb, options.hermesHome, options.grokHome);
+  }, { codexHome: options.codexHome, devinDbPath: options.devinDbPath, opencodeDb: options.opencodeDb, hermesHome: options.hermesHome, grokHome: options.grokHome });
 
   function releaseConversation(paneId: string): void {
     for (const client of clients) {

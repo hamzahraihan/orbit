@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { fail, files, lineOf, matches, read, stripComments } from "../scripts/source-scan.ts";
+import { ConversationUnavailable as HubConversationUnavailable } from "./conversation.ts";
+import { ConversationUnavailable as SharedConversationUnavailable } from "./conversation-shared.ts";
 
 // Server rules from AGENTS.md and server/AGENTS.md that used to be prose only. Each failure says
 // what to change; client rules are in src/conventions.test.ts, repo-wide ones in
@@ -179,6 +181,7 @@ describe("herdr socket", () => {
   // open PRs change them; a follow-up PR moves them to the wrappers once those PRs land.
   const HERDR_RPC_ALLOWED: Record<string, string> = {
     "server/conversation.ts": "open PRs #869 #912 #923 change it",
+    "server/claude-transcript.ts": "todo 7 moved Claude's pane.process_info and agent.get calls out of server/conversation.ts",
     "server/gjc-runtime.ts": "open PR #912 changes it",
     "server/hermes.ts": "open PR #910 changes it",
     "server/omo.ts": "open PR #923 changes it",
@@ -206,5 +209,82 @@ describe("herdr socket", () => {
     const raw = matches(files("{server,src,shared,scripts}/**/*.{ts,tsx,mjs,js}").filter((file) => !file.endsWith(".test.ts")), /["']events\.subscribe["']/).filter((match) => match.file !== "server/herdr/client.ts");
     fail([...subscribers, ...raw].map((match) => match.at),
       "server/collector.ts is the only status subscription (startStatusCollector), and `events.subscribe` is sent only by subscribeEvents in server/herdr/client.ts: take pane status from the collector's callbacks (onStatus, onPaneEnded, onBaseline) in server/index.ts instead of subscribing again.");
+  });
+});
+
+describe("conversation module graph", () => {
+  // server/conversation.ts is the hub: it resolves every provider and calls its readers, and a
+  // provider names the vocabulary they share. A provider importing the hub back leaves a runtime
+  // cycle (and loads every other reader behind the first), so both edges stay one-way: the
+  // vocabulary lives in server/conversation-shared.ts, which imports no provider.
+  const HUB = "server/conversation.ts";
+  const SHARED = "server/conversation-shared.ts";
+
+  // The back-edges into a conversation module that are allowed, keyed `importer -> hub`, each with
+  // its reason. An entry is honest only while that import is `import type`: a type is erased, so the
+  // module never loads at runtime and no cycle exists. Keep it empty unless the code proves the
+  // exception.
+  const CONVERSATION_CYCLE_ALLOWED: Record<string, string> = {
+    [`server/conversation-cache.ts -> ${SHARED}`]: "the cache names TurnSource from the shared vocabulary as a type: erased at runtime, no cycle",
+  };
+
+  /** A file's static imports and re-exports that name a relative module: its target, line and whether it is type-only. */
+  const edgesOf = (file: string) => {
+    const code = stripComments(read(file));
+    const edges = /\b(?:import|export)\s+(type\s+)?(?:[^;]*?\bfrom\s*)?["']([^"']+)["']/g;
+    return [...code.matchAll(edges)].flatMap((match) => {
+      const specifier = match[2]!;
+      if (!specifier.startsWith(".")) return [];
+      const resolved: string[] = [];
+      for (const part of `${file.slice(0, file.lastIndexOf("/"))}/${specifier}`.split("/")) {
+        if (part === "" || part === ".") continue;
+        if (part === "..") resolved.pop();
+        else resolved.push(part);
+      }
+      const line = lineOf(code, match.index!);
+      return [{ file, target: resolved.join("/"), at: `${file}:${line}: ${code.split("\n")[line - 1]!.trim().slice(0, 160)}`, typeOnly: match[1] !== undefined }];
+    });
+  };
+
+  /** The back-edges into `hub`: the server modules it imports that import it in turn. */
+  const backEdges = (hub: string) => {
+    const importers = [...new Set(edgesOf(hub).map((edge) => edge.target))].filter((target) => /^server\/.*\.ts$/.test(target));
+    return importers.flatMap((importer) => edgesOf(importer).filter((edge) => edge.target === hub).map((edge) => ({ ...edge, key: `${importer} -> ${hub}` })));
+  };
+
+  const importShared = `Import the shared vocabulary from ${SHARED} instead, or add a justified entry to CONVERSATION_CYCLE_ALLOWED in server/conventions.test.ts (only for an \`import type\` edge).`;
+
+  it("keeps the providers off the conversation hub", () => {
+    fail(backEdges(HUB).filter((edge) => !(edge.key in CONVERSATION_CYCLE_ALLOWED)).map((edge) => edge.at),
+      `${HUB} imports a module that imports it back. ${importShared}`);
+  });
+
+  it("keeps the shared vocabulary free of the hub", () => {
+    fail(edgesOf(SHARED).filter((edge) => edge.target === HUB).map((edge) => edge.at),
+      `${SHARED} must import nothing from ${HUB}: a provider naming a type from the shared module would load the whole hub, cycle included. Move the vocabulary it needs into ${SHARED}.`);
+  });
+
+  it("allows only type-only edges back into the shared vocabulary", () => {
+    const back = backEdges(SHARED);
+    fail(back.filter((edge) => !(edge.key in CONVERSATION_CYCLE_ALLOWED)).map((edge) => edge.at),
+      `${SHARED} imports a module that imports it back. ${importShared}`);
+    // The allowlist says "a type, erased at runtime"; a value import turns it into a real cycle.
+    fail(back.filter((edge) => edge.key in CONVERSATION_CYCLE_ALLOWED && !edge.typeOnly).map((edge) => edge.at),
+      "CONVERSATION_CYCLE_ALLOWED allows this back-edge only because it is `import type`; it imports values now, which is a runtime cycle. Make it `import type`, or remove the entry and the edge.");
+    const present = new Set([...backEdges(HUB), ...back].map((edge) => edge.key));
+    fail(Object.keys(CONVERSATION_CYCLE_ALLOWED).filter((key) => !present.has(key)),
+      "These CONVERSATION_CYCLE_ALLOWED entries no longer match an edge into a conversation module: remove them from server/conventions.test.ts.");
+  });
+});
+
+describe("conversation symbol identity", () => {
+  // A symbol moved to the shared vocabulary but still re-exported from conversation.ts must be the
+  // one class: a route that catches a provider's error compares it against the constructor the
+  // thrower used, so two definitions would let a caught ConversationUnavailable fall through.
+  it("re-exports ConversationUnavailable from the hub as the shared class", () => {
+    expect(HubConversationUnavailable).toBe(SharedConversationUnavailable);
+    const error = new HubConversationUnavailable("pane_gone");
+    expect(error).toBeInstanceOf(SharedConversationUnavailable);
+    expect(error).toBeInstanceOf(HubConversationUnavailable);
   });
 });

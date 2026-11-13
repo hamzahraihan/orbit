@@ -1,8 +1,16 @@
 import { Database } from "bun:sqlite";
 import { createHash, randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { ConversationMetadata, ConversationPart, ConversationTurn } from "../shared/protocol.ts";
+import type { ConversationMetadata, ConversationPart, ConversationTurn, HerdrPane } from "../shared/protocol.ts";
+import { ConversationNotStarted, ConversationUnavailable, type ConversationPage, type NativeTranscript, type RecognizedConversation, type TranscriptSources } from "./conversation-shared.ts";
+import { activeHistoryText } from "./conversation-reader.ts";
+import { piMessage, piResults } from "./transcript-records.ts";
+import { TOOL_OUTPUT_MAX, TOOL_REF } from "./tool-output.ts";
+import { startScreenMetadata } from "./start-screen.ts";
+import { paneProcessInfo } from "./herdr/client.ts";
+import type { ProviderContext, TranscriptProvider } from "./conversation-providers.ts";
 import { devinUserText } from "./skill-invocations/devin.ts";
 
 const MAX_NODES = 5000;
@@ -207,3 +215,126 @@ export function devinConversation(sessionId: string, cwd: string, options: Devin
     try { db?.close(); } catch { /* a close failure cannot make an already-read snapshot usable */ }
   }
 }
+/** A live Devin executable, not a command line which happens to mention one. */
+export function isDevinProcess(argv: readonly string[]): boolean {
+  const executable = argv[0] ?? "";
+  const exact = /(?:^|[\\/])devin(?:\.exe)?$/;
+  return process.platform === "win32" ? exact.test(executable.toLowerCase()) : exact.test(executable);
+}
+
+/** Resolves only a session explicitly named by this live Devin pane, never by directory contents. */
+export function devinSessionForPane(pane: HerdrPane, panes: HerdrPane[], argv: string[]): string {
+  if (pane.agent !== "devin") throw new ConversationUnavailable("no_session_id");
+  const reported = pane.agent_session?.agent === "devin" && pane.agent_session.kind === "id"
+    && typeof pane.agent_session.value === "string" && pane.agent_session.value.length > 0
+    ? pane.agent_session.value : null;
+  const resumed: string[] = [];
+  for (let index = 1; index < argv.length; index++) {
+    const arg = argv[index]!;
+    if (arg === "--") break;
+    if (arg.startsWith("--resume=")) {
+      const id = arg.slice("--resume=".length);
+      if (!id || id.startsWith("-")) throw new ConversationUnavailable("no_session_id");
+      resumed.push(id);
+    } else if (arg === "--resume" || arg === "-r") {
+      const id = argv[index + 1];
+      if (!id || id.startsWith("-")) throw new ConversationUnavailable("no_session_id");
+      resumed.push(id);
+      index++;
+    }
+  }
+  const named = resumed[0] ?? null;
+  if (resumed.some((id) => id !== named) || (reported !== null && named !== null && reported !== named)) {
+    throw new ConversationUnavailable("no_session_id");
+  }
+  const explicit = reported ?? named;
+  if (explicit === null) throw new ConversationUnavailable("no_session_id");
+  if (panes.some((other) => other.pane_id !== pane.pane_id && other.agent === "devin"
+    && other.agent_session?.agent === "devin" && other.agent_session.kind === "id" && other.agent_session.value === explicit)) {
+    throw new ConversationUnavailable("no_session_id");
+  }
+  return explicit;
+}
+
+/** The resolved devin transcript, checked to name one. */
+function devinResolved(resolved: NativeTranscript): Extract<NativeTranscript, { source: "devin-transcript" }> {
+  if (resolved.source !== "devin-transcript") throw new ConversationUnavailable("no_recognized_transcript");
+  return resolved;
+}
+
+/**
+ * Devin's provider: the session the live devin process names with `--resume`, read from
+ * devin's own SQLite store. Every method mirrors what the hub does for a devin pane today.
+ */
+export const devinProvider: TranscriptProvider = {
+  async resolve(pane: HerdrPane, cwd: string, sources: TranscriptSources, panes?: HerdrPane[]): Promise<NativeTranscript> {
+    const resolvedCwd = pane.foreground_cwd || cwd;
+    const storePath = sources.devinDbPath ?? defaultDevinDbPath();
+    const info = await paneProcessInfo(pane.pane_id).catch(() => null);
+    const processes = (info?.foreground_processes ?? []).filter((process) =>
+      Array.isArray(process.argv) && process.argv.length > 0 && process.argv[0] !== undefined && process.argv.every((arg) => typeof arg === "string")
+      && isDevinProcess(process.argv as string[]) && process.argv[1] !== "acp");
+    // A pane herdr labels devin with no live devin process is no devin transcript at all;
+    // the hub's catch-all reports no_recognized_transcript for that case, so do the same.
+    if (processes.length === 0) throw new ConversationUnavailable("no_recognized_transcript");
+    if (processes.length > 1) throw new ConversationUnavailable("transcript_missing");
+    const session = devinSessionForPane(pane, panes ?? [], processes[0]!.argv as string[]);
+    return { source: "devin-transcript", path: storePath, session, cwd: resolvedCwd };
+  },
+
+  page(call: ProviderContext, page: ConversationPage): RecognizedConversation {
+    const resolved = devinResolved(call.resolved);
+    try {
+      return devinConversation(resolved.session, resolved.cwd, page, resolved.path);
+    } catch (error) {
+      if (error instanceof DevinHistoryUnavailable) throw new ConversationUnavailable("transcript_missing");
+      throw error;
+    }
+  },
+
+  async readImage(_call: ProviderContext, _ref: string) {
+    return null;
+  },
+
+  readToolOutput(call: ProviderContext, ref: string): string | null {
+    const resolved = devinResolved(call.resolved);
+    if (!TOOL_REF.test(ref)) return null;
+    let text: string;
+    try { text = readFileSync(resolved.path, "utf8"); } catch { return null; }
+    text = activeHistoryText(text, "devin-transcript");
+    const needle = JSON.stringify(ref);
+    for (const line of text.split("\n")) {
+      if (!line.includes(needle)) continue;
+      let entry: Record<string, unknown>;
+      try { entry = JSON.parse(line) as Record<string, unknown>; } catch { continue; }
+      const message = piMessage(entry);
+      let output: string | null = null;
+      if (message) output = piResults(message).find((result) => result.id === ref)?.text ?? null;
+      if (output !== null) return output.length > TOOL_OUTPUT_MAX ? `${output.slice(0, TOOL_OUTPUT_MAX)}\n… trimmed` : output;
+    }
+    return null;
+  },
+
+  invalidateCache(path?: string): void {
+    if (path === undefined) {
+      forgetDevinState();
+      return;
+    }
+    for (const key of [...histories.keys()]) {
+      try {
+        const parts = JSON.parse(key) as unknown[];
+        if (Array.isArray(parts) && parts[0] === path) histories.delete(key);
+      } catch { /* keys are always JSON arrays built by this module */ }
+    }
+  },
+
+  startScreenMetadata(screen: string) {
+    return startScreenMetadata("devin-transcript", screen);
+  },
+
+  mapError(error: unknown): ConversationUnavailable | ConversationNotStarted | null {
+    if (error instanceof DevinHistoryUnavailable) return new ConversationUnavailable("transcript_missing");
+    if (error instanceof ConversationUnavailable || error instanceof ConversationNotStarted) return error;
+    return null;
+  },
+};

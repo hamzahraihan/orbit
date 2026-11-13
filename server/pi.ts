@@ -1,10 +1,20 @@
 import { constants, closeSync, fstatSync, lstatSync, openSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
+import { createHash } from "node:crypto";
+
 import { agentGet, paneProcessInfo } from "./herdr/client.ts";
 import { runsAgent } from "./gjc-runtime.ts";
 import { processEnviron } from "./omo.ts";
 import { piAgentDir } from "./pi-models.ts";
+import { activeHistoryText, readTranscriptPage, resolveStream, streamFiles, type ParseTurns, type StreamSpec, type StreamStat } from "./conversation-reader.ts";
+import { forgetAllPiIndexes, forgetPiIndex, piAbandonedTurns, piBranchRecords, piBranchSegments } from "./pi-tree.ts";
+import { isContextClear, parseOmpTranscript, piImageBlock, piMessage, piResults } from "./transcript-records.ts";
+import { TOOL_OUTPUT_MAX, TOOL_REF } from "./tool-output.ts";
+import { ConversationNotStarted, ConversationUnavailable, type ConversationPage, type NativeTranscript, type RecognizedConversation, type TranscriptSources } from "./conversation-shared.ts";
+import { startScreenMetadata } from "./start-screen.ts";
+import type { ProviderContext, TranscriptProvider } from "./conversation-providers.ts";
+import type { HerdrPane } from "../shared/protocol.ts";
 
 /**
  * pi's session store. `PI_CODING_AGENT_SESSION_DIR` moves it, exactly as CODEX_HOME
@@ -176,3 +186,134 @@ export async function piTranscriptPath(
   const unwritten = unwrittenSession(session.value, matches[0]!);
   return unwritten === null ? null : { unwritten };
 }
+
+/** The image a pi tool call returned, by the ref the page gave it (`pi:<call id>:<nth image>`). */
+export const PI_IMAGE_REF = /^pi:([A-Za-z0-9_:.\-]{1,128}):(\d{1,3})$/;
+
+/** pi's tool output from one candidate line, read the way the page parses records. */
+function piOutputInText(line: string, ref: string): string | null {
+  const text = activeHistoryText(line, "pi-transcript");
+  const needle = JSON.stringify(ref);
+  for (const raw of text.split("\n")) {
+    if (!raw.includes(needle)) continue;
+    let entry: Record<string, unknown>;
+    try { entry = JSON.parse(raw) as Record<string, unknown>; } catch { continue; }
+    const message = piMessage(entry);
+    let output: string | null = null;
+    if (message) output = piResults(message).find((result) => result.id === ref)?.text ?? null;
+    if (output !== null) return output.length > TOOL_OUTPUT_MAX ? `${output.slice(0, TOOL_OUTPUT_MAX)}\n… trimmed` : output;
+  }
+  return null;
+}
+
+/**
+ * The output a pi transcript holds for one tool call id, whole (up to TOOL_OUTPUT_MAX).
+ * A pi output lives on the active branch only: reading the file whole would answer a ref
+ * from a branch a /tree abandoned, whose output the chat never showed, so the branch is
+ * read the way the conversation is.
+ */
+export function piToolOutput(path: string, ref: string): string | null {
+  let size: number;
+  let branch: ReturnType<typeof piBranchSegments>;
+  try { size = statSync(path).size; branch = piBranchSegments(path, size); } catch { return null; }
+  if (branch === null) return null;
+  // only a record that can be a clear or can hold the ref is parsed: an unrelated record (a picture
+  // the agent read, a long tool result) is skipped on a substring check, as the segment reader did
+  const needle = JSON.stringify(ref);
+  let output: string | null = null;
+  for (const line of piBranchRecords(path, size)) {
+    if (line.includes("context_clear")) {
+      let entry: unknown;
+      try { entry = JSON.parse(line); } catch { continue; }
+      if (isContextClear(entry, "pi-transcript")) { output = null; continue; }
+    }
+    if (output === null && line.includes(needle)) output = piOutputInText(line, ref);
+  }
+  return output;
+}
+
+/**
+ * The image a pi tool call returned, by the ref the page gave it (`pi:<call id>:<nth image>`).
+ * Like the output, it is read on the active branch only: an image from a branch a /tree
+ * abandoned is one the chat never showed, so it is not offered.
+ */
+export function piTranscriptImage(path: string, ref: string): { mediaType: string; bytes: Uint8Array<ArrayBuffer> } | null {
+  const match = PI_IMAGE_REF.exec(ref);
+  if (match === null || match[1] === undefined || match[2] === undefined) return null;
+  const [, callId, nth] = match;
+  let size: number;
+  let branch: ReturnType<typeof piBranchSegments>;
+  try { size = statSync(path).size; branch = piBranchSegments(path, size); } catch { return null; }
+  if (branch === null) return null;
+  for (const line of piBranchRecords(path, size)) {
+    if (!line.includes(callId)) continue;
+    let entry: unknown;
+    try { entry = JSON.parse(line); } catch { continue; }
+    const message = piMessage(entry);
+    if (message === null) continue;
+    const image = piImageBlock(message, callId, Number(nth));
+    if (image !== null) return { mediaType: image.media_type, bytes: new Uint8Array(Buffer.from(image.data, "base64")) };
+  }
+  return null;
+}
+
+/** The transcript file this provider reads: its own source, or the answer the hub gives for one it does not know. */
+function piPath(resolved: NativeTranscript): string {
+  if (resolved.source !== "pi-transcript") throw new ConversationUnavailable("no_recognized_transcript");
+  return resolved.path;
+}
+
+/**
+ * pi's provider: the session herdr's agent.get names — or the pane's pi process adopts for a custom store —
+ * read through the generic reader on the branch the leaf stands on. Every method mirrors
+ * what the hub does for a pi pane today.
+ */
+export const piProvider: TranscriptProvider = {
+  async resolve(pane: HerdrPane, _cwd: string, _sources: TranscriptSources, _panes?: HerdrPane[]): Promise<NativeTranscript> {
+    const found = await piTranscriptPath(pane.pane_id);
+    if (found === null) throw new ConversationUnavailable("no_session_path");
+    if ("unwritten" in found) throw new ConversationNotStarted(found.unwritten.id, "pi-transcript", found.unwritten.path);
+    return { source: "pi-transcript", path: found.path };
+  },
+
+  page(call: ProviderContext, page: ConversationPage): RecognizedConversation {
+    const path = piPath(call.resolved);
+    let stat: StreamStat;
+    try { stat = statSync(path); } catch { throw new ConversationUnavailable("transcript_missing"); }
+    const branch = piBranchSegments(path, stat.size);
+    if (branch === null) throw new ConversationUnavailable("branch_unreadable");
+    const segments = branch.map((segment) => ({ path, start: segment.start, end: segment.end }));
+    const files = streamFiles(segments, path, stat);
+    const layout = files.map((file, at) => (at === files.length - 1 ? `${file.offset}` : `${file.offset}\0${file.length}`)).join("\n");
+    const chain = `-${createHash("sha256").update(layout).digest("base64url").slice(0, 10)}`;
+    const spec: StreamSpec = { segments, chain };
+    const stream = resolveStream(call.reuse, "pi-transcript", path, stat, spec);
+    const piParse: ParseTurns = (_source, _p, text) => parseOmpTranscript(text, Infinity, { toolImages: true });
+    return readTranscriptPage(stream, "pi-transcript", path, stat, page, piParse, { abandoned: (p, size) => piAbandonedTurns(p, size) ?? undefined });
+  },
+
+  async readImage(call: ProviderContext, ref: string) {
+    const path = piPath(call.resolved);
+    return piTranscriptImage(path, ref);
+  },
+
+  readToolOutput(call: ProviderContext, ref: string): string | null {
+    const path = piPath(call.resolved);
+    if (!TOOL_REF.test(ref)) return null;
+    return piToolOutput(path, ref);
+  },
+
+  invalidateCache(path?: string): void {
+    if (path === undefined) forgetAllPiIndexes();
+    else forgetPiIndex(path);
+  },
+
+  startScreenMetadata(screen: string) {
+    return startScreenMetadata("pi-transcript", screen);
+  },
+
+  mapError(error: unknown): ConversationUnavailable | ConversationNotStarted | null {
+    if (error instanceof ConversationUnavailable || error instanceof ConversationNotStarted) return error;
+    return null;
+  },
+};

@@ -3,8 +3,13 @@ import { Database } from "bun:sqlite";
 import { createHash, randomUUID } from "node:crypto";
 import { closeSync, fstatSync, openSync, readSync, realpathSync, statSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import type { ConversationPart, ConversationTurn } from "../shared/protocol.ts";
-import { trimOutput } from "./tool-output.ts";
+import type { ConversationPart, ConversationTurn, HerdrPane } from "../shared/protocol.ts";
+import { ConversationNotStarted, ConversationUnavailable, HistoryChanged, type ConversationPage, type NativeTranscript, type TranscriptSources } from "./conversation-shared.ts";
+import type { ProviderContext, TranscriptProvider } from "./conversation-providers.ts";
+import { readTranscriptPage, resolveStream, type ParseTurns, type StreamSpec, type StreamStat } from "./conversation-reader.ts";
+import { resolveAgyStore, sameAgyStore } from "./agy-store.ts";
+import { startScreenMetadata } from "./start-screen.ts";
+import { TOOL_REF, trimOutput } from "./tool-output.ts";
 import { toolSummary } from "./transcript-records.ts";
 
 const MAX_ENTRIES = 100_000;
@@ -210,3 +215,81 @@ export function agyToolOutput(path: string, ref: string): string | null {
     });
   } catch { return null; }
 }
+
+/** The transcript file this provider reads: its own source, or the answer the hub gives for one it does not know. */
+function agyPath(resolved: NativeTranscript): string {
+  if (resolved.source !== "agy-transcript") throw new ConversationUnavailable("no_recognized_transcript");
+  return resolved.path;
+}
+
+
+
+/**
+ * Agy's provider: the append-only step ledger, read through the generic reader.
+ *
+ * Every method mirrors what the hub does for an agy pane today, one for one: the same
+ * calls, the same reads, the same reason codes.
+ */
+export const agyProvider: TranscriptProvider = {
+  /** The store agy holds for this pane, and the ledger file it writes. */
+  async resolve(pane: HerdrPane, _cwd: string, _sources: TranscriptSources, _panes?: HerdrPane[]): Promise<NativeTranscript> {
+    const found = await resolveAgyStore(pane);
+    if (!found) throw new ConversationUnavailable("no_session_path");
+    let transcriptExists: boolean;
+    try { transcriptExists = !!statSync(found.path, { throwIfNoEntry: false }); }
+    catch { throw new ConversationUnavailable("transcript_missing"); }
+    if (!transcriptExists) {
+      if (agyCatalog(found.path).size !== 0 || !sameAgyStore(found, await resolveAgyStore(pane))) throw new ConversationUnavailable("transcript_missing");
+      throw new ConversationNotStarted(found.session, "agy-transcript", found.path);
+    }
+    return { source: "agy-transcript", path: found.path, agy: found };
+  },
+
+  /** One page of the transcript: the ledger's projected segments, parsed by agy's own parser. */
+  page(call: ProviderContext, page: ConversationPage) {
+    const path = agyPath(call.resolved);
+    try {
+      return withAgyHistory(path, (projection, fd) => {
+        let stat: StreamStat;
+        try { stat = statSync(path); } catch { throw new ConversationUnavailable("transcript_missing"); }
+        const spec: StreamSpec = { segments: projection.segments.map((segment) => ({ path, ...segment })), chain: `-agy-${projection.revision}`, promptStarts: projection.promptStarts };
+        const stream = resolveStream(call.reuse, "agy-transcript", path, stat, spec, fd);
+        const agyParse: ParseTurns = (_source, p, text) => parseAgyTranscript(text, p);
+        const answer = readTranscriptPage(stream, "agy-transcript", path, stat, page, agyParse);
+        return { ...answer, activity: projection.activity };
+      });
+    } catch (error) {
+      if (error instanceof HistoryChanged || error instanceof ConversationUnavailable) throw error;
+      throw new ConversationUnavailable("transcript_missing");
+    }
+  },
+
+  /** Agy carries no pasted images. */
+  async readImage(_call: ProviderContext, _ref: string) {
+    return null;
+  },
+
+  /** The whole output of the tool call a ref names, read from the ledger. */
+  readToolOutput(call: ProviderContext, ref: string) {
+    const path = agyPath(call.resolved);
+    if (!TOOL_REF.test(ref)) return null;
+    return agyToolOutput(path, ref);
+  },
+
+  /** What one scan remembered about the store (one file), or all of it when no file is named. */
+  invalidateCache(path?: string): void {
+    forgetAgyState(path);
+  },
+
+  /** The model and effort agy's own screen states before its first turn. */
+  startScreenMetadata(screen: string) {
+    return startScreenMetadata("agy-transcript", screen);
+  },
+
+  /** Agy's own errors: an unavailable ledger, and the errors the hub already speaks. */
+  mapError(error: unknown): ConversationUnavailable | ConversationNotStarted | null {
+    if (error instanceof AgyUnavailable) return new ConversationUnavailable("transcript_missing");
+    if (error instanceof ConversationUnavailable || error instanceof ConversationNotStarted) return error;
+    return null;
+  },
+};

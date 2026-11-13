@@ -31,8 +31,11 @@ import { join, resolve } from "node:path";
 
 import type { ConversationMetadata, ConversationPart, ConversationTurn, HerdrPane, SkillActivity } from "../shared/protocol.ts";
 import { opencodeSkillInvocation } from "./skill-invocations/opencode.ts";
-import { trimOutput } from "./tool-output.ts";
+import { TOOL_OUTPUT_MAX, trimOutput } from "./tool-output.ts";
 import { MAX_TURNS, toolSummary } from "./transcript-records.ts";
+import { answerVersion, ConversationNotStarted, ConversationUnavailable, HistoryChanged, type ConversationPage, type NativeTranscript, type RecognizedConversation, type TranscriptSources } from "./conversation-shared.ts";
+import { startScreenMetadata } from "./start-screen.ts";
+import type { ProviderContext, TranscriptProvider } from "./conversation-providers.ts";
 
 /** A page never holds more prompts than this (each opens a user + assistant pair). */
 const MAX_PAGE_PROMPTS = MAX_TURNS / 2;
@@ -822,3 +825,59 @@ function sessionRow1(db: Database, sessionId: string, id: string): { type: strin
   const parts = db.query<{ data: string }, [string]>("SELECT data FROM part WHERE message_id = ? ORDER BY time_created, id").all(id).map((part) => parseData(part.data));
   return adaptMessage1({ id, data: parseData(row.data), parts, updated: 0, size: 0 });
 }
+
+/** The resolved opencode transcript, checked to name one. */
+function opencodeResolved(resolved: NativeTranscript): Extract<NativeTranscript, { source: "opencode-transcript" }> {
+  if (resolved.source !== "opencode-transcript") throw new ConversationUnavailable("no_recognized_transcript");
+  return resolved;
+}
+
+/**
+ * OpenCode's provider: the session herdr's integration reports, read from opencode 2's
+ * own SQLite store. Every method mirrors what the hub does for an opencode pane today.
+ */
+export const opencodeProvider: TranscriptProvider = {
+  async resolve(pane: HerdrPane, _cwd: string, sources: TranscriptSources, _panes?: HerdrPane[]): Promise<NativeTranscript> {
+    const session = opencodeSessionId(pane);
+    if (session === null) throw new ConversationUnavailable("no_session_id");
+    const path = sources.opencodeDb ?? opencodeDatabasePath();
+    if (path === null) throw new ConversationUnavailable("no_session_path");
+    return { source: "opencode-transcript", path, session };
+  },
+
+  page(call: ProviderContext, page: ConversationPage): RecognizedConversation {
+    const resolved = opencodeResolved(call.resolved);
+    const answer = opencodeConversation(resolved.path, resolved.session, page);
+    if (answer.kind === "history_changed") throw new HistoryChanged();
+    if (answer.kind === "unavailable") throw new ConversationUnavailable(answer.reason);
+    const { kind: _kind, signature, ...conversation } = answer;
+    const key = `opencode\0${resolved.path}\0${resolved.session}\0${page.before ?? ""}\0${page.since ?? ""}\0${page.from ?? ""}`;
+    return { source: "opencode-transcript", ...conversation, version: answerVersion(key, signature) };
+  },
+
+  async readImage(call: ProviderContext, ref: string) {
+    const resolved = opencodeResolved(call.resolved);
+    return opencodeImage(resolved.path, resolved.session, ref);
+  },
+
+  readToolOutput(call: ProviderContext, ref: string): string | null {
+    const resolved = opencodeResolved(call.resolved);
+    const output = opencodeToolOutput(resolved.path, resolved.session, ref);
+    if (output !== null && output.length > TOOL_OUTPUT_MAX) return `${output.slice(0, TOOL_OUTPUT_MAX)}\n… trimmed`;
+    return output;
+  },
+
+  invalidateCache(path?: string): void {
+    if (path === undefined) forgetOpencodeState();
+    else forgetOpencodeRead(path);
+  },
+
+  startScreenMetadata(screen: string) {
+    return startScreenMetadata("opencode-transcript", screen);
+  },
+
+  mapError(error: unknown): ConversationUnavailable | ConversationNotStarted | null {
+    if (error instanceof ConversationUnavailable || error instanceof ConversationNotStarted) return error;
+    return null;
+  },
+};

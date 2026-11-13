@@ -1,9 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type { ConversationMetadata, ConversationTurn } from "../shared/protocol.ts";
+import type { TurnSource } from "./conversation-shared.ts";
 
 export const PI_PAGE_CACHE_BYTES = 4 * 1024 * 1024;
-
-type TurnSource = "grok-transcript" | "agy-transcript" | "claude-transcript" | "omp-transcript" | "omo-transcript" | "gjc-transcript" | "pi-transcript" | "codex-transcript" | "devin-transcript" | "opencode-transcript" | "hermes-transcript";
 
 export class ConversationCache {
   readonly processVersion: string;
@@ -52,7 +51,7 @@ export class ConversationCache {
   }>();
 
   readonly settledTurns = new Map<string, {
-    source: "agy-transcript" | "claude-transcript" | "codex-transcript" | "devin-transcript" | "gjc-transcript" | "grok-transcript" | "hermes-transcript" | "omo-transcript" | "omp-transcript" | "opencode-transcript" | "pi-transcript";
+    source: TurnSource;
     id: string;
     start: number;
     end: number;

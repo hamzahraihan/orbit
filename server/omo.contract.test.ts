@@ -259,7 +259,7 @@ it.skipIf(process.platform !== "linux")("recognizes a custom launcher only by ve
   for (const agent of ["codex", "devin", "gjc"]) {
     const relabelled = { ...snapshot, panes: snapshot.panes.map((entry) => entry.pane_id === paneId ? { ...entry, agent } : entry) };
     expect((await omoPanes(relabelled.panes)).get(paneId)?.path).toBe(realpathSync(written));
-    expect((await paneTranscript(paneId, undefined, relabelled)).source).toBe("omo-transcript");
+    expect((await paneTranscript(paneId, { snapshot: relabelled })).source).toBe("omo-transcript");
   }
 
 });

@@ -8,7 +8,8 @@ import type { AgentRenameRequest, PaneDirection, PaneResized, PaneSplit, PaneSwa
 import { paneCommands } from "./commands.ts";
 import { clearFileCache, paneFiles } from "./files.ts";
 import { badRequest, conflictResponse, errorResponse, isCount, isJsonObject, jsonResponse, readJsonObject } from "./http.ts";
-import { conversationImage, ConversationUnavailable, forgetPaneTranscriptState, HistoryChanged, paneConversation, paneProcessRoots, toolOutput } from "./conversation.ts";
+import { ConversationUnavailable, HistoryChanged, type TranscriptSources } from "./conversation-shared.ts";
+import { conversationImage, forgetPaneTranscriptState, paneConversation, paneProcessRoots, toolOutput } from "./conversation.ts";
 import { OPENCODE_TOOL_REF } from "./opencode.ts";
 import { DevinHistoryChanged } from "./devin.ts";
 import { GjcSdkLookupError } from "./gjc-sdk.ts";
@@ -17,7 +18,7 @@ import { PasteImageError, readImageBody, savePaneImage } from "./paste.ts";
 import type { ScheduledPrompts } from "./scheduled-prompts.ts";
 
 /** the native stores createServer was given; unset, each reader finds its own */
-export type PaneStores = { codexHome?: string; grokHome?: string; opencodeDb?: string; devinDbPath?: string; hermesHome?: string; onScroll?: (paneId: string) => void; scheduled?: ScheduledPrompts };
+export type PaneStores = TranscriptSources & { onScroll?: (paneId: string) => void; scheduled?: ScheduledPrompts };
 
 /** the sides herdr's pane.swap and pane.resize take; anything else is refused before the RPC, which would answer invalid_request */
 const isPaneDirection = (value: unknown): value is PaneDirection => value === "left" || value === "right" || value === "up" || value === "down";
@@ -198,7 +199,7 @@ export async function handlePaneRequest(request: Request, url: URL, pathname: st
     const ref = url.searchParams.get("ref");
     if (!paneId || !ref) return badRequest("missing_parameter", "pane_id and ref query parameters are required");
     try {
-      const output = await toolOutput(paneId, ref, options.codexHome, options.opencodeDb, options.hermesHome, options.grokHome);
+      const output = await toolOutput(paneId, ref, options);
       if (output === null) return jsonResponse({ error: { code: "output_not_found", message: "no such tool call in this pane's conversation" } }, 404);
       // a tool call's id names its output for good; OpenCode's ref names a place in a row it rewrites in place
       const cacheControl = (OPENCODE_TOOL_REF.test(ref) || /^grok:/.test(ref)) ? "private, no-store" : "private, max-age=86400, immutable";
@@ -213,7 +214,7 @@ export async function handlePaneRequest(request: Request, url: URL, pathname: st
     const ref = url.searchParams.get("ref");
     if (!paneId || !ref) return badRequest("missing_parameter", "pane_id and ref query parameters are required");
     try {
-      const image = await conversationImage(paneId, ref, options.codexHome, options.opencodeDb);
+      const image = await conversationImage(paneId, ref, options);
       if (image === null) return jsonResponse({ error: { code: "image_not_found", message: "no such image in this pane's conversation" } }, 404);
       // Claude embeds immutable bytes; Codex files and OpenCode tool-image ordinals can change.
       const cacheControl = ref.startsWith("codex-") || ref.startsWith("opencode:") ? "private, no-store" : "private, max-age=86400, immutable";
@@ -232,7 +233,7 @@ export async function handlePaneRequest(request: Request, url: URL, pathname: st
       from: url.searchParams.get("from") ?? undefined,
     };
     try {
-      const { version, ...conversation } = await paneConversation(paneId, options.codexHome, page, options.devinDbPath, options.opencodeDb, options.hermesHome, options.grokHome);
+      const { version, ...conversation } = await paneConversation(paneId, page, options);
       // no-store keeps the browser's own cache out of it, so the chat sees the 304.
       // weak: the same answer goes out gzipped or plain (compress.ts), which are not the same bytes
       const etag = `W/"${version}"`;

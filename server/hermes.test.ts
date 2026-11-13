@@ -18,7 +18,7 @@ import {
   processHermesHome,
   type HermesMessageRow,
 } from "./hermes.ts";
-import { ConversationNotStarted, ConversationUnavailable, HistoryChanged, TRANSCRIPT_WINDOW_BYTES, type RecognizedConversation } from "./conversation.ts";
+import { ConversationNotStarted, ConversationUnavailable, HistoryChanged, TRANSCRIPT_WINDOW_BYTES, type RecognizedConversation } from "./conversation-shared.ts";
 import type { ConversationPart, ConversationTurn } from "../shared/protocol.ts";
 import { toolSummary } from "./transcript-records.ts";
 

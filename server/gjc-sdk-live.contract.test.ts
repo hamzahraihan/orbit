@@ -5,7 +5,8 @@ import { accessSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpath
 import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { ConversationUnavailable, forgetTranscriptState, gjcTranscriptPath, transcriptPage } from "./conversation.ts";
+import { ConversationUnavailable } from "./conversation-shared.ts";
+import { forgetTranscriptState, gjcTranscriptPath, transcriptPage } from "./conversation.ts";
 import { herdrRpc, herdrSocketPath, paneRead, workspaceClose, workspaceCreate } from "./herdr/client.ts";
 import { isGjcProcess } from "./gjc-runtime.ts";
 

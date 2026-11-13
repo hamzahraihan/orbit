@@ -3,6 +3,12 @@ import type { ConversationPart } from "../shared/protocol.ts";
 /** Past this a tool's output is cut in the page; the rest is fetched on request (toolOutput). */
 export const TOOL_OUTPUT_CHARS = 4000;
 
+/** A whole output is still bounded: a page of it, not a log file. */
+export const TOOL_OUTPUT_MAX = 2_000_000;
+
+/** A tool ref is a plain id: nothing in it can name a path. */
+export const TOOL_REF = /^[A-Za-z0-9_:.-]{1,128}$/;
+
 /**
  * omo's goal calls answer with the goal as JSON the chat reads, its objective alone up to 4000
  * characters: cut at the usual length, a finished goal's answer lost its status.

@@ -15,7 +15,8 @@ import * as herdr from "./herdr/client.ts";
 import { forgetHistoryChains } from "./codex.ts";
 import { DevinHistoryChanged } from "./devin.ts";
 import * as omo from "./omo.ts";
-import { ConversationUnavailable, devinSessionForPane, forgetPaneTranscriptState, forgetTranscriptState, gjcTranscriptPath, HistoryChanged, isDevinProcess, isOmoProcess, ompSessionStore, paneConversation, paneProcessRoots, paneTranscript, parseClaudeTranscript, unwrapPastes, transcriptImage, transcriptPage, transcriptToolOutput } from "./conversation.ts";
+import { ConversationUnavailable, HistoryChanged } from "./conversation-shared.ts";
+import { conversationImage, devinSessionForPane, forgetPaneTranscriptState, forgetTranscriptState, gjcTranscriptPath, isDevinProcess, isOmoProcess, ompSessionStore, openPaneConversation, paneConversation, paneProcessRoots, paneTranscript, parseClaudeTranscript, toolOutput, unwrapPastes, transcriptImage, transcriptPage, transcriptToolOutput } from "./conversation.ts";
 
 describe("omo skill roots", () => {
   it("finds the bundled plugin from a Windows canonical launcher path", async () => {
@@ -163,18 +164,18 @@ describe("Devin pane identity", () => {
       } finally { db.close(); }
       mockedPanes = [pane];
       mockedProcesses = [{ argv: ["/usr/local/bin/devin"] }];
-      const answer = await paneConversation(pane.pane_id, undefined, {}, dbPath);
+      const answer = await paneConversation(pane.pane_id, {}, { devinDbPath: dbPath });
       expect(answer.source).toBe("devin-transcript");
       expect(answer.turns.map((turn) => turn.parts[0])).toEqual([
         { kind: "text", text: "synthetic question" }, { kind: "text", text: "synthetic answer" },
       ]);
       mockedProcesses = [{ argv: ["/usr/bin/vim", "/usr/local/bin/devin"] }];
-      await expect(paneConversation(pane.pane_id, undefined, {}, dbPath)).rejects.toThrow(ConversationUnavailable);
+      await expect(paneConversation(pane.pane_id, {}, { devinDbPath: dbPath })).rejects.toThrow(ConversationUnavailable);
       mockedProcesses = [{ argv: ["/usr/local/bin/devin"] }];
       mockedPanes = [{ ...pane, agent_session: undefined }];
-      await expect(paneConversation(pane.pane_id, undefined, {}, dbPath)).rejects.toMatchObject({ name: "ConversationUnavailable", message: "no_session_id" });
+      await expect(paneConversation(pane.pane_id, {}, { devinDbPath: dbPath })).rejects.toMatchObject({ name: "ConversationUnavailable", message: "no_session_id" });
       mockedProcesses = [{ argv: ["/usr/local/bin/devin", "--resume=one"] }];
-      expect((await paneConversation(pane.pane_id, undefined, {}, dbPath)).turns).toEqual(answer.turns);
+      expect((await paneConversation(pane.pane_id, {}, { devinDbPath: dbPath })).turns).toEqual(answer.turns);
     } finally {
       mockedPanes = [];
       mockedProcesses = [];
@@ -186,7 +187,7 @@ describe("Devin pane identity", () => {
     mockedPanes = [pane];
     mockedProcesses = [{ argv: ["/usr/local/bin/devin"] }];
     try {
-      await expect(paneConversation(pane.pane_id, undefined, {}, "/missing/sessions.db")).rejects.toThrow(ConversationUnavailable);
+      await expect(paneConversation(pane.pane_id, {}, { devinDbPath: "/missing/sessions.db" })).rejects.toThrow(ConversationUnavailable);
     } finally {
       mockedPanes = [];
       mockedProcesses = [];
@@ -199,11 +200,11 @@ describe("Devin pane identity", () => {
     mockedPanes = [pane];
     mockedProcesses = [{ argv: ["/usr/local/bin/devin"] }];
     try {
-      await expect(paneConversation(pane.pane_id, undefined, {}, join(root, "missing.db"))).rejects.toThrow(ConversationUnavailable);
+      await expect(paneConversation(pane.pane_id, {}, { devinDbPath: join(root, "missing.db") })).rejects.toThrow(ConversationUnavailable);
       const dbPath = join(root, "malformed.db");
       const db = new Database(dbPath);
       try { db.exec("CREATE TABLE sessions(id TEXT)"); } finally { db.close(); }
-      await expect(paneConversation(pane.pane_id, undefined, {}, dbPath)).rejects.toThrow(ConversationUnavailable);
+      await expect(paneConversation(pane.pane_id, {}, { devinDbPath: dbPath })).rejects.toThrow(ConversationUnavailable);
 
       const oversizedPath = join(root, "oversized.db");
       const oversized = new Database(oversizedPath);
@@ -214,7 +215,7 @@ describe("Devin pane identity", () => {
         for (let index = 1; index <= 5001; index++) insert.run(index, index === 1 ? null : index - 1);
         oversized.exec("COMMIT");
       } finally { oversized.close(); }
-      await expect(paneConversation(pane.pane_id, undefined, {}, oversizedPath)).rejects.toThrow(ConversationUnavailable);
+      await expect(paneConversation(pane.pane_id, {}, { devinDbPath: oversizedPath })).rejects.toThrow(ConversationUnavailable);
     } finally {
       mockedPanes = [];
       mockedProcesses = [];
@@ -227,7 +228,7 @@ describe("Devin pane identity", () => {
     mockedPanes = [pane];
     mockedProcesses = [{ argv: ["node", "/home/u/.nvm/versions/node/v24.18.0/bin/omo"] }];
     try {
-      expect(await paneConversation(pane.pane_id, undefined, {}, "/missing/sessions.db")).toMatchObject({ source: "omo-transcript", turns: [], history_id: "unwritten:synthetic-id" });
+      expect(await paneConversation(pane.pane_id, {}, { devinDbPath: "/missing/sessions.db" })).toMatchObject({ source: "omo-transcript", turns: [], history_id: "unwritten:synthetic-id" });
     } finally {
       session.mockRestore();
       mockedPanes = [];
@@ -249,19 +250,19 @@ describe("Devin pane identity", () => {
       mockedPanes = [pane];
       mockedProcesses = [{ argv: ["/usr/local/bin/devin", "--resume", "one"] }];
       // the store never changes below, so only a forgotten cache can move the identity
-      const read = () => paneConversation(pane.pane_id, undefined, {}, dbPath);
+      const read = () => paneConversation(pane.pane_id, {}, { devinDbPath: dbPath });
       const initial = await read();
       expect(typeof initial.cursor).toBe("string");
       expect((await read()).history_id).toBe(initial.history_id);
-      expect((await paneConversation(pane.pane_id, undefined, { before: initial.cursor! }, dbPath)).turns.length).toBe(20);
+      expect((await paneConversation(pane.pane_id, { before: initial.cursor! }, { devinDbPath: dbPath })).turns.length).toBe(20);
       forgetPaneTranscriptState(pane.pane_id);
       const paneReset = await read();
       expect(paneReset.history_id).not.toBe(initial.history_id);
-      await expect(paneConversation(pane.pane_id, undefined, { before: initial.cursor! }, dbPath)).rejects.toThrow(DevinHistoryChanged);
+      await expect(paneConversation(pane.pane_id, { before: initial.cursor! }, { devinDbPath: dbPath })).rejects.toThrow(DevinHistoryChanged);
       forgetTranscriptState();
       const testReset = await read();
       expect(testReset.history_id).not.toBe(paneReset.history_id);
-      await expect(paneConversation(pane.pane_id, undefined, { before: paneReset.cursor! }, dbPath)).rejects.toThrow(DevinHistoryChanged);
+      await expect(paneConversation(pane.pane_id, { before: paneReset.cursor! }, { devinDbPath: dbPath })).rejects.toThrow(DevinHistoryChanged);
     } finally {
       db.close();
       mockedPanes = [];
@@ -1872,9 +1873,122 @@ describe("Agy native ledger through shared paging", () => {
     const store = spyOn(agyStore, "resolveAgyStore").mockResolvedValue({ root, session: "test", path: loop, pid: 2, started: "test" });
     const rpc = spyOn(herdr, "herdrRpc").mockResolvedValue({ process_info: { foreground_processes: [] } } as never);
     try {
-      await expect(paneTranscript(pane.pane_id, undefined, { panes: [pane] } as SessionSnapshot)).rejects.toMatchObject({
+      await expect(paneTranscript(pane.pane_id, { snapshot: { panes: [pane] } as SessionSnapshot })).rejects.toMatchObject({
         name: "ConversationUnavailable", message: "transcript_missing",
       });
     } finally { store.mockRestore(); rpc.mockRestore(); }
+  });
+});
+
+/**
+ * The four seam functions a later refactor moves behind one store-shape object. They are
+ * characterized through a resolved Claude pane only: the observable results are the source,
+ * the page's turns, the whole tool output, the image bytes and the reason a pane has none.
+ */
+describe("conversation seam", () => {
+  const roots: string[] = [];
+  const restores: Array<() => void> = [];
+  const env = { home: process.env["HOME"], claudeConfigDir: process.env["CLAUDE_CONFIG_DIR"] };
+
+  afterEach(() => {
+    for (const restore of restores.splice(0)) restore();
+    if (env.home === undefined) delete process.env["HOME"]; else process.env["HOME"] = env.home;
+    if (env.claudeConfigDir === undefined) delete process.env["CLAUDE_CONFIG_DIR"]; else process.env["CLAUDE_CONFIG_DIR"] = env.claudeConfigDir;
+    forgetTranscriptState();
+    for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+  });
+
+  /** A pane herdr labels claude, with one session in a temp HOME herdr reports the id of. */
+  const seam = (paneId: string) => {
+    const root = mkdtempSync(join(tmpdir(), "herdr-seam-"));
+    roots.push(root);
+    const home = join(root, "home");
+    const cwd = join(root, "work");
+    // claudeTranscriptFile finds the id in any project directory, so the name is not asserted
+    const projects = join(home, ".claude", "projects", "seam");
+    mkdirSync(projects, { recursive: true });
+    mkdirSync(cwd, { recursive: true });
+    const session = "11111111-2222-3333-4444-555555555555";
+    const imageUuid = "33333333-4444-5555-6666-777777777777";
+    const imageBytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    const path = join(projects, `${session}.jsonl`);
+    writeFileSync(path, `${[
+      { type: "user", timestamp: "2026-09-19T08:00:00.000Z", message: { role: "user", content: "seam prompt" } },
+      { type: "assistant", timestamp: "2026-09-19T08:00:01.000Z", message: { role: "assistant", content: [
+        { type: "text", text: "seam answer" },
+        { type: "tool_use", id: "toolu_seam", name: "Bash", input: { command: "echo seam" } },
+      ] } },
+      { type: "user", timestamp: "2026-09-19T08:00:02.000Z", message: { role: "user", content: [
+        { type: "tool_result", tool_use_id: "toolu_seam", content: "seam tool output" },
+      ] } },
+      { type: "user", uuid: imageUuid, timestamp: "2026-09-19T08:00:03.000Z", message: { role: "user", content: [
+        { type: "image", source: { type: "base64", media_type: "image/png", data: imageBytes.toString("base64") } },
+        { type: "text", text: "see image" },
+      ] } },
+    ].map((entry) => JSON.stringify(entry)).join("\n")}\n`);
+
+    const pane = { pane_id: paneId, cwd, agent: "claude" } as HerdrPane;
+    const rpc = spyOn(herdr, "herdrRpc").mockImplementation(async (method: string) => {
+      if (method === "agent.get") return { agent: { agent_session: { kind: "id", value: session } } } as never;
+      if (method === "pane.process_info") return { process_info: { foreground_processes: [] } } as never;
+      throw new Error(`unexpected conversation seam RPC: ${method}`);
+    });
+    restores.push(() => rpc.mockRestore());
+    const snapshot = spyOn(herdr, "sessionSnapshot").mockImplementation(async () => ({ panes: [pane], agents: [] } as unknown as SessionSnapshot));
+    restores.push(() => snapshot.mockRestore());
+    process.env["HOME"] = home;
+    delete process.env["CLAUDE_CONFIG_DIR"];
+    return { pane, path, imageUuid, imageBytes };
+  };
+
+  it("paneTranscript resolves the pane's native transcript and source", async () => {
+    const { pane, path } = seam("pane-seam-native");
+    expect(await paneTranscript(pane.pane_id)).toEqual({ source: "claude-transcript", path });
+  });
+
+  it("openPaneConversation reads the same transcript's turns", async () => {
+    const { pane } = seam("pane-seam-open");
+    const reader = await openPaneConversation(pane.pane_id);
+    const page = await reader.read();
+    expect(page.source).toBe("claude-transcript");
+    expect(page.turns.map((turn) => turn.parts.map((part) => part.kind === "text" ? part.text : part.kind))).toEqual([
+      ["seam prompt"],
+      ["seam answer", "tool"],
+      ["image", "see image"],
+    ]);
+    const tool = page.turns.flatMap((turn) => turn.parts).find((part) => part.kind === "tool");
+    expect(tool?.kind === "tool" ? tool.output : tool).toBe("seam tool output");
+  });
+
+  it("toolOutput returns the whole output the ref names, and null for another ref", async () => {
+    const { pane } = seam("pane-seam-tool");
+    expect(await toolOutput(pane.pane_id, "toolu_seam")).toBe("seam tool output");
+    expect(await toolOutput(pane.pane_id, "toolu_other")).toBeNull();
+  });
+
+  it("conversationImage returns the bytes and media type the ref names", async () => {
+    const { pane, imageUuid, imageBytes } = seam("pane-seam-image");
+    const image = await conversationImage(pane.pane_id, `${imageUuid}:0`);
+    expect(image?.mediaType).toBe("image/png");
+    expect(Buffer.from(image!.bytes).equals(imageBytes)).toBe(true);
+    // the next block is text, and a string that is no ref never resolves
+    expect(await conversationImage(pane.pane_id, `${imageUuid}:1`)).toBeNull();
+    expect(await conversationImage(pane.pane_id, "not-a-ref")).toBeNull();
+  });
+
+  it("reports no_recognized_transcript, and answers null where a reader answers null", async () => {
+    const pane = { pane_id: "pane-seam-unknown", cwd: tmpdir(), agent: "vim" } as HerdrPane;
+    const rpc = spyOn(herdr, "herdrRpc").mockImplementation(async (method: string) => {
+      if (method === "pane.process_info") return { process_info: { foreground_processes: [] } } as never;
+      throw new Error(`unexpected conversation seam RPC: ${method}`);
+    });
+    restores.push(() => rpc.mockRestore());
+    const snapshot = spyOn(herdr, "sessionSnapshot").mockImplementation(async () => ({ panes: [pane], agents: [] } as unknown as SessionSnapshot));
+    restores.push(() => snapshot.mockRestore());
+
+    await expect(paneTranscript(pane.pane_id)).rejects.toMatchObject({ name: "ConversationUnavailable", message: "no_recognized_transcript" });
+    await expect(openPaneConversation(pane.pane_id)).rejects.toMatchObject({ name: "ConversationUnavailable", message: "no_recognized_transcript" });
+    expect(await toolOutput(pane.pane_id, "toolu_seam")).toBeNull();
+    expect(await conversationImage(pane.pane_id, "33333333-4444-5555-6666-777777777777:0")).toBeNull();
   });
 });

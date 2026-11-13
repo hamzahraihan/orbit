@@ -1,10 +1,16 @@
-import { constants, fstatSync, closeSync, openSync, readdirSync, readFileSync, readlinkSync, readSync, realpathSync } from "node:fs";
+import { constants, fstatSync, closeSync, openSync, readdirSync, readFileSync, readlinkSync, readSync, realpathSync, statSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import type { HerdrPane } from "../shared/protocol.ts";
-import { herdrRpc } from "./herdr/client.ts";
+import { herdrRpc, sessionSnapshot } from "./herdr/client.ts";
 import { recentProcessTable } from "./gjc-runtime.ts";
 import { processStartedAt } from "./process-start.ts";
 import { descendantProcesses, type ProcessRow } from "./windows-processes.ts";
+import { ConversationNotStarted, ConversationUnavailable, type ConversationPage, type NativeTranscript, type RecognizedConversation, type TranscriptSources } from "./conversation-shared.ts";
+import { activeHistoryText, readTranscriptPage, resolveStream, type ParseTurns, type StreamSpec, type StreamStat } from "./conversation-reader.ts";
+import { parseOmpTranscript, piMessage, piResults } from "./transcript-records.ts";
+import { TOOL_OUTPUT_MAX, TOOL_REF } from "./tool-output.ts";
+import { startScreenMetadata } from "./start-screen.ts";
+import type { ProviderContext, TranscriptProvider } from "./conversation-providers.ts";
 
 const OMO_PROCESS = /(^|\/)omo(\.js)?$|\/omo-ai\//;
 /** node and bun run a script: the program is then the script, the first word that is not a flag */
@@ -515,3 +521,78 @@ export async function omoPanes(panes: HerdrPane[], home = process.env["HOME"] ??
   }
   return found;
 }
+
+/**
+ * omo's transcript: herdr knows nothing about its store and its label for the pane flips
+ * between `pi` and `claude` as omo spawns model CLIs, so the pane's process tree routes it
+ * and process/session evidence selects a unique transcript under its agent dir.
+ */
+export async function omoTranscriptPath(paneId: string, cwd: string, panes?: HerdrPane[]): Promise<string> {
+  const session = await omoSessionForPane(paneId, cwd, panes ?? (await sessionSnapshot()).panes);
+  if (session.pending !== null) throw new ConversationNotStarted(session.pending);
+  if (!session.path) throw new ConversationUnavailable("no_session_path");
+  return session.path;
+}
+
+/** The transcript file this provider reads: its own source, or the answer the hub gives for one it does not know. */
+function omoPath(resolved: NativeTranscript): string {
+  if (resolved.source !== "omo-transcript") throw new ConversationUnavailable("no_recognized_transcript");
+  return resolved.path;
+}
+
+/**
+ * omo's provider: the session the pane's process tree names, read through the generic
+ * reader. Every method mirrors what the hub does for an omo pane today.
+ */
+export const omoProvider: TranscriptProvider = {
+  async resolve(pane: HerdrPane, cwd: string, _sources: TranscriptSources, panes?: HerdrPane[]): Promise<NativeTranscript> {
+    return { source: "omo-transcript", path: await omoTranscriptPath(pane.pane_id, cwd, panes) };
+  },
+
+  page(call: ProviderContext, page: ConversationPage): RecognizedConversation {
+    const path = omoPath(call.resolved);
+    let stat: StreamStat;
+    try { stat = statSync(path); } catch { throw new ConversationUnavailable("transcript_missing"); }
+    const spec: StreamSpec = { segments: [{ path, start: 0, end: stat.size }], chain: "" };
+    const stream = resolveStream(call.reuse, "omo-transcript", path, stat, spec);
+    const omoParse: ParseTurns = (_source, _p, text) => parseOmpTranscript(text, Infinity, {});
+    return readTranscriptPage(stream, "omo-transcript", path, stat, page, omoParse);
+  },
+
+  async readImage(_call: ProviderContext, _ref: string) {
+    return null;
+  },
+
+  readToolOutput(call: ProviderContext, ref: string): string | null {
+    const path = omoPath(call.resolved);
+    if (!TOOL_REF.test(ref)) return null;
+    let text: string;
+    try { text = readFileSync(path, "utf8"); } catch { return null; }
+    text = activeHistoryText(text, "omo-transcript");
+    const needle = JSON.stringify(ref);
+    for (const line of text.split("\n")) {
+      if (!line.includes(needle)) continue;
+      let entry: Record<string, unknown>;
+      try { entry = JSON.parse(line) as Record<string, unknown>; } catch { continue; }
+      const message = piMessage(entry);
+      let output: string | null = null;
+      if (message) output = piResults(message).find((result) => result.id === ref)?.text ?? null;
+      if (output !== null) return output.length > TOOL_OUTPUT_MAX ? `${output.slice(0, TOOL_OUTPUT_MAX)}\n… trimmed` : output;
+    }
+    return null;
+  },
+
+  /** omo keeps no cache of its own beyond the hub's generic page cache. */
+  invalidateCache(path?: string): void {
+    void path;
+  },
+
+  startScreenMetadata(screen: string) {
+    return startScreenMetadata("omo-transcript", screen);
+  },
+
+  mapError(error: unknown): ConversationUnavailable | ConversationNotStarted | null {
+    if (error instanceof ConversationUnavailable || error instanceof ConversationNotStarted) return error;
+    return null;
+  },
+};
