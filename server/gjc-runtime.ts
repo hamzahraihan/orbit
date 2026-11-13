@@ -12,6 +12,13 @@ import { captureGjcIndex, gjcIndexUnchanged, type GjcIndexStamp } from "./gjc-in
 import { herdrRpc } from "./herdr/client.ts";
 import { processStartedAt } from "./process-start.ts";
 import { descendantArgv, windowsProcessTable, type ProcessRow } from "./windows-processes.ts";
+import { ConversationNotStarted, ConversationUnavailable, type ConversationPage, type NativeTranscript, type RecognizedConversation, type TranscriptSources } from "./conversation-shared.ts";
+import { activeHistoryText, readTranscriptPage, resolveStream, type ParseTurns, type StreamSpec, type StreamStat } from "./conversation-reader.ts";
+import { parseOmpTranscript, piMessage, piResults } from "./transcript-records.ts";
+import { TOOL_OUTPUT_MAX, TOOL_REF } from "./tool-output.ts";
+import { startScreenMetadata } from "./start-screen.ts";
+import type { ProviderContext, TranscriptProvider } from "./conversation-providers.ts";
+import type { HerdrPane } from "../shared/protocol.ts";
 
 export interface GjcTerminal { id: string; startedAt: number }
 
@@ -436,3 +443,69 @@ async function lookupGjcTranscript(
     return forget();
   }
 }
+
+/** The transcript file this provider reads: its own source, or the answer the hub gives for one it does not know. */
+function gjcPath(resolved: NativeTranscript): string {
+  if (resolved.source !== "gjc-transcript") throw new ConversationUnavailable("no_recognized_transcript");
+  return resolved.path;
+}
+
+/**
+ * GJC's provider: the session the SDK broker binds to this pane, read through the
+ * generic reader. Every method mirrors what the hub does for a gjc pane today.
+ */
+export const gjcProvider: TranscriptProvider = {
+  async resolve(pane: HerdrPane, cwd: string, _sources: TranscriptSources, _panes?: HerdrPane[]): Promise<NativeTranscript> {
+    const found = await gjcTranscriptForPane(pane.pane_id, cwd);
+    if (!found) throw new ConversationUnavailable("no_session_path");
+    return { source: "gjc-transcript", path: found };
+  },
+
+  page(call: ProviderContext, page: ConversationPage): RecognizedConversation {
+    const path = gjcPath(call.resolved);
+    let stat: StreamStat;
+    try { stat = statSync(path); } catch { throw new ConversationUnavailable("transcript_missing"); }
+    const spec: StreamSpec = { segments: [{ path, start: 0, end: stat.size }], chain: "" };
+    const stream = resolveStream(call.reuse, "gjc-transcript", path, stat, spec);
+    const gjcParse: ParseTurns = (_source, _p, text) => parseOmpTranscript(text, Infinity, {});
+    return readTranscriptPage(stream, "gjc-transcript", path, stat, page, gjcParse);
+  },
+
+  async readImage(_call: ProviderContext, _ref: string) {
+    return null;
+  },
+
+  readToolOutput(call: ProviderContext, ref: string): string | null {
+    const path = gjcPath(call.resolved);
+    if (!TOOL_REF.test(ref)) return null;
+    let text: string;
+    try { text = readFileSync(path, "utf8"); } catch { return null; }
+    text = activeHistoryText(text, "gjc-transcript");
+    const needle = JSON.stringify(ref);
+    for (const line of text.split("\n")) {
+      if (!line.includes(needle)) continue;
+      let entry: Record<string, unknown>;
+      try { entry = JSON.parse(line) as Record<string, unknown>; } catch { continue; }
+      const message = piMessage(entry);
+      let output: string | null = null;
+      if (message) output = piResults(message).find((result) => result.id === ref)?.text ?? null;
+      if (output !== null) return output.length > TOOL_OUTPUT_MAX ? `${output.slice(0, TOOL_OUTPUT_MAX)}\n… trimmed` : output;
+    }
+    return null;
+  },
+
+  /** gjc's only caches are the process-table/binding caches cleared by forgetGjcState, which has no per-path form. */
+  invalidateCache(path?: string): void {
+    void path;
+    forgetGjcState();
+  },
+
+  startScreenMetadata(screen: string) {
+    return startScreenMetadata("gjc-transcript", screen);
+  },
+
+  mapError(error: unknown): ConversationUnavailable | ConversationNotStarted | null {
+    if (error instanceof ConversationUnavailable || error instanceof ConversationNotStarted) return error;
+    return null;
+  },
+};

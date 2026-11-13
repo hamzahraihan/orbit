@@ -2,9 +2,15 @@
 import { createHash } from "node:crypto";
 import { closeSync, openSync, readSync, statSync } from "node:fs";
 import { basename, dirname } from "node:path";
-import type { ConversationPart, ConversationTurn, ConversationResponse } from "../shared/protocol.ts";
+import type { ConversationPart, ConversationTurn, ConversationResponse, HerdrPane } from "../shared/protocol.ts";
 import { toolSummary } from "./transcript-records.ts";
-import { trimOutput } from "./tool-output.ts";
+import { TOOL_REF, trimOutput } from "./tool-output.ts";
+import { ConversationNotStarted, ConversationUnavailable } from "./conversation-shared.ts";
+import type { ConversationPage, NativeTranscript, RecognizedConversation, TranscriptSources } from "./conversation-shared.ts";
+import type { ProviderContext, TranscriptProvider } from "./conversation-providers.ts";
+import { readTranscriptPage, resolveStream, type ParseTurns, type StreamSpec, type StreamStat } from "./conversation-reader.ts";
+import { startScreenMetadata } from "./start-screen.ts";
+import { resolveGrokStore } from "./grok-store.ts";
 
 type RecordValue = Record<string, unknown>;
 const record = (value: unknown): RecordValue => value !== null && typeof value === "object" && !Array.isArray(value) ? value as RecordValue : {};
@@ -284,3 +290,56 @@ export function grokToolOutput(path: string, ref: string): string | null {
   } catch { /* changed, incomplete or unavailable history */ }
   return null;
 }
+
+/** The transcript file this provider reads: its own source, or the answer the hub gives for one it does not know. */
+function grokPath(resolved: NativeTranscript): string {
+  if (resolved.source !== "grok-transcript") throw new ConversationUnavailable("no_recognized_transcript");
+  return resolved.path;
+}
+
+/**
+ * Grok's provider: the store it writes, read through the generic reader.
+ */
+export const grokProvider: TranscriptProvider = {
+  async resolve(pane: HerdrPane, _cwd: string, sources: TranscriptSources, _panes?: HerdrPane[]): Promise<NativeTranscript> {
+    const found = await resolveGrokStore(pane, sources.grokHome);
+    if (!found) throw new ConversationUnavailable("no_session_path");
+    return { source: "grok-transcript", path: found };
+  },
+
+  page(call: ProviderContext, page: ConversationPage): RecognizedConversation {
+    const path = grokPath(call.resolved);
+    let stat: StreamStat;
+    try { stat = statSync(path); } catch { throw new ConversationUnavailable("transcript_missing"); }
+    const grok = (() => { try { return grokProjection(path, stat); } catch { throw new ConversationUnavailable("transcript_missing"); } })();
+    const spec: StreamSpec = { segments: grok.segments.map((segment) => ({ path, ...segment })), chain: `-grok-${createHash("sha256").update(path).digest("base64url").slice(0, 10)}-${grok.revision}`, promptStarts: grok.promptStarts };
+    const stream = resolveStream(call.reuse, "grok-transcript", path, stat, spec);
+    const parse: ParseTurns = (_source, p, text) => { try { return parseGrokTranscript(text, p); } catch (error) { if (error instanceof GrokUnavailable) throw new ConversationUnavailable("transcript_missing"); throw error; } };
+    const answer = readTranscriptPage(stream, "grok-transcript", path, stat, page, parse);
+    try { return { ...answer, activity: grokProjection(path, statSync(path)).activity }; } catch { throw new ConversationUnavailable("transcript_missing"); }
+  },
+
+  async readImage(_call: ProviderContext, _ref: string) {
+    return null;
+  },
+
+  readToolOutput(call: ProviderContext, ref: string): string | null {
+    const path = grokPath(call.resolved);
+    if (!TOOL_REF.test(ref)) return null;
+    return grokToolOutput(path, ref);
+  },
+
+  invalidateCache(path?: string): void {
+    forgetGrokState(path);
+  },
+
+  startScreenMetadata(screen: string) {
+    return startScreenMetadata("grok-transcript", screen);
+  },
+
+  mapError(error: unknown): ConversationUnavailable | ConversationNotStarted | null {
+    if (error instanceof GrokUnavailable) return new ConversationUnavailable("transcript_missing");
+    if (error instanceof ConversationUnavailable || error instanceof ConversationNotStarted) return error;
+    return null;
+  },
+};

@@ -7,11 +7,13 @@ import { readFile, stat } from "node:fs/promises";
 
 import type { ConversationMetadata, ConversationPart, ConversationTurn, HerdrPane } from "../shared/protocol.ts";
 import { herdrRpc } from "./herdr/client.ts";
-import { answerVersion, ConversationNotStarted, ConversationUnavailable, type ConversationPage, HistoryChanged, type RecognizedConversation, TRANSCRIPT_WINDOW_BYTES } from "./conversation-shared.ts";
+import { answerVersion, ConversationNotStarted, ConversationUnavailable, type ConversationPage, HistoryChanged, type NativeTranscript, type RecognizedConversation, type TranscriptSources, TRANSCRIPT_WINDOW_BYTES } from "./conversation-shared.ts";
 import { toolSummary } from "./transcript-records.ts";
-import { TOOL_OUTPUT_CHARS, trimOutput } from "./tool-output.ts";
+import { TOOL_OUTPUT_CHARS, TOOL_OUTPUT_MAX, trimOutput } from "./tool-output.ts";
 import { processStartedAt } from "./process-start.ts";
 import { hermesSkillPrompt } from "./skill-activity.ts";
+import { startScreenMetadata } from "./start-screen.ts";
+import type { ProviderContext, TranscriptProvider } from "./conversation-providers.ts";
 
 export interface HermesMessageRow {
   id: number;
@@ -728,3 +730,47 @@ export function parseHermesRows(rows: readonly HermesMessageRow[], identity?: st
 
   return turns;
 }
+
+/** The resolved hermes transcript, checked to name one. */
+function hermesResolved(resolved: NativeTranscript): Extract<NativeTranscript, { source: "hermes-transcript" }> {
+  if (resolved.source !== "hermes-transcript") throw new ConversationUnavailable("no_recognized_transcript");
+  return resolved;
+}
+
+/**
+ * Hermes' provider: the session herdr's agent.get or the pane's process names, read from
+ * hermes' own SQLite store. Every method mirrors what the hub does for a hermes pane today.
+ */
+export const hermesProvider: TranscriptProvider = {
+  async resolve(pane: HerdrPane, cwd: string, sources: TranscriptSources, _panes?: HerdrPane[]): Promise<NativeTranscript> {
+    const resolved = await hermesTranscriptForPane(pane, cwd, sources.hermesHome);
+    return { source: "hermes-transcript", path: resolved.dbPath, sessionId: resolved.sessionId };
+  },
+
+  page(call: ProviderContext, page: ConversationPage): RecognizedConversation {
+    const resolved = hermesResolved(call.resolved);
+    return hermesConversationPage(resolved.sessionId, resolved.path, page);
+  },
+
+  async readImage(_call: ProviderContext, _ref: string) {
+    return null;
+  },
+
+  readToolOutput(call: ProviderContext, ref: string): string | null {
+    const resolved = hermesResolved(call.resolved);
+    return hermesToolOutput(resolved.sessionId, resolved.path, ref, TOOL_OUTPUT_MAX);
+  },
+
+  invalidateCache(path?: string): void {
+    forgetHermesTranscriptState(path);
+  },
+
+  startScreenMetadata(screen: string) {
+    return startScreenMetadata("hermes-transcript", screen);
+  },
+
+  mapError(error: unknown): ConversationUnavailable | ConversationNotStarted | null {
+    if (error instanceof ConversationUnavailable || error instanceof ConversationNotStarted) return error;
+    return null;
+  },
+};

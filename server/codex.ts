@@ -1,16 +1,23 @@
 /** Native Codex rollouts contain both display events and model context. Only
  * conversation records belong in chat; developer prompts and terminal chrome do not. */
 import { Database } from "bun:sqlite";
+import { createHash } from "node:crypto";
 import { closeSync, openSync, readdirSync, readFileSync, readlinkSync, readSync, realpathSync, statSync } from "node:fs";
 import { open, readFile, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import nodePath, { isAbsolute, join, type PlatformPath } from "node:path";
-import type { ConversationPart, ConversationTurn, HerdrPane } from "../shared/protocol.ts";
+import type { ConversationPart, ConversationMetadata, ConversationTurn, HerdrPane } from "../shared/protocol.ts";
 import { patchFiles, patchText } from "../shared/patch.ts";
 import { processStartedAt, processStartUpperBound } from "./process-start.ts";
-import { codexImageParts } from "./codex-images.ts";
+import { codexImageParts, codexTranscriptImage } from "./codex-images.ts";
 import { codexReadCall, codexReadSkills, selectedSkill } from "./skill-activity.ts";
 import { trimOutput } from "./tool-output.ts";
+import { conversationCache, ConversationNotStarted, ConversationUnavailable, TRANSCRIPT_WINDOW_BYTES, type ConversationPage, type NativeTranscript, type RecognizedConversation, type TranscriptSources, type TranscriptStream } from "./conversation-shared.ts";
+import { activeHistoryText, bytesBefore, METADATA_HEAD_BYTES, readStream, readTranscriptPage, remember, resolveStream, streamFiles, type ParseTurns, type StreamSpec, type StreamStat } from "./conversation-reader.ts";
+import { parseConversationMetadata } from "./conversation-metadata.ts";
+import { TOOL_OUTPUT_MAX, TOOL_REF } from "./tool-output.ts";
+import { startScreenMetadata } from "./start-screen.ts";
+import type { ProviderContext, TranscriptProvider } from "./conversation-providers.ts";
 import { agentGet, paneProcessInfo, paneRead, sessionSnapshot } from "./herdr/client.ts";
 
 type RecordValue = Record<string, unknown>;
@@ -1550,3 +1557,133 @@ export async function codexTranscriptPath(paneId: string, cwd: string, home = de
   if (short !== null) return short;
   return shortThreadFromProcess(paneId, cwd, home, screen.text, codexProcesses, panes);
 }
+
+/** Incremental within a long Codex task, including results for tools from earlier polls. */
+export function codexLiveTurn(path: string, stream: TranscriptStream, start: number, before: ConversationMetadata): { turns: ConversationTurn[]; metadata: ConversationMetadata } {
+  let cached = conversationCache.codexTurns.get(path);
+  if (!cached || cached.id !== stream.id || cached.start !== start || cached.scanned > stream.length
+    || bytesBefore(stream, cached.scanned) !== cached.boundary) {
+    cached = { id: stream.id, start, scanned: start, boundary: bytesBefore(stream, start), parser: createCodexTranscriptParser(), metadata: before };
+  }
+  const bytes = readStream(stream, cached.scanned, stream.length);
+  const complete = bytes.lastIndexOf(0x0a) + 1;
+  if (complete > 0) {
+    const text = bytes.subarray(0, complete).toString("utf8");
+    cached.parser.write(text);
+    cached.metadata = parseConversationMetadata(text, "codex-transcript", cached.metadata);
+    cached.scanned += complete;
+    cached.boundary = bytesBefore(stream, cached.scanned);
+  }
+  const tail = bytes.subarray(complete).toString("utf8");
+  // Both record count and retained source bytes are bounded, independent of session length.
+  remember(conversationCache.codexTurns, path, cached, 8);
+  let retained = [...conversationCache.codexTurns.values()].reduce((sum, turn) => sum + turn.scanned - turn.start, 0);
+  for (const [key, turn] of conversationCache.codexTurns) {
+    if (retained <= 2 * TRANSCRIPT_WINDOW_BYTES) break;
+    conversationCache.codexTurns.delete(key);
+    retained -= turn.scanned - turn.start;
+  }
+  return { turns: cached.parser.snapshot(tail), metadata: parseConversationMetadata(tail, "codex-transcript", cached.metadata) };
+}
+
+/** The transcript this provider reads: its own source, or the answer the hub gives for one it does not know. */
+function codexPath(resolved: NativeTranscript): string {
+  if (resolved.source !== "codex-transcript") throw new ConversationUnavailable("no_recognized_transcript");
+  return resolved.path;
+}
+
+/** One Codex rollout's output records, whole, from the history chain. */
+function codexOutputInText(text: string, ref: string): string | null {
+  text = activeHistoryText(text, "codex-transcript");
+  const needle = JSON.stringify(ref);
+  for (const line of text.split("\n")) {
+    if (!line.includes(needle)) continue;
+    let entry: Record<string, unknown>;
+    try { entry = JSON.parse(line) as Record<string, unknown>; } catch { continue; }
+    const payload = entry.payload as { type?: unknown; call_id?: unknown; output?: unknown } | undefined;
+    if ((payload?.type === "function_call_output" || payload?.type === "custom_tool_call_output") && payload.call_id === ref) {
+      const output = codexOutputText(payload.output);
+      return output.length > TOOL_OUTPUT_MAX ? `${output.slice(0, TOOL_OUTPUT_MAX)}\n… trimmed` : output;
+    }
+  }
+  return null;
+}
+
+/**
+ * Codex's provider: the rollout codex writes for this pane, read through the generic
+ * reader (history chain plus the stateful live-turn parser). Every method mirrors
+ * what the hub does for a codex pane today.
+ */
+export const codexProvider: TranscriptProvider = {
+  async resolve(pane: HerdrPane, cwd: string, sources: TranscriptSources, panes?: HerdrPane[]): Promise<NativeTranscript> {
+    const home = await paneCodexHome(pane.pane_id, sources.codexHome);
+    const path = await codexTranscriptPath(pane.pane_id, cwd, home, panes);
+    if (!path) throw new ConversationUnavailable("no_session_path");
+    return { source: "codex-transcript", path, codexHome: home };
+  },
+
+  page(call: ProviderContext, page: ConversationPage): RecognizedConversation {
+    const path = codexPath(call.resolved);
+    const codexHome = call.resolved.source === "codex-transcript"
+      ? call.resolved.codexHome ?? call.sources.codexHome ?? defaultCodexHome()
+      : defaultCodexHome();
+    let stat: StreamStat;
+    try { stat = statSync(path); } catch { throw new ConversationUnavailable("transcript_missing"); }
+    let spec: StreamSpec;
+    try {
+      const segments = codexHistorySegments(path, codexHome).map((segment) => ({ path: segment.path, start: 0, end: segment.end }));
+      const files = streamFiles(segments, path, stat);
+      const earlier = files.slice(0, -1).map((file) => {
+        const identity = statSync(file.path, { throwIfNoEntry: false });
+        return `${file.path}\0${file.length}\0${identity ? `${identity.dev}:${identity.ino}` : "-"}`;
+      });
+      const chain = earlier.length === 0 ? "" : `-${createHash("sha256").update(earlier.join("\n")).digest("base64url").slice(0, 10)}`;
+      spec = { segments, chain };
+    } catch (error) {
+      if (error instanceof ConversationUnavailable) throw error;
+      throw new ConversationUnavailable("transcript_missing");
+    }
+    const stream = resolveStream(call.reuse, "codex-transcript", path, stat, spec);
+    const codexParse: ParseTurns = (_source, _p, text) => parseCodexTranscript(text, Infinity);
+    return readTranscriptPage(stream, "codex-transcript", path, stat, page, codexParse, { head: (p) => readRange(p, 0, METADATA_HEAD_BYTES), live: codexLiveTurn });
+  },
+
+  async readImage(call: ProviderContext, ref: string) {
+    const path = codexPath(call.resolved);
+    const codexHome = call.resolved.source === "codex-transcript"
+      ? call.resolved.codexHome ?? call.sources.codexHome ?? defaultCodexHome()
+      : defaultCodexHome();
+    return codexTranscriptImage(codexHistorySegments(path, codexHome).map((segment) => ({ path: segment.path, end: segment.end })), ref, call.cwd);
+  },
+
+  readToolOutput(call: ProviderContext, ref: string): string | null {
+    const path = codexPath(call.resolved);
+    if (!TOOL_REF.test(ref)) return null;
+    const codexHome = call.resolved.source === "codex-transcript"
+      ? call.resolved.codexHome ?? call.sources.codexHome ?? defaultCodexHome()
+      : defaultCodexHome();
+    let segments: ReturnType<typeof codexHistorySegments>;
+    try { segments = codexHistorySegments(path, codexHome); } catch { return null; }
+    for (const segment of segments) {
+      let text: string;
+      try { text = readRange(segment.path, 0, segment.end); } catch { continue; }
+      const output = codexOutputInText(text, ref);
+      if (output !== null) return output;
+    }
+    return null;
+  },
+
+  invalidateCache(path?: string): void {
+    if (path === undefined) forgetAllCodexState();
+    else forgetCodexStateFor(path);
+  },
+
+  startScreenMetadata(screen: string) {
+    return startScreenMetadata("codex-transcript", screen);
+  },
+
+  mapError(error: unknown): ConversationUnavailable | ConversationNotStarted | null {
+    if (error instanceof ConversationUnavailable || error instanceof ConversationNotStarted) return error;
+    return null;
+  },
+};

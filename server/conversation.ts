@@ -35,11 +35,11 @@
 
 import { createHash } from "node:crypto";
 import { readFileSync, realpathSync, statSync } from "node:fs";
-import nodePath, { type PlatformPath } from "node:path";
+import nodePath from "node:path";
 
 import { PI_PAGE_CACHE_BYTES } from "./conversation-cache.ts";
-import { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, TRANSCRIPT_WINDOW_BYTES, type ConversationPage, type NativeTranscript, type PaneConversationReader, type RecognizedConversation, type ResolvedTranscript, type StreamSource, type TranscriptStream, type TranscriptStreamReuse } from "./conversation-shared.ts";
-import { bytesBefore, activeHistoryText, METADATA_HEAD_BYTES, readStream, readTranscriptPage, remember, resolveStream, streamFiles, type PageSource, type StreamSpec, type StreamStat } from "./conversation-reader.ts";
+import { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, type ConversationPage, type NativeTranscript, type PaneConversationReader, type RecognizedConversation, type ResolvedTranscript, type StreamSource, type TranscriptStreamReuse } from "./conversation-shared.ts";
+import { activeHistoryText, METADATA_HEAD_BYTES, readTranscriptPage, remember, resolveStream, streamFiles, type PageSource, type StreamSpec, type StreamStat } from "./conversation-reader.ts";
 import { claudeToolResult, claudeTranscriptPath, IMAGE_REF, parseClaudeTranscript, subagentsOnPage, transcriptImage } from "./claude-transcript.ts";
 
 export { answerVersion, conversationCache, ConversationNotStarted, ConversationUnavailable, HistoryChanged, TRANSCRIPT_WINDOW_BYTES } from "./conversation-shared.ts";
@@ -48,28 +48,30 @@ export { buildStream, readTranscriptPage, resolveStream, streamFiles } from "./c
 export type { PageSource, ParseTurns, StreamSpec, StreamStat } from "./conversation-reader.ts";
 export { claudePanePid, claudePaneSession, parseClaudeTranscript, transcriptImage, unwrapPastes } from "./claude-transcript.ts";
 
-import type { ConversationMetadata, ConversationTurn, HerdrPane, SessionSnapshot } from "../shared/protocol.ts";
+import type { ConversationTurn, HerdrPane, SessionSnapshot } from "../shared/protocol.ts";
 import { herdrRpc, paneRead, sessionSnapshot } from "./herdr/client.ts";
-import { codexHistorySegments, createCodexTranscriptParser, codexOutputText, codexTranscriptPath, defaultCodexHome, forgetAllCodexState, forgetCodexStateFor, paneCodexHome, parseCodexTranscript, readRange } from "./codex.ts";
+import { codexHistorySegments, codexOutputText, codexTranscriptPath, defaultCodexHome, forgetAllCodexState, forgetCodexStateFor, paneCodexHome, parseCodexTranscript, readRange, codexLiveTurn } from "./codex.ts";
 import { CODEX_IMAGE_REF, codexTranscriptImage } from "./codex-images.ts";
 import { forgetClaudeSessionFile, forgetClaudeSessions } from "./claude-store.ts";
-import { forgetGjcState, gjcPidUnderShell, gjcTranscriptForPane, isGjcProcess, storeRelative } from "./gjc-runtime.ts";
+import { forgetGjcState, gjcPidUnderShell, gjcTranscriptForPane, isGjcProcess } from "./gjc-runtime.ts";
 import { omoProcessIdentity, omoSessionForPane, processEnviron } from "./omo.ts";
-import { ompHeldTranscript } from "./omp.ts";
+import { ompTranscriptPath } from "./omp.ts";
+export { ompSessionStore } from "./omp.ts";
 import { forgetOpencodeRead, forgetOpencodeState, OPENCODE_IMAGE_REF, opencodeConversation, opencodeDatabasePath, opencodeImage, opencodeReadKey, opencodeSessionId, opencodeToolOutput } from "./opencode.ts";
-import { piTranscriptInStore, piTranscriptPath, unwrittenSession } from "./pi.ts";
-import { defaultDevinDbPath, DevinHistoryUnavailable, devinConversation, forgetDevinState } from "./devin.ts";
+import { piTranscriptImage, piTranscriptPath, piToolOutput, PI_IMAGE_REF } from "./pi.ts";
+export { piTranscriptImage } from "./pi.ts";
+import { DevinHistoryUnavailable, devinConversation, forgetDevinState, isDevinProcess, devinSessionForPane, defaultDevinDbPath } from "./devin.ts";
+export { isDevinProcess, devinSessionForPane } from "./devin.ts";
 import { forgetGrokState, grokProjection, grokToolOutput, parseGrokTranscript, GrokUnavailable } from "./grok.ts";
 import { resolveGrokStore } from "./grok-store.ts";
 import { AgyUnavailable, agyCatalog, agyToolOutput, forgetAgyState, parseAgyTranscript, withAgyHistory, type AgyProjection } from "./agy.ts";
 import { resolveAgyStore, sameAgyStore } from "./agy-store.ts";
 import { withinRetentionBudget } from "./retention-budget.ts";
-import { forgetAllPiIndexes, forgetPiIndex, piAbandonedTurns, piBranchRecords, piBranchSegments } from "./pi-tree.ts";
-import { parseConversationMetadata } from "./conversation-metadata.ts";
+import { forgetAllPiIndexes, forgetPiIndex, piAbandonedTurns, piBranchSegments } from "./pi-tree.ts";
 import { TOOL_OUTPUT_MAX, TOOL_REF } from "./tool-output.ts";
 import { forgetHermesTranscriptState, hermesConversationPage, hermesToolOutput, hermesTranscriptForPane } from "./hermes.ts";
 
-import { isContextClear, parseOmpTranscript, piImageBlock, piMessage, piResults } from "./transcript-records.ts";
+import { parseOmpTranscript, piMessage, piResults } from "./transcript-records.ts";
 import { forgetSubagents } from "./claude-subagents.ts";
 import { launchedAgents } from "./launched-agents.ts";
 import { readsStartScreen, startScreenMetadata } from "./start-screen.ts";
@@ -130,33 +132,6 @@ function parseTurns(source: RecognizedConversation["source"], path: string, text
 }
 
 
-/** Incremental within a long Codex task, including results for tools from earlier polls. */
-function codexLiveTurn(path: string, stream: TranscriptStream, start: number, before: ConversationMetadata): { turns: ConversationTurn[]; metadata: ConversationMetadata } {
-  let cached = conversationCache.codexTurns.get(path);
-  if (!cached || cached.id !== stream.id || cached.start !== start || cached.scanned > stream.length
-    || bytesBefore(stream, cached.scanned) !== cached.boundary) {
-    cached = { id: stream.id, start, scanned: start, boundary: bytesBefore(stream, start), parser: createCodexTranscriptParser(), metadata: before };
-  }
-  const bytes = readStream(stream, cached.scanned, stream.length);
-  const complete = bytes.lastIndexOf(0x0a) + 1;
-  if (complete > 0) {
-    const text = bytes.subarray(0, complete).toString("utf8");
-    cached.parser.write(text);
-    cached.metadata = parseConversationMetadata(text, "codex-transcript", cached.metadata);
-    cached.scanned += complete;
-    cached.boundary = bytesBefore(stream, cached.scanned);
-  }
-  const tail = bytes.subarray(complete).toString("utf8");
-  // Both record count and retained source bytes are bounded, independent of session length.
-  remember(conversationCache.codexTurns, path, cached, 8);
-  let retained = [...conversationCache.codexTurns.values()].reduce((sum, turn) => sum + turn.scanned - turn.start, 0);
-  for (const [key, turn] of conversationCache.codexTurns) {
-    if (retained <= 2 * TRANSCRIPT_WINDOW_BYTES) break;
-    conversationCache.codexTurns.delete(key);
-    retained -= turn.scanned - turn.start;
-  }
-  return { turns: cached.parser.snapshot(tail), metadata: parseConversationMetadata(tail, "codex-transcript", cached.metadata) };
-}
 
 /** Retention diagnostics only: counts/budget adherence, never transcript contents. */
 export function piPageCacheUsage(): { pages: number; settled: number; withinBudget: boolean } {
@@ -335,45 +310,6 @@ export async function labelOmoPanes(snapshot: SessionSnapshot): Promise<SessionS
   };
 }
 
-/**
- * The store holding the omp session herdr reports, or null unless the path is a transcript
- * inside one of the user's own stores: ~/.omp/agent/sessions, or the one `omp --profile <name>`
- * keeps at ~/.omp/profiles/<name>/agent/sessions. A Windows PC reports it in its own form
- * (drive letter, backslashes).
- */
-export function ompSessionStore(value: unknown, home: string, paths: PlatformPath = nodePath): string | null {
-  if (typeof value !== "string" || !value.endsWith(".jsonl") || !paths.isAbsolute(value) || !paths.isAbsolute(home)) return null;
-  const store = paths.join(home, ".omp", "agent", "sessions");
-  if (storeRelative(store, value, paths)) return store;
-  const profiles = paths.join(home, ".omp", "profiles");
-  const parts = storeRelative(profiles, value, paths);
-  if (!parts || parts.length < 4 || parts[1] !== "agent" || parts[2] !== "sessions") return null;
-  return paths.join(profiles, parts[0]!, "agent", "sessions");
-}
-
-/**
- * omp's transcript: herdr hands over the absolute path, accepted only inside the user's own
- * stores. When herdr names none (or another agent's session), the pane's omp process does.
- */
-async function ompTranscriptPath(paneId: string, cwd: string): Promise<string> {
-  const info = await herdrRpc<{ agent: { agent_session?: { kind?: unknown; value?: unknown } } }>("agent.get", { target: paneId });
-  const session = info.agent.agent_session;
-  const path = session?.kind === "path" && typeof session.value === "string" ? session.value : null;
-  // a Windows bridge starts with HOME set to the profile directory (remote-entry.ts)
-  const store = ompSessionStore(path, process.env["HOME"] ?? "");
-  if (path === null || store === null) {
-    const held = await ompHeldTranscript(paneId, cwd);
-    if (held === null) throw new ConversationUnavailable("no_session_path");
-    return held;
-  }
-  // omp names its session file at start and writes it with the first answer
-  const unwritten = unwrittenSession(path, store);
-  if (unwritten !== null) throw new ConversationNotStarted(unwritten.id, "omp-transcript", unwritten.path);
-  // the check above is lexical: a link out of the store is no transcript of this pane
-  const inStore = piTranscriptInStore(path, store);
-  if (inStore === null) throw new ConversationUnavailable("no_session_path");
-  return inStore;
-}
 
 /**
  * The store a pane's transcript lives in. herdr's agent label follows the
@@ -468,46 +404,6 @@ async function omoTranscriptPath(paneId: string, cwd: string, panes?: HerdrPane[
   return session.path;
 }
 
-/** A live Devin executable, not a command line which happens to mention one. */
-export function isDevinProcess(argv: readonly string[]): boolean {
-  const executable = argv[0] ?? "";
-  const exact = /(?:^|[\\/])devin(?:\.exe)?$/;
-  return process.platform === "win32" ? exact.test(executable.toLowerCase()) : exact.test(executable);
-}
-
-/** Resolves only a session explicitly named by this live Devin pane, never by directory contents. */
-export function devinSessionForPane(pane: HerdrPane, panes: HerdrPane[], argv: string[]): string {
-  if (pane.agent !== "devin") throw new ConversationUnavailable("no_session_id");
-  const reported = pane.agent_session?.agent === "devin" && pane.agent_session.kind === "id"
-    && typeof pane.agent_session.value === "string" && pane.agent_session.value.length > 0
-    ? pane.agent_session.value : null;
-  const resumed: string[] = [];
-  for (let index = 1; index < argv.length; index++) {
-    const arg = argv[index]!;
-    if (arg === "--") break;
-    if (arg.startsWith("--resume=")) {
-      const id = arg.slice("--resume=".length);
-      if (!id || id.startsWith("-")) throw new ConversationUnavailable("no_session_id");
-      resumed.push(id);
-    } else if (arg === "--resume" || arg === "-r") {
-      const id = argv[index + 1];
-      if (!id || id.startsWith("-")) throw new ConversationUnavailable("no_session_id");
-      resumed.push(id);
-      index++;
-    }
-  }
-  const named = resumed[0] ?? null;
-  if (resumed.some((id) => id !== named) || (reported !== null && named !== null && reported !== named)) {
-    throw new ConversationUnavailable("no_session_id");
-  }
-  const explicit = reported ?? named;
-  if (explicit === null) throw new ConversationUnavailable("no_session_id");
-  if (panes.some((other) => other.pane_id !== pane.pane_id && other.agent === "devin"
-    && other.agent_session?.agent === "devin" && other.agent_session.kind === "id" && other.agent_session.value === explicit)) {
-    throw new ConversationUnavailable("no_session_id");
-  }
-  return explicit;
-}
 
 /** Resolve the native live file or database session without reading conversation turns. */
 export async function paneTranscript(paneId: string, codexHome?: string, snapshot?: SessionSnapshot, devinDbPath?: string, opencodeDb?: string, hermesHome?: string, grokHome?: string): Promise<NativeTranscript> {
@@ -822,57 +718,6 @@ export function transcriptToolOutput(source: StreamSource, path: string, ref: st
   return outputInText(source, text, ref);
 }
 
-/**
- * One whole tool output by ref. A pi output lives on the active branch only: reading the
- * file whole would answer a ref from a branch a /tree abandoned, whose output the chat
- * never showed, so the branch is read the way the conversation is.
- */
-function piToolOutput(path: string, ref: string): string | null {
-  let size: number;
-  let branch: ReturnType<typeof piBranchSegments>;
-  try { size = statSync(path).size; branch = piBranchSegments(path, size); } catch { return null; }
-  if (branch === null) return null;
-  // only a record that can be a clear or can hold the ref is parsed: an unrelated record (a picture
-  // the agent read, a long tool result) is skipped on a substring check, as the segment reader did
-  const needle = JSON.stringify(ref);
-  let output: string | null = null;
-  for (const line of piBranchRecords(path, size)) {
-    if (line.includes("context_clear")) {
-      let entry: unknown;
-      try { entry = JSON.parse(line); } catch { continue; }
-      if (isContextClear(entry, "pi-transcript")) { output = null; continue; }
-    }
-    if (output === null && line.includes(needle)) output = outputInText("pi-transcript", line, ref);
-  }
-  return output;
-}
-
-/**
- * The image a pi tool call returned, by the ref the page gave it (`pi:<call id>:<nth image>`).
- * Like the output, it is read on the active branch only: an image from a branch a /tree
- * abandoned is one the chat never showed, so it is not offered.
- */
-export function piTranscriptImage(path: string, ref: string): { mediaType: string; bytes: Uint8Array<ArrayBuffer> } | null {
-  const match = PI_IMAGE_REF.exec(ref);
-  if (match === null || match[1] === undefined || match[2] === undefined) return null;
-  const [, callId, nth] = match;
-  let size: number;
-  let branch: ReturnType<typeof piBranchSegments>;
-  try { size = statSync(path).size; branch = piBranchSegments(path, size); } catch { return null; }
-  if (branch === null) return null;
-  for (const line of piBranchRecords(path, size)) {
-    if (!line.includes(callId)) continue;
-    let entry: unknown;
-    try { entry = JSON.parse(line); } catch { continue; }
-    const message = piMessage(entry);
-    if (message === null) continue;
-    const image = piImageBlock(message, callId, Number(nth));
-    if (image !== null) return { mediaType: image.media_type, bytes: new Uint8Array(Buffer.from(image.data, "base64")) };
-  }
-  return null;
-}
-
-const PI_IMAGE_REF = /^pi:([A-Za-z0-9_:.\-]{1,128}):(\d{1,3})$/;
 
 function outputInText(source: RecognizedConversation["source"], text: string, ref: string): string | null {
   text = activeHistoryText(text, source);
