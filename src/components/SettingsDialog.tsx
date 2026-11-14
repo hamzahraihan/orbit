@@ -287,7 +287,7 @@ function ThemeSelect({ side }: { side: Mode }) {
         {swatchColors.map((color, index) => <span key={index} className="theme-swatch-chip" style={{ background: color }} />)}
       </span>
       <input type="search" className="input settings-theme-search" value={query} onChange={(event) => setQuery(event.target.value)}
-        placeholder={t("Search themes")} aria-label={t("Search themes")} spellCheck={false} autoComplete="off" />
+        placeholder={t("Search themes")} aria-label={side === "dark" ? t("Search dark themes") : t("Search light themes")} spellCheck={false} autoComplete="off" />
       <select id={`settings-theme-${side}`} className="orbit-select settings-select" value={selected} onChange={(event) => update(pickTheme(settings, side, event.target.value as ThemeId))}>
         {groups.map(({ kind, ids }) => ids.length === 0 ? null : (
           <optgroup key={kind} label={kind === "dark" ? t("Dark") : t("Light")}>
@@ -304,7 +304,7 @@ function AppearancePage() {
   const t = useT();
   return (
     <>
-    <SettingsGroup>
+    <SettingsGroup title={t("Theme")} section="theme">
       <SettingsRow label={t("Theme")} wide>
         <Segmented label={t("Theme")} value={settings.theme} onChange={(theme) => update({ theme })} options={[{ value: "dark", label: t("Dark") }, { value: "light", label: t("Light") }, { value: "system", label: t("System") }]} />
       </SettingsRow>
@@ -314,13 +314,14 @@ function AppearancePage() {
       <SettingsRow label={t("Light theme")} description={t("Shown in light mode")} htmlFor="settings-theme-light" wide>
         <ThemeSelect side="light" />
       </SettingsRow>
+      <SettingsRow label={t("Component borders")} description={t("Draw hairline borders on cards, rows, buttons, inputs and other surfaces. Off removes all borders for a cleaner look.")} wide>
+        <Segmented label={t("Component borders")} value={settings.border} onChange={(border) => update({ border })} options={[{ value: "on", label: t("On") }, { value: "off", label: t("Off") }]} />
+      </SettingsRow>
+    </SettingsGroup>
+
+    <SettingsGroup title={t("Layout")} section="layout">
       <SettingsRow label={t("Density")}>
         <Segmented label={t("Density")} value={settings.density} onChange={(density) => update({ density })} options={[{ value: "comfortable", label: t("Comfortable") }, { value: "compact", label: t("Compact") }]} />
-      </SettingsRow>
-      <SettingsRow label={t("Language")} description={t("Follows the browser unless you choose one")} htmlFor="settings-language">
-        <select id="settings-language" className="orbit-select settings-select" value={settings.language} onChange={(event) => update({ language: event.target.value as typeof settings.language })}>
-          {LANGUAGE_SETTINGS.map((language) => <option key={language} value={language}>{language === "system" ? t("System") : LANGUAGE_NAMES[language]}</option>)}
-        </select>
       </SettingsRow>
       <SettingsRow label={t("Sidebar rows")} description={t("Name each workspace on one line, or show what its agent is doing with the workspace under it")} wide>
         <Segmented label={t("Sidebar rows")} value={settings.sidebarRows} onChange={(sidebarRows) => update({ sidebarRows })} options={[{ value: "one", label: t("One line") }, { value: "two", label: t("Two lines") }]} />
@@ -334,8 +335,13 @@ function AppearancePage() {
       <SettingsRow label={t("Status indicators")} description={t("Classic marks only the states that ask for a look; Dots and Symbols draw every state as herdr's TUI does")} wide>
         <Segmented label={t("Status indicators")} value={settings.statusIndicators} onChange={(statusIndicators) => update({ statusIndicators })} options={[{ value: "classic", label: t("Classic") }, { value: "dots", label: t("Dots") }, { value: "symbols", label: t("Symbols") }]} />
       </SettingsRow>
-      <SettingsRow label={t("Component borders")} description={t("Draw hairline borders on cards, rows, buttons, inputs and other surfaces. Off removes all borders for a cleaner look.")} wide>
-        <Segmented label={t("Component borders")} value={settings.border} onChange={(border) => update({ border })} options={[{ value: "on", label: t("On") }, { value: "off", label: t("Off") }]} />
+    </SettingsGroup>
+
+    <SettingsGroup title={t("Language")} section="language">
+      <SettingsRow label={t("Language")} description={t("Follows the browser unless you choose one")} htmlFor="settings-language">
+        <select id="settings-language" className="orbit-select settings-select" value={settings.language} onChange={(event) => update({ language: event.target.value as typeof settings.language })}>
+          {LANGUAGE_SETTINGS.map((language) => <option key={language} value={language}>{language === "system" ? t("System") : LANGUAGE_NAMES[language]}</option>)}
+        </select>
       </SettingsRow>
     </SettingsGroup>
 
@@ -941,7 +947,7 @@ function PluginsGroup() {
   }, [api]);
   if (plugins.length === 0) return null;
   return (
-    <SettingsGroup title={t("herdr plugins")} note={t("The command palette and its plugin actions are not available in the phone touch UI. Use a wider screen or a keyboard's command palette shortcut.")} className="settings-plugins">
+    <SettingsGroup title={t("herdr plugins")} className="settings-plugins">
       {plugins.map((plugin) => (
         <SettingsRow key={plugin.plugin_id} label={`${plugin.name} ${plugin.version}`} description={plugin.actions.length > 0 ? plugin.actions.map((action) => action.title).join(" · ") : t("No actions")}>
           <span className="settings-hint">{plugin.enabled ? t("Enabled") : t("Disabled")}</span>
