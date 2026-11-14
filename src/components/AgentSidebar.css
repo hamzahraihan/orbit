@@ -472,6 +472,19 @@
   font-size: var(--fs-sm);
 }
 
+.agent-empty-cta {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+@media (pointer: coarse) {
+  .agent-empty-cta .btn,
+  .agent-empty-cta button {
+    min-height: var(--touch-target);
+  }
+}
+
 /* One-line mode (Settings → Sidebar rows → One line) */
 .agents-sidebar.is-one-line .agent-item {
   min-height: var(--side-row);

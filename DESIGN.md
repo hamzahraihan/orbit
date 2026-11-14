@@ -139,13 +139,23 @@ Normal and bright slots may share a colour to preserve the palette while keeping
 | 15 | `brightWhite` | `#0d0d0d` | `#111111` | `#0d0d0d` | `#4c4f69` | `#4c4f69` | `#3760bf` | `#3c3836` | `#383a42` | `#556a72` | `#545464` | `#464261` |
 <!-- END GENERATED THEMES -->
 
-The glass tokens are expressions over the palette above, not colors of their own:
+The glass tokens and the readable accent are expressions over the palette above, not colors of
+their own:
 
 | Role | Token | Dark | Light |
 |------|-------|------|-------|
 | Glass bar | `--bar-bg` | `color-mix(in srgb, var(--bg-panel) 72%, transparent)` | same expression |
 | Glass card | `--card-glass` | `color-mix(in srgb, var(--bg-elevated) 80%, transparent)` | same expression |
 | Glass blur | `--glass-blur` | `saturate(180%) blur(20px)` | same |
+| Accent/readable | `--accent-readable` | `color-mix(in srgb, var(--accent) 55%, var(--text))` | same expression |
+
+`--accent` stays the fill: a tint, a plate, the cursor, the primary action, a border or a seam.
+Where rose is *type or a glyph* — a Markdown link, a file link, a selected chip's word, the chosen
+lens's glyph, a skill's origin icon — it is `--accent-readable` instead: the same hue mixed 55%
+toward `--text`, which is 5.20:1 on the dark base's `--bg`, 4.75:1 on `--bg-elevated`, 7.74:1 on the
+light base's `--bg` and 7.13:1 on its `--bg-elevated`, so the ink clears 4.5:1 for text and 3:1 for
+the focus ring in every palette without a per-theme value. `--ring` outlines in it at the same `2px`
+/ `2px`. The accent fill, `--primary` and the `--status-*` set are unchanged.
 
 `--pdf-page` is the one color with the same value in both columns, on purpose: a PDF page is
 paper, not UI, and the viewer (`.file-viewer-pdf`) must not tint it for the theme. It is named in
@@ -440,6 +450,10 @@ blocks of `src/styles.css`.
   row, the terminal cursor) and primary (the user's action: Send, primary buttons) are the same
   family; in light, accent is the darker text-safe magenta and primary the same fill carrying
   light text. Agent states never use rose.
+- Rose splits by role: `--accent` fills (tints, plates, the cursor, the primary action, seams and
+  edges), and `--accent-readable` is its ink — the same hue 55% toward `--text` — for Markdown
+  links, file links, a selected chip's word and the chosen lens's glyph. A normal-text use never
+  takes the raw fill.
 - Agent state has a written label as well as color. The sidebar's compact glyphs keep their labels
   in tooltips and screen-reader text; other surfaces draw the words. In the sidebar ready and
   unknown draw no glyph and keep their label for assistive tech; elsewhere unknown uses dim text
@@ -667,7 +681,7 @@ Comfortable values are `:root`; the final column is the complete compact overrid
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--ring` | `2px solid var(--accent)` | Global `:focus-visible` outline |
+| `--ring` | `2px solid var(--accent-readable)` | Global `:focus-visible` outline |
 | `--ring-offset` | `2px` | Outline offset |
 | `--z-header` | `4` | A phone's glass header, over the transcript that scrolls under it |
 | `--z-banner` | `5` | Terminal banners |
@@ -1307,11 +1321,14 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   at the top of the More menu (`lib/headerCrumb.ts` builds that line). With no selection, the brand
   and the PC's name stand at the start of the bar, where the lenses would be.
 - The More menu (`.header-more-button`, the `RowMenu` popover, a bottom sheet at `<=640px`) opens
-  with the location on two lines, "PC › workspace" then the full path in mono. Its first item,
-  at every width, is **Search panes and actions**, which opens the command palette (its shortcut
-  as the item's hint where the pointer is fine); then **Find in terminal**, **Browse files** (at
+  with the location on two lines, "PC › workspace" then the full path in mono. Under `481px`,
+  where the bar has no palette button, the first item is **Search panes and actions**: it opens
+  the command palette, and carries the palette's shortcut as its hint where the pointer is fine.
+  From `481px` the bar's own button is that entry and the menu does not say it twice, so the first
+  item is **Find in terminal**; then **Browse files** (at
   `<=768px` only: from `769px` Files is the header's own button), **Copy link** and **Alerts**,
-  each under the condition its own button had. New tab stays on the tab strip's `+`. The Alerts item says
+  each under the condition its own button had; at `<=768px` **Settings** follows, opening the
+  sheet the drawer footer also carries. New terminal stays on the tab strip's `+`. The Alerts item says
   this device's state in words after its label ("On in the app", "On in this tab", "On, pushed to
   this device", "Off on this device") and switches it: it is a `menuitemcheckbox` with
   `aria-checked` in the popover and a button with `aria-pressed` in the sheet. While alerts are off on this device the
@@ -1837,6 +1854,13 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   raises the keyboard: the user reads first, and a tap on the message box or the grid raises it.
   A desktop's picked pane takes typing at once.
 - Enter sends and Shift+Enter breaks by default; with **Enter sends** off, Mod+Enter sends. On touch screens the same device setting is shown inverted as **Return inserts a new line**, with Send and hardware Mod+Enter explained below it. IME Enter is ignored. Stop sends Escape. While the agent works and a draft shows Send in Stop's place, Escape in the box is Stop; an open completion menu takes the first Escape, and its X in the top corner (`.composer-menu-close`, Close suggestions, sticky over the rows it scrolls; the first row leaves it room) does the same for a pointer or a phone, which has no Escape, keeping the text and the focus in the box. T3 Code's command menu closes on Escape alone. Working Send schedules a pending message; its Send now action submits that same message now.
+- A pane with no agent is a shell, not a chat that lost its agent: the same card composes one
+  command line. Its placeholder is **Run a command…**, it turns the phone keyboard's
+  capitalization, spell and autocorrect off (`autoCapitalize`/`autoCorrect`/`spellCheck` keyed on
+  the agent), and Send runs what it holds at the pane's own prompt. One dim `--fs-xs` line under
+  the transcript, just above the composer, says so ("This is a shell pane. Commands typed here run
+  at its prompt."); there is no greeting, no suggested prompt and no agent mark here, because none
+  is missing.
 
 ### Voice input
 - A mic button sits beside the Attach pill in the composer and beside Send in the terminal input line; it
@@ -1931,8 +1955,11 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   **Remote PCs**, **About** (herdr, the repository links).
 - Every page is built from the same parts (`components/SettingsControls.tsx`). A group is an
   optional caption (`--fs-sm`, `--fw-semibold`, `--text-dim`, sentence case) over one card:
-  `--bg-elevated`, hairline `--border`, `--radius-lg`, its rows parted by hairlines and never
-  boxed on their own. A row is a label (`--fs-sm`, `--fw-medium`, `--text-strong`) with at most
+  `--bg-elevated`, hairline `--group-edge`, `--radius-lg`, its rows parted by hairlines and never
+  boxed on their own. `--group-edge` is `--border` on a dark row; a light row derives it from its
+  own `--text-dim` mixed 80% into `--bg-elevated`, because there `--border` parts the card from its
+  page at 1.18:1 and a boundary owes 3:1 (the rule measures 3.56:1 on amber's card; borders off
+  turns it transparent with the rest). A row is a label (`--fs-sm`, `--fw-medium`, `--text-strong`) with at most
   one dim sentence under it (`--fs-xs`, no wider than `54ch`) and one control at the end of the
   line. The controls are HeroUI's Switch (`.switch`, `role="switch"`), ToggleButtonGroup
   (`.toggle-button-group`, `.settings-segmented`) for two to four short choices, a native select
@@ -2175,8 +2202,9 @@ The values are the ones in `src/styles.css`.
   Application-owned paging has its own page length; no page input is queued across disconnects.
   The plain chat page keys preserve composer draft, selection and focus, excluding modified
   keys, composition, other editable controls and modal input. They do not capture terminal keys.
-- On touch screens app actions stay in buttons and menus. More → Search panes and actions opens
-  the command palette, including its plugin actions, in the phone touch UI.
+- On touch screens app actions stay in buttons and menus. At `<=480px` More → Search panes and
+  actions opens the command palette, including its plugin actions, in the phone touch UI; from
+  `481px` the palette button itself does.
   The key bar sends terminal input only; it is not an app-action toolbar. Hardware keyboards use
   the same global bindings on phones and desktops.
 - `document.title` is `<pane title> · Orbit` while selected, otherwise `Orbit`.

@@ -757,9 +757,9 @@ const Turn = memo(function Turn({ paneId, turn, live, waiting, showThinking, ski
     </div>
     {answer.map((part, index) => <Markdown key={index} skills={skills}>{part.text}</Markdown>)}
     {answerText.length > 0 && <div className="chat-turn-meta chat-agent-meta">
-      {/* a mouse reads one copy glyph and the words "Plain text"; touch reads the two formats */}
+      {/* a mouse reads one copy glyph and the word "Copy"; touch reads the two formats */}
       <CopyButton className="chat-meta-btn" text={answerText} label={t("Copy as markdown")} onResult={copied}><span className="chat-meta-fmt">MD</span></CopyButton>
-      <CopyButton className="chat-meta-btn chat-meta-plain" text={plainText(answerText)} label={t("Copy as plain text")} onResult={copied}><span className="chat-meta-fmt">TXT</span><span className="chat-meta-word">{t("Plain text")}</span></CopyButton>
+      <CopyButton className="chat-meta-btn chat-meta-plain" text={plainText(answerText)} label={t("Copy as plain text")} onResult={copied}><span className="chat-meta-fmt">TXT</span><span className="chat-meta-word">{t("Copy")}</span></CopyButton>
       {time}
     </div>}
     {copyError}
@@ -1503,7 +1503,9 @@ export const ChatView = memo(function ChatView({ paneId, active = true, visible:
           ? <p className="chat-activity chat-activity-line" role="status"><CircleDot aria-hidden="true" />{activity === "thinking" ? t("Thinking…") : t("Working…")}</p>
           // before the turn has a row at all, where its work block will be drawn
           : <PendingWorkHead className="chat-activity" title={activity === "thinking" ? t("Thinking…") : t("Working…")} />)}
-      {loaded && empty && error === null && prompt === null && activity === "idle" && !(greeted && blank) && <div className="chat-empty"><AgentMark agent={agent ?? "agent"} size={32} /><p>{t("No conversation yet — say something below")}</p></div>}
+      {/* an agentless pane still shows the prompt in the terminal; say where the command runs */}
+      {loaded && error === null && prompt === null && !ended && agent === null && <p className="chat-inline-state" role="status">{t("This is a shell pane. Commands typed here run at its prompt.")}</p>}
+      {loaded && empty && error === null && prompt === null && activity === "idle" && agent !== null && !(greeted && blank) && <div className="chat-empty"><AgentMark agent={agent} size={32} /><p>{t("No conversation yet — say something below")}</p></div>}
       {ended && <p className="chat-endcap">{t("terminal ended")}</p>}
   </>;
   const jump = newMessages ? <Button type="button" variant="secondary" className="chat-new-messages chat-virtual-jump" onClick={scrollToBottom}>{t("New messages")} <ArrowDown aria-hidden="true" /></Button>

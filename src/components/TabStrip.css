@@ -32,6 +32,31 @@
   border-bottom: var(--hairline) solid var(--border);
 }
 
+/* the phone's place line: the PC/workspace/pane is the identity; the tabs are how many are open */
+.tab-strip-context {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  align-items: center;
+  padding: 0 var(--space-2) 0 var(--space-3);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.tab-strip-context > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-strip-context .tab-strip-context-where {
+  color: var(--text);
+  font-weight: var(--fw-medium);
+}
+
 .tab-strip-row > .tab-strip {
   flex: 0 1 auto;
   min-width: 0;
@@ -187,6 +212,47 @@
 .tab-strip-add svg {
   width: 16px;
   height: 16px;
+}
+
+/* The + is a terminal glyph with a small plus at its lower corner, not a bare Plus: one mark says
+   which kind of tab it opens. Both glyphs are cut from the button's 16px box (the plus sits in a
+   disc of the button's own background, so only its strokes show), and nothing is transformed or
+   pushed past that box: the button keeps its width and its 44px touch target, and the plus stays
+   legible at 16px on the rose surface. */
+.tab-strip-add-glyph {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+.tab-strip-add-glyph svg {
+  position: absolute;
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.tab-strip-add-glyph svg:last-child {
+  top: 9px;
+  left: 9px;
+  width: 7px;
+  height: 7px;
+  padding: 1.5px;
+  border-radius: 50%;
+  /* the button's own resting background: the disc is invisible against it and the terminal's
+     stroke never crosses the plus */
+  background: var(--strip-bg);
+  /* the plus is drawn at 16px and cut to the 7px disc: a 2px stroke reads at this size */
+  stroke-width: 2px;
+}
+
+/* The +'s hover comes from the shared rule below, which paints --bg-hover on the button; the disc
+   takes the same colour so the cut-out keeps matching the surface it sits on. */
+.tab-strip .tab-strip-add:hover .tab-strip-add-glyph svg:last-child,
+.tab-strip .tab-strip-add:focus-visible .tab-strip-add-glyph svg:last-child {
+  background: var(--bg-hover);
 }
 
 @media (pointer: coarse), (max-width: 768px) {

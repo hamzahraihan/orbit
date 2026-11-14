@@ -335,7 +335,9 @@ export function Composer({
   const offlineSentence = t(connectedBefore ? "Reconnecting…" : "Connecting…");
   const placeholder = !connected
     ? offlineSentence
-    : answerHint ?? offered ?? t("Message {agent}…", { agent: agentLabel });
+    : agent === null
+      ? answerHint ?? offered ?? t("Run a command…")
+      : answerHint ?? offered ?? t("Message {agent}…", { agent: agentLabel });
 
   // A cancelled send the agent put back in its input box fills an empty box again — without
   // focus, which would raise a phone's keyboard. When it is gone, only the untouched fill is
@@ -1338,11 +1340,11 @@ export function Composer({
           aria-controls={menuOpen ? menuId : undefined}
           aria-expanded={menuOpen}
           aria-activedescendant={menuOpen ? `${menuId}-${selectedIndex}` : undefined}
-          // most of what is typed to an agent is prose: a phone keyboard's corrections, suggestions
-          // and sentence capitals stay on here (the terminal input line keeps them off)
-          spellCheck
-          autoCapitalize="sentences"
-          autoCorrect="on"
+          // a shell command is executable syntax, not prose: keep phone keyboards from
+          // changing capitalization or spelling while the user types it
+          spellCheck={agent !== null}
+          autoCapitalize={agent === null ? "none" : "sentences"}
+          autoCorrect={agent === null ? "off" : "on"}
           // stays editable while the socket reconnects (sending waits for it): a phone's
           // dictation keyboard opens its own app and comes back, the socket may drop meanwhile,
           // and a disabled box would lose its focus and the dictated text with it

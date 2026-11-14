@@ -1,5 +1,5 @@
 import { type CSSProperties, type DragEvent, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Bell, Ellipsis, FolderOpen, GitBranch, Link, Menu, MessageSquare, PanelLeft, Search, SquareTerminal, X } from "lucide-react";
+import { Bell, Ellipsis, FolderOpen, GitBranch, Link, Menu, MessageSquare, PanelLeft, Search, Settings as SettingsIcon, SquareTerminal, X } from "lucide-react";
 
 import type { AgentStatus, ServerMessage, AccessRefusal, HealthAuth, HerdrPane } from "../shared/protocol.ts";
 import { ApiError, authenticate, createTab, fetchHealth, fetchBridgeHealth, fetchMachines, fetchSession, pairDevice, routeMissing, sendTestPush, signOut, splitPane, zoomPane, type HealthInfo } from "./lib/api.ts";
@@ -67,7 +67,7 @@ import { panelUrl, WebPanelContext, wantsPanel } from "./lib/webPanel.ts";
 import { RepoDiffViewer } from "./components/RepoDiffViewer.tsx";
 import { OpenFileContext } from "./lib/filePaths.ts";
 import { useFileViewer } from "./lib/useFileViewer.ts";
-import { useFocusReturn } from "./lib/useFocusTrap.ts";
+import { useFocusReturn, useFocusTrap } from "./lib/useFocusTrap.ts";
 import { useRepoDiffViewer } from "./lib/useRepoDiffViewer.ts";
 import { useT } from "./lib/i18n.ts";
 import { selectionStill } from "./lib/selectionMark.ts";
@@ -465,9 +465,12 @@ export function App() {
   // a link to Settings opens it on its page, for that first opening alone
   const [settingsOpen, setSettingsOpen] = useState(() => initialLink?.settings != null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const gotItRef = useRef<HTMLButtonElement | null>(null);
+  /** below 481px the bar has no palette button (styles.css), so More carries it */
+  const paletteInMore = useMediaQuery("(max-width: 480px)");
   useEffect(() => {
     try {
-      if (window.localStorage.getItem("herdr-web-ui:onboarded") !== "1") setShowOnboarding(true);
+      if (window.localStorage.getItem("herdr-web-ui:onboarded") !== "1" && initialLink?.settings == null && initialLink?.create == null) setShowOnboarding(true);
     } catch { /* storage denied: skip onboarding */ }
   }, []);
   const [settingsLinkPage, setSettingsLinkPage] = useState<string | null>(() => initialLink?.settings ?? null);
@@ -490,6 +493,12 @@ export function App() {
   }), [closeSettings]);
   useEffect(() => { if (!settingsOpen) recordSettings([]); }, [settingsOpen]);
   const [newSessionOpen, setNewSessionOpen] = useState(false);
+  const dismissOnboarding = useCallback(() => {
+    try { window.localStorage.setItem("herdr-web-ui:onboarded", "1"); } catch { /* storage denied */ }
+    setShowOnboarding(false);
+  }, []);
+  const onboardingOpen = showOnboarding && locked === false && !settingsOpen && !newSessionOpen;
+  const onboarding = useFocusTrap<HTMLDivElement>(onboardingOpen, { initialFocus: gotItRef });
   // the New workspace dialog in the address (lib/deepLink.ts): the fields a link filled for this
   // opening, and what the fields say now
   const [newPrefill, setNewPrefill] = useState<Omit<CreateDraft, "kind"> | null>(null);
@@ -1436,14 +1445,17 @@ export function App() {
   const keyboardLikely = useMediaQuery("(hover: hover) and (pointer: fine)");
   const paletteKeys = keyboardLikely ? formatKeys(shortcutDisplayKeys("palette", settings.shortcutOverrides)).join("+") : "";
   const moreItems: RowMenuItem[] = [
-    // first at every width: a phone's header has no palette button, and a touch screen no shortcut
-    { id: "palette", label: t("Search panes and actions"), icon: Search, ...(paletteKeys ? { hint: paletteKeys } : {}), run: () => openPalette() },
+    // only where the bar has no palette button (below 481px): at desktop the button is right
+    // there, so the menu should not repeat it
+    ...(paletteInMore ? [{ id: "palette", label: t("Search panes and actions"), icon: Search, ...(paletteKeys ? { hint: paletteKeys } : {}), run: () => openPalette() }] : []),
     ...(selectedPane && !selectedPane.restore_error ? [{ id: "find", label: t("Find in terminal"), icon: Search, run: actions.openFind }] : []),
     // from 769px Files has its own button beside the lens switch; a phone keeps it here
     ...(selectedPane && !wideScreen ? [{ id: "files", label: t("Browse files"), icon: FolderOpen, run: openFiles }] : []),
     // the address says where the app is (lib/deepLink.ts); a phone has no address bar to copy it from
     { id: "copy-link", label: t("Copy link"), icon: Link, run: () => void copyText(window.location.href).then((ok) => { if (ok) setHeaderNote("copied"); }) },
     ...(bellVisible ? [{ id: "alerts", label: t("Alerts"), hint: bell.state, checked: bell.on, title: bell.title, icon: Bell, run: () => void bell.run() }] : []),
+    // a phone keeps Settings in the workspace drawer; More is the other door the header can open
+    ...(!wideScreen ? [{ id: "settings", label: t("Settings"), icon: SettingsIcon, run: actions.openSettings }] : []),
   ];
   // The header's More, whose dot marks alerts that are off on this device. A wide bar keeps it with
   // the sidebar's own controls, so the bar's end belongs to the pane: its lenses, Files, Changes
@@ -1570,11 +1582,11 @@ export function App() {
           <div className="segmented view-switch" role="group" aria-label="Pane view">
             <button type="button" aria-pressed={view === "chat"} onClick={() => { setView("chat"); setDrawerOpen(false); }} title={t("Chat transcript (⌘⇧J)")}>
               <MessageSquare />
-              <span className="header-desktop-only">{t("Chat")}</span>
+              <span className="view-switch-label">{t("Chat")}</span>
             </button>
             <button type="button" aria-pressed={view === "terminal"} onClick={() => { setView("terminal"); setDrawerOpen(false); }} title={terminalAttach ? t("Live terminal (⌘⇧J)") : t("Live terminal: coming to Windows PCs once herdr can attach there")}>
               <SquareTerminal />
-              <span className="header-desktop-only">{t("Terminal")}</span>
+              <span className="view-switch-label">{t("Terminal")}</span>
               {!terminalAttach && <span className="pill pill-soon">{t("soon")}</span>}
             </button>
           </div>
@@ -1710,6 +1722,7 @@ export function App() {
                     and one per half in a split */}
                 {slotSnapshot && pane && workspace && !(stripInBar && active) && (
                   <TabStrip snapshot={slotSnapshot} workspace={workspace} selectedPane={pane} panelId={slotPanelId} splitDrag={wideScreen} onSelectPane={onSelect} end={slotEnd}
+                    context={!wideScreen ? <span className="tab-strip-context-where">{machines.length > 1 ? `${machine?.name ?? machineId} › ${workspace.label} › ` : `${workspace.label} › `}{displayPaneTitle(pane)}</span> : undefined}
                     onNewTab={() => actions.openNewTab(active ? undefined : { machineId, workspaceId: workspace.workspace_id })}
                     onNewTerminal={() => actions.openTerminalTab(active ? undefined : { machineId, workspaceId: workspace.workspace_id })}
                     paneActions={active ? (paneId) => {
@@ -1824,8 +1837,9 @@ export function App() {
         <FileViewer key={viewing.path} path={viewing.path} paneId={viewing.paneId} onClose={closeFile} onOpen={(path) => openFile({ ...viewing, path, presentation })} onKind={reportFileKind} onTogglePresentation={toggleFilePresentation} keyboardActive={!settingsOpen} />
       </MachineContext.Provider>}
       <CommandPalette key={selectedMachineId} machines={machines} onSelect={selectTarget} open={paletteOpen} initialQuery={paletteQuery} initialMode={paletteMode} onClose={() => setPaletteOpen(false)} snapshot={snapshot} online={selectedMachine?.state === "connected"} selectedPaneId={selectedPaneId} view={view} actions={actions} />
-      {showOnboarding && (
-        <div className="onboarding-overlay" role="dialog" aria-modal="true" aria-label={t("Welcome to Orbit")}>
+      {onboardingOpen && (
+        <div ref={onboarding} className="onboarding-overlay" role="dialog" aria-modal="true" aria-label={t("Welcome to Orbit")} tabIndex={-1}
+          onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); dismissOnboarding(); } }}>
           <div className="onboarding-card">
             <h2>{t("Welcome to Orbit")}</h2>
             <p>{t("A browser companion for herdr. A few tips to get started:")}</p>
@@ -1834,7 +1848,7 @@ export function App() {
               <li>{t("Enable push alerts to be notified when an agent needs input or finishes.")}</li>
               <li>{t("Switch any pane to Terminal to type directly; use the key bar on a phone.")}</li>
             </ul>
-            <Button variant="primary" onClick={() => { try { window.localStorage.setItem("herdr-web-ui:onboarded", "1"); } catch {} setShowOnboarding(false); }}>{t("Got it")}</Button>
+            <Button ref={gotItRef} variant="primary" onClick={dismissOnboarding}>{t("Got it")}</Button>
           </div>
         </div>
       )}
