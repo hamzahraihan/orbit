@@ -9,7 +9,7 @@
  * That menu also carries the open pane's actions, so a lone pane shows no ellipsis of its own.
  */
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, Bot, Ellipsis, Pencil, Plus, Terminal, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, Ellipsis, Pencil, Plus, SquareTerminal, Terminal, X } from "lucide-react";
 
 import "./TabStrip.css";
 
@@ -55,9 +55,11 @@ export interface TabStripProps {
   splitDrag?: boolean;
   /** drawn at the row's far end, outside the scrolling tabs: a split view half's close (App) */
   end?: ReactNode;
+  /** on a phone, the PC/workspace/pane identity shown before the tabs */
+  context?: ReactNode;
 }
 
-export function TabStrip({ snapshot, workspace, selectedPane, onSelectPane, onNewTab, onNewTerminal, paneActions, panelId = PANE_TABPANEL_ID, splitDrag = false, end }: TabStripProps) {
+export function TabStrip({ snapshot, workspace, selectedPane, onSelectPane, onNewTab, onNewTerminal, paneActions, panelId = PANE_TABPANEL_ID, splitDrag = false, end, context }: TabStripProps) {
   const t = useT();
   const { settings } = useSettings();
   const machineId = useMachineId();
@@ -438,16 +440,20 @@ export function TabStrip({ snapshot, workspace, selectedPane, onSelectPane, onNe
             </div>
           );
         })}
+        {/* the strip's + opens a shell tab at once, so it wears the terminal glyph with a small
+            plus: the workspace's create (MachineSidebar) is a FolderPlus, and no second bare Plus
+            is left to read as "another kind of tab". The glyph and the tooltip say it where a
+            word would crowd the tabs at 390. */}
         <button type="button" className="tab-strip-add" aria-label={t("New terminal")} title={t("New terminal")}
           onClick={() => { setError(null); void onNewTerminal().catch((reason: unknown) => setError(t("New terminal failed: {reason}", { reason: said(reason) }))); }}>
-          <Plus aria-hidden="true" />
+          <span className="tab-strip-add-glyph"><SquareTerminal aria-hidden="true" /><Plus aria-hidden="true" /></span>
         </button>
         {error && <span className="tab-strip-error" role="alert">{error}</span>}
       </div>
   );
   return (
     <>
-      {end === undefined ? row : <div className="tab-strip-row">{row}<div className="tab-strip-end">{end}</div></div>}
+      {context === undefined && end === undefined ? row : <div className="tab-strip-row">{context !== undefined && <div className="tab-strip-context">{context}</div>}{row}{end !== undefined && <div className="tab-strip-end">{end}</div>}</div>}
       {picker && <RowMenu anchor={picker.anchor} point={picker.point} restoreFocusTo={picker.previousFocus}
         title={nameOf(picker.tab)} items={pickerItems(picker.tab, picker.touch)} align="start" onClose={() => setPicker(null)} />}
       {confirm && <ConfirmDialog title={confirm.title} body={confirm.body} confirmLabel={t("Close tab")} onConfirm={async () => { await close(confirm.tab); setConfirm(null); }} onClose={() => setConfirm(null)} />}
