@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowUpDown, ChevronDown, ChevronRight, Ellipsis, Pin, PinOff } from "lucide-react";
+import { ArrowUpDown, ChevronDown, ChevronRight, Ellipsis, FolderPlus, Pin, PinOff } from "lucide-react";
 
 import type { Machine } from "../../shared/machines.ts";
 import { paneStorageId } from "../../shared/machines.ts";
@@ -15,6 +15,7 @@ import { activityOrder, groupAgentRows } from "../lib/sidebarOrder.ts";
 import { currentSidebarPins, pruneSidebarPins, setSidebarPins, sidebarPinKey, splitPinnedRows, subscribeSidebarPins, toggleSidebarPin } from "../lib/sidebarPins.ts";
 import { PANE_DRAG_TYPE, paneDragData } from "../lib/split.ts";
 import { AgentMark, hasAgentMark } from "./AgentMark.tsx";
+import { Button } from "../lib/heroui/orbit-components.tsx";
 import { RowMenu } from "./RowMenu.tsx";
 import { RailFlyout } from "./RailFlyout.tsx";
 import { BackgroundBadge, displayPaneTitle, onRowContextMenu, PlanBadge, StatusBadge } from "./Sidebar.tsx";
@@ -75,6 +76,8 @@ export interface AgentSidebarProps {
   selectedPaneId: string | null;
   /** a PC's state in words, for the tooltip of a row whose PC is not connected */
   stateWord(machine: Machine): string;
+  /** the New workspace action, shown only when no agents are running */
+  onNewSession: () => void;
   onSelect(machineId: string, paneId: string): void;
 }
 
@@ -91,7 +94,7 @@ interface PinMenu { key: string; anchor: HTMLElement; point?: { x: number; y: nu
  * pinned agents stand above both, in a card; on a desktop only a right-click (or the context-menu
  * key) opens the menu. A row's ⋯, or a right-click on it, opens its menu, which pins or unpins it.
  */
-export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stateWord, onSelect }: AgentSidebarProps) {
+export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stateWord, onNewSession, onSelect }: AgentSidebarProps) {
   const t = useT();
   const listId = useId();
   const [collapsed, setCollapsed] = useState(() => window.matchMedia?.(DRAWER_QUERY).matches === true);
@@ -223,6 +226,7 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
 
   // no PCs yet (the roster is still on its way), or a connected PC whose panes have not come in: not "none running"
   const loading = machines.length === 0 || machines.some((machine) => machine.state === "connected" && machine.snapshot === null);
+  const empty = rows.length === 0 && !loading;
   // the empty list's line is a live region that is in the list from its first render, clipped while empty (never
   // display: none), and its words land a frame after it (lib/useAnnouncedText.ts)
   const shownEmpty = useAnnouncedText(rows.length === 0 ? (loading ? t("Loading agents…") : t("No agents running")) : null);
@@ -253,6 +257,9 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
     </div>
     <div className="agent-list-contents" id={listId} hidden={collapsed}>
       <p className={shownEmpty === null ? "visually-hidden" : "agent-empty"} role="status">{shownEmpty}</p>
+      {empty && !collapsed && <div className="agent-empty-cta">
+        <Button type="button" variant="secondary" onClick={onNewSession}><FolderPlus aria-hidden="true" />{t("New workspace")}</Button>
+      </div>}
       {rows.length > 0 && <>
         {split.pinned.length > 0 && <>
           <p className="sidebar-pinned-label" aria-hidden="true"><span><Pin />{t("Pinned")}</span></p>
