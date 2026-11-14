@@ -61,7 +61,7 @@
 .repo-changes-branch svg {
   width: 1.1em;
   height: 1.1em;
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 /* a long root keeps its end, the part that says where you are */
@@ -134,7 +134,7 @@
 }
 
 .repo-change-folder .repo-change-glyph {
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 .repo-change-folder-name {
@@ -188,7 +188,7 @@
 }
 
 .repo-change-mark[data-status="modified"] {
-  color: var(--accent);
+  color: var(--accent-readable);
   background: var(--accent-tint);
 }
 
