@@ -366,6 +366,9 @@ function ChatPage() {
         <SettingsRow label={t("Show thinking")} description={t("Include the agent's reasoning blocks")}>
           <Toggle label={t("Show thinking")} checked={settings.showThinking} onChange={(showThinking) => update({ showThinking })} />
         </SettingsRow>
+        <SettingsRow label={t("Unfold agent detail")} description={t("Open the agent's folded detail as each turn arrives")}>
+          <Toggle label={t("Unfold agent detail")} checked={settings.expandWork} onChange={(expandWork) => update({ expandWork })} />
+        </SettingsRow>
         <SettingsRow label={t("Quiet composer at rest")} description={t("Show only the agent mark and context ring until the box is focused or hovered")}>
           <Toggle label={t("Quiet composer at rest")} checked={settings.quietComposer} onChange={(quietComposer) => update({ quietComposer })} />
         </SettingsRow>

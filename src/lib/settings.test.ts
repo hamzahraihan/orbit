@@ -498,6 +498,14 @@ describe("microphone button", () => {
   });
 });
 
+describe("agent detail folds", () => {
+  it("stay folded until the reader asks for every one", () => {
+    expect(DEFAULT_SETTINGS.expandWork).toBe(false);
+    expect(sanitizeSettings({ expandWork: true }).expandWork).toBe(true);
+    expect(sanitizeSettings({ expandWork: "open" }).expandWork).toBe(false);
+  });
+});
+
 describe("quick replies row", () => {
   it("stays hidden until chosen in settings", () => {
     expect(DEFAULT_SETTINGS.showQuickReplies).toBe(false);

@@ -1504,6 +1504,14 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   words are never behind the fold. A block the reader opened or folded stays as they left it, and
   so does one they focused or clicked inside: the fold at the end of a turn never takes the rows
   from under them.
+- **Unfold agent detail** (Settings → Chat, off by default, this device only) starts every fold
+  the agent writes open: the work block, its rows, the reasoning rows, the skill and goal chips,
+  and the reports a background task or teammate writes back. It is the reading default, not a
+  command — a row the reader folded or opened themselves keeps their choice, so turning it off
+  returns the untouched rows to their headers. Notices, compaction and the nested original
+  delivery of a teammate stay folded: they are the runtime's and the transport's, not the agent's.
+  Reasoning rows exist only while **Show thinking** is on: this setting opens them, it does not
+  bring them back.
 - The header is one line: the counts (`.work-block-summary`) take the width the title and the
   failure count leave and end in an ellipsis. `· 1 failed` (`.work-block-failed`) is its own item
   and is never cut, because the fold hides the failed row; at the largest chat type on the
@@ -1917,7 +1925,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   control, the X, Escape and the scrim take the same entries off. Beside the list, turning pages
   replaces the one entry. A reload steps out of the entries it finds; Forward reopens the page.
 - Pages, in order: **Appearance** (theme, dark theme, light theme, density, language, sidebar rows), **Chat**
-  (panes open in, show thinking, chat width, chat font size and family; then
+  (panes open in, show thinking, unfold agent detail, chat width, chat font size and family; then
   **Composer**: Enter sends, send queued messages automatically, and on a touch screen the suggestion
   chip (off by default); then **Quick replies**: show above the message box and over the terminal,
   put replies in the message box (in the terminal, the input line) instead of sending, and one row

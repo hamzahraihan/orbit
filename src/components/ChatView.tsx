@@ -23,7 +23,7 @@ import { ChatMinimap } from "./ChatMinimap.tsx";
 import { minimapTurns } from "../lib/chatMinimap.ts";
 import type { LegendListRef } from "@legendapp/list/react";
 import { appendChatRowSlots, createChatRowSlots, prependChatRowSlots } from "../lib/chatRows.ts";
-import { ChatDetails, ChatRowMemoryContext, useChatRowToggle, type ChatRowMemory } from "../lib/chatRowState.tsx";
+import { ChatDetailOpenContext, ChatDetails, ChatRowMemoryContext, useChatDetailOpen, useChatRowToggle, type ChatRowMemory } from "../lib/chatRowState.tsx";
 import { turnRevision } from "../lib/turnRevision.ts";
 import { useWholeOutput as useScopedOutput } from "../lib/useWholeOutput.ts";
 import { turnSkills } from "../lib/skillActivity.ts";
@@ -414,7 +414,7 @@ function WorkRow({ paneId, part, stateKey }: { paneId: string; part: ToolPartTyp
   const t = useT();
   // the files an output names open from it ("saved /tmp/shot/t0.png")
   const openFile = useContext(OpenFileContext);
-  const [chosen, setOpen] = useChatRowToggle(stateKey, false);
+  const [chosen, setOpen] = useChatRowToggle(stateKey, useChatDetailOpen());
   const open = chosen === true;
   const whole = useWholeOutput(part.output_ref);
   const summary = part.arguments_omitted ? t("Arguments omitted (too large)") : todoCallSummary(part) ?? part.summary;
@@ -441,7 +441,7 @@ function WorkRow({ paneId, part, stateKey }: { paneId: string; part: ToolPartTyp
 
 function ThinkingRow({ text, stateKey }: { text: string; stateKey: string }) {
   const t = useT();
-  const [chosen, setOpen] = useChatRowToggle(stateKey, false);
+  const [chosen, setOpen] = useChatRowToggle(stateKey, useChatDetailOpen());
   const open = chosen === true;
   return <div className="work-row work-row-thinking">
     <button type="button" className="work-row-head" aria-expanded={open} onClick={() => setOpen(!open)}>
@@ -472,7 +472,9 @@ function PendingWorkHead({ title, className = "" }: { title: string; className?:
 function WorkBlockView({ paneId, parts, duration, live, waiting, defaultOpen, showThinking, pendingHead }: { paneId: string; parts: ConversationPart[]; duration: string | null; live: boolean; waiting: boolean; defaultOpen: boolean; showThinking: boolean; pendingHead: boolean }) {
   const t = useT();
   const [chosenOpen, setOpen] = useChatRowToggle("work", null);
-  const open = chosenOpen ?? defaultOpen;
+  // a settled turn folds to its header; with the setting on it starts open, unless the reader
+  // folded this one themselves
+  const open = chosenOpen ?? (defaultOpen || useChatDetailOpen());
   // reading or working inside the block is a choice to keep it: the fold at the end of the turn
   // must not take the rows from under the reader's focus or close the row they opened
   const keepOpen = () => { if (chosenOpen === null) setOpen(true); };
@@ -504,10 +506,11 @@ function WorkBlockView({ paneId, parts, duration, live, waiting, defaultOpen, sh
 /** Skill evidence stays visible even when the surrounding work block is folded. */
 function SkillActivityList({ parts }: { parts: ConversationPart[] }) {
   const t = useT();
+  const unfold = useChatDetailOpen();
   const skills = turnSkills(parts);
   if (skills.length === 0) return null;
   return <div className="chat-skills" role="group" aria-label={t("Skill activity")}>
-    {skills.map((skill) => <ChatDetails memoryKey={`skill:${skill.evidence}:${skill.path ?? skill.name}`} className={`chat-skill${skill.status === "failed" ? " is-error" : ""}`} key={`${skill.evidence}:${skill.path ?? skill.name}`}>
+    {skills.map((skill) => <ChatDetails memoryKey={`skill:${skill.evidence}:${skill.path ?? skill.name}`} initialOpen={unfold} className={`chat-skill${skill.status === "failed" ? " is-error" : ""}`} key={`${skill.evidence}:${skill.path ?? skill.name}`}>
       <summary><BookOpen aria-hidden="true" /><span className="chat-skill-name">{skill.name}</span><span className="chat-skill-status">{
         skill.evidence === "invocation"
           ? skill.status === "failed" ? t("Skill invocation failed") : skill.status === "requested" ? t("Skill requested") : t("Skill invoked")
@@ -523,6 +526,7 @@ function SkillActivityList({ parts }: { parts: ConversationPart[] }) {
 /** The goal as this turn left it: like a skill, visible while the work block is folded. */
 function GoalActivity({ goal }: { goal: GoalState }) {
   const t = useT();
+  const unfold = useChatDetailOpen();
   const word: Record<GoalStatus, string> = {
     active: t("in progress"), paused: t("paused"), blocked: t("blocked"), complete: t("complete"), budget_limited: t("out of budget"),
   };
@@ -530,7 +534,7 @@ function GoalActivity({ goal }: { goal: GoalState }) {
     goal.timeUsedSeconds !== null && goal.timeUsedSeconds > 0 ? formatGoalTime(goal.timeUsedSeconds) : null,
     goal.tokensUsed !== null && goal.tokensUsed > 0 ? t("{n} tokens", { n: formatTokens(goal.tokensUsed) }) : null,
   ].filter((item) => item !== null).join(" · ");
-  return <ChatDetails memoryKey="goal" className={`chat-goal is-${goal.status}`}>
+  return <ChatDetails memoryKey="goal" initialOpen={unfold} className={`chat-goal is-${goal.status}`}>
     <summary><Target aria-hidden="true" /><span className="chat-goal-label">{t("Goal")}</span><span className="chat-goal-objective">{goal.objective}</span>
       <span className="chat-goal-status">{word[goal.status]}</span><ChevronDown className="chat-skill-caret" aria-hidden="true" /></summary>
     <div className="chat-goal-detail">
@@ -635,9 +639,10 @@ function TaskResultRow({ task }: { task: OmoTaskResult }) {
     task.tool_calls === null ? null : t(task.tool_calls === 1 ? "{n} tool call" : "{n} tool calls", { n: task.tool_calls }),
     task.tokens === null || task.tokens === 0 ? null : t("{n} tokens", { n: formatTokens(task.tokens) }),
   ].filter((item) => item !== null).join(" · ");
+  const unfold = useChatDetailOpen();
   // the answer is drawn once the row is opened: a wake can carry many tasks, each with a long answer
-  const [opened, setOpened] = useChatRowToggle(`task-loaded:${task.id}`, false);
-  return <ChatDetails memoryKey={`task:${task.id}`} className={`chat-task-result is-${task.status}`} onToggle={(event) => { if (event.currentTarget.open) setOpened(true); }}>
+  const [opened, setOpened] = useChatRowToggle(`task-loaded:${task.id}`, unfold);
+  return <ChatDetails memoryKey={`task:${task.id}`} initialOpen={unfold} className={`chat-task-result is-${task.status}`} onToggle={(event) => { if (event.currentTarget.open) setOpened(true); }}>
     <summary>
       <Icon className="chat-task-result-icon" aria-hidden="true" />
       <span className="chat-task-result-main">
@@ -658,8 +663,9 @@ function TaskResultRow({ task }: { task: OmoTaskResult }) {
  *  is free again, not a verdict on its task. */
 function TeammateMessageRow({ message, stateKey }: { message: TeammateMessage; stateKey: string }) {
   const t = useT();
-  const [opened, setOpened] = useChatRowToggle(`teammate-loaded:${stateKey}`, false);
-  return <ChatDetails memoryKey={`teammate:${stateKey}`} className="chat-task-results chat-task-result chat-teammate-message" onToggle={(event) => { if (event.currentTarget.open) setOpened(true); }}>
+  const unfold = useChatDetailOpen();
+  const [opened, setOpened] = useChatRowToggle(`teammate-loaded:${stateKey}`, unfold);
+  return <ChatDetails memoryKey={`teammate:${stateKey}`} initialOpen={unfold} className="chat-task-results chat-task-result chat-teammate-message" onToggle={(event) => { if (event.currentTarget.open) setOpened(true); }}>
     <summary>
       <Layers className="chat-task-result-icon" aria-hidden="true" />
       <span className="chat-task-result-main">
@@ -1448,10 +1454,12 @@ export const ChatView = memo(function ChatView({ paneId, active = true, visible:
   const renderTurn = useCallback((row: { key: string; turn: ConversationTurn }, index: number) => {
     const { turn } = row;
     const live = isLiveWorkTurn(turn, index === shownTurns.length - 1, workStatus, finishedBeforeSend);
-    return <RenderBoundary resetKey={turnRevision(turn, true)} fallback={() => <p className="chat-inline-state chat-inline-error">{t("This message can't be shown here. The terminal has it.")}</p>}>
-      <Turn paneId={paneId} turn={turn} live={live} waiting={isWaitingWorkTurn(live, agentStatus)} showThinking={settings.showThinking} skills={skillMatcher} userSkills={skillMatcher} />
-    </RenderBoundary>;
-  }, [shownTurns.length, workStatus, finishedBeforeSend, t, paneId, agentStatus, settings.showThinking, skillMatcher]);
+    return <ChatDetailOpenContext.Provider value={settings.expandWork}>
+      <RenderBoundary resetKey={turnRevision(turn, true)} fallback={() => <p className="chat-inline-state chat-inline-error">{t("This message can't be shown here. The terminal has it.")}</p>}>
+        <Turn paneId={paneId} turn={turn} live={live} waiting={isWaitingWorkTurn(live, agentStatus)} showThinking={settings.showThinking} skills={skillMatcher} userSkills={skillMatcher} />
+      </RenderBoundary>
+    </ChatDetailOpenContext.Provider>;
+  }, [shownTurns.length, workStatus, finishedBeforeSend, t, paneId, agentStatus, settings.showThinking, settings.expandWork, skillMatcher]);
   // displayPaneTitle falls back to the pane id for a pane with nothing else to call it
   const shownTitle = title?.trim() ?? "";
   const logLabel = shownTitle !== "" && shownTitle !== paneId ? t("conversation of {pane}", { pane: shownTitle }) : t("Conversation");
