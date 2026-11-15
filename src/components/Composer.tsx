@@ -1394,7 +1394,7 @@ export function Composer({
                 disabled={!connected || scheduling || text.trim().length === 0}
                 onClick={() => { setScheduleNote(null); setScheduleOpen((open) => !open); }}>
                 <Clock aria-hidden="true" />
-                <span>{t("Send later")}</span>
+                <span className="composer-schedule-label">{t("Send later")}</span>
               </button>
               {scheduleOpen && <div className="composer-schedule" role="group" aria-label={t("Send later")}>
                 <p className="composer-schedule-head">{t("Send this message at")}</p>

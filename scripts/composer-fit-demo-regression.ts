@@ -213,6 +213,8 @@ try {
     try {
       await context.addInitScript((fitCase) => {
         if (localStorage.getItem("herdr-web-ui:settings") === null) localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en", voiceInput: fitCase.mic ? "on" : "off", chatFontSize: fitCase.chatFontSize ?? null }));
+        // the welcome card sits over the composer on a first run; this is not the screen under test
+        localStorage.setItem("herdr-web-ui:onboarded", "1");
         Object.assign(window, { fitCase });
       }, { agent: "claude", pending: true, status: "working", effort: "xhigh", mic: false, ring: true, ...state });
       const page = await context.newPage();
@@ -302,13 +304,13 @@ try {
         await settings();
         const label = width === 390 ? "Return inserts a new line" : "Enter sends";
         const toggle = page.getByRole("switch", { name: label, exact: true });
-        assert.equal(await toggle.getAttribute("aria-checked"), width === 390 ? "false" : "true", "the default still sends Return");
-        await toggle.click();
+        assert.equal(await toggle.isChecked(), width === 390 ? false : true, "the default still sends Return");
+        await toggle.locator("xpath=ancestor::label[1]").click();
         await close();
         await page.reload();
         await box.waitFor();
         await settings();
-        assert.equal(await toggle.getAttribute("aria-checked"), width === 390 ? "true" : "false", "the choice survives reload on this device");
+        assert.equal(await toggle.isChecked(), width === 390 ? true : false, "the choice survives reload on this device");
         if (width === 390 && process.env.UI_EVIDENCE_DIR) {
           const evidence = process.env.UI_EVIDENCE_DIR;
           mkdirSync(evidence, { recursive: true });
@@ -420,7 +422,7 @@ try {
         const chooseSize = async (size: number) => {
           await page.keyboard.press("ControlOrMeta+Shift+Comma");
           await openSettingsPage(page, "Appearance");
-          const current = Number.parseInt(await page.getByRole("spinbutton", { name: "Interface font size", exact: true }).inputValue(), 10);
+          const current = Number.parseInt(await page.locator('.settings-stepper input[aria-label="Interface font size"]').inputValue(), 10);
           const button = page.getByRole("button", { name: size > current ? "Increase interface font size" : "Decrease interface font size", exact: true });
           for (let step = 0; step < Math.abs(size - current); step++) await button.click();
           await page.getByRole("button", { name: "Close settings", exact: true }).click();

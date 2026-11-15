@@ -147,6 +147,25 @@
   cursor: default;
 }
 
+/* A finger's floor for the two buttons a thumb presses mid-dictation. The pill keeps its
+   control-height look; the expander reaches the documented touch target both ways, and the
+   glyph stays where it is. The timer between them is inert, so it can be underlapped */
+@media (pointer: coarse) {
+  .voice-pill-button {
+    position: relative;
+  }
+
+  .voice-pill-button::before {
+    content: "";
+    position: absolute;
+    top: calc((100% - var(--touch-target)) / 2);
+    left: 50%;
+    width: max(100%, var(--touch-target));
+    height: var(--touch-target);
+    transform: translateX(-50%);
+  }
+}
+
 @media (hover: hover) {
   .voice-cancel:hover {
     background: var(--bg-hover);

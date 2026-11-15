@@ -1673,7 +1673,15 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   wears that same edge (`.composer-controls .voice-mic`, a circle of the same height), so the
   row's actions read as one set and the chip alone carries a tint; the edge is `--border-strong`
   rather than `--card-border` because the latter is the dark card's light wash and would vanish
-  on a light surface.
+  on a light surface. Under a coarse pointer the pills and the mic keep that `--control-h` look
+  and take a `--touch-target` / `44px` hit area through an invisible expander that is at least
+  that wide and centred on the control (never extending into a neighbour's tap, never under its
+  own label). On a card `420px` wide or narrower that also holds the mic or the plan chip,
+  `Send later` keeps its `Clock` alone (a `--control-h` circle, still named by its
+  `aria-label` and title): Attach's word stays, and at `360px` and below the row's gaps
+  tighten to `--space-1`, so a 320px phone draws all its actions without an overlap. A card with
+  room for both words never drops one. On such a card the picker opens over the whole card, as
+  the completion menu does, instead of anchoring to the clock and running off the edge.
 - Nothing sits under the card: it names no working folder and no branch (the pane's header crumb
   and the sidebar carry them), and its bottom edge is the pane's own. The card stands over it
   (`z-index: 1`, so its popovers go with it and still rise over the transcript).
@@ -1747,7 +1755,8 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   be cut to its floor (the `3ch` the box keeps) steps out whole instead, with its mark and its
   pill (`composerLabelDraw`, `src/lib/composerLabelFit.ts`, measured again with the level
   stepped out), so the ring stands alone and whole on a `320px` phone rather than being cut by
-  the pill's edge. The row is measured
+  the pill's edge. The mark leaves with the label only where a context ring remains to stand in
+  its place; a pane that records no ring keeps its mark, so the row never loses both. The row is measured
   again after fonts arrive and the context label opens or closes. The input card keeps one row
   of controls on desktop and phones.
 - Every agent has one primary control: Stop while working with an empty draft, Send with text,
