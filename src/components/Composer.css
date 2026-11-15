@@ -226,7 +226,7 @@
   display: contents;
 }
 
-.composer-status[data-model="out"] .agent-mark {
+.composer-status[data-model="out"]:has(.composer-context) .agent-mark {
   display: none;
 }
 
@@ -402,6 +402,16 @@
 
 .composer-context-readonly {
   cursor: default;
+}
+
+/* The ring and the compact glyph are the two pressable things inside the pill (fine pointers;
+   coarse keeps the ring inert). A 14px glyph is not a target: both reach the 24px pointer
+   floor without moving anything, the pill is 34 tall */
+.composer-context:not(.composer-context-readonly),
+.composer-compact {
+  min-width: var(--pointer-target);
+  min-height: var(--pointer-target);
+  justify-content: center;
 }
 
 /* Compact context: beside the opened number, desktop only (the mobile ring is inert) */
@@ -599,6 +609,53 @@
 .composer-pill-button:disabled {
   opacity: 0.7;
   cursor: default;
+}
+
+/* A finger's floor: the pills and the mic keep their --control-h look and take a --touch-target
+   hit area through an invisible expander (as the card's own X does). The expander is --touch-target
+   tall and at least --touch-target wide, centred on the control; a negative top/height is used
+   rather than top/bottom, which anchor to the padding box, 1px inside the border */
+@media (pointer: coarse) {
+  .composer-pill-button,
+  .composer-controls .voice-mic {
+    position: relative;
+  }
+
+  .composer-pill-button::before,
+  .composer-controls .voice-mic::before {
+    content: "";
+    position: absolute;
+    top: calc((var(--control-h) - var(--touch-target)) / 2 - var(--hairline));
+    left: 50%;
+    width: max(100%, var(--touch-target));
+    height: var(--touch-target);
+    transform: translateX(-50%);
+  }
+}
+
+/* A 320px card with the mic (and often the plan chip) in the row has no room for both action
+   words: the clock keeps its glyph, and its own name (aria-label, title) names it. Attach keeps
+   its word, which is the one pair a user reads first. The rule follows the row's contents, not the
+   window: a lone Attach and Send later still read whole at every width. At 420 and below the two
+   round targets and the chip leave the card too tight for the second word; at 360 and below the
+   gaps narrow too, so nothing overlaps the send button. */
+@media (max-width: 420px) {
+  .composer-controls-left:has(.voice-mic, .bg-tasks-toggle) .composer-schedule-button {
+    width: var(--control-h);
+    justify-content: center;
+    padding-inline: 0;
+    gap: 0;
+  }
+
+  .composer-controls-left:has(.voice-mic, .bg-tasks-toggle) .composer-schedule-label {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .composer-controls-left:has(.voice-mic, .bg-tasks-toggle) {
+    gap: var(--space-1);
+  }
 }
 
 @media (hover: hover) {
@@ -1633,4 +1690,19 @@
 .composer-schedule-time:focus-visible {
   outline: var(--ring);
   outline-offset: calc(var(--ring-offset) * -1);
+}
+
+/* After the picker's own rules: on a narrow card the clock anchors the 208px list to itself,
+   which would run it off the card and under body's clip, so the phone gets the completion
+   menu's landing instead, the full width of the card above it */
+@media (max-width: 420px) {
+  .composer-schedule-wrap {
+    position: static;
+  }
+
+  .composer-schedule {
+    left: var(--space-2);
+    right: var(--space-2);
+    min-width: 0;
+  }
 }
