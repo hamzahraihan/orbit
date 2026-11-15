@@ -173,7 +173,7 @@
 }
 
 .prompt-card-step.is-answered .prompt-card-step-mark {
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 .prompt-card-step.is-current {
@@ -313,7 +313,7 @@
 }
 
 .prompt-card-option:hover .prompt-card-number {
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 /* while an answer is on its way every option waits, the checkbox rows included (the busy state is
@@ -351,7 +351,7 @@
 .prompt-card-option.is-checked .prompt-card-number,
 .prompt-card-option.is-typed .prompt-card-number {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 .prompt-card-option input {
@@ -389,7 +389,7 @@
   padding: 1px var(--space-1);
   border-radius: var(--radius-sm);
   background: var(--accent-tint);
-  color: var(--accent);
+  color: var(--accent-readable);
   font-size: var(--fs-2xs);
   font-weight: var(--fw-semibold);
   /* no taller than the label's line, so the number beside it stays level */

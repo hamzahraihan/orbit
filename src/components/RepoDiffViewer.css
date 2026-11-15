@@ -78,7 +78,7 @@
 }
 
 .repo-diff-status[data-status="modified"] {
-  color: var(--accent);
+  color: var(--accent-readable);
   background: var(--accent-tint);
 }
 
@@ -167,7 +167,7 @@
 
 .repo-diff-action[aria-pressed="true"] {
   background: var(--bg-hover);
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 /* Split on a phone: offered and declined in place, with the reason as its tooltip and a note in the meta line */

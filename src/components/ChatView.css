@@ -324,7 +324,7 @@
   }
 }
 
-/* "Plain text": the second copy as words, shown with a mouse only (below) */
+/* "Copy": the second copy of an answer as words, shown with a mouse only (below) */
 .chat-meta-word {
   display: none;
 }
@@ -584,7 +584,7 @@
 
 /* a link keeps its color and its underline (never color alone); the underline is quiet at rest */
 .markdown a {
-  color: var(--accent);
+  color: var(--accent-readable);
   text-decoration: underline;
   text-decoration-color: var(--text-dim);
   text-underline-offset: var(--space-1);
@@ -1284,7 +1284,7 @@
 }
 
 .markdown-code-link code {
-  color: var(--accent);
+  color: var(--accent-readable);
   text-decoration: underline dotted;
   text-decoration-color: var(--text-dim);
   text-underline-offset: 0.2em;
@@ -1307,7 +1307,7 @@
 .markdown-file:hover code,
 .markdown-file:focus-visible,
 .markdown-file:focus-visible code {
-  color: var(--accent);
+  color: var(--accent-readable);
   text-decoration-style: solid;
   text-decoration-color: currentColor;
 }
@@ -1342,7 +1342,7 @@
 }
 
 .chat-tool-file-link:hover {
-  color: var(--accent);
+  color: var(--accent-readable);
   text-decoration-style: solid;
 }
 

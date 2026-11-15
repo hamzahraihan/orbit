@@ -846,7 +846,7 @@
 /* where a skill comes from: yours in the accent; the project's, the agent's own and a plugin's
    dimmed like any other icon */
 .composer-menu .orbit-menu-item[data-origin="user"] svg {
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 .composer-menu .orbit-menu-item {
@@ -1238,7 +1238,7 @@
 }
 
 .composer-queue.is-ready .composer-queue-mark {
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 .composer-queue.is-ready .composer-queue-send {

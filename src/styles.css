@@ -48,6 +48,9 @@
      their own quiet edge, one step above --border; the focused composer takes the strong one */
   --card-border: rgba(255, 255, 255, 0.08);
   --card-border-strong: rgba(255, 255, 255, 0.12);
+  /* a Settings group's card edge (SettingsControls.css): a hairline on the dark ground, a derived
+     step in light where --border parts the card from its page at 1.18:1 (see [data-theme="light"]) */
+  --group-edge: var(--border);
 
   /* text */
   --text: #f2eef5;
@@ -58,6 +61,10 @@
      and the four agent states, none of them rose */
   --accent: #a3185a;
   --accent-tint: rgba(163, 24, 90, 0.12);
+  /* Fills keep `--accent`; type, glyphs and the focus ring read `--accent-readable`, the same
+     rose mixed toward `--text` until it clears 4.5:1 (and 3:1 as a ring) on `--bg`, `--bg-elevated`
+     and the accent tints. It follows every theme and palette because both its inputs do. */
+  --accent-readable: color-mix(in srgb, var(--accent) 55%, var(--text));
   --primary: #8f1a52;
   --primary-hover: #a3185a;
   --primary-text: #f2eef5;
@@ -234,7 +241,7 @@
   --palette-top: 12vh;
 
   /* focus */
-  --ring: 2px solid var(--accent);
+  --ring: 2px solid var(--accent-readable);
   --ring-offset: 2px;
 
   /* motion: only real state changes move (drawer, dialogs, working/reconnecting pulse) */
@@ -286,6 +293,12 @@
   --bg-input: #ffffff;
   --border: #e4d8e0;
   --border-strong: #cbbcc7;
+  /* the Settings group card's edge (.settings-card): --border above reads 1.18:1 against the card's
+     own --bg-elevated, under the 3:1 a boundary owes the surface it parts. This step is mixed
+     from that palette's own quiet text, which every entry holds at 4.5:1 or better on --bg-elevated
+     (settings.test.ts), at a weight that measures 3.56:1 here. It stays a hairline border, not a
+     shadow; borders off turns it transparent with the rest (below). */
+  --group-edge: color-mix(in srgb, var(--text-dim) 80%, var(--bg-elevated));
   --bubble-border: var(--border);
   --text: #501854;
   --text-dim: #7a5570;
@@ -1907,7 +1920,7 @@ button {
 .view-switch > button[aria-pressed="true"] {
   color: var(--text-strong);
   background: var(--bg-chip);
-  box-shadow: inset 0 0 0 var(--hairline) var(--border-strong);
+  box-shadow: inset 0 0 0 var(--hairline) var(--accent-readable);
 }
 
 /* the bar's own controls: small quiet glyphs that take a plate only under the pointer. A coarse
@@ -2344,6 +2357,8 @@ html ::-webkit-scrollbar-thumb {
 .border-off {
   --border: transparent;
   --border-strong: transparent;
+  /* the Settings group's card edge is derived, not a step of --border, so it is turned off here too */
+  --group-edge: transparent;
 }
 
 
@@ -2402,7 +2417,7 @@ html ::-webkit-scrollbar-thumb {
   height: auto;
   padding: 0 var(--space-1);
   margin-left: var(--space-1);
-  color: var(--accent);
+  color: var(--accent-readable);
   border-color: var(--accent);
   background: var(--accent-tint);
   text-transform: uppercase;
@@ -2524,9 +2539,10 @@ html ::-webkit-scrollbar-thumb {
   color: var(--text-strong);
 }
 
-/* the chosen lens carries the selection color on its glyph, like the rail does in the list */
+/* the chosen lens's glyph carries the selection color like the rail does in the list: the
+   readable rose, since the glyph sits on the lens's chip plate, where the fill rose is not ink */
 .segmented > button[aria-pressed="true"] svg {
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 /* keyboard key hint */
@@ -2723,7 +2739,7 @@ html ::-webkit-scrollbar-thumb {
 /* a bordered field shows focus on its own border; the offset ring is for controls without one */
 .orbit-select:focus,
 .orbit-select:focus-visible {
-  border-color: var(--accent);
+  border-color: var(--accent-readable);
   outline: none;
 }
 
@@ -2922,11 +2938,6 @@ html ::-webkit-scrollbar-thumb {
   }
 }
 
-/* the bar's two words would crowd a narrow window: the lenses are their glyphs alone, each still
-   named in its button's title */
-@media (max-width: 560px) {
-  .view-switch .header-desktop-only { display: none; }
-}
 
 /* phones: every header control is a full thumb target, the lens buttons too */
 @media (max-width: 768px) {
@@ -2942,6 +2953,12 @@ html ::-webkit-scrollbar-thumb {
   .app-header .view-switch > button {
     min-width: var(--touch-target-header);
     height: var(--touch-target-header);
+    gap: var(--space-1);
+    padding: 0 var(--space-1);
+  }
+
+  .view-switch-label {
+    font-size: var(--fs-xs);
   }
 }
 

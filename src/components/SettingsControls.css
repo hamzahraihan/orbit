@@ -26,7 +26,10 @@
   flex-direction: column;
   min-width: 0;
   background: var(--bg-elevated);
-  border: var(--hairline) solid var(--border);
+  /* --group-edge, not --border: on a light palette a 1.18:1 hairline left the group's card and page
+     reading as one surface, so the edge takes the derived step styles.css measures (styles.css,
+     [data-theme="light"]); on the dark ground the two are the same color */
+  border: var(--hairline) solid var(--group-edge);
   border-radius: var(--radius-lg);
 }
 
