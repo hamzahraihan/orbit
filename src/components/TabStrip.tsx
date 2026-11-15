@@ -1,7 +1,7 @@
 /**
  * Herdr's tab row, visible for a single tab too. Left-click selects; right-click opens
- * New tab with agent / Rename / Close at the pointer. The + opens a shell tab at once, as herdr's
- * own new tab does. Pane actions belong to PaneCanvas.
+ * New tab with agent / Rename / Close at the pointer. The + is herdr's own new tab (prefix+c): a shell
+ * tab in the workspace's folder at once, no dialog. Pane actions belong to PaneCanvas.
  * The selected tab carries an ellipsis that opens its trimmed menu: a phone keeps it in view as a
  * touch entry, a desktop with a mouse draws it when the strip is hovered or the tab has keyboard
  * focus (TabStrip.css), so the menu is never only behind a right-click. Where the canvas shows a
@@ -46,7 +46,7 @@ export interface TabStripProps {
   /** the New tab dialog, where an agent is picked */
   onNewTab: () => void;
   /** a shell tab in this workspace, with no dialog; rejects with herdr's refusal */
-  onNewTerminal: () => Promise<void>;
+  onNewShellTab: () => Promise<void>;
   /** the open pane's actions (PaneCanvas), offered in the touch menu */
   paneActions?: (paneId: string) => RowMenuItem[];
   /** the panel the tabs control: each half of a split view has its own (lib/split.ts) */
@@ -57,7 +57,7 @@ export interface TabStripProps {
   end?: ReactNode;
 }
 
-export function TabStrip({ snapshot, workspace, selectedPane, onSelectPane, onNewTab, onNewTerminal, paneActions, panelId = PANE_TABPANEL_ID, splitDrag = false, end }: TabStripProps) {
+export function TabStrip({ snapshot, workspace, selectedPane, onSelectPane, onNewTab, onNewShellTab, paneActions, panelId = PANE_TABPANEL_ID, splitDrag = false, end }: TabStripProps) {
   const t = useT();
   const { settings } = useSettings();
   const machineId = useMachineId();
@@ -438,8 +438,8 @@ export function TabStrip({ snapshot, workspace, selectedPane, onSelectPane, onNe
             </div>
           );
         })}
-        <button type="button" className="tab-strip-add" aria-label={t("New terminal")} title={t("New terminal")}
-          onClick={() => { setError(null); void onNewTerminal().catch((reason: unknown) => setError(t("New terminal failed: {reason}", { reason: said(reason) }))); }}>
+        <button type="button" className="tab-strip-add" aria-label={t("New tab")} title={t("New tab")}
+          onClick={() => { setError(null); void onNewShellTab().catch((reason: unknown) => setError(t("New tab failed: {reason}", { reason: said(reason) }))); }}>
           <Plus aria-hidden="true" />
         </button>
         {error && <span className="tab-strip-error" role="alert">{error}</span>}

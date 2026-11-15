@@ -1058,8 +1058,7 @@ export const KO: Record<string, string> = {
   // tabs: the strip over the pane, and the New tab dialog
   "New tab": "새 탭",
   "New tab with agent…": "에이전트로 새 탭…",
-  "New terminal": "새 터미널",
-  "New terminal failed: {reason}": "새 터미널 열기 실패: {reason}",
+  "New tab failed: {reason}": "새 탭 열기 실패: {reason}",
   "Tab {n}": "탭 {n}",
   "Tab name (optional)": "탭 이름 (선택)",
   "Uses the workspace's folder": "워크스페이스의 폴더를 그대로 씁니다",

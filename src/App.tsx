@@ -1327,7 +1327,7 @@ export function App() {
         setNewTab({ workspaceId: workspace.workspace_id, workspaceLabel: workspace.label, cwd, number: workspace.tab_count + 1 });
         setNewSessionOpen(true);
       },
-      openTerminalTab: async (target) => {
+      openShellTab: async (target) => {
         const found = newTabTarget(target);
         if (!found) return;
         const asked = selectionRef.current;
@@ -1558,7 +1558,7 @@ export function App() {
         {stripInBar && snapshot && selectedWorkspace && selectedPane && (
           <div className="header-tabs">
             <TabStrip snapshot={snapshot} workspace={selectedWorkspace} selectedPane={selectedPane} splitDrag={wideScreen}
-              onSelectPane={selectPane} onNewTab={() => actions.openNewTab()} onNewTerminal={() => actions.openTerminalTab()}
+              onSelectPane={selectPane} onNewTab={() => actions.openNewTab()} onNewShellTab={() => actions.openShellTab()}
               paneActions={stripPaneActions} />
           </div>
         )}
@@ -1711,7 +1711,7 @@ export function App() {
                 {slotSnapshot && pane && workspace && !(stripInBar && active) && (
                   <TabStrip snapshot={slotSnapshot} workspace={workspace} selectedPane={pane} panelId={slotPanelId} splitDrag={wideScreen} onSelectPane={onSelect} end={slotEnd}
                     onNewTab={() => actions.openNewTab(active ? undefined : { machineId, workspaceId: workspace.workspace_id })}
-                    onNewTerminal={() => actions.openTerminalTab(active ? undefined : { machineId, workspaceId: workspace.workspace_id })}
+                    onNewShellTab={() => actions.openShellTab(active ? undefined : { machineId, workspaceId: workspace.workspace_id })}
                     paneActions={active ? (paneId) => {
                       const target = snapshot?.panes.find((item) => item.pane_id === paneId);
                       if (!target || !paneActionsRef.current) return [];

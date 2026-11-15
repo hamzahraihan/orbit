@@ -31,10 +31,10 @@ export interface AppActions {
    */
   openNewTab: (target?: { machineId: string; workspaceId: string }) => void;
   /**
-   * A shell tab in the same workspace, at once and with no dialog, as herdr's own new tab: the
-   * new pane opens unless another one was opened meanwhile. Rejects with herdr's refusal.
+   * A shell tab in the same workspace, at once and with no dialog, as herdr's own new tab (prefix+c):
+   * the new pane opens unless another one was opened meanwhile. Rejects with herdr's refusal.
    */
-  openTerminalTab: (target?: { machineId: string; workspaceId: string }) => Promise<void>;
+  openShellTab: (target?: { machineId: string; workspaceId: string }) => Promise<void>;
   /** the palette, blank or opened on `query` (a `>` prefix keeps the actions alone) */
   openPalette: (query?: string) => void;
   /** the palette opened in conversation search: no panes or actions, recent searches when blank */

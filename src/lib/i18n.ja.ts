@@ -1060,8 +1060,7 @@ export const JA: Record<string, string> = {
   // tabs: the strip over the pane, and the New tab dialog
   "New tab": "新しいタブ",
   "New tab with agent…": "エージェントで新しいタブ…",
-  "New terminal": "新しいターミナル",
-  "New terminal failed: {reason}": "新しいターミナルを開けませんでした: {reason}",
+  "New tab failed: {reason}": "新しいタブを開けませんでした: {reason}",
   "Tab {n}": "タブ {n}",
   "Tab name (optional)": "タブ名 (任意)",
   "Uses the workspace's folder": "ワークスペースのフォルダーをそのまま使います",

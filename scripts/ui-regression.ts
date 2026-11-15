@@ -1795,23 +1795,25 @@ try {
   await page.getByRole("dialog", { name: /^New workspace/ }).waitFor({ state: "hidden" });
   console.log("PASS a second tab is made from the tab strip, listed over the pane, and opened from it");
 
-  // The strip's + is herdr's own new tab: a shell tab in the workspace's folder at once, no dialog,
-  // and its pane opens. It is closed again, so the tabs below stay the two named ones.
-  const terminalResponse = page.waitForResponse((response) => response.url().endsWith("/api/tab/create"));
+  // The strip's + is herdr's own new tab (prefix+c): a shell tab in the workspace's folder at once,
+  // no dialog, and its pane opens. It is named for the tab it makes, not for this app's Terminal
+  // view. It is closed again, so the tabs below stay the two named ones.
+  assert.equal(await page.locator(".tab-strip-add").getAttribute("aria-label"), "New tab", "the + is named for the tab it adds");
+  const addedResponse = page.waitForResponse((response) => response.url().endsWith("/api/tab/create"));
   await page.locator(".tab-strip-add").click();
-  const terminalAnswer = await terminalResponse;
-  assert.deepEqual(terminalAnswer.request().postDataJSON(), { workspace_id: created.workspace_id, cwd: join(root, "a", "made-here"), label: null, agent: null }, "the + asks for a shell tab in the workspace's folder");
-  const terminalTab = await terminalAnswer.json() as WorkspaceCreated;
-  assert.equal(terminalTab.workspace_id, created.workspace_id, "the shell tab joins the workspace");
-  assert.equal(terminalTab.agent_started, false, "no agent is started");
-  await until(async () => (await page.locator(`[data-pane="${terminalTab.pane_id}"][title^="${terminalTab.pane_id} —"]`).getAttribute("aria-current")) === "true", "the shell tab's pane is selected");
+  const addedAnswer = await addedResponse;
+  assert.deepEqual(addedAnswer.request().postDataJSON(), { workspace_id: created.workspace_id, cwd: join(root, "a", "made-here"), label: null, agent: null }, "the + asks for a shell tab in the workspace's folder");
+  const addedTab = await addedAnswer.json() as WorkspaceCreated;
+  assert.equal(addedTab.workspace_id, created.workspace_id, "the shell tab joins the workspace");
+  assert.equal(addedTab.agent_started, false, "no agent is started");
+  await until(async () => (await page.locator(`[data-pane="${addedTab.pane_id}"][title^="${addedTab.pane_id} —"]`).getAttribute("aria-current")) === "true", "the shell tab's pane is selected");
   assert.equal(await page.getByRole("dialog", { name: /^New tab/ }).count(), 0, "the + opens no dialog");
   assert.equal(await strip.getByRole("tab").count(), 3, "the strip lists the shell tab");
-  const terminalTabId = (await sessionSnapshot()).panes.find((pane) => pane.pane_id === terminalTab.pane_id)?.tab_id;
-  assert.ok(terminalTabId, "herdr has the shell tab's pane");
+  const addedTabId = (await sessionSnapshot()).panes.find((pane) => pane.pane_id === addedTab.pane_id)?.tab_id;
+  assert.ok(addedTabId, "herdr has the shell tab's pane");
   await strip.getByRole("tab", { name: "Tab 1", exact: true }).click();
   await until(async () => (await page.locator(`[data-pane="${created.pane_id}"][title^="${created.pane_id} —"]`).getAttribute("aria-current")) === "true", "the first tab opens its pane again");
-  await herdrRpc("tab.close", { tab_id: terminalTabId });
+  await herdrRpc("tab.close", { tab_id: addedTabId });
   await until(async () => (await strip.getByRole("tab").count()) === 2, "the shell tab is gone from the strip");
   console.log("PASS the strip's + opens a shell tab at once, with no dialog");
 

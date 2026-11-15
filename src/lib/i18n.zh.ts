@@ -1062,8 +1062,7 @@ export const ZH: Record<string, string> = {
   // tabs: the strip over the pane, and the New tab dialog
   "New tab": "新建标签页",
   "New tab with agent…": "用 Agent 新建标签页…",
-  "New terminal": "新建终端",
-  "New terminal failed: {reason}": "新建终端失败：{reason}",
+  "New tab failed: {reason}": "新建标签页失败：{reason}",
   "Tab {n}": "标签页 {n}",
   "Tab name (optional)": "标签页名称（可选）",
   "Uses the workspace's folder": "直接使用工作区的文件夹",
