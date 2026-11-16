@@ -1007,8 +1007,9 @@ export function Composer({
         setMenuDismissed(true);
         return;
       }
-      // a draft puts Send where Stop was: Escape is then the Stop the agent's own input has
-      if (event.key === "Escape" && connected && agentStatus === "working" && textRef.current.trim().length > 0) {
+      // Escape is Stop only under Stop's own rule: an empty box (a draft puts Send in its place).
+      // With a draft up Escape does nothing here — Stop's tap is the deliberate path
+      if (event.key === "Escape" && connected && agentStatus === "working" && textRef.current.trim().length === 0) {
         event.preventDefault();
         onAbort();
         return;
@@ -1418,8 +1419,9 @@ export function Composer({
           <BackgroundTasks paneId={paneId} count={backgroundTasks} omo={agent === "omo"} claude={agent === "claude"} plan={plan} />
         </div>
         {/* between the two control groups of the card's last row. The agent's name, its separator and the
-            state word are read, not drawn: the mark and the header name the agent, and Stop, the live row and
-            the prompt card say the state. All state words stay available to assistive tech only.
+            state words stay available to assistive tech; the actionable states (RUN, INPUT, BACKGROUND) also
+            draw one dim word in the row, so a glance can tell them apart from rest (.composer-status-word).
+            READY and DONE stay read, not drawn. Stop, the live row and the prompt card carry the rest.
             Where the model label does not fit, it steps out and is still read (fitStatus marks data-model) */}
         <div ref={statusRef} className="composer-status" role="status" data-status={shownStatus}
           data-offline={connected ? undefined : ""} data-hint={hint ?? undefined} data-hint-alone={hintText !== null ? "" : undefined}>
@@ -1428,6 +1430,8 @@ export function Composer({
             <span className="composer-agent-label visually-hidden">{agentLabel}</span>
             <span className="composer-status-separator visually-hidden" aria-hidden="true">·</span>
             <strong className="visually-hidden">{t(composerStatusWord(shownStatus))}</strong>
+            {(shownStatus === "working" || shownStatus === "blocked" || shownStatus === "waiting") &&
+              <span className="composer-status-word" aria-hidden="true">{t(composerStatusWord(shownStatus))}</span>}
             {/* the mark, the model, the level and the context ring as one quiet pill. It only shows: no role,
                 no focus, nothing to press but the ring inside it. A pane that names no model draws no pill
                 (.is-bare): the mark, a level if it has one, and the ring stand in the row as they are */}

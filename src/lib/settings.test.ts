@@ -485,15 +485,12 @@ describe("microphone button", () => {
     for (const voiceLanguage of [null, 1, "", "hu", "hu-hu", "xx-XX", "auto "]) expect(sanitizeSettings({ voiceLanguage }).voiceLanguage).toBe("auto");
   });
 
-  it("is asked for in the chat off a phone on auto, everywhere when on and nowhere when off", () => {
-    expect(wantsVoiceInput("auto", "chat", false)).toBe(true);
-    expect(wantsVoiceInput("auto", "chat", true)).toBe(false);
-    expect(wantsVoiceInput("auto", "terminal", false)).toBe(false);
+  it("is asked for in the chat on every device on auto, in either input when on and nowhere when off", () => {
+    expect(wantsVoiceInput("auto", "chat")).toBe(true);
+    expect(wantsVoiceInput("auto", "terminal")).toBe(false);
     for (const mode of ["chat", "terminal"] as const) {
-      for (const phone of [false, true]) {
-        expect(wantsVoiceInput("on", mode, phone)).toBe(true);
-        expect(wantsVoiceInput("off", mode, phone)).toBe(false);
-      }
+      expect(wantsVoiceInput("on", mode)).toBe(true);
+      expect(wantsVoiceInput("off", mode)).toBe(false);
     }
   });
 });

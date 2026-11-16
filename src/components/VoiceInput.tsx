@@ -89,7 +89,8 @@ export interface DictationOptions {
   mode: VoiceMode;
   connected: boolean;
   polish: boolean;
-  /** a phone's input, short of room: the mic is there only when Settings asks for it */
+  /** a phone's input, short of room: on "on" or a working voice path the mic is drawn; on "auto" it is drawn
+   *  too, disabled with its reason where dictation cannot work */
   phone?: boolean;
   keywords?: () => string[];
   box: RefObject<HTMLTextAreaElement | null>;
@@ -104,7 +105,8 @@ export interface DictationOptions {
 }
 
 export interface Dictation {
-  /** the button and pill are shown at all: settings.voiceInput, and on auto only where dictation can work */
+  /** the button and pill are shown at all: settings.voiceInput; on a phone on auto it is drawn even where
+   *  dictation cannot work, disabled with its reason; elsewhere on auto it is left out where it cannot work */
   shown: boolean;
   connected: boolean;
   voice: VoiceInput;
@@ -123,7 +125,7 @@ export interface Dictation {
 export function useDictation(options: DictationOptions): Dictation {
   const t = useT();
   const { settings } = useSettings();
-  const wanted = wantsVoiceInput(settings.voiceInput, options.mode, options.phone === true);
+  const wanted = wantsVoiceInput(settings.voiceInput, options.mode);
   const [partial, setPartial] = useState("");
   const latest = useRef(options);
   latest.current = options;
@@ -184,8 +186,8 @@ export function useDictation(options: DictationOptions): Dictation {
   });
   const voiceRef = useRef(voice);
   voiceRef.current = voice;
-  // nobody asked for the button on auto, so one that cannot work here is left out, not shown disabled
-  const shown = wanted && (settings.voiceInput === "on" || voice.available);
+  // on auto a desktop draws the mic only where dictation works; a phone draws it always, disabled with its reason where it cannot
+  const shown = wanted && (settings.voiceInput === "on" || voice.available || options.phone === true);
 
   // a transcript waiting for an IME composition to end is part of what the user cancels
   const engineCancel = voice.cancel;

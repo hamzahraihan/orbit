@@ -1664,7 +1664,9 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   message's first words ellipsized, and an X at the far end. It is the same surface as the card
   (`--bg-elevated`, `--border` hairline, `--radius-md`), no chip fills the row with colour, and a
   row whose send failed says why in place of the time in `--danger-text`: the failure is a fact in
-  the same row, never a banner. A row whose moment came into an agent input box that holds a draft
+  the same row, never a banner. Under a coarse pointer the row reaches `--touch-target`, and its X
+  grows to it; the Send later picker's moments, its clock field and its Schedule button reach it
+  the same way. A row whose moment came into an agent input box that holds a draft
   keeps its time and says what it waits on, in italics, in place of the words (`.is-held`): the
   time asked for never moves, and nothing colours the row until the wait ends badly.
 - An action is a labelled pill (`.composer-pill-button`, `--control-h` tall, `--radius-pill`,
@@ -1714,10 +1716,10 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   start, on the message's text line; the actions follow it and the button holds the end. It
   draws, at `--fs-xs`: the model pill and the uploading
   or reconnecting sentence in `--text-dim`. The background-task chip is a button in the controls;
-  its count is repeated here as `.visually-hidden` text, so a change is still announced. The agent's written name, its separator, the state words
-  `READY` / `RUN` / `INPUT` / `DONE` / `BACKGROUND` and the sentence `Reasoning high` stay in it for assistive tech only
-  (`.visually-hidden`): the header names the pane, and the state is told by Stop, the live row
-  and the prompt card. No state word is drawn in the chat composer.
+  its count is repeated here as `.visually-hidden` text, so a change is still announced. The agent's written name, its separator and the state words
+  `READY` / `RUN` / `INPUT` / `DONE` / `BACKGROUND` stay in it for assistive tech (`.visually-hidden`): the header names the pane, and the state is told by Stop, the live row
+  and the prompt card. The actionable states (`RUN` / `INPUT` / `BACKGROUND`, the word assistive tech reads) also draw one dim `--fs-2xs` word at the row's start
+  (`.composer-status-word`), so a glance can tell them from rest; `READY` and `DONE` stay read, not drawn.
 - The model pill (`.composer-pill`) holds the agent mark, the model, the reasoning level and the
   context ring in one quiet run: no fill of its own (the row's only fills are the chip and the
   button), no inline padding, `--control-h` tall, `--space-2` between its parts, so the label
@@ -1804,7 +1806,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   input held for the terminal, a copy note) stand over the card instead, in the held messages'
   anatomy: one `--border` hairline above the group, then a row per notice (`role="status"`), no
   tint and no box, every line of text `--space-3` in. A row is its lucide mark and its sentence in
-  `--text-dim` at `--fs-xs` (`--status-working` for the two warnings: another app holds the pane,
+  `--text-dim` at `--fs-xs` (`--notice` for the two warnings: another app holds the pane,
   the stream failed), its own way on at its end (`Open here`, `Reconnect`, in the held rows' buttons)
   and an X named `Dismiss notice`. The held input's row has no sentence on screen: the held text
   (mono, one line, an ellipsis, the whole text as its title) and two `.icon-button` controls named
@@ -1870,7 +1872,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
 - On a touch screen, picking a pane (drawer, palette, notification) or switching its lens never
   raises the keyboard: the user reads first, and a tap on the message box or the grid raises it.
   A desktop's picked pane takes typing at once.
-- Enter sends and Shift+Enter breaks by default; with **Enter sends** off, Mod+Enter sends. On touch screens the same device setting is shown inverted as **Return inserts a new line**, with Send and hardware Mod+Enter explained below it. IME Enter is ignored. Stop sends Escape. While the agent works and a draft shows Send in Stop's place, Escape in the box is Stop; an open completion menu takes the first Escape, and its X in the top corner (`.composer-menu-close`, Close suggestions, sticky over the rows it scrolls; the first row leaves it room) does the same for a pointer or a phone, which has no Escape, keeping the text and the focus in the box. T3 Code's command menu closes on Escape alone. Working Send schedules a pending message; its Send now action submits that same message now.
+- Enter sends and Shift+Enter breaks by default; with **Enter sends** off, Mod+Enter sends. On touch screens the same device setting is shown inverted as **Return inserts a new line**, with Send and hardware Mod+Enter explained below it. IME Enter is ignored. Stop sends Escape. While the agent works and the box is empty, Escape in the box is Stop — Stop's own rule: with a draft up Send stands in Stop's place and Escape does nothing in the field. An open completion menu takes the first Escape, and its X in the top corner (`.composer-menu-close`, Close suggestions, sticky over the rows it scrolls; the first row leaves it room) does the same for a pointer or a phone, which has no Escape, keeping the text and the focus in the box. T3 Code's command menu closes on Escape alone. Working Send schedules a pending message; its Send now action submits that same message now.
 - A pane with no agent is a shell, not a chat that lost its agent: the same card composes one
   command line. Its placeholder is **Run a command…**, it turns the phone keyboard's
   capitalization, spell and autocorrect off (`autoCapitalize`/`autoCorrect`/`spellCheck` keyed on
@@ -1882,9 +1884,10 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
 ### Voice input
 - A mic button sits beside the Attach pill in the composer and beside Send in the terminal input line; it
   fills with `--accent` while recording. Dictated text is inserted at the caret, never sent.
-- `voiceInput`: `auto`, `on` or `off`; default `auto`. Auto puts the mic in the composer only, not on
-  a phone (the composer's `(max-width: 640px), (pointer: coarse)`), and leaves it out where dictation
-  cannot work (no HTTPS, or no key and no browser recognition). On shows it in both inputs and on a
+- `voiceInput`: `auto`, `on` or `off`; default `auto`. Auto puts the mic in the chat composer on every
+  device — on a phone it is drawn even where dictation cannot work, disabled with its reason (the `on`
+  treatment); on a desktop it is left out where it cannot work (no HTTPS, or no key and no browser
+  recognition). The terminal input line never takes the mic on auto. On shows it in both inputs and on a
   phone, disabled with its reason where it cannot work.
 - The recording pill shows Cancel, a **Recording** label, the level bars, a mono timer and Done.
   Muted rose only; `--danger` stays for errors.
