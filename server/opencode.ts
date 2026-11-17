@@ -8,9 +8,9 @@
  * The service is started with the user's environment, so this server's environment finds it; the
  * pane's process environment would not. A session is a `session_v2` row and its conversation the
  * `session_message` rows of its id, ordered by `seq`, each a `type` and a JSON `data`. OpenCode 1.x
- * wrote `session`/`message`/`part` instead (2.0 copies them into `session_v2` when it migrates); a
- * store without `session_v2` is read by the 1.x reader at the foot of this file, which folds the same
- * turns, and keeps the terminal only when neither table set is there.
+ * wrote `session`/`message`/`part` instead (2.0 copies them into `session_v2` when it migrates). A store
+ * holding both table sets — what an OpenCode downgrade leaves behind — is read per session, by whichever
+ * set its writes touched last, and a session neither holds keeps the terminal.
  *
  * herdr's OpenCode integration reports the session the TUI shows (`herdr:opencode`, kind `id`),
  * so a pane is bound by that id, never by a guess from its cwd.
@@ -468,8 +468,11 @@ export function opencodeConversation(path: string, sessionId: string, page: Open
   const cacheKey = `${key}\0${page.before ?? ""}\0${page.since ?? ""}\0${page.from ?? ""}`;
   try {
     const answer = withStore(path, (db): OpencodeAnswer => {
-      // A broken or changing 1.x store leaves the terminal as the source of the conversation.
-      if (storeFlavor(db) === "v1") {
+      // A store holds both table sets after an OpenCode downgrade: 2.0 copies 1.x rows into
+      // session_v2, and 1.x then writes only its own tables. The set holding this session answers, picked
+      // by where its writes landed last, never by which table the file merely has. A broken or changing
+      // 1.x store leaves the terminal as the source of the conversation.
+      if (flavorOf(db, sessionId) === "v1") {
         try { return conversation1(db, cacheKey, sessionId, page); }
         catch (error) {
           if (busy(error)) return answers.get(`${cacheKey}\0v1`)?.answer ?? { kind: "unavailable", reason: "store_busy" };
@@ -565,7 +568,7 @@ function readRow<T>(path: string, sessionId: string, id: string, read: (row: { t
   if (!SESSION_ID.test(sessionId) || !MESSAGE_ID.test(id)) return null;
   try {
     return withStore(path, (db) => {
-      const row = storeFlavor(db) === "v1" ? sessionRow1(db, sessionId, id) : sessionRow(db, sessionId, id);
+      const row = flavorOf(db, sessionId) === "v1" ? sessionRow1(db, sessionId, id) : sessionRow(db, sessionId, id);
       return row === null ? null : read(row);
     });
   } catch (error) {
@@ -618,12 +621,32 @@ type StoreFlavor = "v2" | "v1" | "unknown";
 const MAX_V1_ROWS = 10_000;
 const MAX_V1_BYTES = 4 * OPENCODE_WINDOW_BYTES;
 
-/** 2.x (`session_v2`), 1.x (`session`/`message`/`part`), or a file this reader cannot page. */
-function storeFlavor(db: Database): StoreFlavor {
-  const table = (name: string) => db.query<{ name: string }, [string]>("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(name) !== null;
-  if (table("session_v2")) return "v2";
-  if (table("session") && table("message") && table("part")) return "v1";
-  return "unknown";
+function table(db: Database, name: string): boolean {
+  return db.query<{ name: string }, [string]>("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?").get(name) !== null;
+}
+
+/** `time_updated` of the session's row in one table set, or null when the set does not hold it. */
+function sessionUpdated(db: Database, tableName: "session_v2" | "session", sessionId: string): number | null {
+  if (!table(db, tableName)) return null;
+  const sql = tableName === "session_v2"
+    ? "SELECT time_updated FROM session_v2 WHERE id = ?"
+    : "SELECT time_updated FROM session WHERE id = ?";
+  return db.query<{ time_updated: number }, [string]>(sql).get(sessionId)?.time_updated ?? null;
+}
+
+/**
+ * Which table set holds this session's conversation. A downgraded store keeps both (2.0 copies the
+ * 1.x rows into `session_v2`, and since then 1.x writes only its own tables), so the flavor is the
+ * one the session's writes touched last, never the one the file merely has.
+ */
+function flavorOf(db: Database, sessionId: string): StoreFlavor {
+  const v2 = sessionUpdated(db, "session_v2", sessionId);
+  const v1 = sessionUpdated(db, "session", sessionId);
+  if (v2 !== null && (v1 === null || v2 >= v1)) return "v2";
+  if (v1 !== null) return "v1";
+  // no table set holds the session: a store that is itself 1.x (no `session_v2`, a full 1.x set)
+  // keeps its own reader, whose `session_not_found` is the answer there too
+  return table(db, "session_v2") || !table(db, "session") || !table(db, "message") || !table(db, "part") ? "unknown" : "v1";
 }
 
 /** One 1.x message with its parts, in the order the page reads them. */
