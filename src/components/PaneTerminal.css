@@ -227,8 +227,8 @@
 }
 
 .terminal-banner-warning {
-  border-color: var(--status-working);
-  color: var(--status-working);
+  border-color: var(--notice);
+  color: var(--notice);
 }
 
 /* a banner's own action takes clicks back from the pass-through column */

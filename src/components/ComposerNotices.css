@@ -27,9 +27,9 @@
   border-top: var(--hairline) solid var(--border);
 }
 
-/* a warning (another app holds the pane, the output stream failed): the terminal pill's colour */
+/* a warning (another app holds the pane, the output stream failed): the notice colour — ready, never the working blue */
 .composer-notice.is-warning {
-  color: var(--status-working);
+  color: var(--notice);
 }
 
 .composer-notice-mark {

@@ -141,13 +141,13 @@
 }
 
 /* the middle of the card's last row, between add and the round button, pushed to the button's
-   side. It can share that row because the agent's name and the state word are no longer drawn
-   (.visually-hidden: the mark stays, and the state is told by Stop, the live row and the prompt
-   card). What does not fit gives way in this order: the task chip's words (BackgroundTasks.css,
-   by the card's width); then the model label, as composerModelDraw says of the measured row
-   (Composer.tsx marks data-model): the level steps out whole, read and not drawn, so no word is
-   drawn in part; then the model's name and the opened context text. Nothing overlaps its
-   neighbour, and the context ring at the end is never the part that is cut. */
+   side. It can share that row because the agent's name is not drawn (.visually-hidden: the mark
+   stays, and the state is told by Stop, the live row, the prompt card and, for the actionable
+   states, one dim word). What does not fit gives way in this order: the task chip's words
+   (BackgroundTasks.css, by the card's width); then the model label, as composerModelDraw says
+   of the measured row (Composer.tsx marks data-model): the level steps out whole, read and not
+   drawn, so no word is drawn in part; then the model's name and the opened context text.
+   Nothing overlaps its neighbour, and the context ring at the end is never the part that is cut. */
 .composer-status {
   grid-area: status;
   display: flex;
@@ -169,6 +169,16 @@
 .composer-status[data-offline] {
   justify-content: flex-start;
 }
+/* the one state word a glance gets: the actionable states only, the same word assistive tech
+   reads (RUN / INPUT / BACKGROUND), dim and small — quiet, never another accent */
+.composer-status-word {
+  flex: 0 0 auto;
+  color: var(--text-dim);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.06em;
+}
+
 
 /* a sentence (uploading, reconnecting) is never cut: where it does not fit beside the model it
    takes the next line, and wraps there if it must */
@@ -1704,5 +1714,18 @@
     left: var(--space-2);
     right: var(--space-2);
     min-width: 0;
+  }
+}
+
+/* A finger's floor: the picker's moments, its clock field and its Schedule button keep their
+   look and take a --touch-target hit area under a coarse pointer */
+@media (pointer: coarse) {
+  .composer-schedule-preset,
+  .composer-schedule-go {
+    min-height: var(--touch-target);
+  }
+
+  .composer-schedule-time {
+    height: var(--touch-target);
   }
 }

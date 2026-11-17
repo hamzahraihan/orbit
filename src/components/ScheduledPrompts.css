@@ -96,3 +96,14 @@
   opacity: 0.5;
   cursor: default;
 }
+
+@media (pointer: coarse) {
+  .scheduled-prompt {
+    min-height: var(--touch-target);
+  }
+
+  .scheduled-prompt-cancel {
+    width: var(--touch-target);
+    height: var(--touch-target);
+  }
+}

@@ -284,9 +284,11 @@ function voiceButton(value: unknown): VoiceButton {
   return VOICE_BUTTONS.includes(value as VoiceButton) ? value as VoiceButton : DEFAULT_SETTINGS.voiceInput;
 }
 
-/** Whether an input asks for dictation at all: auto leaves the terminal input line and a phone's composer alone. */
-export function wantsVoiceInput(setting: VoiceButton, mode: "chat" | "terminal", phone: boolean): boolean {
-  return setting === "on" || (setting === "auto" && mode === "chat" && !phone);
+/** Whether an input asks for dictation at all: auto puts the mic in the chat composer on every device
+ *  (on a phone where dictation cannot work it is drawn disabled with its reason), and never on the
+ *  terminal input line. */
+export function wantsVoiceInput(setting: VoiceButton, mode: "chat" | "terminal"): boolean {
+  return setting === "on" || (setting === "auto" && mode === "chat");
 }
 
 /** The replies worth a button: what the list holds, without the blank ones still being written. */
