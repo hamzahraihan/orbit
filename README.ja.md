@@ -77,7 +77,7 @@ https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
 
 <p align="center"><sub>どのクリップも、パソコンとスマートフォンを同時に収録した実際の動作です。等速・カットなし。クリックすると動画全体を再生できます。</sub></p>
 
-- **チャットとターミナルを、ひとつのペインで** — Claude Code、Codex、omp、omo、gjc、pi の会話履歴と、herdr が識別した OpenCode 2 と Devin CLI のセッションを表示し、ワンクリックでライブターミナルに切り替えられます。エージェントの作業中に次のメッセージを書いておくと次のターンで送られ、Send now ですぐに送ることもできます。[対応エージェント →](docs/guide.md#supported-agents)
+- **チャットとターミナルを、ひとつのペインで** — Claude Code、Codex、omp、omo、gjc、pi の会話履歴と、herdr が識別した OpenCode と Devin CLI のセッションを表示し、ワンクリックでライブターミナルに切り替えられます。エージェントの作業中に次のメッセージを書いておくと次のターンで送られ、Send now ですぐに送ることもできます。[対応エージェント →](docs/guide.md#supported-agents)
 - **タップで承認** — 承認リクエスト、質問、計画メニューがカードになり、問いかけがまだ有効か確認してから回答を送信します。
 - **対応が必要なときに通知** — すべてのペインの状態をリアルタイムに表示し、アプリを開いているときは通知が上から降りてきます。入力が必要なときや完了したときには、アプリを閉じていてもプッシュ通知が届きます。
 - **スマートフォンにインストール** — キーボードの上にキーバー（Esc、Tab、Ctrl、Alt、Shift、Enter、矢印キー）が並ぶ PWA。キーの並べ替えや独自のキー組み合わせの追加は Settings（設定）でできます。Tailscale のアドレスは QR コードで表示されます。[スマートフォンの設定 →](docs/guide.md#on-your-phone)
@@ -129,7 +129,7 @@ herdr が起動した状態で **[localhost:7317](http://localhost:7317)** を�
 
 **チャット表示はどのエージェントに対応していますか？**
 
-Claude Code、Codex、omp、omo、gjc、pi は、それぞれのセッションファイルから読み取ります。OpenCode 2 は herdr が報告したセッションを OpenCode 自身のデータベースから読み取り、ホーム画面または 1.x のストアではライブターミナルを表示します。Devin CLI は `devin --resume <id>` のように herdr や実行中のプロセスがセッションを示すときにチャットになり、単に `devin` で起動した場合はライブターミナルを表示します。それ以外のプログラムはライブターミナルと状態が表示されます。[対応エージェント →](docs/guide.md#supported-agents)
+Claude Code、Codex、omp、omo、gjc、pi は、それぞれのセッションファイルから読み取ります。OpenCode は herdr が報告したセッションを OpenCode 自身のデータベースから読み取ります。2.x の session_v2 にも、ダウングレード後に同じファイルに残る 1.x のテーブルにも対応します。ホーム画面ではライブターミナルを表示します。Devin CLI は `devin --resume <id>` のように herdr や実行中のプロセスがセッションを示すときにチャットになり、単に `devin` で起動した場合はライブターミナルを表示します。それ以外のプログラムはライブターミナルと状態が表示されます。[対応エージェント →](docs/guide.md#supported-agents)
 
 **herdr の TUI の代わりになるものですか？**
 
