@@ -720,3 +720,59 @@ describe("an OpenCode 1.x session (session/message/part)", () => {
     expect(opencodeConversation(s.path, s.session)).toEqual({ kind: "unavailable", reason: "transcript_missing" });
   });
 });
+describe("an OpenCode store holding both table sets (after a downgrade)", () => {
+  /** Both table sets in one file: `session_v2` left by 2.x, `session`/`message`/`part` written by 1.x. */
+  function storeMixed() {
+    const path = join(root, `opencode-mixed-${++stores}.db`);
+    const db = new Database(path, { create: true });
+    opened.push(db);
+    db.exec("PRAGMA journal_mode = WAL");
+    db.exec(SCHEMA);
+    db.exec(SCHEMA_V1);
+    return { path, db };
+  }
+  const insertV1Session = (db: Database, id: string, updated: number) =>
+    db.query("INSERT INTO session (id, project_id, slug, directory, title, version, time_created, time_updated) VALUES (?, 'global', 'slug', ?, 'Test', '1.19.5', ?, ?)").run(id, root, updated, updated);
+  const insertV1Message = (db: Database, session: string, id: string, role: string, data: Record<string, unknown>, parts: Record<string, unknown>[], at: number) => {
+    db.query("INSERT INTO message (id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?)")
+      .run(id, session, at, at, JSON.stringify({ role, time: { created: at, ...(role === "assistant" ? { completed: at + 1 } : {}) }, ...data }));
+    for (const [index, part] of parts.entries()) {
+      db.query("INSERT INTO part (id, message_id, session_id, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?, ?)")
+        .run(`prt_${id}${index}`, id, session, at + index + 1, at + index + 1, JSON.stringify(part));
+    }
+  };
+
+  it("reads a session that only the 1.x tables hold, though session_v2 merely exists", () => {
+    const mixed = storeMixed();
+    insertV1Session(mixed.db, "ses_mix1", T0 + 10);
+    insertV1Message(mixed.db, "ses_mix1", "msg_mix1a", "user", {}, [{ type: "text", text: "hello 1.x" }], T0 + 11);
+    insertV1Message(mixed.db, "ses_mix1", "msg_mix1b", "assistant", { finish: "stop", modelID: "deepseek-v4.1-flash", providerID: "opencode-go" }, [{ type: "text", text: "answer from 1.x" }], T0 + 20);
+    const answer = page(opencodeConversation(mixed.path, "ses_mix1"));
+    expect(answer.turns.map((turn) => turn.role)).toEqual(["user", "assistant"]);
+    expect(answer.turns[1]!.parts).toEqual([{ kind: "text", text: "answer from 1.x" }]);
+  });
+
+  it("prefers the 1.x side while its writes landed last, though 2.x still holds a stale copy", () => {
+    const mixed = storeMixed();
+    mixed.db.query("INSERT INTO session_v2 (id, project_id, slug, directory, title, version, time_created, time_updated) VALUES (?, 'global', 'slug', ?, 'Test', '2.0.24', ?, ?)").run("ses_mix2", root, T0, T0); // stale copy left by the 2.0 migration
+    insertV1Session(mixed.db, "ses_mix2", T0 + 500);
+    insertV1Message(mixed.db, "ses_mix2", "msg_mix2a", "user", {}, [{ type: "text", text: "hello from 1.x" }], T0 + 501);
+    insertV1Message(mixed.db, "ses_mix2", "msg_mix2b", "assistant", { finish: "stop", modelID: "deepseek-v4.1-flash", providerID: "opencode-go" }, [{ type: "text", text: "fresh 1.x answer" }], T0 + 510);
+    const answer = page(opencodeConversation(mixed.path, "ses_mix2"));
+    expect(answer.turns[0]!.parts).toEqual([{ kind: "text", text: "hello from 1.x" }]);
+    expect(answer.turns[1]!.parts).toEqual([{ kind: "text", text: "fresh 1.x answer" }]);
+  });
+
+  it("keeps reading the 2.x side while its writes landed last", () => {
+    const mixed = storeMixed();
+    insertV1Session(mixed.db, "ses_mix3", T0 + 100); // stale 1.x copy
+    mixed.db.query("INSERT INTO session_v2 (id, project_id, slug, directory, title, version, time_created, time_updated) VALUES (?, 'global', 'slug', ?, 'Test', '2.0.24', ?, ?)").run("ses_mix3", root, T0 + 900, T0 + 900);
+    mixed.db.query("INSERT INTO session_message (id, session_id, type, seq, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .run("msg_mix3a", "ses_mix3", "user", 5, T0 + 901, T0 + 901, JSON.stringify({ time: { created: T0 + 901 }, text: "hello from 2.x", files: [], agents: [] }));
+    mixed.db.query("INSERT INTO session_message (id, session_id, type, seq, time_created, time_updated, data) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .run("msg_mix3b", "ses_mix3", "assistant", 8, T0 + 902, T0 + 902, JSON.stringify({ time: { created: T0 + 902, completed: T0 + 903 }, content: [{ type: "text", text: "fresh 2.x answer" }], finish: "stop" }));
+    const answer = page(opencodeConversation(mixed.path, "ses_mix3"));
+    expect(answer.turns[0]!.parts).toEqual([{ kind: "text", text: "hello from 2.x" }]);
+    expect(answer.turns[1]!.parts).toEqual([{ kind: "text", text: "fresh 2.x answer" }]);
+  });
+});
