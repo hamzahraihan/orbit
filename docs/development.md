@@ -352,15 +352,18 @@ in the historical table above. They were taken with a 2 s push-read bound; the b
 
 ## README media
 
-`bun run build && bun scripts/readme-media/capture.ts` regenerates the stills and demos in `docs/screenshots/` from a staged, fictional session in its own herdr session (`herdr-web-ui-demo`). Pass `shots` or `video` to redo only one of them. It needs ffmpeg.
+`bun run build:site` assembles `_site/` including `_site/demo/`, the app itself on the fictional session. `bun scripts/readme-media/look.ts` serves `_site/` on a loopback port, opens the demo in Chromium at desktop and phone size, and frames every capture in a browser window or a phone with `composeStill` (transparent backdrop). It writes the stills the docs embed:
 
-- `stage.ts` builds the session from `site/demo/fixtures.ts`: two git repositories under `/tmp/herdr-demo`, each with two agent worktrees herdr adds, a release shell tab, curated chats served in place of transcripts, and the hostname rewritten.
-- `record.ts` records a walkthrough at 2x (Chrome's screencast, with `--force-device-scale-factor=2`), logging pointer moves, clicks, taps and camera cues as it drives the page.
-- `compose.ts` draws every output frame on a canvas: a backdrop, a phone, the frame under an eased camera, and a vector cursor with click ripples or touch rings. It writes `demo-mobile.mp4` (1080×1920, 30 fps) and its GIF. Stills get the same phone on a transparent background.
+- `docs/media/look-chat.png`, `look-prompt.png`, `look-terminal.png` (desktop: the chat, the Codex approval answered from the chat, the terminal), and
+- `docs/screenshots/mobile-chat.png`, `mobile-terminal.png`, `mobile-sessions.png` (the phone walkthrough: chat, terminal, the session drawer).
 
-The MP4s are not committed, and the README embeds none: a video the README plays has to be a GitHub upload (`github.com/user-attachments/…`), so drop one into an issue or PR comment and use the link it gives.
+The plain captures in `docs/screenshots/` come from the staged session when a feature needs one; the phone demo recording is the exception.
 
-The stills in `docs/media/look-{chat,prompt,terminal}.png` (1760×1150) are rendered from those captures by `bun scripts/readme-media/banner.ts look`, which draws `banner.html` in headless Chrome and quantizes each PNG to 256 colours. They are committed: the READMEs and the user guide embed them.
+- `stage.ts` builds the session from `site/demo/fixtures.ts` (POSIX only: it stages `/tmp/herdr-demo` and calls herdr's `worktree.create`, which refuses a relative path on Windows).
+- `capture.ts` regenerates `docs/screenshots/mobile-*.png` with `shots` and the phone walkthrough `demo-mobile.mp4` from that session, recording with `record.ts` at 2x and framing each frame with `compose.ts`.
+- `composeStill` (`compose.ts`, `kind: "phone"` or `"window"`) puts each capture in a window or a phone shell on a transparent background.
+
+The MP4s are not committed, and the README embeds no video: a video the README plays has to be a GitHub upload (`github.com/user-attachments/…`), so drop one into an issue or PR comment and use the link it gives.
 
 ## Website
 
