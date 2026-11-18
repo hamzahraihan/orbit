@@ -751,6 +751,36 @@ describe("palette", () => {
     }
     expect(failures).toEqual([]);
   });
+  it("keeps the readable accent readable as text (4.5:1) on every surface of every entry", () => {
+    const hex = (entry: string, role: string, raw: string): Rgb => {
+      const match = /^#([0-9a-f]{6})$/i.exec(raw);
+      if (!match?.[1]) throw new ThemeValueError(entry, role, raw, "not an opaque color");
+      return [0, 2, 4].map((i) => parseInt(match[1]!.slice(i, i + 2), 16)) as Rgb;
+    };
+    // resolveEntry resolves var() inside and outside color-mix; the committed recipe is either a plain hex
+    // (the three pinned themes declare `--accent-readable: var(--text-strong)`) or this exact mix
+    const recipe = (entry: string, of: Record<string, string>): Rgb => {
+      const raw = (of["--accent-readable"] ?? "(missing)").trim();
+      const mix = /^color-mix\(in srgb, (#[0-9a-f]{6}) (\d+)%, (#[0-9a-f]{6})\)$/i.exec(raw);
+      if (!mix) return hex(entry, "accent-readable", raw);
+      const a = hex(entry, "accent", mix[1]!);
+      const b = hex(entry, "text-strong", mix[3]!);
+      const weight = Number(mix[2]) / 100;
+      return a.map((c, i) => Math.round(c * weight + b[i]! * (1 - weight))) as Rgb;
+    };
+    const failures: string[] = [];
+    for (const { id, mode, key } of entries) {
+      checked(failures, () => {
+        const { resolved } = resolveEntry(css, id, mode);
+        const readable = recipe(key, resolved);
+        for (const surface of ["bg", "bg-panel", "bg-elevated", "bg-hover"]) {
+          const ground = hex(key, surface, resolved[`--${surface}`] ?? "(missing)");
+          if (ratio(readable, ground) < 4.5) failures.push(`${key} accent-readable on ${surface}`);
+        }
+      });
+    }
+    expect(failures).toEqual([]);
+  });
 
   it("paints amber before settings load: the base blocks are the default palette's", () => {
     const css = readFileSync(join(import.meta.dir, "..", "styles.css"), "utf8");
