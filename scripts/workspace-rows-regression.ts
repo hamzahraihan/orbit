@@ -206,7 +206,7 @@ try {
     "selecting a split pane keeps the workspace label in Spaces");
   // Both entry points act on the workspace clicked, without changing the selected pane.
   const alphaWorkspace = workspaceSelector(alpha.workspaceId);
-  // a desktop draws no row ⋯: the context-menu key opens the menu at the focused row
+  // the context-menu key opens the row's menu while it has focus
   await page.locator(`${alphaWorkspace} .workspace-select`).focus();
   await page.keyboard.press("Shift+F10");
   const workspaceMenu = page.getByRole("menu");
