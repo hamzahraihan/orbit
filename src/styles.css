@@ -2341,6 +2341,21 @@ html ::-webkit-scrollbar-thumb {
   display: none;
 }
 
+.drawer-toggle {
+  position: relative;
+}
+
+.drawer-attention-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--indicator-blocked);
+  pointer-events: none;
+}
+
 /* fingers: the header controls grow to the touch target; the header still fits them */
 @media (pointer: coarse) {
   .icon-button {

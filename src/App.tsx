@@ -1545,12 +1545,13 @@ export function App() {
           <button
             type="button"
             className="icon-button drawer-toggle"
-            aria-label={t(drawerOpen ? "Close workspace list" : "Open workspace list")}
+            aria-label={waiting > 0 ? t(drawerOpen ? "Close workspace list ({count} agents need input)" : "Open workspace list ({count} agents need input)", { count: waiting }) : t(drawerOpen ? "Close workspace list" : "Open workspace list")}
             aria-expanded={drawerOpen}
             aria-controls="workspace-drawer"
             onClick={() => setDrawerOpen((open) => !open)}
           >
             {drawerOpen ? <X /> : <Menu />}
+            {waiting > 0 && <span className="drawer-attention-dot" aria-hidden="true" />}
           </button>
           <button
             type="button"
