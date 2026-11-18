@@ -83,7 +83,7 @@
   flex: none;
   width: var(--icon-size);
   height: var(--icon-size);
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 .dir-browser-item span {

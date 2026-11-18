@@ -163,7 +163,7 @@
 /* an "on" toggle (Show source) carries the accent on its glyph */
 .file-viewer-action[aria-pressed="true"] {
   background: var(--bg-hover);
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 .file-viewer-body {

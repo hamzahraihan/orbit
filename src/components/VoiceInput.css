@@ -264,7 +264,7 @@
 }
 
 .voice-timer.is-ending {
-  color: var(--accent);
+  color: var(--accent-readable);
   font-weight: 600;
 }
 
