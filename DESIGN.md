@@ -1011,13 +1011,13 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   Worktree folds are remembered at
   `herdr-web-ui:worktree-group-collapsed:<machineId>:<repo_key>`; a folded group keeps the selected
   child visible, and status snapshots preserve a deliberate fold. Its hover card stands at the
-  list's left edge, level with the row; the collapsed rail opens it beside the mark.
+  row's right edge, level with the row, in both the list and the collapsed rail.
 - Worktree branches come from the existing `GET /api/worktree/list`, matched by repository key,
   open workspace ID and normalized checkout path. A listing-confirmed detached checkout reads
   **Detached HEAD**; without matching branch metadata, the workspace name remains the fallback.
   A custom workspace name appears beside the branch in dim text; the default name made by
   replacing branch slashes with dashes is omitted. Full branch, workspace name and checkout
-  path remain in the tooltip. Disk-only checkouts do not become sidebar rows.
+  path remain in the row's hover card. Disk-only checkouts do not become sidebar rows.
 - Create/open responses seed the branch immediately, open the parent group and reveal the
   selected row within the upper workspace scroll area, including on a phone. Inventory reads
   run once per repository with opened linked worktrees, through that PC's bound API. Structural
@@ -1033,12 +1033,11 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   or more are registered), the workspace and the tab (only when the workspace has two or more tabs
   or the tab was renamed, and never when it repeats the workspace). An agent with a live name
   leads that line with it in `--font-mono` and `--text` (`.agent-name`); the kind takes the label's
-  place beside it, and the tooltip keeps the name. Its background-task count and
+  place beside it, and the hover card keeps the name. Its background-task count and
   compact status sit at the right. A pane that waits for an answer is not listed apart or moved
   up: its state shows on its workspace row and its agent row, and the alerts say the rest. Pane state is
   authoritative when the agent roster and pane status differ. Pointing at or focusing a row opens
-  its card level with that row at the list's left edge; the collapsed rail opens it beside the
-  mark. The card stays while the chat scrolls, follows its row when its own list scrolls, and hides
+  its card at that row's right edge, level with the row, in both the list and the collapsed rail. The card stays while the chat scrolls, follows its row when its own list scrolls, and hides
   while the row is scrolled out of view. The workspace and agent lists share the existing combined
   machine roster and its SSE updates; neither adds a status subscription.
   A disconnected PC's saved workspace and agent rows are dimmed, inert and draw no state until that PC reconnects.
@@ -1052,7 +1051,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   the app's dim. Where herdr's config names no rows, the row draws every token, by name. The rows
   are this server's herdr config, as herdr's sidebar is the client's, and apply to every PC's agents
   (server/herdr-sidebar.ts, told on the machine events). The values are text, never markup; a blank
-  or missing token draws nothing; the row's tooltip, and a phone's ⋯ sheet under its place
+  or missing token draws nothing; the row's hover card, and a phone's ⋯ sheet under its place
   (`.row-sheet-detail`, wrapped), say each whole. A PC that is away draws none, as it draws no
   state. A plugin's line for the agent (`display_agent`) leads the place, as before, where it says
   more than the mark and the title; it changes live like the tokens.
@@ -1082,12 +1081,12 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
 - Each workspace row holds its folder (top-level rows), a leading glyph, the name (on two lines,
   the title over the place) and the compact state at the right. The leading glyph is the brand mark of the agent in the pane the row opens; a row that opens a
   shell shows the terminal glyph, and a linked worktree without an agent the branch glyph. The
-  mark never stands for another pane's agent; the row's tooltip lists every agent in the
+  mark never stands for another pane's agent; the row's hover card lists every agent in the
   workspace. A custom worktree workspace name follows the branch on the same line in dim text.
   On One line, as in herdr's own sidebar, a top-level git workspace (a repository, or a worktree
   whose repository is not open) says its branch under its name in `--text-dim` `--fs-xs`, on a
   two-line row's height (`--side-row-2`); an indented worktree, whose name already comes from its
-  branch, a pinned workspace in its card (the branch stays in its tooltip and menu) and a folder
+  branch, a pinned workspace in its card (the branch stays in its hover card and menu) and a folder
   outside git stay one line. The branch is read with the worktree inventory
   (`useWorktreeBranches`), a repository without worktrees and a git workspace herdr has not marked
   included. As herdr draws its tree, each indented worktree hangs from its repository's folder on
@@ -1118,7 +1117,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   shared list (a workspace's key is `machine:workspace:id`), so other browsers of the server see them.
 - A title that is a working directory written out (`/home/me/dev/api`, `~/dev/api`, `C:\work\api`)
   shows as its last folder, here, in the header, the palette and every alert; the full path stays
-  in the row's tooltip. Parent workspace names stay fixed and linked checkouts are named by branch;
+  in the row's hover card. Parent workspace names stay fixed and linked checkouts are named by branch;
   agent rows show their pane's own title. Each row's
   place is available to screen readers, without repeating what its title already says. The
   palette, which has no header, names the workspace and folder once when they are the same.
@@ -1130,7 +1129,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   PC (disabled while it is offline). An SSH PC's manage button sits before the
   caret and shows on hover, focus, while its panel is open, while the PC is not connected, and always
   on touch. Connected is the dot alone; every other state is also written under the name, with the server's
-  error clamped to two lines and complete in the tooltip.
+  error clamped to two lines, the full text in the status line.
 - A repository's worktree workspaces (`workspace.worktree.is_linked_worktree`)
   sit indented under the row of the workspace on its main checkout (`.worktree-children`), on a
   `--hairline` `--border-strong` branch that leaves that row's folder: a tee for each child and an

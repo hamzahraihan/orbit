@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { ArrowUpDown, ChevronDown, ChevronRight, Ellipsis, FolderPlus, Pin, PinOff } from "lucide-react";
 
 import type { Machine } from "../../shared/machines.ts";
@@ -17,7 +17,7 @@ import { PANE_DRAG_TYPE, paneDragData } from "../lib/split.ts";
 import { AgentMark, hasAgentMark } from "./AgentMark.tsx";
 import { Button } from "../lib/heroui/orbit-components.tsx";
 import { RowMenu } from "./RowMenu.tsx";
-import { RailFlyout } from "./RailFlyout.tsx";
+import { RailFlyout, useFlyoutDwell } from "./RailFlyout.tsx";
 import { BackgroundBadge, displayPaneTitle, onRowContextMenu, PlanBadge, StatusBadge } from "./Sidebar.tsx";
 import { WorkspaceMonogram } from "./WorkspaceMonogram.tsx";
 import { knownStatus } from "../lib/status.ts";
@@ -69,6 +69,11 @@ function AgentRowBody({ mark, markKind, title, name, context, tokens, background
     <span className="agent-row-state"><StatusBadge status={known} compact /></span>
   </>;
 }
+/** The hover card's lines, in order: context, pane id, each whole token, the full cwd — as text. */
+export function agentFlyoutLines(context: string, online: boolean, awayWord: string | null, paneId: string, tokens: readonly string[], cwd: string | null | undefined): string[] {
+  return [...new Set([context || (online ? null : awayWord), paneId, ...tokens, cwd].filter((line): line is string => Boolean(line)))];
+}
+
 
 export interface AgentSidebarProps {
   machines: Machine[];
@@ -98,7 +103,9 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
   const t = useT();
   const listId = useId();
   const [collapsed, setCollapsed] = useState(() => window.matchMedia?.(DRAWER_QUERY).matches === true);
-  const [agentFlyout, setAgentFlyout] = useState<{ anchor: HTMLElement; side: "left" | "right"; title: string; subtitle?: string | null; detail?: string | null } | null>(null);
+  const [agentFlyout, setAgentFlyout] = useState<{ anchor: HTMLElement; key: string; title: string; subtitle?: string | null; children?: ReactNode } | null>(null);
+  const flyoutId = useId();
+  const flyoutDwell = useFlyoutDwell();
   const { settings, update } = useSettings();
   // shared with the other browsers of this server (lib/preferencesSync.ts)
   const pinned = useSyncExternalStore(subscribeSidebarPins, currentSidebarPins, currentSidebarPins);
@@ -157,20 +164,24 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
     const markKind = kind && kind !== title.trim() && !contextParts.includes(kind) ? kind : null;
     // a PC that is away says nothing of its agents now, its plugins' words included
     const tokens = online ? paneTokenValues(rowTokens, entry.canonicalAgent, pane.tokens ?? agent?.tokens) : [];
-    // the row cuts a long value: the tooltip, and a phone's menu sheet, say each in full
-    const tooltip = [...new Set([pane.pane_id, title, context, ...tokens, markKind, name, agent?.display_agent, pane.cwd, online ? null : stateWord(machine)].filter(Boolean))].join("\n");
+    // the row cuts a long value: its card spells each out in full
     const pinKey = sidebarPinKey(machine.id, pane.pane_id);
+    const flyoutFor = (anchor: HTMLElement) => {
+      const lines = agentFlyoutLines(context, online, online ? null : stateWord(machine), pane.pane_id, tokens, pane.cwd);
+      return {
+        anchor,
+        key: pinKey,
+        title,
+        subtitle: [markKind, name, agent?.display_agent].filter(Boolean).join(" · ") || null,
+        children: <>{lines.map((line) => <div key={line}>{line}</div>)}</>,
+      };
+    };
     const menuOpen = menu?.key === pinKey;
     // one menu for the ⋯ and a right-click, which opens it at the pointer and leaves the focus where it was
     const toggleMenu = (anchor: HTMLElement, point?: { x: number; y: number }, previousFocus?: HTMLElement | null): void =>
       setMenu(menuOpen ? null : { key: pinKey, anchor, point, previousFocus, title, place: context, tokens: tokens.join(" · ") });
     // the row button is `display: contents` (AgentSidebar.css), so it has no rect to stand a card on;
-    // the row itself is the cell the eye sees, and the card stands inside the list's left edge. In
-    // the rail there is no list to stand in, so the card opens beside the square instead.
-    const rowBox = (event: { currentTarget: HTMLElement }): { anchor: HTMLElement; side: "left" | "right" } => {
-      const anchor = event.currentTarget.closest<HTMLElement>(".agent-item") ?? event.currentTarget;
-      return { anchor, side: anchor.closest(".app")?.classList.contains("sidebar-collapsed") ? "right" : "left" };
-    };
+    // the row itself is the cell the eye sees, and the card stands at the row's right edge
     return <li className={`agent-item${selected ? " is-selected" : ""}${online ? "" : " is-offline"}`} key={paneStorageId(machine.id, pane.pane_id)} data-machine={machine.id} data-pane={pane.pane_id} data-pin-key={pinKey}
       onMouseDownCapture={(event) => { if (event.button === 2 || (event.button === 0 && event.ctrlKey)) event.preventDefault(); }}
       onContextMenu={(event) => onRowContextMenu(event, toggleMenu)}>
@@ -179,26 +190,18 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
         className="agent-select agent-row"
         disabled={!online}
         aria-current={selected ? "true" : undefined}
-        title={tooltip}
+        aria-describedby={agentFlyout?.key === pinKey ? flyoutId : undefined}
         onClick={() => onSelect(machine.id, pane.pane_id)}
         onPointerEnter={(e) => {
-          if (e.pointerType === "mouse") {
-            setAgentFlyout({
-              ...rowBox(e),
-              title,
-              subtitle: [markKind, name, agent?.display_agent].filter(Boolean).join(" · ") || null,
-              detail: context || (online ? null : stateWord(machine)),
-            });
-          }
+          if (e.pointerType !== "mouse") return;
+          const anchor = e.currentTarget.closest<HTMLElement>(".agent-item") ?? e.currentTarget;
+          flyoutDwell.schedule(() => setAgentFlyout(flyoutFor(anchor)));
         }}
-        onPointerLeave={() => setAgentFlyout(null)}
+        onPointerLeave={() => { flyoutDwell.cancel(); setAgentFlyout(null); }}
         onFocus={(e) => {
-          setAgentFlyout({
-            ...rowBox(e),
-            title,
-            subtitle: [markKind, name, agent?.display_agent].filter(Boolean).join(" · ") || null,
-            detail: context || (online ? null : stateWord(machine)),
-          });
+          flyoutDwell.cancel();
+          const anchor = e.currentTarget.closest<HTMLElement>(".agent-item") ?? e.currentTarget;
+          setAgentFlyout(flyoutFor(anchor));
         }}
         onBlur={() => setAgentFlyout(null)}
         onKeyDown={(e) => {
@@ -245,13 +248,13 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
       <button type="button" className="agent-section-toggle sidebar-section-label" aria-expanded={!collapsed} aria-controls={listId} onClick={() => setCollapsed(!collapsed)}>
         <span>{t("Agents")}</span>
         {/* the count stands in for the label where the sidebar is the rail, and beside a folded head */}
-        <span className="agent-section-count">{rows.length}</span>
+        <span className="agent-section-count" aria-hidden="true">{rows.length}</span>
         {collapsed ? <ChevronRight className="agent-section-caret" aria-hidden="true" /> : <ChevronDown className="agent-section-caret" aria-hidden="true" />}
       </button>
       {/* The order within Active and Idle, without a trip to Settings → Agents order: the same
           setting, so the two controls never disagree. Pressed is priority — the agent that needs
           you first inside its group. */}
-      <button type="button" className="agent-section-order" aria-label={t("Agents order")} aria-pressed={byActivity} title={byActivity ? t("Within each group: waiting agents first") : t("Within each group: herdr's workspace order")} onClick={() => update({ agentOrder: byActivity ? "workspace" : "activity" })}>
+      <button type="button" className="agent-section-order" aria-label={t("Agents order")} aria-pressed={byActivity} onClick={() => update({ agentOrder: byActivity ? "workspace" : "activity" })}>
         <ArrowUpDown aria-hidden="true" />
       </button>
     </div>
@@ -267,11 +270,11 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
         </>}
         {split.rest.length > 0 && <div className="agent-groups">
           {groups.active.length > 0 && <div className="agent-group is-active">
-            <p className="agent-group-label" aria-hidden="true"><span>{t("Active")}</span><span className="agent-group-count">{groups.active.length}</span></p>
+            <p className="agent-group-label" aria-hidden="true"><span>{t("Active")}</span><span className="agent-group-count" aria-hidden="true">{groups.active.length}</span></p>
             <ul className="agent-list" aria-label={t("Active agents")}>{groups.active.map(agentItem)}</ul>
           </div>}
           {groups.idle.length > 0 && <div className="agent-group is-idle">
-            <p className="agent-group-label" aria-hidden="true"><span>{t("Idle")}</span><span className="agent-group-count">{groups.idle.length}</span></p>
+            <p className="agent-group-label" aria-hidden="true"><span>{t("Idle")}</span><span className="agent-group-count" aria-hidden="true">{groups.idle.length}</span></p>
             <ul className="agent-list" aria-label={t("Idle agents")}>{groups.idle.map(agentItem)}</ul>
           </div>}
         </div>}
@@ -285,11 +288,12 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
     <RailFlyout
       anchor={agentFlyout?.anchor ?? null}
       open={agentFlyout !== null}
-      side={agentFlyout?.side ?? "left"}
+      id={flyoutId}
       title={agentFlyout?.title ?? ""}
       subtitle={agentFlyout?.subtitle}
-      detail={agentFlyout?.detail}
       onClose={() => setAgentFlyout(null)}
-    />
+    >
+      {agentFlyout?.children}
+    </RailFlyout>
   </section>;
 }

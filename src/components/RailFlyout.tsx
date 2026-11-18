@@ -5,8 +5,8 @@ import "./RailFlyout.css";
 interface RailFlyoutProps {
   anchor: HTMLElement | null;
   open: boolean;
-  /** which side of the anchor it stands on; the sidebar's rows stand at the window's left */
-  side?: "left" | "right";
+  /** stable id so the anchoring row can point at the open card with aria-describedby */
+  id?: string;
   title: string;
   subtitle?: string | null;
   detail?: string | null;
@@ -28,13 +28,13 @@ function scrollBox(anchor: HTMLElement): DOMRect | null {
 }
 
 /**
- * An instant, theme-aware floating flyout for minimized rail items.
- * Renders on hover and keyboard focus without OS tooltip delay.
+ * An instant, theme-aware floating flyout for sidebar rows.
+ * Renders on hover (after a short dwell) and keyboard focus without OS tooltip delay.
  */
 export function RailFlyout({
   anchor,
   open,
-  side = "right",
+  id,
   title,
   subtitle,
   detail,
@@ -42,7 +42,7 @@ export function RailFlyout({
   children,
   onClose,
 }: RailFlyoutProps) {
-  const [coords, setCoords] = useState<{ top: number; left: number; maxWidth?: number } | null>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   const flyoutRef = useRef<HTMLDivElement>(null);
 
   /** places the card beside the anchor's current box, or hides it while the row is out of its list */
@@ -60,14 +60,12 @@ export function RailFlyout({
       setCoords(null);
       return;
     }
-    // a row at the window's edge has no room outside it: its card stands over the list's left,
-    // never wider than the row, so it stays inside the column it describes
-    const left = side === "left" ? Math.max(EDGE_GAP, rect.left) : rect.right + EDGE_GAP;
-    const maxWidth = side === "left" ? Math.max(0, rect.right - left) : undefined;
+    // the card stands at the anchor's right edge, level with the row
+    const left = rect.right + EDGE_GAP;
     // Align vertically with the anchor row, clamped to viewport bounds
     const top = Math.max(EDGE_GAP, Math.min(rect.top, window.innerHeight - 80));
-    setCoords((current) => current !== null && current.top === top && current.left === left && current.maxWidth === maxWidth ? current : { top, left, maxWidth });
-  }, [open, anchor, side, onClose]);
+    setCoords((current) => current !== null && current.top === top && current.left === left ? current : { top, left });
+  }, [open, anchor, onClose]);
 
   useLayoutEffect(() => { place(); }, [place]);
 
@@ -94,7 +92,8 @@ export function RailFlyout({
     <div
       ref={flyoutRef}
       className="rail-flyout"
-      style={{ top: `${coords.top}px`, left: `${coords.left}px`, ...(coords.maxWidth ? { maxWidth: `${coords.maxWidth}px` } : {}) }}
+      id={id}
+      style={{ top: `${coords.top}px`, left: `${coords.left}px` }}
       role="tooltip"
       aria-hidden="false"
       onPointerEnter={(e) => e.stopPropagation()}
@@ -109,4 +108,31 @@ export function RailFlyout({
     </div>,
     document.body
   );
+}
+
+/** Milliseconds a pointer must rest on a row before its card opens; keyboard focus opens at once. */
+export const FLYOUT_DWELL_MS = 180;
+
+/**
+ * Pointer-entered flyouts open only after a short dwell, so sweeping down a list does not strobe
+ * cards. Keyboard focus sites open directly instead. The timer clears on unmount and on
+ * re-schedule; call `cancel` on pointer leave.
+ */
+export function useFlyoutDwell(): { schedule: (open: () => void) => void; cancel: () => void } {
+  const timer = useRef<number | null>(null);
+  const cancel = useCallback(() => {
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+      timer.current = null;
+    }
+  }, []);
+  useEffect(() => cancel, [cancel]);
+  const schedule = useCallback((open: () => void) => {
+    cancel();
+    timer.current = window.setTimeout(() => {
+      timer.current = null;
+      open();
+    }, FLYOUT_DWELL_MS);
+  }, [cancel]);
+  return { schedule, cancel };
 }

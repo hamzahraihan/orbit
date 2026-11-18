@@ -14,7 +14,7 @@ import { indicatorGlyph, knownStatus, rollupStatus, STATUS_SENTENCE, STATUS_WORD
 import { AgentMark } from "./AgentMark.tsx";
 import { WorkspaceFavicon } from "./WorkspaceFavicon.tsx";
 import { WorkspaceMonogram } from "./WorkspaceMonogram.tsx";
-import { RailFlyout } from "./RailFlyout.tsx";
+import { RailFlyout, useFlyoutDwell } from "./RailFlyout.tsx";
 import { ConfirmDialog } from "./ConfirmDialog.tsx";
 import { RowMenu, type RowMenuItem } from "./RowMenu.tsx";
 import { WorktreeDialog, type WorktreeDialogMode } from "./WorktreeDialog.tsx";
@@ -71,7 +71,7 @@ export function RestoreErrorBadge({ reason }: { reason: string }) {
   const t = useT();
   const label = t("NOT RESTORED");
   return (
-    <span className="orbit-badge badge-restore-error sidebar-status" data-status="restore-error" role="status" aria-label={label} title={`${label} — ${reason}`}>
+    <span className="orbit-badge badge-restore-error sidebar-status" data-status="restore-error" role="status" aria-label={`${label} — ${reason}`}>
       <TriangleAlert aria-hidden="true" />
       <span className="visually-hidden">{label}</span>
     </span>
@@ -106,7 +106,6 @@ export function StatusBadge({ status, compact = false }: { status?: AgentStatus;
       data-status={value}
       role={compact ? "status" : undefined}
       aria-label={compact ? description : undefined}
-      title={description}
     >
       {compact && indicators !== "classic" && <span className="sidebar-status-glyph" aria-hidden="true" onAnimationStart={value === "working" ? alignBreath : undefined}>{indicatorGlyph(value, indicators)}</span>}
       {compact && indicators === "classic" && value === "blocked" && <span className="sidebar-status-mark" aria-hidden="true">?</span>}
@@ -126,7 +125,7 @@ export function BackgroundBadge({ count }: { count?: number }) {
   if (!count || count <= 0) return null;
   const label = t("Background tasks running: {count}", { count });
   return (
-    <span className="background-count" title={label} aria-label={label} data-testid="background-tasks">
+    <span className="background-count" aria-label={label} data-testid="background-tasks">
       <Layers aria-hidden="true" />{count}
     </span>
   );
@@ -137,8 +136,9 @@ export function PlanBadge({ plan }: { plan?: PlanSummary }) {
   const t = useT();
   if (!plan || plan.total <= 0) return null;
   const label = t("Plan: {done} of {total} done", { done: plan.done, total: plan.total });
+  const spoken = plan.current ? `${label} · ${plan.current}` : label;
   return (
-    <span className={`plan-count${plan.done === plan.total ? " is-done" : ""}`} title={plan.current ? `${label} · ${plan.current}` : label} aria-label={label} data-testid="plan-progress">
+    <span className={`plan-count${plan.done === plan.total ? " is-done" : ""}`} aria-label={spoken} data-testid="plan-progress">
       <ListChecks aria-hidden="true" />{plan.done}/{plan.total}
     </span>
   );
@@ -242,7 +242,9 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
   const [touchDrag, setTouchDrag] = useState<{ source: string; over: string | null } | null>(null);
   // the browser's drag and drop is a mouse's: on a touch screen a long press lifts the row instead
   const coarsePointer = useMediaQuery("(pointer: coarse)");
-  const [hoverFlyout, setHoverFlyout] = useState<{ anchor: HTMLElement; side: "left" | "right"; workspace: WorkspaceInfo; pane: PaneInfo; title: string; subtitle?: string | null; detail?: string | null; statusBadge?: React.ReactNode } | null>(null);
+  const [hoverFlyout, setHoverFlyout] = useState<{ anchor: HTMLElement; workspace: WorkspaceInfo; pane: PaneInfo; title: string; subtitle?: string | null; statusBadge?: React.ReactNode; children?: React.ReactNode } | null>(null);
+  const flyoutId = useId();
+  const flyoutDwell = useFlyoutDwell();
   const [inlineError, setInlineError] = useState<InlineError | null>(null);
   const rosterId = useId();
   const workspaceRoot = useRef<HTMLDivElement>(null);
@@ -663,18 +665,16 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
     const fixed = fixedIds.has(workspace.workspace_id);
     const menuOpen = menu?.workspace.workspace_id === workspace.workspace_id;
     const contentsId = `${rosterId}-worktrees-${encodeURIComponent(workspace.workspace_id)}`;
-    // the row's card stands over the list it belongs to, level with the row (as an agent's does);
-    // the rail has no list beside the mark, so its card opens into the pane instead
+    // the row's card stands at the row's right edge, level with the row, in both the list and the rail
     const flyoutFor = (anchor: HTMLElement) => {
-      const side: "left" | "right" = anchor.closest(".app")?.classList.contains("sidebar-collapsed") ? "right" : "left";
+      const cardLines = [pane.pane_id, branchNote, ...paths, paneTitle(pane), agentsTitle(workspace), pane.restore_error ? `${t("NOT RESTORED")} — ${pane.restore_error}` : null].filter((line): line is string => Boolean(line));
       return {
         anchor,
-        side,
         workspace,
         pane,
         title: rowTitle,
         subtitle: branchLine || secondaryBranch || (paths[0] ? folderName(paths[0]) : null),
-        detail: paths[0] || null,
+        children: <>{cardLines.map((line) => <div key={line}>{line}</div>)}</>,
         statusBadge: online && pane.restore_error ? <RestoreErrorBadge reason={pane.restore_error} /> : <StatusBadge compact status={online ? rollupStatus(statusPanes.map((candidate) => activity.status(machineId, candidate))) : undefined} />,
       };
     };
@@ -704,13 +704,15 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
         aria-description={fixed ? undefined : `${t("Reorder workspace {name}", { name: workspace.label })} · ${t("Drag to reorder · Alt+↑/↓")}`}
         data-pane={pane.pane_id}
         aria-current={selected ? "true" : undefined}
-        title={[`${pane.pane_id} — ${rowTitle}`, branchNote, ...paths, paneTitle(pane), agentsTitle(workspace)].filter(Boolean).join(" — ")}
+        aria-describedby={hoverFlyout?.workspace.workspace_id === workspace.workspace_id ? flyoutId : undefined}
         onClick={() => actions.selectPane(pane.pane_id)}
         onPointerEnter={(event) => {
-          if (event.pointerType === "mouse") setHoverFlyout(flyoutFor(event.currentTarget));
+          if (event.pointerType !== "mouse") return;
+          const target = event.currentTarget;
+          flyoutDwell.schedule(() => setHoverFlyout(flyoutFor(target)));
         }}
-        onPointerLeave={() => setHoverFlyout(null)}
-        onFocus={(event) => setHoverFlyout(flyoutFor(event.currentTarget))}
+        onPointerLeave={() => { flyoutDwell.cancel(); setHoverFlyout(null); }}
+        onFocus={(event) => { flyoutDwell.cancel(); setHoverFlyout(flyoutFor(event.currentTarget)); }}
         onBlur={() => setHoverFlyout(null)}
         onKeyDown={(event) => {
           onRowKeyDown(event, workspace.workspace_id);
@@ -733,7 +735,6 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
             type="button"
             className="sidebar-row-action workspace-toggle sidebar-row-face"
             aria-label={collapsed ? t("Expand worktrees of {name}", { name: workspace.label }) : t("Collapse worktrees of {name}", { name: workspace.label })}
-            title={collapsed ? t("Expand worktrees of {name}", { name: workspace.label }) : t("Collapse worktrees of {name}", { name: workspace.label })}
             aria-expanded={!collapsed}
             aria-controls={contentsId}
             onClick={(event) => { event.stopPropagation(); setWorktreeCollapsed(repoKey, !collapsed); }}
@@ -864,13 +865,14 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
       <RailFlyout
         anchor={hoverFlyout?.anchor ?? null}
         open={hoverFlyout !== null}
-        side={hoverFlyout?.side ?? "left"}
+        id={flyoutId}
         title={hoverFlyout?.title ?? ""}
         subtitle={hoverFlyout?.subtitle}
-        detail={hoverFlyout?.detail}
         statusBadge={hoverFlyout?.statusBadge}
         onClose={() => setHoverFlyout(null)}
-      />
+      >
+        {hoverFlyout?.children}
+      </RailFlyout>
     </div>
   );
 }

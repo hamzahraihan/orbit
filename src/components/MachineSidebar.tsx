@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ChevronDown, ChevronRight, Download, FolderPlus, Settings, SlidersHorizontal, X } from "lucide-react";
 import type { Machine, MachineState, MachineUpdate } from "../../shared/machines.ts";
 import { MachineContext } from "../lib/machineContext.tsx";
@@ -11,7 +11,7 @@ import { WorkspaceMonogram } from "./WorkspaceMonogram.tsx";
 import { Sidebar } from "./Sidebar.tsx";
 import { AgentSidebar } from "./AgentSidebar.tsx";
 import { SidebarActivityProvider, useSidebarActivityState } from "../lib/sidebarActivity.tsx";
-import { RailFlyout } from "./RailFlyout.tsx";
+import { RailFlyout, useFlyoutDwell } from "./RailFlyout.tsx";
 import "./Machines.css";
 
 import { Button, Input } from "../lib/heroui/orbit-components.tsx";
@@ -71,9 +71,11 @@ function MachineGroup({ machine, ...props }: Props & { machine: Machine }) {
   const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem(`herdr-web-ui:pc-collapsed:${machine.id}`) === "1"; } catch { return false; } });
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(machine.name);
+  const [flyoutAnchor, setFlyoutAnchor] = useState<HTMLElement | null>(null);
+  const flyoutId = useId();
+  const flyoutDwell = useFlyoutDwell();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [flyoutAnchor, setFlyoutAnchor] = useState<HTMLElement | null>(null);
   const online = machine.state === "connected";
   // a PC that waits on the user, or is updating, shows its notice in the state line's place
   const noticed = Boolean(machine.action_required || machine.updating);
@@ -111,10 +113,14 @@ function MachineGroup({ machine, ...props }: Props & { machine: Machine }) {
   return <section className={`machine-group${props.selectedMachineId === machine.id ? " is-current" : ""}${online ? "" : " is-offline"}`} aria-label={t("PC {name}", { name: machine.name })}>
     <header
       className="machine-header"
-      title={`${machine.name} (${machine.kind === "local" ? t("Host") : "SSH"}) — ${stateWord ?? t(STATE_WORD[machine.state])}`}
-      onPointerEnter={(e) => { if (e.pointerType === "mouse") setFlyoutAnchor(e.currentTarget); }}
-      onPointerLeave={() => setFlyoutAnchor(null)}
-      onFocus={(e) => setFlyoutAnchor(e.currentTarget)}
+      aria-describedby={flyoutAnchor !== null ? flyoutId : undefined}
+      onPointerEnter={(e) => {
+        if (e.pointerType !== "mouse") return;
+        const target = e.currentTarget;
+        flyoutDwell.schedule(() => setFlyoutAnchor(target));
+      }}
+      onPointerLeave={() => { flyoutDwell.cancel(); setFlyoutAnchor(null); }}
+      onFocus={(e) => { flyoutDwell.cancel(); setFlyoutAnchor(e.currentTarget); }}
       onBlur={() => setFlyoutAnchor(null)}
       tabIndex={0}
     >
@@ -124,28 +130,28 @@ function MachineGroup({ machine, ...props }: Props & { machine: Machine }) {
         </span>
         <span className="machine-name">{machine.name}</span>
         {/* the computer this app's server runs on; on a phone "this PC" read as the phone */}
-        {machine.kind === "local" && <span className="machine-kind" title={t("The computer this app runs on")}>{t("Host")}</span>}
-        <span className={`machine-dot is-${machine.action_required === "setup" ? "setup" : machine.state}`} title={machine.action_required === "setup" ? t("Setup needed") : t(STATE_WORD[machine.state])} aria-hidden="true" />
+        {machine.kind === "local" && <span className="machine-kind" role="img" aria-label={t("The computer this app runs on")}>{t("Host")}</span>}
+        <span className={`machine-dot is-${machine.action_required === "setup" ? "setup" : machine.state}`} role="img" aria-label={machine.action_required === "setup" ? t("Setup needed") : t(STATE_WORD[machine.state])} />
       </div>
-      {machine.kind === "ssh" && <button className="sidebar-row-action machine-manage" aria-label={t("Manage {name}", { name: machine.name })} title={t("Manage PC")} aria-expanded={editing} onClick={() => { setEditing(!editing); setConfirmDelete(false); }}><SlidersHorizontal aria-hidden="true" /></button>}
+      {machine.kind === "ssh" && <button className="sidebar-row-action machine-manage" aria-label={t("Manage {name}", { name: machine.name })} aria-expanded={editing} onClick={() => { setEditing(!editing); setConfirmDelete(false); }}><SlidersHorizontal aria-hidden="true" /></button>}
       {/* the fold over this PC's workspaces sits beside its create: a folder with a plus reads as
           "new workspace" at a glance, where the tab strip's + is a bare Plus for a shell tab
-          (TabStrip.tsx). The words live in the tooltip and the accessible name, so the PC's own
-          name keeps the row's width. */}
-      <button className="sidebar-row-action machine-toggle" aria-expanded={!collapsed} aria-label={collapsed ? t("Expand {name}", { name: machine.name }) : t("Collapse {name}", { name: machine.name })} title={collapsed ? t("Expand {name}", { name: machine.name }) : t("Collapse {name}", { name: machine.name })} onClick={toggle}>{collapsed ? <ChevronRight aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}</button>
-      <button className="sidebar-row-action machine-new" disabled={!online} aria-label={t("New workspace on {name}", { name: machine.name })} title={t("New workspace")} onClick={() => props.onNew(machine.id)}><FolderPlus aria-hidden="true" /></button>
+          (TabStrip.tsx). The words live in the accessible name, so the PC's own name keeps the row's width. */}
+      <button className="sidebar-row-action machine-toggle" aria-expanded={!collapsed} aria-label={collapsed ? t("Expand {name}", { name: machine.name }) : t("Collapse {name}", { name: machine.name })} onClick={toggle}>{collapsed ? <ChevronRight aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}</button>
+      <button className="sidebar-row-action machine-new" disabled={!online} aria-label={t("New workspace on {name}", { name: machine.name })} onClick={() => props.onNew(machine.id)}><FolderPlus aria-hidden="true" /></button>
       <RailFlyout
         anchor={flyoutAnchor}
         open={flyoutAnchor !== null}
+        id={flyoutId}
         title={machine.name}
         subtitle={machine.kind === "local" ? t("Host machine") : t("Remote PC (SSH)")}
-        detail={stateWord ?? t(STATE_WORD[machine.state])}
+        detail={`${machine.name} (${machine.kind === "local" ? t("Host") : "SSH"}) — ${stateWord ?? t(STATE_WORD[machine.state])}`}
         onClose={() => setFlyoutAnchor(null)}
       />
     </header>
     {/* connected is the norm and says nothing new; every other state is spelled out */}
     {noticed && <MachineActionNotice machine={machine} onSetup={props.onSetup} />}
-    <p className={`machine-state is-${machine.state}${online || stateWord === null ? " visually-hidden" : ""}`} role="status" title={noticed ? undefined : machine.error ?? undefined}>
+    <p className={`machine-state is-${machine.state}${online || stateWord === null ? " visually-hidden" : ""}`} role="status">
       <span className="machine-state-word">{stateWord}</span>
       {!noticed && machine.error && <span className="machine-state-detail">{machine.error}</span>}
       {nextStep !== null && <span className="machine-state-next">{nextStep}</span>}
@@ -264,6 +270,6 @@ export function MachineActionBanner({ machines, onSetup }: { machines: Machine[]
   return <div className="update-notice" role="status">
     <span>{t(conflict ? "{name} has a bridge connection conflict{others}." : update ? "{name} needs a bridge update to reconnect{others}." : "{name} needs web access setup{others}.", { name: first.name, others })}</span>
     <Button type="button" variant="secondary" onClick={() => update ? void machineRequest(`/${encodeURIComponent(first.id)}/update-bridge`, "POST").catch(() => onSetup(first, true)) : onSetup(first, false)}>{t(conflict ? "Reconnect" : update ? "Update bridge" : "Set up web access")}</Button>
-    <button type="button" className="icon-button update-notice-dismiss" aria-label={t("Dismiss")} title={t("Dismiss")} onClick={() => { const next = [...dismissed, ...waiting.map(noticeKey)]; setDismissed(next); writeDismissed(next); }}><X /></button>
+    <button type="button" className="icon-button update-notice-dismiss" aria-label={t("Dismiss")} onClick={() => { const next = [...dismissed, ...waiting.map(noticeKey)]; setDismissed(next); writeDismissed(next); }}><X /></button>
   </div>;
 }
