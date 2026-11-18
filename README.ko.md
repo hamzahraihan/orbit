@@ -26,9 +26,9 @@
 
 ---
 
-https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
+![Orbit: 하나의 Claude Code 세션이 herdr 터미널, 브라우저의 Terminal과 채팅, 그리고 새 worktree를 바로 옆에 띄우는 폰에 나타나는 모습](docs/media/look-chat.png)
 
-<p align="center"><sub>하나의 Claude Code 세션을 herdr 터미널에서 브라우저의 터미널과 채팅으로, 이어서 폰으로. 폰에서는 새 워크트리를 바로 옆에 띄웁니다 · 실제 화면 녹화, 컷 없음</sub></p>
+<p align="center"><sub>하나의 Claude Code 세션을 herdr 터미널에서 브라우저의 터미널과 채팅으로, 이어서 폰으로. 폰에서는 새 worktree를 바로 옆에 띄웁니다.</sub></p>
 
 **Claude Code와 Codex를 폰에서.**
 
@@ -36,51 +36,12 @@ https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
 
 **포크입니다.** Orbit은 업스트림 프로젝트를 수정한 포크로, 익명 사용 통계, 앱 업데이트 확인, 구독 사용량 미터, Portal 릴레이를 제거했습니다. 변경 사항은 [NOTICE](NOTICE)에 기록되어 있습니다.
 
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/32ca9aa4-960f-4629-9fb5-17c12ba35c80"><img src="docs/media/readme/terminal.webp" width="100%" alt="실제 화면 녹화. 브라우저의 Chat에 Claude Code의 답이 보이고, Terminal을 클릭하면 같은 pane이 Claude Code 자체의 터미널로 바뀌며 src/server.test.ts에 &quot;unknown refund is 404&quot; 테스트를 추가한 수정이 보입니다. 폰에서는 tests 탭의 터미널에서 키 바의 ↑로 bun test를 불러오고 키 바의 Enter로 실행합니다: 5 pass, 0 fail."></a>
-      <br><b>라이브 터미널로 바꾸기</b>
-      <br><sub>클릭 한 번이면 채팅이 그 pane의 실제 터미널로 바뀌고, 폰에서는 키 바의 ↑로 테스트 명령을 불러와 바로 옆 Enter로 다시 실행합니다.</sub>
-    </td>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/22d10639-9aa6-4953-a5f3-a1b743f4053b"><img src="docs/media/readme/layout.webp" width="100%" alt="실제 화면 녹화. 브라우저에 herdr의 레이아웃이 보입니다. 사이드바의 워크스페이스 네 개는 각 줄 끝에 에이전트 상태를 보여 주고(Claude가 일을 마친 checkout-api는 초록 점, Codex가 작업 중인 web-dashboard는 도는 호, infra와 release는 표시 없음), checkout-api에는 payments와 dev 탭이 있습니다. dev 탭을 클릭하면 첫 pane인 tests에 bun test의 4 pass가 보이고, 탭의 pane 메뉴에 분할된 두 pane인 tests와 git이 나오며, git을 클릭하면 git log가 보이고 checkout-api 줄에 git이 표시됩니다. 폰에서 ☰를 누르면 같은 상태의 같은 워크스페이스 네 개가 열리고, checkout-api를 탭하면 Claude의 채팅이 열립니다: &quot;What does this repo do? Answer in one line.&quot;와 그 답."></a>
-      <br><b>브라우저 속 herdr 레이아웃</b>
-      <br><sub>워크스페이스, 탭, 분할 pane과 에이전트마다의 상태가 그대로: 탭을 클릭하고, 분할의 pane을 고르고, 폰에서는 워크스페이스를 바꿉니다.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/b228a2b8-6db5-4546-a15b-972056000cab"><img src="docs/media/readme/alerts.webp" width="100%" alt="실제 화면 녹화. 브라우저에서 Claude가 checkout-api 작업을 하는 동안 폰은 다른 워크스페이스의 터미널을 보고 있습니다. Claude가 어떤 요청 제한을 쓸지 묻자 폰에 &quot;checkout-api Needs input&quot; 알림이 내려오고, 탭하면 질문이 카드로 열립니다. 브라우저에서는 checkout-api 줄과 Agents 아래 그 줄에 빨간 물음표가 표시되고, 같은 카드가 채팅에서 기다립니다."></a>
-      <br><b>에이전트가 부르면 바로 알기</b>
-      <br><sub>다른 워크스페이스를 보고 있어도 Claude가 물으면 알림이 내려오고, 한 번 탭하면 질문이 열립니다.</sub>
-    </td>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/a193b426-259c-47d9-bd73-10acc2594265"><img src="docs/media/readme/attach.webp" width="100%" alt="실제 화면 녹화. 폰에서 checkout-api의 빈 채팅이 &quot;What should Claude do in checkout-api?&quot;라고 묻습니다. + 버튼으로 합계가 $NaN으로 보이는 영수증 스크린샷을 첨부하면 경로가 들어가고, &quot;Fix this, with a test.&quot;를 입력해 보냅니다. 스크린샷이 담긴 메시지가 폰과 데스크톱 채팅에 나타나는 동안 카메라가 뒤로 빠졌다가 데스크톱 채팅으로 다가갑니다. 전체 영상에서는 이어서 Claude가 src/routes/receipt.ts와 src/server.ts를 읽는 첫 명령을 실행합니다."></a>
-      <br><b>폰에서 스크린샷 보내기</b>
-      <br><sub>+ 버튼으로 pane 폴더에 올리고 경로를 넣어 줍니다. Claude가 이미지를 읽습니다.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/bc419d3e-ebda-4fb5-acc5-e498609559fe"><img src="docs/media/readme/open.webp" width="100%" alt="실제 화면 녹화. 브라우저의 터미널에서 Claude Code가 bench/p95.svg를 작성했습니다. 답에 있는 경로를 클릭하면 파일 뷰어에 차트가 열리고, 폰 채팅의 같은 경로를 탭하면 전체 화면으로 열립니다."></a>
-      <br><b>에이전트가 만든 결과물 열기</b>
-      <br><sub>터미널의 경로를 클릭하거나 채팅의 경로를 탭하면 그 자리에서 파일이 열립니다.</sub>
-    </td>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/150a4c9d-7667-4f63-ba56-8f91e6a25878"><img src="docs/media/readme/worktree.webp" width="100%" alt="실제 화면 녹화. 폰에서 checkout-api의 ⋯ 메뉴 → New worktree를 누르면 브랜치 worktree/clear-field-23e0이 미리 채워진 양식이 열리고, Claude Code를 고른 뒤 Create worktree를 탭합니다. 카메라가 브라우저로 옮겨 가면 checkout-api 폴더가 열려 있고 그 아래에 새 체크아웃이 Claude로 표시되어 붙어 있습니다. 이어서 그 줄은 worktree-clear-field-23e0 위에 Claude Code로 표시되고, Agents 목록에는 네 번째 에이전트로 추가됩니다."></a>
-      <br><b>두 번째 에이전트로 갈라지기</b>
-      <br><sub>폰에서 ⋯ → New worktree: 브랜치는 미리 채워져 있고, 에이전트를 고르면 첫 번째 옆에서 시작합니다.</sub>
-    </td>
-  </tr>
-</table>
-
-<p align="center"><sub>모든 클립은 데스크톱과 폰을 동시에 녹화한 실제 동작이며, 실제 속도로 컷 없이 담았습니다. 누르면 전체 영상을 볼 수 있습니다.</sub></p>
-
 - **채팅과 터미널을 pane 하나에** — Claude Code, Codex, omp, omo, gjc, pi의 대화 기록과 herdr가 식별한 OpenCode와 Devin CLI 세션을 보여 주고, 클릭 한 번이면 라이브 터미널로 넘어갑니다. 에이전트가 일하는 동안 다음 메시지를 써 두면 다음 턴에 들어가고, Send now로 바로 보낼 수도 있습니다. [지원 에이전트 →](docs/guide.md#supported-agents)
 - **탭 한 번으로 승인** — 승인 요청, 질문, 계획 메뉴가 카드로 뜹니다. 답을 보내기 전에 그 질문이 아직 유효한지 확인합니다.
 - **내가 필요할 때 알림** — 모든 pane의 상태를 실시간으로 보여 주고, 앱을 보고 있을 때는 알림이 위에서 내려오며, 에이전트가 입력을 기다리거나 일을 끝내면 앱이 닫혀 있어도 푸시 알림을 보냅니다.
 - **폰에 설치해서 쓰기** — 키보드 위에 키 바(Esc, Tab, Ctrl, Alt, Shift, Enter, 방향키)가 붙은 PWA입니다. 키 순서를 바꾸거나 나만의 키 조합을 Settings(설정)에서 추가할 수 있습니다. Tailscale 주소는 QR 코드로 받아 갑니다. [폰 설정 →](docs/guide.md#on-your-phone)
+- **폰에서 스크린샷 보내기** — + 버튼이 pane 폴더에 업로드하고 경로를 넣어 줍니다. Claude가 그 이미지를 읽습니다.
+- **에이전트가 만든 파일 열기** — 터미널에서 경로를 클릭하거나 채팅에서 경로를 탭하면 파일이 바로 그 자리에서 열립니다.
 - **말로 입력하기** — 채팅이나 터미널 입력 줄에 받아쓰기로 입력합니다. 한국어와 영어를 섞어 말해도 됩니다. 에이전트에게 보내기 전에 글자를 확인할 수 있고, 받아쓰기는 내 OpenAI 키나 브라우저의 음성 인식을 씁니다.
 - **작업 방식은 그대로** — 에이전트는 herdr가 관리하고, 이 앱은 거기에 연결만 합니다. 에이전트를 멈추지 않고 플러그인을 다시 설치하면 업데이트됩니다. 새 탭과 worktree는 행의 ⋯ 메뉴에서 만듭니다. [전체 기능 →](docs/guide.md#features)
 

@@ -26,9 +26,9 @@
 
 ---
 
-https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
+![Orbit: 1 つの Claude Code セッションが herdr のターミナル、ブラウザの Terminal とチャット、そして新しい worktree をすぐ隣に起動するスマートフォンに映る様子](docs/media/look-chat.png)
 
-<p align="center"><sub>1 つの Claude Code セッションを、herdr のターミナルからブラウザのターミナルとチャットへ、そしてスマートフォンへ。スマートフォンでは新しい worktree をすぐ隣に起動 · 実際の動作を収録、カットなし</sub></p>
+<p align="center"><sub>1 つの Claude Code セッションを、herdr のターミナルからブラウザのターミナルとチャットへ、そしてスマートフォンへ。スマートフォンでは新しい worktree をすぐ隣に起動。</sub></p>
 
 **Claude Code と Codex を、スマートフォンから。**
 
@@ -36,51 +36,12 @@ https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b
 
 **これはフォークです。** Orbit は上流プロジェクトを改変したフォークで、匿名の使用統計、アプリのアップデート確認、サブスクリプションの使用量メーター、Portal リレーを取り除いています。変更点は [NOTICE](NOTICE) に記録しています。
 
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/32ca9aa4-960f-4629-9fb5-17c12ba35c80"><img src="docs/media/readme/terminal.webp" width="100%" alt="実際の動作の録画。ブラウザの Chat に Claude Code の返答があり、Terminal をクリックすると同じペインが Claude Code 自身のターミナルとして表示され、src/server.test.ts にテスト「unknown refund is 404」を追加した編集が見えます。スマートフォンでは tests タブのターミナルで、キーバーの ↑ で bun test を呼び出し、キーバーの Enter で実行します：5 pass, 0 fail。"></a>
-      <br><b>ライブターミナルに切り替える</b>
-      <br><sub>クリック 1 回でチャットがそのペインの本物のターミナルに切り替わり、スマートフォンではキーバーの ↑ でテストのコマンドを呼び出して、隣の Enter で再実行します。</sub>
-    </td>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/22d10639-9aa6-4953-a5f3-a1b743f4053b"><img src="docs/media/readme/layout.webp" width="100%" alt="実際の動作の録画。ブラウザに herdr のレイアウトが表示されます。サイドバーの 4 つのワークスペースは、各行の末尾にエージェントの状態を示し（Claude が作業を終えた checkout-api は緑の点、Codex が作業中の web-dashboard は回る弧、infra と release は表示なし）、checkout-api には payments と dev のタブがあります。dev タブをクリックすると最初のペイン tests に bun test の 4 pass が表示され、タブのペインメニューには分割された 2 つのペイン tests と git が並び、git をクリックするとその git log が表示され、checkout-api の行に git と表示されます。スマートフォンでは ☰ で同じ状態の同じ 4 つのワークスペースが開き、checkout-api をタップすると Claude のチャットが開きます：「What does this repo do? Answer in one line.」とその回答。"></a>
-      <br><b>herdr のレイアウトをブラウザで</b>
-      <br><sub>ワークスペース、タブ、分割ペイン、そして各エージェントの状態がそのまま。タブをクリックし、分割のペインを選び、スマートフォンからワークスペースを切り替えます。</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/b228a2b8-6db5-4546-a15b-972056000cab"><img src="docs/media/readme/alerts.webp" width="100%" alt="実際の動作の録画。ブラウザで Claude が checkout-api の作業をしている間、スマートフォンは別のワークスペースのターミナルを表示しています。Claude がどのレート制限を使うか尋ねると、スマートフォンに「checkout-api Needs input」という通知が降りてきて、タップすると質問がカードとして開きます。ブラウザでは checkout-api の行と Agents の下のその行に赤い疑問符が表示され、同じカードがチャットで待っています。"></a>
-      <br><b>エージェントに呼ばれたらすぐ分かる</b>
-      <br><sub>別のワークスペースを見ていても、Claude が質問すると通知が降りてきて、タップ 1 回で質問が開きます。</sub>
-    </td>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/a193b426-259c-47d9-bd73-10acc2594265"><img src="docs/media/readme/attach.webp" width="100%" alt="実際の動作の録画。スマートフォンで checkout-api の空のチャットが「What should Claude do in checkout-api?」と尋ねています。+ ボタンで合計が $NaN と表示されたレシートのスクリーンショットを添付するとパスが挿入され、「Fix this, with a test.」と入力して送信します。スクリーンショット付きのメッセージがスマートフォンとデスクトップのチャットに表示されるあいだにカメラが引き、デスクトップのチャットに寄ります。動画全体では、続いて Claude が src/routes/receipt.ts と src/server.ts を読む最初のコマンドを実行します。"></a>
-      <br><b>スマートフォンからスクリーンショットを送る</b>
-      <br><sub>+ ボタンでペインのフォルダーにアップロードしてパスを挿入。Claude が画像を読みます。</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/bc419d3e-ebda-4fb5-acc5-e498609559fe"><img src="docs/media/readme/open.webp" width="100%" alt="実際の動作の録画。ブラウザのターミナルで Claude Code が bench/p95.svg を書き出しました。回答内のパスをクリックするとファイルビューアーでグラフが開き、スマートフォンのチャットで同じパスをタップすると全画面で開きます。"></a>
-      <br><b>エージェントが作ったファイルを開く</b>
-      <br><sub>ターミナルのパスをクリック、またはチャットのパスをタップすると、その場でファイルが開きます。</sub>
-    </td>
-    <td width="50%" valign="top">
-      <a href="https://github.com/user-attachments/assets/150a4c9d-7667-4f63-ba56-8f91e6a25878"><img src="docs/media/readme/worktree.webp" width="100%" alt="実際の動作の録画。スマートフォンで checkout-api の ⋯ メニュー → New worktree を開くと、ブランチ worktree/clear-field-23e0 が入力済みのフォームが表示され、Claude Code を選んで Create worktree をタップします。カメラがブラウザに移ると、checkout-api のフォルダーが開き、その下に新しいチェックアウトが Claude として入れ子で表示されています。続いてその行は worktree-clear-field-23e0 の上に Claude Code と表示され、Agents 一覧には 4 つ目のエージェントとして加わります。"></a>
-      <br><b>2 つ目のエージェントを分岐させる</b>
-      <br><sub>スマートフォンで ⋯ → New worktree。ブランチは入力済み、エージェントを選べば最初のものの隣で起動します。</sub>
-    </td>
-  </tr>
-</table>
-
-<p align="center"><sub>どのクリップも、パソコンとスマートフォンを同時に収録した実際の動作です。等速・カットなし。クリックすると動画全体を再生できます。</sub></p>
-
 - **チャットとターミナルを、ひとつのペインで** — Claude Code、Codex、omp、omo、gjc、pi の会話履歴と、herdr が識別した OpenCode と Devin CLI のセッションを表示し、ワンクリックでライブターミナルに切り替えられます。エージェントの作業中に次のメッセージを書いておくと次のターンで送られ、Send now ですぐに送ることもできます。[対応エージェント →](docs/guide.md#supported-agents)
 - **タップで承認** — 承認リクエスト、質問、計画メニューがカードになり、問いかけがまだ有効か確認してから回答を送信します。
 - **対応が必要なときに通知** — すべてのペインの状態をリアルタイムに表示し、アプリを開いているときは通知が上から降りてきます。入力が必要なときや完了したときには、アプリを閉じていてもプッシュ通知が届きます。
 - **スマートフォンにインストール** — キーボードの上にキーバー（Esc、Tab、Ctrl、Alt、Shift、Enter、矢印キー）が並ぶ PWA。キーの並べ替えや独自のキー組み合わせの追加は Settings（設定）でできます。Tailscale のアドレスは QR コードで表示されます。[スマートフォンの設定 →](docs/guide.md#on-your-phone)
+- **スマートフォンからスクリーンショットを送る** — + ボタンでペインのフォルダーにアップロードしてパスを挿入。Claude が画像を読みます。
+- **エージェントが作ったファイルを開く** — ターミナルのパスをクリック、またはチャットのパスをタップすると、その場でファイルが開きます。
 - **話して入力** — チャットやターミナルの入力欄に音声で入力できます。韓国語と英語が混ざっても認識し、送信するまで何も送られません。自分の OpenAI API キー、またはブラウザの音声認識を使います。
 - **いつもの作業環境をそのままに** — エージェントは herdr が管理し、このアプリはそこに接続します。エージェントを止めずにプラグインを入れ直すだけで更新できます。新しいタブや worktree は行の ⋯ メニューから作れます。[すべての機能 →](docs/guide.md#features)
 
