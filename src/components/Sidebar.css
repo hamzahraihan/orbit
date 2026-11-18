@@ -874,15 +874,15 @@ li.sidebar-row {
   font-size: var(--fs-sm);
   color: var(--text);
   background: var(--bg-input);
-  border: var(--hairline) solid var(--accent);
+  border: var(--hairline) solid var(--accent-readable);
   border-radius: var(--sidebar-radius);
   outline: none;
 }
 
 .workspace-rename-input:focus,
 .pane-rename-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-tint);
+  border-color: var(--accent-readable);
+  box-shadow: 0 0 0 2px var(--accent-readable);
 }
 
 /* Touch/mobile adjustments */

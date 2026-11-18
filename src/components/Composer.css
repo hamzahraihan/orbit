@@ -1276,7 +1276,7 @@
 }
 
 .composer-queue-toggle:focus-visible {
-  outline: var(--hairline) solid var(--accent);
+  outline: var(--hairline) solid var(--accent-readable);
   outline-offset: var(--space-1);
   border-radius: var(--radius-sm);
 }
@@ -1309,7 +1309,7 @@
 }
 
 .composer-queue.is-ready .composer-queue-send {
-  border-color: var(--accent);
+  border-color: var(--accent-readable);
   color: var(--text-strong);
 }
 
@@ -1375,7 +1375,7 @@
 
 .composer-queue-text:focus-visible {
   padding-inline: var(--space-2);
-  border-color: var(--accent);
+  border-color: var(--accent-readable);
   background: var(--bg-panel);
   outline: none;
 }

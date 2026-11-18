@@ -1,6 +1,6 @@
 .terminal-viewport-tools { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .terminal-find-hit { position: absolute; background: color-mix(in srgb, var(--accent) 25%, transparent); pointer-events: none; }
-.terminal-find-hit.is-current { background: color-mix(in srgb, var(--accent) 38%, transparent); outline: var(--hairline) solid var(--accent); outline-offset: calc(-1 * var(--hairline)); }
+.terminal-find-hit.is-current { background: color-mix(in srgb, var(--accent) 38%, transparent); outline: var(--hairline) solid var(--accent-readable); outline-offset: calc(-1 * var(--hairline)); }
 /* the way back to the bottom while reading up: the chat lens' round, wordless form, anchored by its
    bottom-right corner to the grid's visible bottom-right corner */
 .terminal-jump-bottom {

@@ -20,7 +20,7 @@
   overflow: hidden;
 }
 
-.pane-frame.is-current { border-color: var(--accent); }
+.pane-frame.is-current { border-color: var(--accent-readable); }
 .pane-frame.is-hidden { visibility: hidden; pointer-events: none; }
 .pane-frame.is-single { border: 0; }
 .pane-frame-head {
