@@ -26,9 +26,9 @@
 
 ---
 
-![Orbit: the same Claude Code session in herdr's terminal, in the browser's Terminal and Chat, and on the phone, where a new worktree starts beside it](docs/media/look-chat.png)
+![Orbit in the browser: the same Claude Code session herdr runs, as a chat, with the terminal a click away](docs/media/look-chat.png)
 
-<p align="center"><sub>One Claude Code session: in herdr's terminal, then the browser's Terminal and Chat, then the phone, where a new worktree starts beside it.</sub></p>
+<p align="center"><sub>The session herdr owns, in the browser: Chat, with the Terminal a click away.</sub></p>
 
 **Claude Code and Codex, from your phone.**
 

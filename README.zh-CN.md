@@ -26,9 +26,9 @@
 
 ---
 
-![Orbit：同一个 Claude Code 会话出现在 herdr 终端、浏览器的终端与聊天，以及手机上，在手机上紧挨着它启动一个新的 worktree](docs/media/look-chat.png)
+![浏览器中的 Orbit：herdr 运行的 Claude Code 会话以聊天呈现，Terminal 一键可达](docs/media/look-chat.png)
 
-<p align="center"><sub>同一个 Claude Code 会话：从 herdr 终端到浏览器的终端和聊天，再到手机，在手机上紧挨着它启动一个新的 worktree。</sub></p>
+<p align="center"><sub>herdr 拥有的会话，在浏览器中：聊天，Terminal 一键可达。</sub></p>
 
 **在手机上使用 Claude Code 和 Codex。**
 

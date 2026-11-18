@@ -26,9 +26,9 @@
 
 ---
 
-![Orbit: 하나의 Claude Code 세션이 herdr 터미널, 브라우저의 Terminal과 채팅, 그리고 새 worktree를 바로 옆에 띄우는 폰에 나타나는 모습](docs/media/look-chat.png)
+![브라우저의 Orbit: herdr가 돌리는 Claude Code 세션을 채팅으로, Terminal은 클릭 한 번](docs/media/look-chat.png)
 
-<p align="center"><sub>하나의 Claude Code 세션을 herdr 터미널에서 브라우저의 터미널과 채팅으로, 이어서 폰으로. 폰에서는 새 worktree를 바로 옆에 띄웁니다.</sub></p>
+<p align="center"><sub>herdr가 돌리는 세션을 브라우저에서. 채팅, Terminal은 클릭 한 번으로.</sub></p>
 
 **Claude Code와 Codex를 폰에서.**
 

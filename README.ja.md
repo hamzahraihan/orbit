@@ -26,9 +26,9 @@
 
 ---
 
-![Orbit: 1 つの Claude Code セッションが herdr のターミナル、ブラウザの Terminal とチャット、そして新しい worktree をすぐ隣に起動するスマートフォンに映る様子](docs/media/look-chat.png)
+![ブラウザの Orbit: herdr が動かす Claude Code のセッションをチャットで表示、Terminal はワンクリックで](docs/media/look-chat.png)
 
-<p align="center"><sub>1 つの Claude Code セッションを、herdr のターミナルからブラウザのターミナルとチャットへ、そしてスマートフォンへ。スマートフォンでは新しい worktree をすぐ隣に起動。</sub></p>
+<p align="center"><sub>herdr が動かすセッションを、ブラウザで。チャット、Terminal はワンクリックで。</sub></p>
 
 **Claude Code と Codex を、スマートフォンから。**
 
