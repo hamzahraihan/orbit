@@ -515,8 +515,8 @@
 }
 
 .composer-surface.is-dragging {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 var(--hairline) var(--accent);
+  border-color: var(--accent-readable);
+  box-shadow: 0 0 0 var(--hairline) var(--accent-readable);
 }
 
 .composer-text {
