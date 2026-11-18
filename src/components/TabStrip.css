@@ -333,7 +333,7 @@
   top: var(--space-1);
   bottom: var(--space-1);
   width: 2px;
-  background: var(--accent);
+  background: var(--accent-readable);
   pointer-events: none;
 }
 .tab-strip-item.is-drop-before::before { left: 0; }

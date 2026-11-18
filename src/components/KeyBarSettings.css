@@ -114,7 +114,7 @@
 
 .key-bar-settings-modifier[aria-pressed="true"] {
   background: var(--bg-elevated);
-  border-color: var(--accent);
+  border-color: var(--accent-readable);
   color: var(--text-strong);
 }
 

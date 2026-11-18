@@ -22,7 +22,7 @@
 }
 
 .phone-panel a {
-  color: var(--accent);
+  color: var(--accent-readable);
 }
 
 .phone-command {

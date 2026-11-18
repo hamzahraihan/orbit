@@ -40,8 +40,8 @@ describe("HeroUI token bridge", () => {
     }
   });
 
-  it("keeps a focused field on its own surface and names the accent as its border", () => {
+  it("keeps a focused field on its own surface and names the readable accent as its border", () => {
     expect(bridged.get("--field-focus")).toBe("var(--bg-input)");
-    expect(bridged.get("--field-border-focus")).toBe("var(--accent)");
+    expect(bridged.get("--field-border-focus")).toBe("var(--accent-readable)");
   });
 });

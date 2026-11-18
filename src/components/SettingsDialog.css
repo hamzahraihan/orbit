@@ -161,7 +161,7 @@
 }
 
 .settings-shortcut-record[aria-pressed="true"] {
-  border-color: var(--accent);
+  border-color: var(--accent-readable);
   color: var(--text-strong);
 }
 

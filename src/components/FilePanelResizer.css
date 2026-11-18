@@ -31,7 +31,7 @@
 }
 
 .file-panel-resizer.is-dragging::after,
-.file-panel-resizer:focus-visible::after { background: var(--accent); }
+.file-panel-resizer:focus-visible::after { background: var(--accent-readable); }
 
 @media (prefers-reduced-motion: reduce) {
   .file-panel-resizer::after { transition: none; }

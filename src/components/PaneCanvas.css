@@ -20,7 +20,7 @@
   overflow: hidden;
 }
 
-.pane-frame.is-current { border-color: var(--accent); }
+.pane-frame.is-current { border-color: var(--accent-readable); }
 .pane-frame.is-hidden { visibility: hidden; pointer-events: none; }
 .pane-frame.is-single { border: 0; }
 .pane-frame-head {
@@ -34,7 +34,7 @@
   background: var(--term-bg);
   font-size: var(--fs-xs);
 }
-.pane-frame.is-current .pane-frame-head { color: var(--accent); }
+.pane-frame.is-current .pane-frame-head { color: var(--accent-readable); }
 .pane-frame-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .pane-frame-menu { flex: none; width: var(--control-h); height: var(--control-h); pointer-events: auto; }
 .pane-frame-body { flex: 1; min-width: 0; min-height: 0; position: relative; }

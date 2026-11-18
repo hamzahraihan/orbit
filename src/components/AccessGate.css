@@ -90,7 +90,7 @@
   background: var(--accent);
   border: var(--hairline) solid var(--accent);
   border-radius: var(--radius-sm);
-  color: var(--bg);
+  color: var(--primary-text);
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);
   cursor: pointer;

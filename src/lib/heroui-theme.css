@@ -63,7 +63,7 @@
   --border-width: var(--hairline);
 
   /* Focus */
-  --focus: var(--accent);
+  --focus: var(--accent-readable);
 
   /* Default / neutral actions */
   --default: var(--bg-hover);
@@ -104,7 +104,7 @@
   /* HeroUI uses --field-focus as the field's focus *surface*, not its border. */
   --field-focus: var(--bg-input);
   --field-border-hover: var(--border-strong);
-  --field-border-focus: var(--accent);
+  --field-border-focus: var(--accent-readable);
   --field-radius: var(--radius-lg);
   --field-border-width: var(--hairline);
 

@@ -102,7 +102,7 @@
 .key:active,
 .key.is-armed {
   background: var(--bg-elevated);
-  border-color: var(--accent);
+  border-color: var(--accent-readable);
   color: var(--text-strong);
 }
 

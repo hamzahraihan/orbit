@@ -48,7 +48,7 @@
 
 .hl-keyword { color: var(--syntax-keyword); }
 .hl-line.is-marked { background: var(--accent-tint); }
-.hl-code[data-line-numbers] .hl-line.is-marked::before { color: var(--accent); }
+.hl-code[data-line-numbers] .hl-line.is-marked::before { color: var(--accent-readable); }
 .hl-string { color: var(--syntax-string); }
 .hl-number { color: var(--syntax-number); }
 .hl-comment { color: var(--syntax-comment); }
