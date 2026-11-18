@@ -1,9 +1,8 @@
 <!doctype html>
 <!--
-  The template banner.ts renders: the README banner, the Open Graph card and the framed
-  "A look around" shots. The graphite stage from brief section 2 (lamp, floor pool, vignette,
-  grain) with the real app in a window object and a phone object. banner.ts replaces the
-  {{…}} tokens and sets <body data-kind>; nothing here is animated.
+  The template banner.ts renders for the Open Graph card: the graphite stage from brief
+  section 2 (lamp, floor pool, vignette, grain) with the real app in a window object and a
+  phone object. banner.ts replaces the {{…}} tokens; nothing here is animated.
 -->
 <html lang="en">
 <head>
@@ -106,22 +105,9 @@
   body[data-kind="og"] .phone { --pw: 260; left: 606px; top: 168px; padding: 8px; border-radius: 38px; }
   body[data-kind="og"] .phone img { border-radius: 30px; }
 
-  /* ---- look: one window under the lamp; whole and centred, or a detail whose top-left corner sits
-     96px in and which bleeds off the right and bottom ---- */
-  body[data-kind="look"] .window { --ww: {{LOOK_W}}; }
-  body[data-look="whole"] .window { left: 50%; top: 50%; transform: translate(-50%, -50%); }
-  body[data-look="detail"] .window { left: 96px; top: 96px; }
-  body[data-look="detail"] .stage { --lamp-x: 34%; }
-  /* the detail sinks into the table where it leaves the frame, so the bleed reads as chosen */
-  body[data-look="detail"] .stage::after {
-    content: ""; position: absolute; inset: 0; z-index: 9; pointer-events: none;
-    background:
-      linear-gradient(to bottom, transparent calc(100% - 340px), rgba(18, 16, 14, 0.94)),
-      linear-gradient(to right, transparent calc(100% - 64px), rgba(18, 16, 14, 0.7));
-  }
 </style>
 </head>
-<body data-kind="{{KIND}}" data-look="{{LOOK}}">
+<body data-kind="{{KIND}}">
   <div class="stage">
     {{CONTENT}}
     <div class="grain"></div>

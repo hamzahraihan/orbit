@@ -1,17 +1,13 @@
 /**
- * Renders the site's Open Graph card and the README's framed "A look around" shots from
- * banner.html in headless Chrome: the graphite stage, the logo mark, and the real app (the stills)
- * in a window object and a phone object. Every image is an opaque rectangle. Each PNG is then
- * quantized to 256 colours with ffmpeg, since the README must stay light.
+ * Renders the site's Open Graph card (`site/assets/og.png`) from banner.html in headless Chrome:
+ * the graphite stage, the logo mark, and the real app (the stills) in a window object and a phone
+ * object. The image is an opaque rectangle. The PNG is then quantized to 256 colours with ffmpeg,
+ * since the OG card must stay light.
  *
- *   bun scripts/readme-media/banner.ts [og] [look]
+ *   bun scripts/readme-media/banner.ts [og]
  *
  * Inputs: the stills in _film/footage/stills, the brand fonts in _film/fonts (falls back to the CDN
  * copies), docs/brand/icon-source.png. Needs ffmpeg.
- * Outputs: site/assets/og.png (1280x640), docs/media/look-{chat,prompt,terminal}.png (1760x1150,
- * shown at 880 or 440): chat is the whole window, centred; prompt and terminal are details on one
- * rule (top-left corner 96px in, 1.25 px per CSS px, so dots, pane title and sidebar stay in frame),
- * bleeding off the right and bottom.
  */
 import { chromium } from "playwright-core";
 import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -44,17 +40,9 @@ const phoneObject = (still: string) => `<div class="phone"><img src="${url(join(
 const copy = `<div class="copy"><img class="mark" src="${url(mark)}" alt=""><div class="word">Orbit</div><div class="tag">Your agents, in plain conversation.</div></div>`;
 const hero = `${copy}<div class="scene">${windowObject("03-desktop-todo-open.png")}${phoneObject("14-phone-codex-approval.png")}</div>`;
 
-// look: the window's width in px, and "whole" (centred) or "detail" (top-left corner at 96,96)
-interface Job { out: string; kind: "og" | "look"; w: number; h: number; content: string; look?: { w: number; anchor: "whole" | "detail" }; maxBytes: number }
-// the stills are 2x, so 1.25 px per CSS px is still below 1 output px per source px
-const looks = [
-  { name: "chat", still: "02-desktop-chat-worked-open", look: { w: 1540, anchor: "whole" } },
-  { name: "prompt", still: "04-desktop-codex-approval", look: { w: 1440 * 1.25, anchor: "detail" } },
-  { name: "terminal", still: "07-desktop-terminal", look: { w: 1440 * 1.25, anchor: "detail" } },
-] as const;
+interface Job { out: string; kind: "og"; w: number; h: number; content: string; maxBytes: number }
 const jobs = ([
   { out: "site/assets/og.png", kind: "og" as const, w: 1280, h: 640, content: hero, maxBytes: 400_000 },
-  ...looks.map((x): Job => ({ out: `docs/media/look-${x.name}.png`, kind: "look", w: 1760, h: 1150, content: windowObject(`${x.still}.png`), look: x.look, maxBytes: 700_000 })),
 ] satisfies Job[] as Job[]).filter((job) => want(job.kind));
 
 const template = readFileSync(join(import.meta.dir, "banner.html"), "utf8");
@@ -66,9 +54,7 @@ for (const job of jobs) {
     .replaceAll("{{GRAIN}}", url(grain))
     .replaceAll("{{W}}", String(job.w))
     .replaceAll("{{H}}", String(job.h))
-    .replaceAll("{{LOOK_W}}", String(job.look?.w ?? 0))
     .replaceAll("{{KIND}}", job.kind)
-    .replaceAll("{{LOOK}}", job.look?.anchor ?? "")
     .replace("{{CONTENT}}", job.content);
   const file = join(tmp, `${job.kind}.html`);
   writeFileSync(file, html);
