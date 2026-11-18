@@ -165,7 +165,7 @@ export async function checkMobileTabs(browser: Browser, origin: string): Promise
     await page.locator(".conn-live").waitFor();
     await page.reload();
     await page.locator(".conn-live").waitFor();
-    await page.getByRole("button", { name: "Open workspace list", exact: true }).tap();
+    await page.getByRole("button", { name: "Open workspace list" }).tap();
     await page.locator(`.workspace-group[data-workspace=${JSON.stringify(workspaceId)}] > .workspace-header .workspace-select`).tap();
     await shown(second);
     assert.equal(await page.locator(`[data-layout-pane=${JSON.stringify(first)}]`).isVisible(), false, "a workspace row picked after a reload opens the pane it was left on");

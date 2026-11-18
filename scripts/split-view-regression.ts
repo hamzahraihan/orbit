@@ -430,7 +430,7 @@ export async function checkSplitView(browser: Browser, origin: string): Promise<
       await page.waitForFunction(() => document.querySelectorAll(".pane-slot").length === 1);
       await page.locator(`.pane-frame[data-layout-pane="${shown}"]`).getByRole("log").waitFor();
       // the narrow window keeps the workspace list in a drawer
-      await page.getByRole("button", { name: "Open workspace list", exact: true }).click();
+      await page.getByRole("button", { name: "Open workspace list" }).click();
       await page.locator(`.pane-select[title^="${hidden} —"]`).click();
       await page.locator(`.pane-frame[data-layout-pane="${hidden}"]`).getByRole("log").waitFor();
       assert.notEqual(await page.evaluate(() => sessionStorage.getItem("herdr-web-ui:split")), null, "the split is kept while the window is narrow");

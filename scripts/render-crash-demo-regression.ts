@@ -253,9 +253,9 @@ try {
         const notice = page.locator(".pane-slot").getByRole("alert").filter({ hasText: "This pane can't be shown." });
         await notice.waitFor();
         assert.equal(await page.locator(".app-crash").count(), 0, "the page is not blanked");
-        await page.getByRole("button", { name: "Open workspace list", exact: true }).tap();
+        await page.getByRole("button", { name: "Open workspace list" }).tap();
         await page.locator("#workspace-drawer.is-open .sidebar-shell").waitFor();
-        await page.getByRole("button", { name: "Close workspace list", exact: true }).tap();
+        await page.getByRole("button", { name: "Close workspace list" }).tap();
         await stopCrashing(page);
         await notice.getByRole("button", { name: "Try again", exact: true }).tap();
         await page.locator(".pane-frame.is-current").waitFor();

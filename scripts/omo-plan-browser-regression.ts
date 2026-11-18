@@ -98,7 +98,7 @@ try {
         await page.goto(`${origin}/?pane=${encodeURIComponent(paneId)}`);
         await page.locator(".conn-live").waitFor();
         if (width === 390) {
-          await page.getByRole("button", { name: "Open workspace list", exact: true }).click();
+          await page.getByRole("button", { name: "Open workspace list" }).click();
           await page.locator(".agents-sidebar .agent-section-toggle").click();
         }
         const row = page.locator(`.agents-sidebar .agent-item[data-pane="${paneId}"]`);

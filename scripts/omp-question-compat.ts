@@ -206,7 +206,7 @@ process.on("SIGTERM", () => { app.stop(); process.exit(0); });
       await browser(cli, browserEnv, ["click", ".view-switch button:nth-child(1)"]);
       await browser(cli, browserEnv, ["set", "viewport", String(cases[1]!.viewport[0]), String(cases[1]!.viewport[1])]);
       const drawerOpen = JSON.parse(await browser(cli, browserEnv, ["eval", "document.querySelector('.drawer-toggle')?.getAttribute('aria-expanded') === 'true'"])) as boolean;
-      if (drawerOpen) await browser(cli, browserEnv, ["click", "button[aria-label='Close workspace list']"]);
+      if (drawerOpen) await browser(cli, browserEnv, ["click", "button[aria-label^='Close workspace list']"]);
       question = await waitForPrompt(origin, paneId, fixture.question, 30_000);
       assert.equal(question.question, fixture.question, "narrow terminal resize preserves the exact wrapped question");
       await assertVisiblePrompt(cli, browserEnv, fixture.question, fixture.options);

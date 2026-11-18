@@ -103,7 +103,7 @@ try {
             if (message.type() === "error" && message.text().includes("render failed")) renderErrors.push(message.text());
           });
           await page.goto(`http://127.0.0.1:${server.port}/?machine=remote&pane=${encodeURIComponent(panes.api)}&view=chat&detached=1`);
-          if (phone) await page.getByRole("button", { name: "Open workspace list", exact: true }).click();
+          if (phone) await page.getByRole("button", { name: "Open workspace list" }).click();
           await page.locator('.sidebar .sidebar-row[role="button"][title*="Detached HEAD"]').first().waitFor({ state: "attached" });
           assert.ok(await page.locator('.sidebar .machine-workspaces .sidebar-row[role="button"]').count() > 0, "workspace rows survive a remote detached worktree with no branch field");
           assert.equal(await page.getByRole("alert").filter({ hasText: /can't be shown|Something went wrong/ }).count(), 0);
