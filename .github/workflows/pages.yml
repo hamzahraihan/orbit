@@ -39,7 +39,7 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: ./.github/actions/setup-ci
-      # poster frames and scaled stills (scripts/build-site.ts); the GitHub-hosted image has no
+      # the scaled installer still (scripts/build-site.ts); the GitHub-hosted image has no
       # ffmpeg, the self-hosted runner image ships it and has no sudo
       - run: |
           if command -v ffmpeg >/dev/null 2>&1; then

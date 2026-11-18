@@ -1,27 +1,19 @@
 /**
  * Assembles the website into _site/ for GitHub Pages (.github/workflows/pages.yml) and for a local
- * look (`bun run build:site`, then serve _site/ under /herdr-web-ui/).
+ * look (`bun run build:site`, then serve _site/).
  *
  * The page is site/index.html, with its Simplified Chinese copy at site/zh/index.html (the same page,
- * its paths one level up; a change to one belongs in the other). Both are built from the README's artifacts: its top video (`videos`, a GitHub
- * upload that is downloaded, never committed; docs/development.md, "README media"), its feature clips
- * (docs/media/readme/*.webp) and the installer still. A video's poster frame is cut with ffmpeg when it
- * is installed (the workflow installs it); without it the still stays full size and a poster that
- * could not be made is dropped from the page. `{{version}}`, `{{stars}}`, `{{contributors}}`,
- * `{{plugin_rank}}` and `{{plugin_repo_count}}` in the page are filled in here, from package.json, the
- * GitHub API and herdr's plugin index. The page's FAQ rows are also written into its head as
- * FAQPage structured data, so the two cannot differ, and sitemap.xml lists the page (the demo is
- * noindex and stays out of it).
+ * its paths one level up; a change to one belongs in the other). The installer still and the page's
+ * own logo mark are committed; the installer still is scaled down when ffmpeg is installed, and
+ * `{{version}}`, `{{stars}}`, `{{contributors}}`, `{{plugin_rank}}` and `{{plugin_repo_count}}` in the
+ * page are filled in here, from package.json, the GitHub API and herdr's plugin index. The page's FAQ
+ * rows are also written into its head as FAQPage structured data, so the two cannot differ, and
+ * sitemap.xml lists the page (the demo is noindex and stays out of it).
  *
  * demo/ is the app itself, built by Vite with relative asset paths into demo/app/, loaded behind
  * site/demo/transport.ts (bundled to demo-transport.js and injected before the app's scripts) so it
  * runs on the fixtures in site/demo/ instead of a server; site/demo/index.html frames it with a
  * banner. Building it needs node_modules (`bun install`).
- *
- * site/assets/ (logo marks and older stills) and site/media/ (the film, linked from the README and the
- * page, and the chat loop, with their posters) are committed already optimised and copied whole. A
- * missing film/loop poster is cut from its video when ffmpeg can; references to missing film/loop
- * files are removed if a page uses them.
  */
 import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -44,19 +36,11 @@ const copies: Array<[from: string, to: string]> = [
   ["public/social-preview.png", "assets/social-preview.png"],
 ];
 
-/** The pages, in _site/: every one gets the figures, the media checks and the FAQ data below. */
+/** The pages, in _site/: every one gets the figures and the FAQ data below. */
 const pages = ["index.html", "zh/index.html"];
 
 /** README stills, scaled down for the page when ffmpeg is there. */
 const stills: Array<{ file: string; width: number }> = [{ file: "install.png", width: 1400 }];
-
-/**
- * The README's top video and its GitHub upload. It is listed here, not read from the README, so the
- * README can change how it presents its videos; a new recording needs its link changed here as well.
- */
-const videos: Array<{ file: string; poster: string; at: string; upload: string }> = [
-  { file: "readme-hero.mp4", poster: "readme-hero.jpg", at: "11.8", upload: "https://github.com/user-attachments/assets/d854dbb6-64bd-4eba-81c7-fbd3f525726b" },
-];
 
 async function run(cmd: string[]): Promise<boolean> {
   const proc = Bun.spawn(cmd, { stdout: "ignore", stderr: "pipe" });
@@ -65,18 +49,11 @@ async function run(cmd: string[]): Promise<boolean> {
   return code === 0;
 }
 
-// size guard, before anything is removed: the page's media and stills are committed, so they must stay small
+// size guard, before anything is removed: the page's mark is committed, so it must stay small
 const MB = 1024 * 1024;
-const caps: Record<string, (file: string) => number> = {
-  "site/media": (file) => (file === "herdr-web-ui-film.mp4" ? 24 : 4) * MB,
-  "site/assets": () => 0.75 * MB,
-};
-for (const [dir, cap] of Object.entries(caps)) {
-  const from = join(root, dir);
-  for (const file of existsSync(from) ? readdirSync(from, { recursive: true, encoding: "utf8" }) : []) {
-    const stat = statSync(join(from, file));
-    if (stat.isFile() && stat.size > cap(file)) throw new Error(`${dir}/${file} is ${(stat.size / MB).toFixed(2)} MB, over its ${cap(file) / MB} MB cap`);
-  }
+for (const file of existsSync(join(root, "site/assets")) ? readdirSync(join(root, "site/assets"), { recursive: true, encoding: "utf8" }) : []) {
+  const stat = statSync(join(root, "site/assets", file));
+  if (stat.isFile() && stat.size > 0.75 * MB) throw new Error(`site/assets/${file} is ${(stat.size / MB).toFixed(2)} MB, over its 0.75 MB cap`);
 }
 
 rmSync(out, { recursive: true, force: true });
@@ -92,35 +69,12 @@ for (const dir of ["assets", "media"]) {
   const from = join(root, "site", dir);
   if (existsSync(from)) cpSync(from, join(out, dir), { recursive: true });
 }
-// the README's feature clips, each linking to its full upload from the page
-cpSync(join(root, "docs/media/readme"), join(out, "media/readme"), { recursive: true });
 
 const hasFfmpeg = Bun.which("ffmpeg") !== null;
 for (const still of stills) {
   const from = join(root, "docs/screenshots", still.file);
   const target = join(out, "assets", still.file);
   if (!hasFfmpeg || !(await run(["ffmpeg", "-v", "error", "-y", "-i", from, "-vf", `scale=${still.width}:-1`, target]))) copyFileSync(from, target);
-}
-
-mkdirSync(join(out, "media"), { recursive: true });
-for (const video of videos) {
-  const target = join(out, "media", video.file);
-  const local = join(root, "docs/screenshots", video.file);
-  if (existsSync(local)) {
-    copyFileSync(local, target);
-  } else {
-    const response = await fetch(video.upload, { redirect: "follow" });
-    if (!response.ok) throw new Error(`${video.upload}: HTTP ${response.status}`);
-    writeFileSync(target, new Uint8Array(await response.arrayBuffer()));
-  }
-  const poster = join(out, "media", video.poster);
-  if (!hasFfmpeg || !(await run(["ffmpeg", "-v", "error", "-y", "-ss", video.at, "-i", target, "-frames:v", "1", "-q:v", "3", poster]))) {
-    // no poster file: the pages must not ask for one
-    for (const name of pages) {
-      const page = join(out, name);
-      writeFileSync(page, readFileSync(page, "utf8").replace(new RegExp(` poster="(?:\\.\\./)?media/${video.poster.replace(".", "\\.")}"`), ""));
-    }
-  }
 }
 
 // the pages' figures: the release they are built from, and the repository's stars as of the build
@@ -161,20 +115,6 @@ const listedStars = starsByRepo.get("hamzahraihan/orbit");
 const rank = listedStars === undefined ? null : [...starsByRepo.values()].filter((count) => count > listedStars).length + 1;
 if (rank === null) console.warn(`herdr plugin index unavailable (${index ? `HTTP ${index.status}` : "no connection"}) or the plugin is not in it: the page shows a dash`);
 
-// the pages' own media: cut a missing poster from its video; a file still missing is unlinked below
-const pageMedia = ["herdr-web-ui-film", "chat-loop"];
-const missingMedia: Array<{ file: string; attrs: string }> = [];
-for (const name of pageMedia) {
-  const video = join(out, "media", `${name}.mp4`);
-  const poster = join(out, "media", `${name}.jpg`);
-  if (existsSync(video) && !existsSync(poster) && hasFfmpeg) await run(["ffmpeg", "-v", "error", "-y", "-i", video, "-frames:v", "1", "-q:v", "3", poster]);
-  for (const [file, attrs] of [[video, "src|data-src"], [poster, "poster|data-poster"]] as const) {
-    if (existsSync(file)) continue;
-    console.warn(`site/media/${file.split("/").pop()} is missing: the page shows its still instead`);
-    missingMedia.push({ file: file.split("/").pop()!, attrs });
-  }
-}
-
 for (const name of pages) {
   let page = readFileSync(join(out, name), "utf8");
   page = page.replaceAll("{{version}}", version);
@@ -182,9 +122,6 @@ for (const name of pages) {
   page = page.replaceAll("{{contributors}}", contributors === null ? "—" : contributors.toLocaleString("en-US"));
   page = page.replaceAll("{{plugin_rank}}", rank === null ? "—" : `#${rank}`);
   page = page.replaceAll("{{plugin_repo_count}}", repositoryCount === null ? "—" : repositoryCount.toLocaleString("en-US"));
-  for (const { file, attrs } of missingMedia) {
-    page = page.replace(new RegExp(` (?:${attrs})="(?:\\.\\./)?media/${file.replace(".", "\\.")}"`, "g"), "");
-  }
 
   // the FAQ as structured data, read from the rows the page shows
   // (a row's closing "… →" link is navigation, not part of the answer)
@@ -246,4 +183,4 @@ copyFileSync(join(root, "site/demo/index.html"), join(out, "demo", "index.html")
 const files = new Bun.Glob("**/*").scanSync({ cwd: out, dot: true });
 let bytes = 0;
 for (const file of files) bytes += Bun.file(join(out, file)).size;
-console.log(`_site: ${(bytes / 1024 / 1024).toFixed(1)} MB${hasFfmpeg ? "" : " (no ffmpeg: full-size stills, videos without posters)"}`);
+console.log(`_site: ${(bytes / 1024 / 1024).toFixed(1)} MB${hasFfmpeg ? "" : " (no ffmpeg: full-size stills)"}`);
