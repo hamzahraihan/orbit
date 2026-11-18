@@ -24,20 +24,10 @@ Install, connect and use Orbit on your desktop and phone.
 </table>
 
 <p align="center">
-  <img src="screenshots/demo-mobile.gif" width="219" alt="Phone demo: scrolling a chat, opening the session list, approving a Codex command, the terminal with its key bar, and typing a message.">
   <img src="screenshots/mobile-chat.png" width="200" alt="Phone chat view of a Claude Code pane.">
   <img src="screenshots/mobile-terminal.png" width="200" alt="Phone terminal view with the Esc, Tab, Ctrl, arrow and Ctrl+C key bar.">
-  <img src="screenshots/mobile-sessions.png" width="200" alt="Phone session list with Claude Code, Codex, gjc, omo and shell panes and their live status.">
+  <img src="screenshots/mobile-sessions.png" width="200" alt="Phone session list with each agent's live status.">
 </p>
-
-<details>
-<summary><b>▶ Watch the demos in HD</b> (desktop 1920×1200, phone 1080×1920)</summary>
-
-https://github.com/user-attachments/assets/4ca73671-ebfc-4c18-b8f2-99331abf9fa7
-
-https://github.com/user-attachments/assets/2f030569-1004-425e-835d-9e775ec6e4c8
-
-</details>
 
 ## Quick start
 
