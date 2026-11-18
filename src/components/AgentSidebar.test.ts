@@ -6,7 +6,7 @@ import type { Machine } from "../../shared/machines.ts";
 import type { AgentInfo, HerdrPane, SessionSnapshot } from "../../shared/protocol.ts";
 import { setAgentRowTokens } from "../lib/agentRowTokens.ts";
 import { SettingsProvider } from "../lib/settings.ts";
-import { AgentSidebar } from "./AgentSidebar.tsx";
+import { AgentSidebar, agentFlyoutLines } from "./AgentSidebar.tsx";
 
 const pane = (pane_id: string, extra: Partial<HerdrPane> = {}): HerdrPane => ({
   pane_id, workspace_id: "w1", tab_id: "w1:t1", terminal_id: `term-${pane_id}`, focused: false, revision: 1,
@@ -32,14 +32,11 @@ const decode = (text: string): string => text.replace(/&lt;/g, "<").replace(/&gt
 /** the text of each element with this class, entities as the browser reads them */
 const texts = (html: string, className: string): string[] =>
   [...html.matchAll(new RegExp(`<span class="${className}">(.*?)</span>`, "g"))].map((match) => decode(match[1]!));
-/** each agent row's tooltip, line by line */
-const tooltips = (html: string): string[][] =>
-  [...html.matchAll(/class="agent-select agent-row"[^>]* title="([^"]*)"/g)].map((match) => decode(match[1]!).split("\n"));
 /** the status groups, in order: their label, count and the titles inside them */
 const groups = (html: string): { label: string; count: number; titles: string[] }[] =>
   html.split('<div class="agent-group ').slice(1).map((part) => {
     const body = part.slice(0, part.indexOf("</ul>"));
-    const label = /<span>([^<]*)<\/span><span class="agent-group-count">(\d+)<\/span>/.exec(body);
+    const label = /<span>([^<]*)<\/span><span class="agent-group-count"[^>]*>(\d+)<\/span>/.exec(body);
     return {
       label: decode(label?.[1] ?? ""),
       count: Number(label?.[2] ?? 0),
@@ -104,10 +101,15 @@ describe("AgentSidebar plugin tokens", () => {
     expect(texts(html, "agent-tokens")).toEqual(["40% 12m · 5h 95%", "90% 1m", "codex's own rows"]);
   });
 
-  test("the row's tooltip says each token whole; a PC that is away draws none", () => {
+  test("the hover card's lines say each whole token, in order, without repeats", () => {
     const long = `summary ${"x".repeat(200)}`;
-    const online = render([machine([pane("w1:p1", { tokens: { summary: long, quota: "5h 95%" } })])]);
-    expect(tooltips(online)[0]).toEqual(["w1:p1", "checkout-api", "5h 95%", long, "claude"]);
+    expect(agentFlyoutLines("checkout-api", true, null, "w1:p1", ["5h 95%", long], "/home/me/dev/api")).toEqual(["checkout-api", "w1:p1", "5h 95%", long, "/home/me/dev/api"]);
+    expect(agentFlyoutLines("", false, "disconnected", "w1:p1", [], null)).toEqual(["disconnected", "w1:p1"]);
+    expect(agentFlyoutLines("checkout-api", true, null, "w1:p1", ["5h 95%"], "checkout-api")).toEqual(["checkout-api", "w1:p1", "5h 95%"]);
+  });
+
+  test("a PC that is away draws no tokens", () => {
+    const long = `summary ${"x".repeat(200)}`;
     const away = render([machine([pane("w1:p1", { tokens: { summary: long } })], "disconnected")]);
     expect(away).not.toContain("agent-tokens");
     expect(away).not.toContain(long);

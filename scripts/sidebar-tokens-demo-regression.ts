@@ -78,13 +78,13 @@ try {
           ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: "en-US", colorScheme: theme }
           : { viewport: { width: 1280, height: 900 }, locale: "en-US", colorScheme: theme });
         try {
-          await context.addInitScript(([value, sidebarRows]) => localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en", theme: value, sidebarRows })), [theme, rows] as const);
+          await context.addInitScript(([value, sidebarRows]) => { localStorage.setItem("herdr-web-ui:onboarded", "1"); localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en", theme: value, sidebarRows })); }, [theme, rows] as const);
           const page = await context.newPage();
           const errors: string[] = [];
           page.on("pageerror", (error) => errors.push(error.message));
           await page.goto(`http://127.0.0.1:${server.port}/?pane=${encodeURIComponent(panes.shell)}`);
           if (phone) {
-            await page.getByRole("button", { name: "Open workspace list", exact: true }).click();
+            await page.getByRole("button", { name: "Open workspace list" }).click();
             // the phone's drawer starts with Agents folded
             const toggle = page.locator(".agent-section-toggle");
             if (await toggle.getAttribute("aria-expanded") === "false") await toggle.click();
@@ -99,13 +99,17 @@ try {
           assert.equal(await row(page, panes.shell).locator(".agent-tokens").count(), 0, "a pane without tokens draws no line");
           assert.match(await row(page, panes.omp).locator(".agent-context").textContent() ?? "", /^needs a login · 8m ago · /, "a plugin's line for the agent leads the place");
 
-          // the line sits under the title and the place, small and cut, its whole text in the tooltip
+          // the line sits under the title and the place, small and cut, its whole text in the hover card
           const title = await box(page, panes.api, ".agent-title"), place = await box(page, panes.api, ".agent-context"), tokens = await box(page, panes.api, ".agent-tokens");
           if (rows === "one") assert.ok(Math.abs(title.y + title.height - (place.y + place.height)) < 3, "One line keeps the place beside the title");
           else assert.ok(place.y >= title.y + title.height - 1, "Two lines keeps the place under the title");
           assert.ok(tokens.y >= place.y + place.height - 1, "the tokens have their own line, under the place");
           assert.ok(await tokensOf(page, panes.api).evaluate((element) => element.scrollWidth > element.clientWidth), "a long value is cut");
-          assert.match(await row(page, panes.api).locator(".agent-select").getAttribute("title") ?? "", new RegExp(LONG), "the tooltip says it whole");
+          await row(page, panes.api).locator(".agent-select").evaluate((element) => element.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, relatedTarget: document.body, pointerType: "mouse" })));
+          const card = page.locator(".rail-flyout");
+          await card.waitFor();
+          assert.match(await card.textContent() ?? "", new RegExp(LONG), "the hover card says it whole");
+          await row(page, panes.api).locator(".agent-select").evaluate((element) => element.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body, pointerType: "mouse" })));
           const sizes = await row(page, panes.api).evaluate((item) => ({
             title: parseFloat(getComputedStyle(item.querySelector(".agent-title")!).fontSize),
             tokens: parseFloat(getComputedStyle(item.querySelector(".agent-tokens")!).fontSize),
@@ -143,7 +147,7 @@ try {
           await page.waitForFunction((pane) => document.querySelector(`.agent-list .agent-item[data-pane="${pane}"] .agent-tokens`) === null, panes.api);
           if (evidence && !phone && rows === "one") await page.locator(".agents-sidebar").screenshot({ path: join(evidence, "tokens-desktop-herdr-rows.png") });
           assert.deepEqual(errors, []);
-          console.log(`PASS ${label}: plugin tokens draw a dim line of their own, cut with the whole text in the tooltip${phone ? " and the sheet" : ""}, follow herdr's rows and change live`);
+          console.log(`PASS ${label}: plugin tokens draw a dim line of their own, cut with the whole text in the hover card${phone ? " and the sheet" : ""}, follow herdr's rows and change live`);
         } finally { await context.close(); }
       }
     } finally { await browser.close(); }

@@ -36,6 +36,7 @@ async function withPage(browser: Browser, settings: object, run: (page: Page) =>
   });
   try {
     await context.addInitScript((stored) => {
+      localStorage.setItem("herdr-web-ui:onboarded", "1");
       localStorage.setItem("herdr-web-ui:settings", JSON.stringify({ language: "en", defaultView: "chat", ...stored }));
     }, settings);
     const page = await context.newPage();
@@ -83,12 +84,17 @@ try {
         assert.deepEqual(await page.locator(".agents-sidebar .agent-group-label > span:first-child").allTextContents(), ["Active", "Idle"]);
         assert.deepEqual(await page.locator(".agents-sidebar .agent-group-count").allTextContents(), ["2", "4"]);
         assert.match(await agent(page, API).locator(".agent-context").textContent() ?? "", /checkout-api/, "a row names its workspace");
-        // a desktop draws no row ⋯: a right-click or the context-menu key opens the menu
-        assert.equal(await agent(page, API).getByRole("button").count(), 1, "a desktop row is its selector alone");
-        assert.equal(await page.locator(".row-menu-toggle:visible").count(), 0, "no row ⋯ on a desktop");
+        // a fine pointer renders the ⋯ too, held invisible until the row is hovered, focused or selected
+        assert.equal(await agent(page, API).getByRole("button").count(), 2, "a desktop row is its selector plus its ⋯");
+        const rowActions = agent(page, API).locator(".agent-actions");
+        assert.equal(await rowActions.evaluate((element) => getComputedStyle(element).opacity), "0", "at rest the ⋯ is invisible on a fine pointer");
+        await agent(page, API).hover();
+        await page.waitForFunction((title) =>
+          [...document.querySelectorAll(".agent-item")].some((item) => item.textContent?.includes(title)
+            && getComputedStyle(item.querySelector(".agent-actions")!).opacity === "1"), API, { timeout: 5_000 });
         assert.equal(await page.locator(".agents-sidebar .agent-list-pinned").count(), 0, "no pinned list without pins");
       });
-      console.log("PASS the Agents list parts into Active and Idle with counts, each half in herdr's order, each row a selector with no ⋯ on a desktop");
+      console.log("PASS the Agents list parts into Active and Idle with counts, each half in herdr's order, each row a selector plus its revealed-on-demand ⋯");
 
       // a pane's plan: the composer's chip shows how far it got and opens its steps, as the background
       // tasks do; the header carries no plan of its own
@@ -100,7 +106,7 @@ try {
           await chip.waitFor();
           assert.match(await chip.getAttribute("aria-label") ?? "", /^Plan: 1 of \d+ done/, "the chip names the plan's progress");
           assert.match((await chip.locator(".bg-tasks-plan").textContent())?.trim() ?? "", /^1\/\d+$/);
-          assert.equal(await page.locator(".bg-tasks-toggle").count(), 0, "no plan button in the header");
+          assert.equal(await page.locator(".app-header .bg-tasks-toggle").count(), 0, "no plan button in the header");
           await chip.click();
           const list = page.getByRole("dialog", { name: /^Plan/ });
           await list.locator(".bg-step").first().waitFor();
