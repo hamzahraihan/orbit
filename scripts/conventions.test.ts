@@ -207,3 +207,14 @@ describe("browser test selectors", () => {
     fail(missing, "Remove these non-existent test scripts from the selector guardrail list in scripts/conventions.test.ts: " + missing.join(", "));
   });
 });
+
+describe("browser demo fixtures", () => {
+  // `_site/demo/` is rebuilt from src/ on every deploy, but site/demo/fixtures/*.json are captured
+  // by hand from a staged herdr (`bun scripts/demo-fixtures.ts`, POSIX only). Nothing rebuilt them,
+  // so they drifted a long way from the app that reads them while the demo kept answering.
+  // demo-freshness.ts checks the shapes, the roster and the routes; this fails with its findings.
+  it("still match the app that serves them", () => {
+    const { stdout, stderr, status } = spawnSync(process.execPath, ["run", "scripts/demo-freshness.ts"], { cwd: repo, encoding: "utf8" });
+    if (status !== 0) throw new Error(`${`${stdout}${stderr}`.trim()}\n\nRecapture with \`bun run demo:fixtures\` on a POSIX host (docs/development.md, "The browser demo").`);
+  });
+});

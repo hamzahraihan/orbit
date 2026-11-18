@@ -18,6 +18,7 @@
     "scripts/release-guards.ts",
     "scripts/changelog-fold.ts",
     "site/demo/transport.ts",
+    "scripts/demo-freshness.ts",
     "scripts/build-remote-bundle.ts",
     "scripts/ssh-integration.ts",
     "scripts/file-viewer-regression.ts",
