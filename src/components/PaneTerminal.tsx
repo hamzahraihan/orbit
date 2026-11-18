@@ -3099,7 +3099,7 @@ export function PaneTerminal({
           notices={composerNotices}
           greeting={greetingDue ? (
             <div className={`composer-greeting${greeted ? "" : " is-out"}`} ref={greetingRef} aria-hidden={greeted ? undefined : true}>
-              <p className="composer-greeting-title">{t("What should {agent} do in {folder}?", { agent: agentDisplayLabel(agent), folder })}</p>
+              <p className="composer-greeting-title shiny-text">{t("What should {agent} do in {folder}?", { agent: agentDisplayLabel(agent), folder })}</p>
               {/* each part keeps its own direction: a right-to-left PC name does not reorder the path */}
               <p className="composer-greeting-where">{machineName && <bdi>{machineName}</bdi>}{machineName && cwd ? " · " : ""}{cwd && <bdi>{cwd}</bdi>}</p>
             </div>
