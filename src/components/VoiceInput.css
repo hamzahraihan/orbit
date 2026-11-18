@@ -57,7 +57,7 @@
 .voice-mic[aria-pressed="true"] {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--bg);
+  color: var(--primary-text);
 }
 
 @media (hover: hover) {
@@ -139,7 +139,7 @@
 
 .voice-done {
   background: var(--accent);
-  color: var(--bg);
+  color: var(--primary-text);
 }
 
 .voice-pill-button:disabled {

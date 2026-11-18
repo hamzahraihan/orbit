@@ -287,7 +287,7 @@
 .repo-diff-comment-send {
   border-color: transparent;
   background: var(--accent);
-  color: var(--bg);
+  color: var(--primary-text);
   font-weight: var(--fw-semibold);
 }
 
