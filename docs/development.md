@@ -356,66 +356,26 @@ in the historical table above. They were taken with a 2 s push-read bound; the b
 
 - `stage.ts` builds the session from `site/demo/fixtures.ts`: two git repositories under `/tmp/herdr-demo`, each with two agent worktrees herdr adds, a release shell tab, curated chats served in place of transcripts, and the hostname rewritten.
 - `record.ts` records a walkthrough at 2x (Chrome's screencast, with `--force-device-scale-factor=2`), logging pointer moves, clicks, taps and camera cues as it drives the page.
-- `compose.ts` draws every output frame on a canvas: a backdrop, a browser window or a phone, the frame under an eased camera, and a vector cursor with click ripples or touch rings. It writes `demo-*.mp4` (1920×1200 and 1080×1920, 30 fps) and a GIF of each. Stills get the same window or phone on a transparent background.
+- `compose.ts` draws every output frame on a canvas: a backdrop, a phone, the frame under an eased camera, and a vector cursor with click ripples or touch rings. It writes `demo-mobile.mp4` (1080×1920, 30 fps) and its GIF. Stills get the same phone on a transparent background.
 
-The MP4s are not committed: GitHub plays a README video only from an upload (`github.com/user-attachments/…`), so drop them into an issue or PR comment and use the link it gives.
-The website's page is built from the README's own artifacts: it downloads the README's top video (listed in `scripts/build-site.ts`, `videos`, so a new top video needs its link changed there as well), shows the feature grid's clips linking to their uploads (the same list of links is in `site/index.html` and `site/zh/index.html`), and uses `docs/screenshots/install.png`.
-The README's feature grid shows a looping ~7-second cut of each feature video (`docs/media/readme/*.webp`, 800×450, 15 fps), each linking to its upload. Cut one with
-`ffmpeg -ss <start> -t <seconds> -i clip.mp4 -vf "fps=15,scale=800:450:force_original_aspect_ratio=increase:flags=lanczos,crop=800:450" -c:v libwebp_anim -loop 0 -quality 72 -compression_level 6 -an out.webp`;
-the scale and crop fill 800×450 from any source aspect. Start on a sharp frame, not mid camera move. The top video stays a GitHub upload so it plays at full quality.
+The MP4s are not committed, and the README embeds none: a video the README plays has to be a GitHub upload (`github.com/user-attachments/…`), so drop one into an issue or PR comment and use the link it gives.
 
-The user guide's gallery and the retained banner assets are rendered from the film's stills (below): `bun scripts/readme-media/banner.ts [banner] [og] [look]`
-draws `banner.html` in headless Chrome into `docs/media/banner.png` (1920×800), `site/assets/og.png` (1280×640) and
-`docs/media/look-{chat,prompt,terminal}.png` (1760×1150), each quantized to 256 colours. `docs/media/chat-loop.gif`
-comes from `scripts/film/render.ts loop`.
-
-## The film
-
-The film (`site/media/herdr-web-ui-film.mp4`, 56 s) and chat loop (`site/media/chat-loop.mp4`, with the README's
-`docs/media/chat-loop.gif`) are the real client on the demo's fixtures, recorded and composited by `scripts/film/`.
-Raw footage and renders go to `_film/` (gitignored); only the outputs under `site/media/`, `site/assets/` and
-`docs/media/` are committed. Needs ffmpeg and Chrome at `/usr/bin/google-chrome` (`CHROME_PATH` otherwise).
-
-```bash
-bun run build:site                              # the demo the takes are recorded from
-bun scripts/film/capture.ts [stills] [rec] [stepped] [R10 R11 … | still names]   # _film/footage/
-bun scripts/film/site-assets.ts                 # site/assets/*.webp|jpg|png from the stills
-bun scripts/readme-media/banner.ts              # banner, og.png, look-*.png from the stills
-bun scripts/film/render.ts film                 # site/media/herdr-web-ui-film.{mp4,jpg}
-bun scripts/film/render.ts loop                 # site/media/chat-loop.{mp4,jpg}, docs/media/chat-loop.gif
-bun scripts/film/render.ts check                # acceptance frame grabs, sizes, loop seam
-```
-
-- `capture.ts` serves `_site/` under `/herdr-web-ui/` and records `demo/app/` (no demo banner) at 2x with `hand.ts`
-  (CDP screencast frames with paint times, plus a cue log of every pointer move, click and tap). Film-only staging lives
-  here as init scripts, never in `site/demo/`: fixture `mods` (`todo`, `real`, `stream`, `story`, `worked`) change what
-  the fixtures say, and `filmHold` holds the demo's own 4.5 s / 2.4 s timers so a turn stays running on camera.
-  `_film/footage/INDEX.md` lists every take, its mods and its marks.
-- `timeline.ts` is the film shot by shot as data (source ranges from each take's `marks.json`, camera, type);
-  `camera.ts` the easing and matrices; `stage.ts` the compositor page that draws one frame; `footage.ts` reads the takes.
-- `render.ts` renders frames in parallel Chromes and encodes once. `render.ts report` prints the shot table with the
-  maximum magnification (never above 1 source px per output px); `render.ts stills 8 13.6 …` grabs single frames.
-- After a re-capture, re-check what was placed by hand on the frames (the header of `render.ts` lists it), then
-  re-render. `build-site.ts` fails if a file in `site/media/` is over 4 MB (the film: 24 MB) or one in `site/assets/`
-  is over 750 KB.
+The stills in `docs/media/look-{chat,prompt,terminal}.png` (1760×1150) are rendered from those captures by `bun scripts/readme-media/banner.ts look`, which draws `banner.html` in headless Chrome and quantizes each PNG to 256 colours. They are committed: the READMEs and the user guide embed them.
 
 ## Website
 
-`site/index.html` is a static page with desktop and phone
-demos, a screenshot gallery, supported agents, phone setup and a comparison table. `site/zh/index.html`
+`site/index.html` is a static page with the hero, the feature rows, supported agents, phone setup and a
+comparison table, and it links to the browser demo. `site/zh/index.html`
 is the same page in Simplified Chinese at `/zh/`, linked from the header; a change to one page belongs in
 the other. `bun run build:site`
-assembles it into `_site/` with icons, the social preview and scaled screenshots from `docs/screenshots/`.
-The two demo videos come from local `docs/screenshots/*.mp4` when present, otherwise the README's uploads;
-ffmpeg creates their poster frames. Without ffmpeg, the page omits unavailable posters.
+assembles it into `_site/` with icons, the social preview and a scaled `docs/screenshots/install.png`.
 
 For search engines the build also writes `sitemap.xml` (the page only: the demo is `noindex`) and copies
 the page's FAQ rows (`<div class="qa">`) into its head as FAQPage structured data, so edit a question in
 the page and the data follows. The SoftwareApplication data is written in the page's head by hand.
 
-The build also copies the retained `site/assets/` and `site/media/` files, including the film linked
-from the README and its chat loop. These remain available at their existing URLs even though the
-homepage uses the desktop and phone demos.
+The build also copies the page's own `site/assets/` mark.
+
 `.github/workflows/pages.yml` installs ffmpeg when the runner lacks it and runs after CI completes
 on `main`, or on manual dispatches from `main`. A completed CI run only builds and deploys when it
 succeeded for a push from this repository; PR runs and forks cannot publish. It builds that CI run's
@@ -436,9 +396,29 @@ transport answers the app's `fetch("/api/…")`, the machines event stream and t
 socket from `site/demo/fixtures/`: the chats and the Codex approval are the README's
 (`site/demo/fixtures.ts`, shared with `scripts/readme-media/stage.ts`), and `machines.json`,
 `agents.json`, `commands.json` and the shell pane's `terminal.json` are captured from that staged
-session by `bun scripts/demo-fixtures.ts` (needs herdr; it uses the `herdr-web-ui-demo` session and
-scrubs the hostname and login). Recapture them after a herdr upgrade changes the snapshot shapes, or
-after changing the staged session. Files, images, push and remote PCs are not part of the demo.
+session by `bun scripts/demo-fixtures.ts` (needs herdr, and POSIX: it stages `/tmp/herdr-demo` and
+calls herdr's `worktree.create`, which refuses a relative path on Windows). Recapture them after a
+herdr upgrade changes the snapshot shapes, or after changing the staged session. Files, images, push
+and remote PCs are not part of the demo.
+
+The client itself is rebuilt on every site build, so only the fixtures can go stale. `bun run
+demo:check` (`scripts/demo-freshness.ts`, also a `conventions.test.ts` case) fails when a fixture no
+longer fits the protocol the app reads — a pane's `agent_status` outside `AgentStatus`, a pane
+naming a tab or workspace the snapshot does not list, a pane with no `revision` — when `panes.json`
+and `machines.json` disagree about the roster, when an agent or command row is missing the field the
+app reads, or when a fixture names the PC it was captured on. It reads the sources, so it needs no
+herdr and no build, and it reports every problem it finds rather than the first. The demo's `/api`
+routes are covered separately by `scripts/conventions.test.ts`, which owns the list of routes the
+demo deliberately leaves unanswered and why.
+
+On 2026-11-16 the check failed on the roster, which is what the demo was really shipping:
+`panes.json` named `w1H:p1`, `w1J:p1`, `w1K:p1` and `w1L:p1` for the `flaky`, `omp`, `cli` and
+`hermes` specs, while `machines.json` held only the five panes of an older capture (`w1C`–`w1G`,
+with `w1E`/`w1F` under labels no spec uses). Only `api`, `web` and `shell` were really recorded; the
+other four specs got synthesized panes with invented `terminal_id`s. The demo still opened them and
+still drew their chats and terminals in a check on 2026-11-16, so this is drift rather than an
+outage — but four of the seven panes were fiction built on a stale capture, and nothing in the repo
+said so. Recapture on a POSIX host to clear it.
 
 ## Releasing
 
@@ -687,7 +667,7 @@ input regression matrix.
 | [`src/`](../src/) | React UI: chat, terminal, composer, sidebar, settings |
 | [`server/`](../server/) | API, WebSockets, transcript readers, push, PTY bridge, remote PCs and the herdr self-update |
 | [`shared/`](../shared/) | HTTP/WebSocket contract and generated herdr types |
-| [`scripts/`](../scripts/) | Plugin lifecycle, type generation, remote bundles, README media, the film and browser checks |
+| [`scripts/`](../scripts/) | Plugin lifecycle, type generation, remote bundles, README media and browser checks |
 | [`public/`](../public/) | PWA manifest, service worker and icons |
 | [`docs/`](.) | Remote PCs, flow control, chat audit, brand assets and README media (`docs/media/`) |
 | [`site/`](../site/) | The website, built by `scripts/build-site.ts` and deployed by GitHub Pages |
