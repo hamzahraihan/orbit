@@ -465,7 +465,7 @@ function ThinkingRow({ text, stateKey }: { text: string; stateKey: string }) {
  */
 function PendingWorkHead({ title, className = "" }: { title: string; className?: string }) {
   return <div className={`work-block is-live is-pending ${className}`} role="status">
-    <div className="work-block-head"><span className="work-row-caret" aria-hidden="true" /><span className="work-block-title">{title}</span></div>
+    <div className="work-block-head"><span className="work-row-caret" aria-hidden="true" /><span className="work-block-title shiny-text">{title}</span></div>
   </div>;
 }
 
@@ -487,7 +487,7 @@ function WorkBlockView({ paneId, parts, duration, live, waiting, defaultOpen, sh
   return <section className={`work-block${live ? " is-live" : ""}${waiting ? " is-waiting" : ""}${open ? "" : " is-folded"}`}>
     <button type="button" className="work-block-head" aria-expanded={open} onClick={() => setOpen(!open)}>
       <span className="work-row-caret" aria-hidden="true">{open ? <ChevronDown /> : <ChevronRight />}</span>
-      <span className="work-block-title">{title}</span>
+      <span className={live && !waiting ? "work-block-title shiny-text" : "work-block-title"}>{title}</span>
       {summary.length > 0 && <span className="work-block-summary">· {summary}</span>}
       {/* its own span: the counts before it are cut on a narrow screen, a failure never is */}
       {failed > 0 && <span className="work-block-failed">· {t("{n} failed", { n: failed })}</span>}

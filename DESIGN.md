@@ -1498,6 +1498,10 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
 ### Work block (`.work-block`, `.work-row`)
 - One per assistant turn: a `▸ Worked for 7s · 1 edit · 2 commands` header (duration = next turn's
   timestamp minus this one's; "Working…" in `--status-working` behind a breathing dot while the agent runs;
+  the live title's words carry a slow sheen (`.shiny-text`: the base muted toward `--text-dim`;
+  a white streak crosses on a dark ground, a deepened glint of the base on the light one, ~2 s
+  crossing with ~1.5 s rest; the blocked "Needs you" title and a settled title stay plain, and
+  reduced motion freezes the sweep);
   "Needs you" in `--text-dim` behind a still `--status-blocked` dot while the
   agent is blocked, by the pane's status and not by whether a prompt card was parsed) over
   one-line rows on the header's own left edge, which is the prose edge too (the hover plate
@@ -1692,6 +1696,8 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   (`z-index: 1`, so its popovers go with it and still rise over the transcript).
 - Empty chat (`.composer-greeting`): one line on the composer's column, directly over it,
   `What should <agent> do in <folder>?` in `--text-strong`, `--fs-display`, `--fw-semibold`, `--tracking-display`, centred,
+  its words carrying the same slow sheen as the live work line (`.shiny-text`, the resting tone
+  muted toward `--text-dim`; reduced motion freezes it),
   and under it `PC · full path` in `--text-dim`, `--fs-sm`. Both wrap anywhere. While dictation's
   recording pill is open over the composer the greeting is hidden (its box stays). No suggestion
   chips or starter prompts. The greeting is out of the flow, so it takes no row from the terminal

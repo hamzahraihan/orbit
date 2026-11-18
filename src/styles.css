@@ -284,6 +284,8 @@
   --droplet-mark-bg: rgba(255, 255, 255, 0.1);
   --droplet-ring: rgba(255, 255, 255, 0.1);
   --droplet-shadow: rgba(0, 0, 0, 0.35);
+  /* the sheen's streak (.shiny-text): white on a dark ground; the light theme deepens it in its own block */
+  --shiny-band: #fff;
 }
 
 [data-theme="light"] {
@@ -357,6 +359,8 @@
   --syntax-type: #155a72;
   --syntax-variable: #7a5418;
   --syntax-meta: #5d4791;
+  /* a white glint is invisible on paper, so the sheen goes dark instead: a deepened glint of the base hue */
+  --shiny-band: color-mix(in srgb, var(--shiny-base, var(--text-strong)) 45%, #000);
 }
 
 /* Charcoal in light: plain paper with ink for the accent and the cursor */
@@ -1612,6 +1616,45 @@ html:lang(ko) :is(.composer-text, .terminal-input-text)::placeholder {
 .settings-section h3 {
   text-wrap: balance;
 }
+/* A sheen crossing the words the stage follows: the empty chat's greeting and the live "Working…"
+   line. The resting tone is the base muted toward the dim tone, so the streak has somewhere to go;
+   the base hue stays (working reads steel, not gray). The streak itself is --shiny-band: a white
+   glint on a dark ground, a deepened glint of the base on the light one, where white cannot hold
+   contrast. The words are clipped to a gradient with -webkit-text-fill-color only, so `color`
+   keeps the breathing dot's currentColor. Endless, so the sweep is stepped (a frame is drawn only
+   when the streak moves, never at every display refresh); reduced motion freezes it, and the rest
+   tone is the static look. */
+.shiny-text {
+  --shiny-rest: color-mix(in srgb, var(--shiny-base, var(--text-strong)) 55%, var(--text-dim));
+  animation: shiny-sweep 3.6s steps(48, jump-end) infinite;
+}
+
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .shiny-text {
+    background-image: linear-gradient(115deg,
+      var(--shiny-rest) 0%,
+      var(--shiny-rest) 37%,
+      var(--shiny-band, #fff) 50%,
+      var(--shiny-rest) 63%,
+      var(--shiny-rest) 100%);
+    background-repeat: no-repeat;
+    background-size: 300% 100%;
+    background-position: 0 0;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+@keyframes shiny-sweep {
+  0%, 12% {
+    background-position: 100% 0;
+  }
+  58%, 100% {
+    background-position: 0% 0;
+  }
+}
+
 
 button {
   font: inherit;
@@ -3080,7 +3123,8 @@ html ::-webkit-scrollbar-thumb {
   }
 
   .badge-working::before,
-  .conn-reconnecting .conn-dot {
+  .conn-reconnecting .conn-dot,
+  .shiny-text {
     animation: none;
   }
 }
