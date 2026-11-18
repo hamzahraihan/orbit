@@ -12,13 +12,13 @@ evidence/
 
 remote-bundles/
 
-# README demo videos: uploaded to GitHub, not committed (docs/development.md)
+# README demo recordings: uploaded to GitHub, not committed (docs/development.md)
 docs/screenshots/*.mp4
 
 # the website, assembled by scripts/build-site.ts
 _site/
 
-# film footage and renders, made by scripts/film/
+# the stills banner.ts renders the README's look shots from
 _film/
 
 # one-off screenshot and probe scripts kept inside the repo so imports resolve
@@ -30,6 +30,15 @@ Microsoft/
 graphify-out/
 
 skills/
+
+# local agent harnesses' hooks, settings and skill locks, which name the PC they were written on
+.codex/
+.gemini/
+skills-lock.json
+.impeccable/config.json
+
+# one-off analyses kept in the checkout, not shipped docs
+devrel-benchmark-*.md
 
 # demo server build output and PID
 .demo-look/
