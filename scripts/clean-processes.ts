@@ -60,7 +60,7 @@ export function isTestArtifact(commandLine: string): boolean {
   if (line.includes("playwright_chromiumdev_profile") || (line.includes("--user-data-dir=") && line.includes("herdr-"))) return true;
   return /(?:^|[\s"/])(?:scripts\/(?:check\.ts|ci-(?:tests|lanes|browser)|demo-build\.ts)|server\/pty\/pty-host\.mjs)/.test(line)
     || /(?:^|[\s"/])scripts\/[\w./-]*(?:-regression|-browser-qa|-qa|smoke)\.(?:ts|mjs)/.test(line)
-    || /(?:^|[\s"/])scripts\/(?:fixtures|film|readme-media)\//.test(line);
+    || /(?:^|[\s"/])scripts\/(?:fixtures|readme-media)\//.test(line);
 }
 
 /** Whether a process lost its root: Windows keeps a child's parent number after that parent exits, POSIX reparents it to 1. */
