@@ -64,6 +64,38 @@
   outline-offset: calc(var(--ring-offset) * -1);
 }
 
+/* Fine pointers: 24px hit box over the 18px glyph (WCAG 2.5.8); glyph and layout unchanged. */
+@media (pointer: fine) {
+  .agent-section-order {
+    position: relative;
+  }
+
+  .agent-section-order::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+  }
+}
+
+/* Coarse pointer at phone width: 44px hit box; the order control is the head's last button, so the
+   box grows rightward into the header padding rather than over the fold toggle. */
+@media (pointer: coarse) and (max-width: 768px) {
+  .agent-section-order {
+    position: relative;
+  }
+
+  .agent-section-order::after {
+    content: "";
+    position: absolute;
+    inset: -13px -26px -13px 0;
+  }
+
+  .sidebar-row-action.row-menu-toggle {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+  }
+}
+
 .agents-sidebar.is-collapsed,
 .agents-sidebar.is-empty {
   flex: 0 0 auto;
@@ -366,12 +398,14 @@
   height: 100%;
 }
 
-/* Actions (menu button) */
+/* Actions (menu button): revealed on hover/focus/selection/open-menu at every pointer, at zero resting
+   cost — the fine-pointer grid keeps a column for it (below), so the row's text never shifts when it fades in. */
 .agent-actions {
   display: flex;
   align-items: center;
   gap: var(--space-1);
   opacity: 0;
+  pointer-events: none;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 
@@ -379,17 +413,24 @@
 .agent-item.is-selected > .agent-actions,
 .agent-actions:has([aria-expanded="true"]) {
   opacity: 1;
+  pointer-events: auto;
 }
 
 @media (hover: hover) {
   .agent-item:hover > .agent-actions {
     opacity: 1;
+    pointer-events: auto;
   }
 }
 
+/* Fine pointers keep the same cells as coarse (status then actions), invisible until revealed. */
 @media (pointer: fine) and (min-width: 769px) {
+  .agent-item {
+    grid-template-columns: var(--side-box) 1fr auto auto auto;
+  }
+
   .agent-actions {
-    display: none;
+    grid-column: 5;
   }
 }
 
@@ -402,6 +443,8 @@
 
   .agent-actions {
     grid-column: 5;
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 

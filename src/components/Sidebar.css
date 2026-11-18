@@ -640,14 +640,15 @@ li.sidebar-row {
 .plan-count svg { color: var(--status-working); }
 .plan-count.is-done svg { color: var(--status-done); }
 
-/* Row actions (menu button): a desktop with a fine pointer draws none (the row itself anchors the
-   menu), so the grid keeps no column for one; where the ⋯ shows, it takes a column of its own
-   (below) instead of wrapping into an implicit second row. */
+/* Row actions (menu button): revealed on hover/focus/selection/open-menu at every pointer, at zero resting
+   cost — the grid keeps a column for the ⋯ at fine pointers too (below), so the row's text never shifts
+   when it fades in. */
 .sidebar-row-actions {
-  display: none;
+  display: flex;
   align-items: center;
   gap: var(--space-1);
   opacity: 0;
+  pointer-events: none;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 
@@ -667,7 +668,20 @@ li.sidebar-row {
     max-width: 100%;
   }
 
-  .sidebar-row-actions { display: flex; }
+  .sidebar-row-actions {
+    display: flex;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .sidebar-row > .sidebar-row-meta { grid-column: 3; }
+  .sidebar-row > .sidebar-row-actions { grid-column: 4; }
+}
+
+@media (pointer: fine) and (min-width: 769px) {
+  .sidebar-row {
+    grid-template-columns: var(--side-box) 1fr auto auto;
+  }
+
   .sidebar-row > .sidebar-row-meta { grid-column: 3; }
   .sidebar-row > .sidebar-row-actions { grid-column: 4; }
 }
@@ -676,11 +690,13 @@ li.sidebar-row {
 .sidebar-row.is-selected > .sidebar-row-actions,
 .sidebar-row-actions:has([aria-expanded="true"]) {
   opacity: 1;
+  pointer-events: auto;
 }
 
 @media (hover: hover) {
   .sidebar-row:hover > .sidebar-row-actions {
     opacity: 1;
+    pointer-events: auto;
   }
 }
 
@@ -909,6 +925,56 @@ li.sidebar-row {
   }
 }
 
+/* Fine pointers: 24px hit boxes over the 18px glyphs (WCAG 2.5.8). The glyph and its neighbors stay
+   put; only an invisible pseudo-element grows. */
+@media (pointer: fine) {
+  .sidebar-row-action.workspace-toggle,
+  .sidebar-section-header .machine-new {
+    position: relative;
+  }
+
+  .sidebar-row-action.workspace-toggle::after,
+  .sidebar-section-header .machine-new::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+  }
+}
+
+/* Coarse pointer at phone width: 44px hit areas (WCAG 2.5.8, the product's own --touch-target).
+   The ⋯'s row cell is auto-width and the row is 44px tall, so it takes a true 44px box. The 18px
+   glyph buttons keep their visual size and grow an invisible pseudo-element instead; machine-new
+   is the header's last control, so its box grows rightward into the header padding rather than
+   over machine-toggle. */
+@media (pointer: coarse) and (max-width: 768px) {
+  .sidebar-row-action.row-menu-toggle,
+  .machine-toggle {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+  }
+
+  .sidebar-row-action.workspace-toggle,
+  .sidebar-section-header .machine-new {
+    width: var(--side-box);
+    height: var(--side-box);
+    position: relative;
+  }
+
+  .sidebar-row-action.workspace-toggle::after,
+  .sidebar-section-header .machine-new::after {
+    content: "";
+    position: absolute;
+  }
+
+  .sidebar-row-action.workspace-toggle::after {
+    inset: -13px;
+  }
+
+  .sidebar-section-header .machine-new::after {
+    inset: -13px -26px -13px 0;
+  }
+}
+
 /* Reduced motion. A few of these animations and transitions are declared on descendant or
    state selectors (`.sidebar-section-header .machine-fold`, `.sidebar-status[data-status="working"]
    .sidebar-status-dot`, …), which outrank the bare class: they are repeated here, and this block
@@ -1065,18 +1131,12 @@ li.sidebar-row {
     background: var(--side-hover);
   }
 
-  /* Selected is the island's one filled target: the accent square, its mark taken to white, so the
-     eye lands on it first and never mistakes it for one more tinted row. */
+  /* Selected keeps the island's tint with the live-edge hairline as its ring — rose is the live
+     edge, never the selection fill; the mark keeps its own colors. */
   .app.sidebar-collapsed li.sidebar-row.is-selected,
   .app.sidebar-collapsed .agent-item.is-selected {
-    background: var(--accent);
-  }
-
-  .app.sidebar-collapsed li.sidebar-row.is-selected .sidebar-mark,
-  .app.sidebar-collapsed .agent-item.is-selected .sidebar-mark {
-    color: var(--primary-text);
-    filter: grayscale(1) brightness(0) invert(1);
-    opacity: 1;
+    background: var(--sidebar-selected);
+    box-shadow: inset 0 0 0 1px var(--accent);
   }
 
   /* State is one dot on the square's corner: a 38px target has no room for a plate, and a 9px
@@ -1110,7 +1170,7 @@ li.sidebar-row {
 
   .app.sidebar-collapsed li.sidebar-row.is-selected .orbit-badge.sidebar-status,
   .app.sidebar-collapsed .agent-item.is-selected .orbit-badge.sidebar-status {
-    box-shadow: 0 0 0 3px var(--accent);
+    box-shadow: 0 0 0 3px var(--sidebar-selected);
   }
 
   .app.sidebar-collapsed .agent-row-status {
