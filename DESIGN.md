@@ -147,14 +147,17 @@ their own:
 | Glass bar | `--bar-bg` | `color-mix(in srgb, var(--bg-panel) 72%, transparent)` | same expression |
 | Glass card | `--card-glass` | `color-mix(in srgb, var(--bg-elevated) 80%, transparent)` | same expression |
 | Glass blur | `--glass-blur` | `saturate(180%) blur(20px)` | same |
-| Accent/readable | `--accent-readable` | `color-mix(in srgb, var(--accent) 55%, var(--text))` | same expression |
+| Accent/readable | `--accent-readable` | `color-mix(in srgb, var(--accent) 40%, var(--text-strong))` | same expression |
 
 `--accent` stays the fill: a tint, a plate, the cursor, the primary action, a border or a seam.
 Where rose is *type or a glyph* — a Markdown link, a file link, a selected chip's word, the chosen
-lens's glyph, a skill's origin icon — it is `--accent-readable` instead: the same hue mixed 55%
-toward `--text`, which is 5.20:1 on the dark base's `--bg`, 4.75:1 on `--bg-elevated`, 7.74:1 on the
-light base's `--bg` and 7.13:1 on its `--bg-elevated`, so the ink clears 4.5:1 for text and 3:1 for
-the focus ring in every palette without a per-theme value. `--ring` outlines in it at the same `2px`
+lens's glyph, a skill's origin icon — it is `--accent-readable` instead: the same hue mixed 40%
+toward `--text-strong`, which is 7.00:1 on the dark base's `--bg`, 6.40:1 on its `--bg-elevated`,
+10.68:1 on the light base's `--bg` and 9.84:1 on its `--bg-elevated`; it clears 4.5:1 on `--bg`,
+`--bg-panel`, `--bg-elevated` and `--bg-hover` of every palette (held by `settings.test.ts`).
+solarized, tokyo-night-day and kanagawa-lotus pin it to `--text-strong`: their strongest text itself
+only clears its worst surface by a hair (4.61–4.66:1), so no rose clears there. `--ring` outlines in
+it at the same `2px`
 / `2px`. The accent fill, `--primary` and the `--status-*` set are unchanged.
 
 `--pdf-page` is the one color with the same value in both columns, on purpose: a PDF page is
@@ -451,7 +454,7 @@ blocks of `src/styles.css`.
   family; in light, accent is the darker text-safe magenta and primary the same fill carrying
   light text. Agent states never use rose.
 - Rose splits by role: `--accent` fills (tints, plates, the cursor, the primary action, seams and
-  edges), and `--accent-readable` is its ink — the same hue 55% toward `--text` — for Markdown
+  edges), and `--accent-readable` is its ink — the same hue 40% toward `--text-strong` — for Markdown
   links, file links, a selected chip's word and the chosen lens's glyph. A normal-text use never
   takes the raw fill.
 - Agent state has a written label as well as color. The sidebar's compact glyphs keep their labels
