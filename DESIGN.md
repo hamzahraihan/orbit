@@ -807,18 +807,21 @@ are absent at zero, and both count only agents waiting on the user, never finish
 
 ## 5. Components
 
-HeroUI v3 owns the shared controls' anatomy, sizing, states, focus and motion: its stylesheet is
-loaded in `src/tailwind-orbit.css`, and `src/lib/heroui-theme.css` points its theme variables at
-Orbit's tokens (never `--accent: var(--border)`-style self-references — Orbit owns those names),
-so every HeroUI control draws in the current palette while HeroUI's own geometry shows. Orbit
-keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `.orbit-menu`,
-`.modal`), and no component stylesheet paints over a HeroUI slot class.
+ui-sdk owns the shared controls' anatomy, sizing, states, focus and motion; `@ui-sdk/core/web.css`
+is loaded in `src/main.tsx` inside `@layer ui-sdk`. `src/layers.css` orders Orbit's element reset
+(`src/reset.css`) below it and `src/ui.css` above it; Orbit's shell in `src/styles.css` and every
+component stylesheet are unlayered, so they win without `!important`. `src/ui.css` maps ui-sdk's
+tokens onto Orbit's palette and keeps the product's control geometry. `src/lib/ui.tsx` re-exports and
+wraps ui-sdk's parts; Orbit's wrappers only map Orbit's semantic names (`Button`'s variants and sizes,
+`Switch`, `Select`, `Segmented`, `Stepper`) onto them. Orbit keeps its own chrome primitives
+(`.icon-button`, `.segmented`, `.orbit-badge`, `.orbit-menu`, `.modal`), and no component stylesheet
+paints over a ui-sdk slot class.
 
-### Button (HeroUI `.button`, `.icon-button`)
-- Text actions are HeroUI's Button (`src/lib/heroui/orbit-components.tsx` maps Orbit's semantic
-  variants onto its own: `primary`, `secondary`, `ghost`, `outline`, `tertiary`, `danger`, plus
-  `icon` for a square icon-only action). HeroUI owns the anatomy, sizing, states and focus; the
-  pill radius, heights and hover come from its stylesheet, colored by the bridge's tokens.
+### Button (ui-sdk `[data-slot="button"]`, `.icon-button`)
+- Text actions are ui-sdk's Button wrapped by `src/lib/ui.tsx`, which maps Orbit's semantic
+  variants onto classes: `primary`, `secondary`, `ghost`, `outline`, `tertiary`, `danger`, plus
+  `icon` for a square icon-only action. ui-sdk owns the anatomy, sizing, states and focus; the
+  radius, heights and hover come from `src/ui.css`, colored by Orbit's tokens.
   A destructive action that asks twice (Settings → Phone & devices, Revoke) is a neutral
   `.icon-button` (the trash glyph, named "Revoke {name}") at rest and becomes a danger button
   with its "Revoke?" label only while it asks to confirm; the same element through both steps,
@@ -831,13 +834,11 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   disabled.
 - Coarse pointers grow both families to `--touch-target`.
 
-### Segmented control (HeroUI `.toggle-button-group`, Orbit `.segmented`)
-- Settings' two-to-four-choice control is HeroUI's ToggleButtonGroup (`Segmented` in
+### Segmented control (ui-sdk `SegmentedControl`, Orbit `.segmented`)
+- Settings' two-to-four-choice control is ui-sdk's SegmentedControl (`Segmented` in
   `components/SettingsControls.tsx`): attached buttons on one track, the chosen one filled with
-  the stronger rose tint (`--accent-soft` → `--primary-tint`) and its label in `--text-strong`,
-  `disallowEmptySelection` so one option is always chosen. The faint tint and the accent-colored
-  label it used to take read as the disabled option on a dark card. No hairline of its own: the
-  track is the frame.
+  the stronger rose tint and its label in `--text-strong`; the chosen option is always one, so no
+  empty-selection state exists. No hairline of its own: the track is the frame.
 - It is not a generic tab list. Five or more choices go in a select.
 - Used for Chat/Terminal, theme, density, sidebar rows and the like. The header's own
   Chat/Terminal switch (`.segmented`, `aria-pressed`) is Orbit's: at every width it drops the track
@@ -850,8 +851,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
 - Orbit's `.segmented` keeps an option at `--control-h` less `--segmented-inset` tall, so its
   track is `--control-h`. On a coarse pointer each option is at least `--touch-target` wide, so
   neighbours never share a tap, and reaches `--touch-target` tall through an invisible `::before`
-  expander sized from that same difference, as the palette's filter chips do. HeroUI's own group
-  reaches the target through its `min-height` on a coarse pointer.
+  expander sized from that same difference, as the palette's filter chips do.
 
 ### Keyboard hint (`.kbd`)
 - An inline mono keycap: `18px` high, strong bottom edge, `--radius-sm`, `--fs-2xs`.
@@ -859,8 +859,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
 
 ### Modal (`.modal*`)
 - `.modal-scrim` centers an `aria-modal` dialog at `--z-modal`; `.modal` is a capped scrollable
-  column with header, body and footer and `--shadow-pop`, on HeroUI's overlay radius
-  (`--radius-2xl`).
+  column with header, body and footer and `--shadow-pop`, on the overlay radius (`--radius-2xl`).
 - At `<=640px`, it becomes a bottom sheet with top `--radius-2xl` corners and safe-area padding.
   Every surface on a `.modal-scrim` (dialogs, the palette, the row sheet) rises from the bottom
   edge as an iPhone's sheet does (`--dur-sheet` on `--ease-settle`, the scrim darkening with it),
@@ -885,12 +884,13 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   and closes the group, as herdr's `--group` does.
 
 ### Field (`.field`, `.input`, `.orbit-select`)
-- Stacked uppercase label, optional hint and field. The text field itself is HeroUI's `.input`
-  skin (raw `<input class="input">` and the `Input` wrapper both take it): `--field-*` tokens give
+- Stacked uppercase label, optional hint and field. The text field itself takes `.input`
+  (ui-sdk's Input renders the native element, wired by `src/lib/ui.tsx`): `--ui-*` tokens give
   it `--bg-input`, `--radius-lg`, the hairline border and the accent edge on focus. Desktop fields
   use `--fs-sm`; small-screen fields retain `--fs-input` to avoid focus zoom.
-- A native `<select class="orbit-select">` keeps the OS picker (long theme lists, mobile) and wears
-  the same field surface, so the control vocabulary stays one system.
+- A select draws with ui-sdk's Select wrapped by `src/lib/ui.tsx` (data or groups of options in,
+  an `.orbit-select` trigger out), wearing the same field surface, so the control vocabulary stays
+  one system.
 - Focus names the edge with accent; errors use blocked/danger tokens and `role="alert"`. A failure
   leads with a plain sentence (`lib/userError.ts`); what the PC or the browser said follows on a
   second line in the interface face, selectable, never in the mono stack (which has no Hangul and
@@ -899,7 +899,7 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   palette), never the browser's own grey (3.8:1 on a dark field).
 
 ### Menu / popover (`.orbit-menu*`)
-- A `--radius-2xl` surface with `--shadow-pop` (HeroUI's popover geometry); rows
+- A `--radius-2xl` surface with `--shadow-pop`; rows
   (`.orbit-menu-item`) are 36px tall on `--radius-xl`, with an icon, ellipsized main label and
   optional hint.
 - Hover or `aria-selected` uses `--bg-hover`. Headings are dim uppercase micro labels.
@@ -1989,10 +1989,10 @@ keeps its own chrome primitives (`.icon-button`, `.segmented`, `.orbit-badge`, `
   page at 1.18:1 and a boundary owes 3:1 (the rule measures 3.56:1 on amber's card; borders off
   turns it transparent with the rest). A row is a label (`--fs-sm`, `--fw-medium`, `--text-strong`) with at most
   one dim sentence under it (`--fs-xs`, no wider than `54ch`) and one control at the end of the
-  line. The controls are HeroUI's Switch (`.switch`, `role="switch"`), ToggleButtonGroup
-  (`.toggle-button-group`, `.settings-segmented`) for two to four short choices, a native select
-  for five or more, NumberField (`.number-field`, `.settings-stepper`) as a stepper (minus, value,
-  plus, in one bordered well) and HeroUI's Input (`.input`); inside a card they sit on
+  line. The controls are ui-sdk's Switch (`Switch` in `src/lib/ui.tsx`, `.orbit-switch`,
+  `role="switch"`), SegmentedControl (`.settings-segmented`) for two to four short choices, ui-sdk's
+  Select for five or more, NumberInput (`.settings-stepper`) as a stepper (minus, value,
+  plus, in one bordered well) and ui-sdk's Input (`.input`); inside a card they sit on
   `--bg-input`. On a phone a control that needs the line
   (three or more segments, a text field, or a long sentence above it) goes under its label at
   the card's width, its segments sharing it equally; the rest stay on the label's line. The
