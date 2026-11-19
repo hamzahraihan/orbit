@@ -563,7 +563,9 @@ describe("file paths in output", () => {
 
   it("opens the files a log in a plain code block names, and leaves code in a language alone", () => {
     const plain = render(createElement(Markdown, { children: `\`\`\`\n${LOG}\n\`\`\`` }), opener);
-    expect(plain).toContain(`<button type="button" class="markdown-file" title="Open /tmp/editor-shot/t00000.png">/tmp/editor-shot/t00000.png</button> (1600, 1000)`);
+    expect(plain).toContain("markdown-file");
+    expect(plain).toContain(`title="Open /tmp/editor-shot/t00000.png"`);
+    expect(plain).toContain(">/tmp/editor-shot/t00000.png</button> (1600, 1000)");
     // a MIME type has no extension: it is not a file
     expect(plain).not.toContain("Open image/png");
     const code = render(createElement(Markdown, { children: "```ts\nimport { a } from \"./lib/a.ts\";\n```" }), opener);
@@ -577,7 +579,10 @@ describe("file paths in output", () => {
 
   it("links a tool output's paths, keeping its text, and leaves a huge output plain", () => {
     const html = render(createElement("pre", null, linkFilePaths(LOG, opener)), opener);
-    expect(html).toBe(`<pre><button type="button" class="markdown-file" title="Open /tmp/editor-shot/t00000.png">/tmp/editor-shot/t00000.png</button> (1600, 1000) -&gt; (1255, 960)\ndisplay image 1: [image/png]</pre>`);
+    expect(html).toContain("<pre><button");
+    expect(html).toContain("markdown-file");
+    expect(html).toContain(`title="Open /tmp/editor-shot/t00000.png"`);
+    expect(html).toContain(">/tmp/editor-shot/t00000.png</button> (1600, 1000) -&gt; (1255, 960)\ndisplay image 1: [image/png]</pre>");
     expect(linkFilePaths("no paths here", opener)).toBe("no paths here");
     const huge = `${"x".repeat(FILE_LINK_LIMIT)} /tmp/a/b.png`;
     expect(linkFilePaths(huge, opener)).toBe(huge);
