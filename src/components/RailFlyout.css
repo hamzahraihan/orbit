@@ -14,7 +14,7 @@
   pointer-events: none;
   font-family: var(--font-sans);
   color: var(--text);
-  line-height: 1.35;
+  line-height: var(--lh-base);
   animation: rail-flyout-in var(--dur-fast) var(--ease-out);
 }
 
@@ -38,7 +38,7 @@
 
 .rail-flyout-title {
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--text-strong);
   overflow: hidden;
   text-overflow: ellipsis;
