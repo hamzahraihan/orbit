@@ -57,6 +57,17 @@ to change. Also read [server/AGENTS.md](server/AGENTS.md) and [src/AGENTS.md](sr
   PR's checks in a fresh `git clone` under `/tmp` and delete it afterwards. Leave its own
   checkouts alone.
 
+## ui-sdk components
+- Components are ui-sdk parts wrapped by `src/lib/ui.tsx` and styled by `src/ui.css`. Before building
+  or changing a control, read the installed docs index
+  `node_modules/@ui-sdk/react/docs/llms.txt` and the component's page; do not hand-roll a widget
+  ui-sdk ships, and do not paint over a `[data-slot]` part with per-component CSS.
+- `src/layers.css` orders the cascade: Orbit's element defaults (`src/reset.css`) sit below
+  `@ui-sdk/core/web.css`'s `ui-sdk` layer, and `src/ui.css` is unlayered above both. Never load a
+  product stylesheet into `ui-sdk`; a control's own rule does not belong in `src/reset.css`.
+- `Button`, `Input`, `Textarea`, `Select`, `Switch`, `Segmented`, `Stepper` and `Checkbox` are the
+  shared entries in `src/lib/ui.tsx`; reuse them instead of adding another wrapper.
+
 ## Maintainer workflow
 - A session that changes code, in any harness, stops at an open PR: only the maintainer's merge
   pass merges, unless the maintainer asks that session to merge. One session that edits files per
