@@ -35,8 +35,9 @@
   border-top: var(--hairline) solid var(--sidebar-divider);
 }
 
-/* Machine header: the title owns its own mark, then the controls take their own columns, so no
-   cell has to hold a mark and a name at once. */
+/* Machine header: the title owns its own mark, then the controls take their own columns, so no cell
+   has to hold a mark and a name at once. The header is the head of its workspaces, not a button:
+   its caret and plus are the controls; the hover fill stays, since pointing at it opens its card. */
 .machine-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto auto;
@@ -45,7 +46,6 @@
   min-height: var(--side-row);
   padding: 0 var(--space-2);
   border-radius: var(--sidebar-radius);
-  cursor: pointer;
   transition: background var(--dur-fast) var(--ease-out);
 }
 

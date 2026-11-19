@@ -1056,13 +1056,14 @@ paints over a ui-sdk slot class.
   state. A plugin's line for the agent (`display_agent`) leads the place, as before, where it says
   more than the mark and the title; it changes live like the tokens.
 - The Agents list is flat and every row names its own place. Pinned agents (pinned from a row's
-  menu) stand first, in the order they were pinned, in a card (a `--hairline` `--border` edge,
-  `--radius-lg`, no fill, so hover and selection read inside it as elsewhere),
-  with no mark of their own (the card says so); the rest follow `--space-2` below in the
-  chosen order. The card's caption sits on its top edge, as a fieldset's legend does
-  (`.sidebar-pinned-label`: a pin and **PINNED**, centered, `--fs-2xs` semibold caps in
-  `--text-dim` on the `--bg-panel` it masks the edge with); it is hidden from screen readers,
-  where the list itself is labelled **Pinned**. Without pins there is no card and no caption. Pins are shared with the other browsers of the server.
+  menu) stand first, in the order they were pinned, in a card (a `--sidebar-pinned-bg` fill, a
+  `--hairline` `--sidebar-pinned-border` edge, `--sidebar-radius`; hover and selection read inside it as elsewhere);
+  each row keeps its mark. The rest follow `--space-2` below in the
+  chosen order. The card's caption is a full-width bar above its rows (`.sidebar-pinned-label`:
+  a pin and **PINNED**, `--fs-xs` semibold caps in `--text-dim` on a `color-mix` of the card's fill,
+  over a `--hairline` bottom border); it is hidden from screen readers,
+  where the list itself is labelled **Pinned**. Without pins there is no card and no caption; in the
+  rail the card's border and caption go, its rows standing as tiles with the others. Pins are shared with the other browsers of the server.
 - Appearance's **Sidebar rows** is **One line** by default: a workspace row is its name, and an
   agent row is one line on a workspace row's height, its dim place after the title (the title keeps
   its width first, the place takes what is left with an ellipsis). Two lines draws the row as the
@@ -1106,8 +1107,9 @@ paints over a ui-sdk slot class.
   next or previous group with its worktrees, and a worktree moves among its siblings only.
 - A workspace is pinned from its row menu (**Pin workspace** / **Unpin workspace**, first in the
   menu), as Paseo pins a chat: pinned workspaces leave their place and stand first in their PC's
-  list, in the order they were pinned, in the Agents list's card (`.sidebar-pinned`, under the same **Pinned** caption), with no mark
-  of their own either. A pinned repository's workspace stands alone in the card; its unpinned
+  list, in the order they were pinned, in the same card (`.sidebar-pinned`, under the same **Pinned** caption).
+  A pinned row keeps its mark — the folder, project icon or agent brand mark it would draw in the list.
+  A pinned repository's workspace stands alone in the card; its unpinned
   worktrees stay as standalone rows at the group's position, in their order. They are not dragged
   or moved away from their repository; unpinning the head restores the group. A pinned worktree
   leaves its repository's group, which stays. Dragging, touch long-press and `Alt+↑/↓` reorder

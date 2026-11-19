@@ -734,7 +734,9 @@ li.sidebar-row {
   height: var(--icon-size);
 }
 
-/* Pinned section — card with border */
+/* Pinned section — card with a filled, bordered container and a caption bar above its rows.
+   The caption's rules live here and nowhere else (AgentSidebar.css draws the same card): the reset
+   makes an <svg> a block, and a block inside the inline span broke the caption into two lines. */
 .sidebar-pinned {
   background: var(--sidebar-pinned-bg);
   border: var(--hairline) solid var(--sidebar-pinned-border);
@@ -760,10 +762,16 @@ li.sidebar-row {
   border-bottom: var(--hairline) solid var(--sidebar-pinned-border);
 }
 
+.sidebar-pinned-label > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
 .sidebar-pinned-label svg {
   width: 14px;
   height: 14px;
-  margin-right: var(--space-2);
   flex-shrink: 0;
 }
 
@@ -1025,7 +1033,7 @@ li.sidebar-row {
   .app.sidebar-collapsed :is(
     .machine-name, .machine-kind, .machine-state,
     .sidebar-row-title, .sidebar-row-context, .sidebar-fold-count,
-    .sidebar-pinned-label, .sidebar-footer-action span,
+    .sidebar-footer-action span,
     .agent-section-toggle > span:not(.agent-section-count), .agent-copy, .agent-tokens,
     .agent-empty, .tree-state, .tree-state-hint, .machine-empty
   ) {
@@ -1041,6 +1049,15 @@ li.sidebar-row {
   }
 
   .app.sidebar-collapsed :is(.machine-action, .machine-controls, .machine-new, .machine-toggle, .machine-manage, .error-state, .sidebar-resizer) {
+    display: none;
+  }
+  /* The pinned card in the rail: the card chrome goes, its caption with it — one column of marks, as every other list in the rail */
+  .app.sidebar-collapsed .sidebar-pinned {
+    padding: 0;
+    border: 0;
+  }
+
+  .app.sidebar-collapsed .sidebar-pinned-label {
     display: none;
   }
 
