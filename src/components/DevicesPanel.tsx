@@ -3,7 +3,7 @@ import { Check, Pencil, RefreshCw, Trash2, X } from "lucide-react";
 
 import "./DevicesPanel.css";
 
-import { Button, Input } from "../lib/heroui/orbit-components.tsx";
+import { Button, Input } from "../lib/ui.tsx";
 
 import { ApiError, fetchDevices, pairDevice, renameDevice, revokeDevice, startPairing } from "../lib/api.ts";
 import { copyText } from "../lib/clipboard.ts";
@@ -151,8 +151,8 @@ export function DevicesPanel({ pairUrl, auth, onPaired }: DevicesPanelProps) {
               {renaming?.id === d.id ? (
                 <form className="devices-rename" onSubmit={(e) => { e.preventDefault(); void rename(); }}>
                   <Input className="input" value={renaming.label} maxLength={48} autoFocus aria-label={t("Device name")} onChange={(e) => setRenaming({ id: d.id, label: e.target.value })} />
-                  <button type="submit" className="icon-button" aria-label={t("Save name")}><Check /></button>
-                  <button type="button" className="icon-button" aria-label={t("Cancel")} onClick={() => setRenaming(null)}><X /></button>
+                  <Button type="submit" className="icon-button" aria-label={t("Save name")}><Check /></Button>
+                  <Button type="button" className="icon-button" aria-label={t("Cancel")} onClick={() => setRenaming(null)}><X /></Button>
                 </form>
               ) : (
                 <>
@@ -161,7 +161,7 @@ export function DevicesPanel({ pairUrl, auth, onPaired }: DevicesPanelProps) {
                     <span className="settings-description">{t("Last seen {when}", { when: lastSeen(d.last_seen_at) })}</span>
                   </div>
                   <div className="devices-actions">
-                    <button type="button" className="icon-button" aria-label={t("Rename {name}", { name: d.label })} onClick={() => setRenaming({ id: d.id, label: d.label })}><Pencil /></button>
+                    <Button type="button" className="icon-button" aria-label={t("Rename {name}", { name: d.label })} onClick={() => setRenaming({ id: d.id, label: d.label })}><Pencil /></Button>
                     {/* one element across both steps, so focus stays on it when it asks to confirm */}
                     <Button type="button" variant={confirming === d.id ? "danger" : "tertiary"} aria-label={confirming === d.id ? undefined : t("Revoke {name}", { name: d.label })} onClick={() => void revoke(d.id)}>
                       <Trash2 aria-hidden="true" />{confirming === d.id && t("Revoke?")}

@@ -8,6 +8,7 @@ import { useMachineApi } from "../lib/machineContext.tsx";
 import { useT } from "../lib/i18n.ts";
 import { userErrorMessage, type UserError } from "../lib/userError.ts";
 import type { TerminalSearchState } from "./TerminalViewportTools.tsx";
+import { Button, Input } from "../lib/ui.tsx";
 import "./FindBar.css";
 
 export function FindBar({ paneId, viewportIntent, disabled, focusRequest, activePane = true, onClose, onResult }: { paneId: string; viewportIntent: ViewportIntentGate; disabled: boolean; focusRequest: number; activePane?: boolean; onClose: () => void; onResult?: (state: TerminalSearchState | null) => void }) {
@@ -69,16 +70,16 @@ export function FindBar({ paneId, viewportIntent, disabled, focusRequest, active
         <label className="find-bar-query">
           <Search size={16} aria-hidden="true" />
           <span className="visually-hidden">{t("Find in terminal")}</span>
-          <input ref={input} className="input" type="search" value={query} maxLength={1024} placeholder={t("Find in terminal")} readOnly={busy} onChange={(event) => { setQuery(event.target.value); setResult(null); setError(null); }}
+          <Input ref={input} className="input" type="search" value={query} maxLength={1024} placeholder={t("Find in terminal")} readOnly={busy} onChange={(event) => { setQuery(event.target.value); setResult(null); setError(null); }}
             onKeyDown={(event) => {
               if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
               if (event.key === "Enter") { event.preventDefault(); void search(event.shiftKey || !result ? "backward" : "forward"); }
             }} />
         </label>
         <span className="find-bar-count" role="status">{busy ? t("Searching…") : result ? result.current === null ? t("No matches") : t("{current} of {total}", { current: result.current, total: result.total }) : ""}</span>
-        <button className="icon-button" type="button" aria-label={t("Previous match")} title={t("Previous match")} disabled={disabled || busy || !query} onClick={() => void search("backward")}><ArrowUp size={16} aria-hidden="true" /></button>
-        <button className="icon-button" type="button" aria-label={t("Next match")} title={t("Next match")} disabled={disabled || busy || !query} onClick={() => void search("forward")}><ArrowDown size={16} aria-hidden="true" /></button>
-        <button className="icon-button" type="button" aria-label={t("Close search")} title={t("Close search")} onClick={onClose}><X size={16} aria-hidden="true" /></button>
+        <Button className="icon-button" type="button" aria-label={t("Previous match")} title={t("Previous match")} disabled={disabled || busy || !query} onClick={() => void search("backward")}><ArrowUp size={16} aria-hidden="true" /></Button>
+        <Button className="icon-button" type="button" aria-label={t("Next match")} title={t("Next match")} disabled={disabled || busy || !query} onClick={() => void search("forward")}><ArrowDown size={16} aria-hidden="true" /></Button>
+        <Button className="icon-button" type="button" aria-label={t("Close search")} title={t("Close search")} onClick={onClose}><X size={16} aria-hidden="true" /></Button>
       </div>
       {error ? <p className="find-bar-error" role="alert">{error.message}{error.detail !== null && <><br /><code>{error.detail}</code></>}</p> : <p className="find-bar-hint">{t("Search moves the pane for every client.")}</p>}
     </form>

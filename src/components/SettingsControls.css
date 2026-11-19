@@ -1,4 +1,4 @@
-/* Settings is built from these: a group (caption + card), a row, and the Hero UI controls. */
+/* Settings is built from these: a group (caption + card), a row, and the ui-sdk controls. */
 
 .settings-section {
   display: flex;
@@ -114,35 +114,19 @@
   gap: var(--space-2);
 }
 
-/* Hero UI's Switch, ToggleButtonGroup and NumberField carry their own skins. Orbit only
-   keeps the stepper a row-sized control and widens their hit areas on touch screens, where a
-   20px track is too small a target. */
-.settings-stepper {
-  flex: 0 0 auto;
-  width: 8.5rem;
-}
-
-.settings-stepper .number-field__group {
-  width: 100%;
-}
-
-/* HeroUI fills the switch's off track with --default, which is Orbit's hover surface: on a card
-   that is one shade off the card itself, so an off switch looked like a knob with no track. The
-   track takes the border's strong step instead; checked, hover and pressed keep HeroUI's fills. */
-.settings-row .switch {
-  --switch-control-bg: var(--border-strong);
-}
+/* ui-sdk draws the switch, the segmented track and the stepper; Orbit keeps
+   the stepper a row-sized control and widens a finger's target without changing
+   the 20px track it sees. */
 
 @media (pointer: coarse) {
-  .settings-row .switch__content {
-    min-height: var(--touch-target);
-    align-items: center;
+  .settings-row .orbit-switch {
+    position: relative;
   }
 
-  .settings-row .number-field__increment-button,
-  .settings-row .number-field__decrement-button {
-    min-width: var(--touch-target);
-    min-height: var(--touch-target);
+  .settings-row .orbit-switch::before {
+    content: "";
+    position: absolute;
+    inset: calc((var(--touch-target) - 1.25rem) / -2) calc(var(--space-3) * -1);
   }
 }
 
@@ -159,7 +143,7 @@
     width: 100%;
   }
 
-  .settings-row.is-wide > .settings-segmented > .toggle-button {
+  .settings-row.is-wide > .settings-segmented > .segmented-option {
     flex: 1 1 0;
     min-width: 0;
   }

@@ -5,6 +5,7 @@ import "./ComposerNotices.css";
 
 import { isDismissible, type ComposerNotice } from "../lib/composerNotices.ts";
 import { useT } from "../lib/i18n.ts";
+import { Button } from "../lib/ui.tsx";
 
 export interface ComposerNoticeRow extends ComposerNotice {
   /** another app holds the pane, the output stream failed: the terminal pill's warning colour */
@@ -32,9 +33,9 @@ export function ComposerNotices({ notices, onDismiss }: ComposerNoticesProps) {
           <span className="composer-notice-actions">
             {notice.actions}
             {isDismissible(notice) && (
-              <button type="button" className="composer-notice-dismiss" aria-label={t("Dismiss notice")} title={t("Dismiss notice")} onClick={() => onDismiss(notice)}>
+              <Button type="button" className="composer-notice-dismiss" aria-label={t("Dismiss notice")} title={t("Dismiss notice")} onClick={() => onDismiss(notice)}>
                 <X aria-hidden="true" />
-              </button>
+              </Button>
             )}
           </span>
         </div>

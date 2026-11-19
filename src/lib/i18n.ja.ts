@@ -40,7 +40,6 @@ export const JA: Record<string, string> = {
   "Your browser or operating system may intercept {keys}.": "ブラウザーや OS が {keys} を先に処理する場合があります。",
   "Reserved": "予約済み",
   "Already assigned": "割り当て済み",
-  "Send keys to terminal": "キーを端末に送る",
   "Default": "既定",
   "Password or PIN": "パスワードまたは PIN",
   "Enter a single-line password or PIN.": "改行を含まないパスワードまたは PIN を入力してください。",

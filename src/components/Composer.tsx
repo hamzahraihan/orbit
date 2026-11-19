@@ -61,6 +61,7 @@ import { cachedPaneCommands } from "../lib/paneCommandCache.ts";
 import { useT } from "../lib/i18n.ts";
 import { offersRetry, userFailure, type UserFailure } from "../lib/userError.ts";
 import { AttachmentTooLargeError } from "../lib/api.ts";
+import { Button, Input, Textarea } from "../lib/ui.tsx";
 import { modalOpen } from "../lib/focus.ts";
 
 export interface ComposerProps {
@@ -176,7 +177,7 @@ function ContextRing({ context, shown, readOnly = false, onToggle, onCompact }: 
   </span>;
   return (
     <>
-    <button
+    <Button
       type="button"
       className={`composer-context${left <= 20 ? " is-low" : ""}`}
       aria-label={`${label} · ${detail}`}
@@ -190,10 +191,10 @@ function ContextRing({ context, shown, readOnly = false, onToggle, onCompact }: 
           strokeDasharray={`${circumference * (100 - left) / 100} ${circumference}`} transform="rotate(-90 8 8)" />
       </svg>
       {shown && <span className="composer-context-text">{label}</span>}
-    </button>
-    {shown && onCompact && <button type="button" className="composer-compact" title={t("Compact context")} aria-label={t("Compact context")} onClick={onCompact}>
+    </Button>
+    {shown && onCompact && <Button type="button" className="composer-compact" title={t("Compact context")} aria-label={t("Compact context")} onClick={onCompact}>
       <Minimize2 aria-hidden="true" />
-    </button>}
+    </Button>}
     </>
   );
 }
@@ -1091,11 +1092,11 @@ export function Composer({
   // the suggestions' own close, for a pointer or a phone, which has no Escape: it does what Escape does, and the
   // text and the focus stay in the box (a press never takes the focus; a key on it hands it back)
   const menuClose = (
-    <button type="button" className="composer-menu-close" aria-label={t("Close suggestions")} title={t("Close suggestions")}
+    <Button type="button" className="composer-menu-close" aria-label={t("Close suggestions")} title={t("Close suggestions")}
       onMouseDown={(event) => event.preventDefault()}
       onClick={(event) => { setMenuDismissed(true); if (event.detail === 0) textareaRef.current?.focus({ preventScroll: true }); }}>
       <X aria-hidden="true" />
-    </button>
+    </Button>
   );
   // the arrow keys move the selection, not the focus (it stays in the box), so the browser does not scroll to it
   useEffect(() => {
@@ -1109,33 +1110,32 @@ export function Composer({
       {/* no Tab key on a phone: the suggestion can be a chip there that fills the box, when Settings asks for it */}
       {settings.suggestionChip && offered !== null && text === "" && (
         <div className="composer-quick composer-suggestion-row">
-          <button type="button" className="composer-quick-reply composer-suggestion" title={t("Use the suggestion")} onClick={() => setTextAndCaret(offered, offered.length)}>
+          <Button type="button" className="composer-quick-reply composer-suggestion" title={t("Use the suggestion")} onClick={() => setTextAndCaret(offered, offered.length)}>
             <span aria-hidden="true">↹ </span>{offered}
-          </button>
+          </Button>
         </div>
       )}
 
       {quickOpen && quickReplies.length > 0 && (
         mobile && !quickExpanded ? (
           <div className="composer-quick" role="group" aria-label={t("Quick replies")}>
-            <button type="button" className="composer-quick-reply composer-quick-toggle" onClick={() => setQuickExpanded(true)}>
+            <Button type="button" className="composer-quick-reply composer-quick-toggle" onClick={() => setQuickExpanded(true)}>
               {t("Quick replies ({n})", { n: quickReplies.length })}
-            </button>
+            </Button>
           </div>
         ) : (
         <div className="composer-quick" role="group" aria-label={t("Quick replies")}>
           {mobile && (
-            <button type="button" className="composer-quick-reply composer-quick-toggle" onClick={() => setQuickExpanded(false)}>
+            <Button type="button" className="composer-quick-reply composer-quick-toggle" onClick={() => setQuickExpanded(false)}>
               {t("Hide")}
-            </button>
+            </Button>
           )}
           {quickReplies.map((reply, index) => {
             const armed = armedQuickReply === index;
             const label = settings.quickReplyMode === "insert"
               ? t("Put “{reply}” in the message box", { reply: reply.text })
               : armed ? t("Tap again to send “{reply}”", { reply: reply.text }) : t("Send “{reply}”", { reply: reply.text });
-            return <button
-              key={index}
+            return <Button
               type="button"
               className={`composer-quick-reply${armed ? " is-armed" : ""}`}
               title={label}
@@ -1144,7 +1144,7 @@ export function Composer({
               onClick={() => useQuickReply(reply, index)}
             >
               {reply.text}
-            </button>;
+            </Button>;
           })}
         </div>
         )
@@ -1165,9 +1165,9 @@ export function Composer({
           {/* the draft named above, never what has replaced it since: the server checks; a box it could
               not tell empty, sent over only in the same Claude terminal the refusal was for */}
           {typeof note === "object" && ("failure" in note
-            ? offersRetry(note.failure) && <button type="button" className="composer-note-action" disabled={!connected} onClick={() => retryUpload(note.attachment)}>{t("Try again")}</button>
-            : <button type="button" className="composer-note-action" disabled={!connected || uploading || roomless !== undefined || sending || text.trim().length === 0}
-              onClick={() => "draft" in note ? send(note.draft) : send(undefined, true)}>{"draft" in note ? t("Clear it and send") : t("Send anyway")}</button>)}
+            ? offersRetry(note.failure) && <Button type="button" className="composer-note-action" disabled={!connected} onClick={() => retryUpload(note.attachment)}>{t("Try again")}</Button>
+            : <Button type="button" className="composer-note-action" disabled={!connected || uploading || roomless !== undefined || sending || text.trim().length === 0}
+              onClick={() => "draft" in note ? send(note.draft) : send(undefined, true)}>{"draft" in note ? t("Clear it and send") : t("Send anyway")}</Button>)}
         </div>
       )}
 
@@ -1227,7 +1227,7 @@ export function Composer({
                   const owner = command.origin === undefined ? null : ownerLabel(command.origin);
                   const Owner = command.origin === undefined ? null : ORIGIN_ICON[command.origin];
                   return (
-                    <button
+                    <Button
                       id={`${menuId}-${index}`}
                       key={`${command.source}:${command.name}`}
                       type="button"
@@ -1243,10 +1243,9 @@ export function Composer({
                       <span className="menu-item-main">{syntax.skillTriggers.includes(trigger.prefix ?? "/") ? trigger.prefix ?? command.trigger ?? "/" : command.trigger ?? "/"}{command.name}</span>
                       {owner !== null && <span className="visually-hidden">{owner}</span>}
                       <span className="menu-item-hint">{withSource && owner === null ? `${t(SOURCE_LABEL[command.source])}${description ? " · " : ""}` : ""}{description}</span>
-                    </button>
+                    </Button>
                   );
                 };
-                if (!groupedBySource) return <div className="composer-menu-group">{orderedCommands.map((command) => row(command, true))}</div>;
                 return COMMAND_GROUPS.map((group) => {
                   const rows = orderedCommands.filter((command) => commandGroup(command) === group);
                   if (rows.length === 0) return null;
@@ -1262,9 +1261,8 @@ export function Composer({
               <div className="composer-menu-group">
                 <div className="menu-heading">{t("Files")}</div>
                 {files.map((file, index) => (
-                  <button
+                  <Button
                     id={`${menuId}-${index}`}
-                    key={file}
                     type="button"
                     className="orbit-menu-item"
                     role="option"
@@ -1273,7 +1271,7 @@ export function Composer({
                     onClick={() => selectCompletion(file, trigger)}
                   >
                     <span className="menu-item-main">{file}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
@@ -1308,15 +1306,15 @@ export function Composer({
                     ? <><TriangleAlert aria-hidden="true" /><span className="visually-hidden">{t(attachment.state === "error" ? "Failed" : "No room")}</span></>
                     : t(attachment.state === "uploading" ? "Uploading" : "Attached")}
                 </span>
-                <button type="button" aria-label={t("Remove {file}", { file: attachment.file.name })} onClick={() => removeAttachment(attachment)}>
+                <Button type="button" aria-label={t("Remove {file}", { file: attachment.file.name })} onClick={() => removeAttachment(attachment)}>
                   <X aria-hidden="true" />
-                </button>
+                </Button>
               </div>
             ))}
           </div>
         )}
 
-        <textarea
+        <Textarea
           ref={textareaRef}
         onCompositionStart={() => { composingRef.current = true; }}
         onCompositionEnd={() => {
@@ -1365,7 +1363,7 @@ export function Composer({
         />
 
         <div className="composer-controls composer-controls-left">
-          <input
+          <Input
             ref={fileInputRef}
             type="file"
             multiple
@@ -1376,7 +1374,7 @@ export function Composer({
               void uploadImages(picked);
             }}
           />
-          <button
+          <Button
             type="button"
             className="composer-pill-button composer-attach"
             aria-label={t("Attach files")}
@@ -1386,30 +1384,30 @@ export function Composer({
           >
             <Paperclip aria-hidden="true" />
             <span>{t("Attach")}</span>
-          </button>
+          </Button>
           {onSchedule && (
             <div className="composer-schedule-wrap" ref={scheduleRef}>
               {/* the clock states a choice, not a mode: it opens only while there is text to line up */}
-              <button type="button" className="composer-pill-button composer-schedule-button"
+              <Button type="button" className="composer-pill-button composer-schedule-button"
                 aria-label={t("Send later")} title={t("Send later")} aria-expanded={scheduleOpen}
                 disabled={!connected || scheduling || text.trim().length === 0}
                 onClick={() => { setScheduleNote(null); setScheduleOpen((open) => !open); }}>
                 <Clock aria-hidden="true" />
                 <span className="composer-schedule-label">{t("Send later")}</span>
-              </button>
+              </Button>
               {scheduleOpen && <div className="composer-schedule" role="group" aria-label={t("Send later")}>
                 <p className="composer-schedule-head">{t("Send this message at")}</p>
-                <button type="button" className="composer-schedule-preset" disabled={scheduling}
-                  onClick={() => { void scheduleAt(presetSendAt(SCHEDULE_PRESETS_MS[0], Date.now())); }}>{t("In 15 minutes")}</button>
-                <button type="button" className="composer-schedule-preset" disabled={scheduling}
-                  onClick={() => { void scheduleAt(presetSendAt(SCHEDULE_PRESETS_MS[1], Date.now())); }}>{t("In 1 hour")}</button>
-                <button type="button" className="composer-schedule-preset" disabled={scheduling}
-                  onClick={() => { void scheduleAt(presetSendAt("tomorrow", Date.now())); }}>{t("Tomorrow at 9")}</button>
+                <Button type="button" className="composer-schedule-preset" disabled={scheduling}
+                  onClick={() => { void scheduleAt(presetSendAt(SCHEDULE_PRESETS_MS[0], Date.now())); }}>{t("In 15 minutes")}</Button>
+                <Button type="button" className="composer-schedule-preset" disabled={scheduling}
+                  onClick={() => { void scheduleAt(presetSendAt(SCHEDULE_PRESETS_MS[1], Date.now())); }}>{t("In 1 hour")}</Button>
+                <Button type="button" className="composer-schedule-preset" disabled={scheduling}
+                  onClick={() => { void scheduleAt(presetSendAt("tomorrow", Date.now())); }}>{t("Tomorrow at 9")}</Button>
                 <div className="composer-schedule-pick">
-                  <input type="time" className="composer-schedule-time" aria-label={t("Time")} value={scheduleClock}
+                  <Input type="time" className="composer-schedule-time" aria-label={t("Time")} value={scheduleClock}
                     disabled={scheduling} onChange={(event) => setScheduleClock(event.currentTarget.value)} />
-                  <button type="button" className="composer-schedule-go" disabled={scheduling || scheduleClock === ""}
-                    onClick={() => { const at = pickedSendAt(scheduleClock, Date.now()); if (at !== null) void scheduleAt(at); }}>{t("Schedule")}</button>
+                  <Button type="button" className="composer-schedule-go" disabled={scheduling || scheduleClock === ""}
+                    onClick={() => { const at = pickedSendAt(scheduleClock, Date.now()); if (at !== null) void scheduleAt(at); }}>{t("Schedule")}</Button>
                 </div>
                 {scheduleNote !== null && <p className="composer-schedule-note" role="alert">{scheduleNote}</p>}
               </div>}
@@ -1464,7 +1462,7 @@ export function Composer({
         </div>
         <div className="composer-controls composer-controls-right">
           {!sendShown ? (
-            <button
+            <Button
               type="button"
               className="composer-action composer-stop"
               aria-label={t("Stop agent")}
@@ -1473,9 +1471,9 @@ export function Composer({
               onClick={onAbort}
             >
               <Square aria-hidden="true" />
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               type="button"
               className="composer-action composer-send"
               aria-label={t("Send message")}
@@ -1488,7 +1486,7 @@ export function Composer({
               onClick={sendTapped}
             >
               {sending ? <LoaderCircle className="composer-send-progress" aria-hidden="true" /> : <ArrowUp aria-hidden="true" />}
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { ExternalLink, Globe, RotateCw, X } from "lucide-react";
+import { Button } from "../lib/ui.tsx";
 import { useT } from "../lib/i18n.ts";
 import "./FileViewer.css";
 
@@ -27,10 +28,10 @@ export function WebPanel({ url, onClose, panelStart }: WebPanelProps) {
           <Globe aria-hidden="true" className="file-viewer-glyph" />
           <h2 className="file-viewer-name" title={url}><span className="file-viewer-stem">{label}</span></h2>
           <div className="file-viewer-actions">
-            <button type="button" className="icon-button file-viewer-action" aria-label={t("Reload page")} title={t("Reload page")} onClick={() => setLoads((count) => count + 1)}><RotateCw aria-hidden="true" /></button>
+            <Button type="button" className="icon-button file-viewer-action" aria-label={t("Reload page")} title={t("Reload page")} onClick={() => setLoads((count) => count + 1)}><RotateCw aria-hidden="true" /></Button>
             <a className="icon-button file-viewer-action" href={url} target="_blank" rel="noopener noreferrer" aria-label={t("Open in a new tab")} title={t("Open in a new tab")}><ExternalLink aria-hidden="true" /></a>
           </div>
-          <button type="button" className="icon-button file-viewer-action file-viewer-close" aria-label={t("Close page")} title={t("Close page")} onClick={onClose}><X aria-hidden="true" /></button>
+          <Button type="button" className="icon-button file-viewer-action file-viewer-close" aria-label={t("Close page")} title={t("Close page")} onClick={onClose}><X aria-hidden="true" /></Button>
         </header>
         <div className="file-viewer-body">
           <iframe key={`${url}#${loads}`} className="file-viewer-page" src={url} title={label}

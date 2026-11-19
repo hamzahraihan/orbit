@@ -1,5 +1,7 @@
 import { lazy, Suspense, useCallback, useLayoutEffect, useRef, type RefObject } from "react";
 
+import { Textarea } from "../lib/ui.tsx";
+
 import { OpenFileContext } from "../lib/filePaths.ts";
 import { resolveFromDocument } from "../lib/fileReader.ts";
 import type { Lines } from "../lib/highlight.ts";
@@ -49,7 +51,7 @@ export function TextFileView({ path, blocks, lines, virtual, selectable, onOpen,
   }, [path, blocks, virtual, markedLine, sourceRef]);
   const code = (() => {
     if (virtual === null) return <CodeLines ref={sourceRef as RefObject<HTMLPreElement | null>} className="file-viewer-text" lines={lines} open={null} lineNumbers wrap={settings.wrapCode} markedLine={markedLine} />;
-    if (selectable) return <textarea ref={sourceRef as RefObject<HTMLTextAreaElement | null>} className="file-viewer-select-source" readOnly value={virtual.text} aria-label={t("File source")} spellCheck={false} />;
+    if (selectable) return <Textarea ref={sourceRef as RefObject<HTMLTextAreaElement | null>} className="file-viewer-select-source" readOnly value={virtual.text} aria-label={t("File source")} spellCheck={false} />;
     return <Suspense fallback={<p className="file-viewer-note">{t("Opening…")}</p>}>
       <VirtualSource name={path} text={virtual.text} colored={virtual.colored} wrap={settings.wrapCode} theme={resolvedEntry.mode} markedLine={markedLine} />
     </Suspense>;

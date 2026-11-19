@@ -7,6 +7,7 @@ import { deviceLabel } from "../lib/phone.ts";
 import type { AccessRefusal } from "../../shared/protocol.ts";
 import { useT } from "../lib/i18n.ts";
 import { userErrorMessage, type UserError } from "../lib/userError.ts";
+import { Button, Input } from "../lib/ui.tsx";
 
 
 export interface AccessGateProps {
@@ -90,7 +91,7 @@ export function AccessGate({ reason, initialCode, onUnlocked }: AccessGateProps)
         </p>
         <form aria-labelledby="access-gate-title" onSubmit={submitCode}>
           <label className="access-gate-label" htmlFor="access-gate-code">{t("Pairing code")}</label>
-          <input
+          <Input
             ref={codeRef}
             id="access-gate-code"
             className="access-gate-input"
@@ -107,15 +108,15 @@ export function AccessGate({ reason, initialCode, onUnlocked }: AccessGateProps)
             onChange={(event) => { setCodeShort(false); setCode(event.target.value.replace(/\D/g, "").slice(0, 6)); }}
           />
           {codeShort && <p id="access-gate-code-error" className="access-gate-error" role="alert">{t("Enter all 6 digits of the pairing code.")}</p>}
-          <button type="submit" className="access-gate-submit" disabled={submitting !== null}>
+          <Button type="submit" className="access-gate-submit" disabled={submitting !== null}>
             {t(submitting === "code" ? "Pairing…" : "Pair this device")}
-          </button>
+          </Button>
         </form>
         <details className="access-gate-alt">
           <summary>{t("Have an access token instead?")}</summary>
           <form onSubmit={(event) => void submitToken(event)}>
             <label className="access-gate-label" htmlFor="access-gate-token">{t("Access token")}</label>
-            <input
+            <Input
               ref={tokenRef}
               id="access-gate-token"
               className="access-gate-input"
@@ -126,9 +127,9 @@ export function AccessGate({ reason, initialCode, onUnlocked }: AccessGateProps)
               value={token}
               onChange={(event) => setToken(event.target.value)}
             />
-            <button type="submit" className="access-gate-submit" disabled={submitting !== null}>
+            <Button type="submit" className="access-gate-submit" disabled={submitting !== null}>
               {t(submitting === "token" ? "Unlocking…" : "Unlock")}
-            </button>
+            </Button>
           </form>
         </details>
         {error !== null && (

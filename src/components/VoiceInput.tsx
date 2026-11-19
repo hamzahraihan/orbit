@@ -4,6 +4,7 @@
  */
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { Check, Mic, Square, X } from "lucide-react";
+import { Button } from "../lib/ui.tsx";
 
 import "./VoiceInput.css";
 
@@ -245,7 +246,7 @@ export function MicButton({ dictation, className = "" }: { dictation: Dictation;
   return (
     <span className={`voice-mic-wrap ${className}`} data-state={voice.state}>
       <span className="voice-mic-ring" ref={voice.bindRing} aria-hidden="true" />
-      <button
+      <Button
         type="button"
         className="voice-mic"
         aria-label={label}
@@ -264,7 +265,7 @@ export function MicButton({ dictation, className = "" }: { dictation: Dictation;
         onClick={() => { if (performance.now() - pointerUpAt.current > 500) press(); }}
       >
         {recording ? <Square aria-hidden="true" /> : <Mic aria-hidden="true" />}
-      </button>
+      </Button>
     </span>
   );
 }
@@ -290,10 +291,10 @@ export function VoiceRecordingPill({ dictation, align }: { dictation: Dictation;
     : t("Recording");
   return (
     <div className={`voice-pill${open ? " is-open" : ""}`} data-state={state} data-align={align} aria-hidden={!open}>
-      <button type="button" className="voice-pill-button voice-cancel" aria-label={t("Cancel dictation")} title={t("Cancel dictation")}
+      <Button type="button" className="voice-pill-button voice-cancel" aria-label={t("Cancel dictation")} title={t("Cancel dictation")}
         tabIndex={open ? 0 : -1} onPointerDown={(event) => event.preventDefault()} onClick={() => voice.cancel()}>
         <X aria-hidden="true" />
-      </button>
+      </Button>
       <span className="voice-pill-dot" aria-hidden="true" />
       <span className="voice-pill-label" role="status" aria-live="polite">{open ? label : ""}</span>
       {partial !== "" && <span className="voice-pill-partial" title={partial}>{partial}</span>}
@@ -304,10 +305,10 @@ export function VoiceRecordingPill({ dictation, align }: { dictation: Dictation;
       <span className={`voice-timer${state === "recording" && left <= 10 ? " is-ending" : ""}`} aria-hidden="true">
         {clock(state === "recording" && left <= 10 ? Math.max(0, left) : seconds)}
       </span>
-      <button type="button" className="voice-pill-button voice-done" aria-label={t("Insert dictation")} title={t("Insert dictation")}
+      <Button type="button" className="voice-pill-button voice-done" aria-label={t("Insert dictation")} title={t("Insert dictation")}
         tabIndex={open ? 0 : -1} disabled={state === "transcribing"} onPointerDown={(event) => event.preventDefault()} onClick={() => voice.finish()}>
         <Check aria-hidden="true" />
-      </button>
+      </Button>
     </div>
   );
 }

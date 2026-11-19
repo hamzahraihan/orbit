@@ -3,7 +3,7 @@ import { Braces, Check, Code, Copy, Download, Ellipsis, ExternalLink, Link2, Max
 
 import "./FileViewer.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button } from "../lib/ui.tsx";
 import { DirectoryBrowser } from "./DirectoryBrowser.tsx";
 import { FileGlyph } from "./FileGlyph.tsx";
 import { useHighlightedLines } from "./HighlightedCode.tsx";
@@ -107,9 +107,9 @@ function CopyFileButton({ text, sourceRef, onShowSource }: { text: string; sourc
     if (await copyText(text, source)) setCopied(true);
     else if (!source) onShowSource();
   };
-  return <button type="button" className="icon-button file-viewer-action" aria-label={label} title={label} onClick={() => void copy()}>
+  return <Button type="button" className="icon-button file-viewer-action" aria-label={label} title={label} onClick={() => void copy()}>
     {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
-  </button>;
+  </Button>;
 }
 
 /**
@@ -130,10 +130,10 @@ function CopyLinkButton({ href, menuItem = false, onDone }: { href: string; menu
     onDone?.();
   };
   return menuItem
-    ? <button type="button" role="menuitem" className="file-viewer-more-item" onClick={() => void copy()}><Link2 aria-hidden="true" />{label}</button>
-    : <button type="button" className="icon-button file-viewer-action file-viewer-wide" aria-label={label} title={label} onClick={() => void copy()}>
+    ? <Button type="button" role="menuitem" className="file-viewer-more-item" onClick={() => void copy()}><Link2 aria-hidden="true" />{label}</Button>
+    : <Button type="button" className="icon-button file-viewer-action file-viewer-wide" aria-label={label} title={label} onClick={() => void copy()}>
       {copied ? <Check aria-hidden="true" /> : <Link2 aria-hidden="true" />}
-    </button>;
+    </Button>;
 }
 
 /** Selects a source element for a copy by hand: a text box selects its value, anything else its contents. */
@@ -324,8 +324,8 @@ export function FileViewer({ path: asked, paneId, onClose, onOpen, keyboardActiv
   const pageUrl = `${url}&render=1`;
   // Page | Source: over the HTML file in a dialog, in the docked panel's toolbar
   const modes = <div className="segmented file-viewer-modes" role="group" aria-label={t("Show the HTML file as")}>
-    <button type="button" aria-pressed={!source} onClick={() => setSource(false)}>{t("Page")}</button>
-    <button type="button" aria-pressed={source} onClick={() => setSource(true)}>{t("Source")}</button>
+    <Button type="button" aria-pressed={!source} onClick={() => setSource(false)}>{t("Page")}</Button>
+    <Button type="button" aria-pressed={source} onClick={() => setSource(true)}>{t("Source")}</Button>
   </div>;
   const textFile = info?.kind === "text";
   const language = languageForPath(info?.path ?? target.path);
@@ -453,9 +453,9 @@ export function FileViewer({ path: asked, paneId, onClose, onOpen, keyboardActiv
   const newTabHref = htmlPage && !source ? pageUrl : markdown ? previewUrl : url;
   const downloadHref = fileUrl(shownPath, paneId, true);
   const fileActions = <>
-    {!page && onTogglePresentation && <button type="button" className="icon-button file-viewer-action" aria-label={docked ? t("Show as a popup") : t("Show beside the pane")} title={docked ? t("Show as a popup") : t("Show beside the pane")} onClick={onTogglePresentation}>
+    {!page && onTogglePresentation && <Button type="button" className="icon-button file-viewer-action" aria-label={docked ? t("Show as a popup") : t("Show beside the pane")} title={docked ? t("Show as a popup") : t("Show beside the pane")} onClick={onTogglePresentation}>
       {docked ? <Maximize2 aria-hidden="true" /> : <PanelRight aria-hidden="true" />}
-    </button>}
+    </Button>}
     {/* new tab, raw and download: buttons in the row, and on a phone in the More menu after Copy */}
     {/* in the installed app's window a new tab would be another app window: Copy link takes their place */}
     {!page && !appWindow && <a className="icon-button file-viewer-action file-viewer-wide" href={newTabHref} target="_blank" rel="noopener" aria-label={t("Open in a new tab")} title={t("Open in a new tab")}><ExternalLink aria-hidden="true" /></a>}
@@ -464,7 +464,7 @@ export function FileViewer({ path: asked, paneId, onClose, onOpen, keyboardActiv
     <a className="icon-button file-viewer-action file-viewer-wide" href={downloadHref} download={info?.name ?? true} aria-label={t("Download")} title={t("Download")}><Download aria-hidden="true" /></a>
     {copyable && <CopyFileButton text={loaded.text} sourceRef={sourceRef} onShowSource={showSourceToSelect} />}
     {!docked && <div className="file-viewer-more" ref={moreRef}>
-      <button type="button" className="icon-button file-viewer-action" aria-label={t("More")} title={t("More")} aria-haspopup="menu" aria-expanded={moreOpen} onClick={() => setMoreOpen((open) => !open)}><Ellipsis aria-hidden="true" /></button>
+      <Button type="button" className="icon-button file-viewer-action" aria-label={t("More")} title={t("More")} aria-haspopup="menu" aria-expanded={moreOpen} onClick={() => setMoreOpen((open) => !open)}><Ellipsis aria-hidden="true" /></Button>
       {moreOpen && <div className="file-viewer-more-menu" role="menu" aria-label={t("More")} onKeyDown={moveInMore}>
         {!page && !appWindow && <a role="menuitem" className="file-viewer-more-item" href={newTabHref} target="_blank" rel="noopener" onClick={() => closeMore(true)}><ExternalLink aria-hidden="true" />{t("Open in a new tab")}</a>}
         {(page || markdown) && !appWindow && <a role="menuitem" className="file-viewer-more-item" href={url} target="_blank" rel="noopener" onClick={() => closeMore(true)}><Code aria-hidden="true" />{t("Open raw file")}</a>}
@@ -473,7 +473,7 @@ export function FileViewer({ path: asked, paneId, onClose, onOpen, keyboardActiv
       </div>}
     </div>}
   </>;
-  const closeButton = !page && <button type="button" className="icon-button file-viewer-action file-viewer-close" aria-label={t("Close file")} title={t("Close file")} onClick={onClose}><X aria-hidden="true" /></button>;
+  const closeButton = !page && <Button type="button" className="icon-button file-viewer-action file-viewer-close" aria-label={t("Close file")} title={t("Close file")} onClick={onClose}><X aria-hidden="true" /></Button>;
   // Docked, the header is one row (the file's glyph and name, then its actions) and the toolbar
   // under it carries the meta and the view modes, as t3code's file surface and paseo's file bar
   // do; it never stacks, since the panel is never as narrow as a phone.
@@ -495,7 +495,7 @@ export function FileViewer({ path: asked, paneId, onClose, onOpen, keyboardActiv
         {/* how the text shows: Preview or source is one choice of two, so one toggle; wrapping is a
             setting (Settings → File viewer), not an action here */}
         {textFile && previewable && <div className="file-viewer-group">
-          <button type="button" className="icon-button file-viewer-action" aria-pressed={mode === "code"} aria-label={t("Show source")} title={t("Show source")} onClick={() => setChosen({ path, mode: mode === "code" ? "preview" : "code" })}><Braces aria-hidden="true" /></button>
+          <Button type="button" className="icon-button file-viewer-action" aria-pressed={mode === "code"} aria-label={t("Show source")} title={t("Show source")} onClick={() => setChosen({ path, mode: mode === "code" ? "preview" : "code" })}><Braces aria-hidden="true" /></Button>
         </div>}
         <div className="file-viewer-group">{fileActions}</div>
       </div>
@@ -506,8 +506,8 @@ export function FileViewer({ path: asked, paneId, onClose, onOpen, keyboardActiv
   const toolbar = docked && directory === null && <div className="file-viewer-toolbar">
     {meta}
     {textFile && previewable && <div className="segmented file-viewer-modes" role="group" aria-label={t("Show the Markdown file as")}>
-      <button type="button" aria-pressed={mode === "preview"} onClick={() => setChosen({ path, mode: "preview" })}>{t("Preview")}</button>
-      <button type="button" aria-pressed={mode === "code"} onClick={() => setChosen({ path, mode: "code" })}>{t("Source")}</button>
+      <Button type="button" aria-pressed={mode === "preview"} onClick={() => setChosen({ path, mode: "preview" })}>{t("Preview")}</Button>
+      <Button type="button" aria-pressed={mode === "code"} onClick={() => setChosen({ path, mode: "code" })}>{t("Source")}</Button>
     </div>}
     {htmlPage && modes}
   </div>;

@@ -1,5 +1,6 @@
 import { type CSSProperties, type DragEvent, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Bell, Ellipsis, FolderOpen, GitBranch, Link, Menu, MessageSquare, PanelLeft, Search, Settings as SettingsIcon, SquareTerminal, X } from "lucide-react";
+import { Button } from "./lib/ui.tsx";
 
 import type { AgentStatus, ServerMessage, AccessRefusal, HealthAuth, HerdrPane } from "../shared/protocol.ts";
 import { ApiError, authenticate, createTab, fetchHealth, fetchBridgeHealth, fetchMachines, fetchSession, pairDevice, routeMissing, sendTestPush, signOut, splitPane, zoomPane, type HealthInfo } from "./lib/api.ts";
@@ -85,8 +86,6 @@ import { PaneFollowContext } from "./lib/paneSubmitContext.ts";
 import { SplitDropPreview } from "./components/SplitDropPreview.tsx";
 import { CrashProbe, RegionCrash } from "./components/AppCrash.tsx";
 import { RenderBoundary } from "./components/RenderBoundary.tsx";
-
-import { Button } from "./lib/heroui/orbit-components.tsx";
 
 const APP_TITLE = "Orbit";
 /** how soon after a key press a focus counts as the user's own (lastKeyAtRef) */
@@ -1461,7 +1460,7 @@ export function App() {
   // the sidebar's own controls, so the bar's end belongs to the pane: its lenses, Files, Changes
   const moreButton = (
     <span className="header-more">
-      <button
+      <Button
         type="button"
         className="icon-button header-more-button"
         aria-label={alertsOffDot ? t("More · alerts are off") : t("More")}
@@ -1474,7 +1473,7 @@ export function App() {
         }}
       >
         <Ellipsis />
-      </button>
+      </Button>
       {alertsOffDot && <span className="header-more-dot" aria-hidden="true" />}
     </span>
   );
@@ -1542,7 +1541,7 @@ export function App() {
             .header-side is the sidebar's own top row from 769px, the More menu with it so the bar's
             end is the pane's (styles.css); below 769px its buttons and that menu sit in the bar */}
         <div className="header-side">
-          <button
+          <Button
             type="button"
             className="icon-button drawer-toggle"
             aria-label={waiting > 0 ? t(drawerOpen ? "Close workspace list ({count} agents need input)" : "Open workspace list ({count} agents need input)", { count: waiting }) : t(drawerOpen ? "Close workspace list" : "Open workspace list")}
@@ -1552,8 +1551,8 @@ export function App() {
           >
             {drawerOpen ? <X /> : <Menu />}
             {waiting > 0 && <span className="drawer-attention-dot" aria-hidden="true" />}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             className="icon-button header-desktop-only sidebar-toggle"
             aria-label={t(sidebarCollapsed ? "Show workspace list" : "Hide workspace list")}
@@ -1562,10 +1561,10 @@ export function App() {
             onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
           >
             <PanelLeft />
-          </button>
-          <button type="button" className="icon-button palette-button" aria-label={t("Command palette")} title={t("Command palette (⌘⇧K)")} onClick={() => openPalette()}>
+          </Button>
+          <Button type="button" className="icon-button palette-button" aria-label={t("Command palette")} title={t("Command palette (⌘⇧K)")} onClick={() => openPalette()}>
             <Search />
-          </button>
+          </Button>
           {wideScreen && moreButton}
         </div>
         {stripInBar && snapshot && selectedWorkspace && selectedPane && (
@@ -1581,15 +1580,15 @@ export function App() {
         <HeaderNote note={note} />
         {selectedPane && (
           <div className="segmented view-switch" role="group" aria-label="Pane view">
-            <button type="button" aria-pressed={view === "chat"} onClick={() => { setView("chat"); setDrawerOpen(false); }} title={t("Chat transcript (⌘⇧J)")}>
+            <Button type="button" aria-pressed={view === "chat"} onClick={() => { setView("chat"); setDrawerOpen(false); }} title={t("Chat transcript (⌘⇧J)")}>
               <MessageSquare />
               <span className="view-switch-label">{t("Chat")}</span>
-            </button>
-            <button type="button" aria-pressed={view === "terminal"} onClick={() => { setView("terminal"); setDrawerOpen(false); }} title={terminalAttach ? t("Live terminal (⌘⇧J)") : t("Live terminal: coming to Windows PCs once herdr can attach there")}>
+            </Button>
+            <Button type="button" aria-pressed={view === "terminal"} onClick={() => { setView("terminal"); setDrawerOpen(false); }} title={terminalAttach ? t("Live terminal (⌘⇧J)") : t("Live terminal: coming to Windows PCs once herdr can attach there")}>
               <SquareTerminal />
               <span className="view-switch-label">{t("Terminal")}</span>
               {!terminalAttach && <span className="pill pill-soon">{t("soon")}</span>}
-            </button>
+            </Button>
           </div>
         )}
         <div className="header-meta">
@@ -1604,14 +1603,14 @@ export function App() {
               names: the pane's folder, or its repository's changes */}
           {selectedPane && wideScreen && (
             <>
-              <button type="button" className="icon-button header-files-button" aria-label={t("Browse files")} title={t("Browse files")} onClick={openFiles}>
+              <Button type="button" className="icon-button header-files-button" aria-label={t("Browse files")} title={t("Browse files")} onClick={openFiles}>
                 <FolderOpen />
                 <span className="header-action-label">{t("Files")}</span>
-              </button>
-              <button type="button" className="icon-button header-changes-button" aria-label={t("Changes")} title={t("Changes")} onClick={() => openFilesOn("changes")}>
+              </Button>
+              <Button type="button" className="icon-button header-changes-button" aria-label={t("Changes")} title={t("Changes")} onClick={() => openFilesOn("changes")}>
                 <GitBranch />
                 <span className="header-action-label">{t("Changes")}</span>
-              </button>
+              </Button>
             </>
           )}
           {!wideScreen && moreButton}
@@ -1689,12 +1688,12 @@ export function App() {
                 event.dataTransfer.setData(PANE_DRAG_TYPE, paneDragData({ machineId, paneId }));
               }}>
               {machines.length > 1 && <span className="pane-slot-machine">{machine?.name ?? machineId}</span>}
-              {pane && <button type="button" className="icon-button pane-slot-action" aria-label={t(slotView === "chat" ? "Show the terminal" : "Show the chat")} title={t(slotView === "chat" ? "Show the terminal" : "Show the chat")} onClick={toggleSlotView}>
+              {pane && <Button type="button" className="icon-button pane-slot-action" aria-label={t(slotView === "chat" ? "Show the terminal" : "Show the chat")} title={t(slotView === "chat" ? "Show the terminal" : "Show the chat")} onClick={toggleSlotView}>
                 {slotView === "chat" ? <SquareTerminal /> : <MessageSquare />}
-              </button>}
-              <button type="button" className="icon-button pane-slot-action" aria-label={t("Close this half")} title={t("Close this half")} onClick={() => closeSlot(slot)}>
+              </Button>}
+              <Button type="button" className="icon-button pane-slot-action" aria-label={t("Close this half")} title={t("Close this half")} onClick={() => closeSlot(slot)}>
                 <X />
-              </button>
+              </Button>
             </div> : undefined;
             // a half with no strip to carry its close (its pane gone, or the half crashed) keeps one in a bar of its own
             const slotBar = splitOn ? <div className="pane-slot-bar"><span className="pane-slot-title">{pane ? displayPaneTitle(pane) : t("Pane closed")}</span>{slotEnd}</div> : null;

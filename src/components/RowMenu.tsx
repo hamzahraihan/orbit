@@ -14,7 +14,7 @@ import { Check, type LucideIcon } from "lucide-react";
 
 import "./RowMenu.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button } from "../lib/ui.tsx";
 
 import { useT } from "../lib/i18n.ts";
 import { useMediaQuery } from "../lib/useMediaQuery.ts";
@@ -198,12 +198,12 @@ export function RowMenu({ anchor, point, restoreFocusTo, title, subtitle, detail
           {/* the items scroll between the head and Cancel: a tab's menu is taller than a short phone, and `.modal` hides its overflow */}
           <div className="row-sheet-items">
             {items.map((item) => (
-              <button key={item.id} type="button" className={`row-sheet-item${item.danger ? " is-danger" : ""}${item.divider ? " has-divider" : ""}`} aria-current={item.current ? "true" : undefined} aria-pressed={item.checked} title={item.title} onMouseDown={keepFocus} onMouseEnter={point ? (event) => event.currentTarget.focus({ preventScroll: true }) : undefined} onClick={() => run(item)}>
+              <Button key={item.id} type="button" className={`row-sheet-item${item.danger ? " is-danger" : ""}${item.divider ? " has-divider" : ""}`} aria-current={item.current ? "true" : undefined} aria-pressed={item.checked} title={item.title} onMouseDown={keepFocus} onMouseEnter={point ? (event) => event.currentTarget.focus({ preventScroll: true }) : undefined} onClick={() => run(item)}>
                 {item.glyph ?? <item.icon aria-hidden="true" />}
                 <span className="row-sheet-label">{item.label}</span>
                 {item.hint && <span className="row-sheet-hint">{item.hint}</span>}
                 {item.checked && <Check className="row-sheet-check" aria-hidden="true" />}
-              </button>
+              </Button>
             ))}
           </div>
           <Button type="button" variant="secondary" className="row-sheet-cancel" onMouseDown={keepFocus} onClick={onClose}>{t("Cancel")}</Button>
@@ -219,12 +219,12 @@ export function RowMenu({ anchor, point, restoreFocusTo, title, subtitle, detail
       {items.map((item) => (
         <Fragment key={item.id}>
           {item.divider && <span className="row-menu-divider" role="separator" />}
-          <button type="button" role={item.checked === undefined ? "menuitem" : "menuitemcheckbox"} aria-checked={item.checked} className={`orbit-menu-item${item.danger ? " is-danger" : ""}`} aria-current={item.current ? "true" : undefined} title={item.title} onMouseDown={keepFocus} onMouseEnter={point ? (event) => event.currentTarget.focus({ preventScroll: true }) : undefined} onClick={() => run(item)}>
+          <Button type="button" role={item.checked === undefined ? "menuitem" : "menuitemcheckbox"} aria-checked={item.checked} className={`orbit-menu-item${item.danger ? " is-danger" : ""}`} aria-current={item.current ? "true" : undefined} title={item.title} onMouseDown={keepFocus} onMouseEnter={point ? (event) => event.currentTarget.focus({ preventScroll: true }) : undefined} onClick={() => run(item)}>
             {item.glyph ?? <item.icon aria-hidden="true" />}
             <span className="menu-item-main">{item.label}</span>
             {item.hint && <span className="menu-item-hint">{item.hint}</span>}
             {item.checked && <Check className="menu-item-check" aria-hidden="true" />}
-          </button>
+          </Button>
         </Fragment>
       ))}
     </div>,

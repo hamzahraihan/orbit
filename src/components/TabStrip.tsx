@@ -10,6 +10,7 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Bot, Ellipsis, Pencil, Plus, SquareTerminal, Terminal, X } from "lucide-react";
+import { Button, Input } from "../lib/ui.tsx";
 
 import "./TabStrip.css";
 
@@ -379,7 +380,7 @@ export function TabStrip({ snapshot, workspace, selectedPane, onSelectPane, onNe
           return (
             <div className={`tab-strip-item${active ? " is-active" : ""}${own.length > 1 ? " has-panes" : ""}${editing?.tabId === tab.tab_id ? " is-editing" : ""}${reorder.drag?.tabId === tab.tab_id ? " is-dragging" : ""}${reorder.drag?.boundary === index ? " is-drop-before" : ""}${reorder.drag?.boundary === tabs.length && index === tabs.length - 1 ? " is-drop-after" : ""}`} key={tab.tab_id}>
               {editing?.tabId === tab.tab_id ? (
-                <input
+                <Input
                   className="input tab-strip-rename"
                   aria-label={t("Tab name")}
                   autoFocus
@@ -399,7 +400,7 @@ export function TabStrip({ snapshot, workspace, selectedPane, onSelectPane, onNe
                   }}
                 />
               ) : (
-                <button
+                <Button
                   type="button"
                   role="tab"
                   className="tab-strip-tab"
@@ -432,11 +433,11 @@ export function TabStrip({ snapshot, workspace, selectedPane, onSelectPane, onNe
                     ? <span className="tab-strip-dot" data-status={status} aria-hidden="true" />
                     : <span className="tab-strip-dot tab-strip-glyph" data-status={status} aria-hidden="true">{indicatorGlyph(status, settings.statusIndicators)}</span>)}
                   <span className="tab-strip-label">{name}</span>
-                </button>
+                </Button>
               )}
-              {menuButton && active && editing?.tabId !== tab.tab_id && <button type="button" className="tab-strip-menu" aria-label={t("Actions for {tab}", { tab: name })} title={t("Actions for {tab}", { tab: name })} aria-haspopup="menu" aria-expanded={pickerOpen} onClick={(event) => openPicker(event, tab)}>
+              {menuButton && active && editing?.tabId !== tab.tab_id && <Button type="button" className="tab-strip-menu" aria-label={t("Actions for {tab}", { tab: name })} title={t("Actions for {tab}", { tab: name })} aria-haspopup="menu" aria-expanded={pickerOpen} onClick={(event) => openPicker(event, tab)}>
                 <Ellipsis aria-hidden="true" />
-              </button>}
+              </Button>}
             </div>
           );
         })}
@@ -444,10 +445,10 @@ export function TabStrip({ snapshot, workspace, selectedPane, onSelectPane, onNe
             plus: the workspace's create (MachineSidebar) is a FolderPlus, and no second bare Plus
             is left to read as "another kind of tab". The glyph and the tooltip say it where a
             word would crowd the tabs at 390. */}
-        <button type="button" className="tab-strip-add" aria-label={t("New tab")} title={t("New tab")}
+        <Button type="button" className="tab-strip-add" aria-label={t("New tab")} title={t("New tab")}
           onClick={() => { setError(null); void onNewShellTab().catch((reason: unknown) => setError(t("New tab failed: {reason}", { reason: said(reason) }))); }}>
           <span className="tab-strip-add-glyph"><SquareTerminal aria-hidden="true" /><Plus aria-hidden="true" /></span>
-        </button>
+        </Button>
         {error && <span className="tab-strip-error" role="alert">{error}</span>}
       </div>
   );

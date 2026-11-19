@@ -9,7 +9,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button } from "../lib/ui.tsx";
 import "./ConfirmDialog.css";
 
 import { ApiError } from "../lib/api.ts";

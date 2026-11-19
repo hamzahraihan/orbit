@@ -1,14 +1,15 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-// the faces the tokens name, then styles.css before any component: it holds the primitives
-// (.orbit-menu, .modal…) that component stylesheets override, and Vite emits CSS in import order
+// Vite emits CSS in import order, and the cascade must run base to product: ui-sdk's optional
+// component skin, then Orbit's skin over its parts, then the shell and primitives in styles.css,
+// which every component stylesheet imported below may override.
 import "./fonts/fonts.css";
+import "./layers.css";
+import "./reset.css";
+import "@ui-sdk/core/web.css";
+import "./ui.css";
 import "./styles.css";
-// Tailwind + HeroUI's component layer, then the unlayered bridge that points
-// HeroUI's variables at Orbit's tokens in src/styles.css.
-import "./tailwind-orbit.css";
-import "./lib/heroui-theme.css";
 
 import { App } from "./App.tsx";
 import { AppCrash, CrashProbe } from "./components/AppCrash.tsx";

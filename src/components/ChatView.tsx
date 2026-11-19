@@ -9,7 +9,7 @@ import "./ChatView.css";
 // the timeline's styles stay in the entry: its chunk loads apart (chatTimelineLoader.ts), but
 // .chat-frame and the loading state are drawn before it arrives
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button } from "../lib/ui.tsx";
 import "./ChatTimeline.css";
 
 import { AgentMark } from "./AgentMark.tsx";
@@ -205,10 +205,10 @@ function CopyButton({ text, label, className = "icon-button chat-copy", children
     if (ok) window.setTimeout(() => setCopied(false), 1500);
   };
   return (
-    <button type="button" className={copied ? `${className} is-copied` : className} onClick={() => void copy()} aria-label={copied ? t("Copied") : label} title={copied ? t("Copied") : label}>
+    <Button type="button" className={copied ? `${className} is-copied` : className} onClick={() => void copy()} aria-label={copied ? t("Copied") : label} title={copied ? t("Copied") : label}>
       {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -260,7 +260,7 @@ function ToolFile({ path, suffix }: { path: string; suffix?: string }) {
   const t = useT();
   const open = useContext(OpenFileContext);
   if (open === null) return <p className="chat-tool-file">{path}{suffix}</p>;
-  return <p className="chat-tool-file"><button type="button" className="chat-tool-file-link" title={t("Open {path}", { path })} onClick={() => open(path)}>{path}</button>{suffix}</p>;
+  return <p className="chat-tool-file"><Button type="button" className="chat-tool-file-link" title={t("Open {path}", { path })} onClick={() => open(path)}>{path}</Button>{suffix}</p>;
 }
 
 /** An edit's old and new text as one diff: the unchanged lines once, the changes in place. */
@@ -378,9 +378,9 @@ function ImageThumb({ image, onOpen }: { image: GalleryImage; onOpen: () => void
   // the focus is placed on the thumbnail before the viewer opens, so the viewer's focus trap
   // records it as the opener and gives the focus back here on close (Safari does not focus a
   // clicked button on its own)
-  return <button type="button" className="chat-user-image" title={t("Open image")} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(); }}>
+  return <Button type="button" className="chat-user-image" title={t("Open image")} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(); }}>
     <ReservedImage src={image.src} alt={image.name} slot />
-  </button>;
+  </Button>;
 }
 
 /** The thumbnails of a message's pictures; a press opens ChatView's viewer on them. */
@@ -423,7 +423,7 @@ function WorkRow({ paneId, part, stateKey }: { paneId: string; part: ToolPartTyp
   // the list is the answer of a todo call: its raw text would say it twice
   const output = isTodoTool(part.name) && parseTodoAnswer(part.output) !== null ? "" : whole.text ?? part.output;
   return <div className={`work-row${part.error ? " is-error" : ""}`}>
-    <button type="button" className="work-row-head" aria-expanded={open} title={narration || verb !== null ? `${part.name} · ${summary}` : undefined} onClick={() => setOpen(!open)}>
+    <Button type="button" className="work-row-head" aria-expanded={open} title={narration || verb !== null ? `${part.name} · ${summary}` : undefined} onClick={() => setOpen(!open)}>
       <span className="work-row-caret" aria-hidden="true">{open ? <ChevronDown /> : <ChevronRight />}</span>
       {!narration && (verb !== null ? <span className="work-row-name is-verb">{t(verb)}</span> : <span className="work-row-name">{part.name}</span>)}
       {/* the spaces are for a screen reader: the row is read as words, not "Ranbun test" */}
@@ -431,7 +431,7 @@ function WorkRow({ paneId, part, stateKey }: { paneId: string; part: ToolPartTyp
       {summary.length > 0 && summary !== part.name && <>{" "}<span className="work-row-summary">{summary}</span></>}
       {/* after a verb, or the agent's own sentence, the word follows it: "Ran pnpm test failed", not "Ran failed pnpm test" */}
       {part.error && (narration || verb !== null) && <>{" "}<span className="work-row-failed">{t("failed")}</span></>}
-    </button>
+    </Button>
     {open && <div className="work-row-detail">{verb !== null && <p className="work-row-tool">{part.name}</p>}<ToolInputView part={part} /><ToolImages paneId={paneId} part={part} />{output.length > 0 && <section className="chat-tool-output"><h4>{t(part.error ? "Error" : "Output")}</h4><pre className={`chat-tool-io${whole.text !== null ? " is-whole" : ""}`}>{linkFilePaths(output, openFile)}</pre>
       {part.output_ref !== undefined && whole.text === null && <Button type="button" variant="ghost" className="chat-tool-more" disabled={whole.state === "loading"} onClick={whole.load}>
         {t(whole.state === "loading" ? "Loading the whole output…" : whole.state === "failed" ? "Couldn't load the whole output — retry" : "Show the whole output ({size} characters)", { size: formatTokens(part.output_size ?? 0) })}
@@ -444,10 +444,10 @@ function ThinkingRow({ text, stateKey }: { text: string; stateKey: string }) {
   const [chosen, setOpen] = useChatRowToggle(stateKey, useChatDetailOpen());
   const open = chosen === true;
   return <div className="work-row work-row-thinking">
-    <button type="button" className="work-row-head" aria-expanded={open} onClick={() => setOpen(!open)}>
+    <Button type="button" className="work-row-head" aria-expanded={open} onClick={() => setOpen(!open)}>
       <span className="work-row-caret" aria-hidden="true">{open ? <ChevronDown /> : <ChevronRight />}</span>
       <span className="work-row-name">{t("thinking")}</span>
-    </button>
+    </Button>
     {open && <div className="work-row-detail work-thinking-text">{text}</div>}
   </div>;
 }
@@ -485,13 +485,13 @@ function WorkBlockView({ paneId, parts, duration, live, waiting, defaultOpen, sh
   // a blocked agent is not working: the open block takes the sidebar's words for it
   const title = waiting ? t("Needs you") : live ? t("Working…") : duration !== null ? t("Worked for {duration}", { duration }) : t("Worked");
   return <section className={`work-block${live ? " is-live" : ""}${waiting ? " is-waiting" : ""}${open ? "" : " is-folded"}`}>
-    <button type="button" className="work-block-head" aria-expanded={open} onClick={() => setOpen(!open)}>
+    <Button type="button" className="work-block-head" aria-expanded={open} onClick={() => setOpen(!open)}>
       <span className="work-row-caret" aria-hidden="true">{open ? <ChevronDown /> : <ChevronRight />}</span>
       <span className={live && !waiting ? "work-block-title shiny-text" : "work-block-title"}>{title}</span>
       {summary.length > 0 && <span className="work-block-summary">· {summary}</span>}
       {/* its own span: the counts before it are cut on a narrow screen, a failure never is */}
       {failed > 0 && <span className="work-block-failed">· {t("{n} failed", { n: failed })}</span>}
-    </button>
+    </Button>
     {/* the rows open and fold at the block's measured height; folded and settled, they are not drawn */}
     <AnimatedHeight open={open} animateContent={false}>
       <div className="work-block-rows" onFocus={keepOpen} onClick={keepOpen}>{visible.map((part, index) =>
@@ -607,7 +607,7 @@ function UserMessage({ text, skills = null }: { text: string; skills?: SkillMatc
   return <div ref={card} className={`chat-bubble${capped ? " is-capped" : ""}${clipped ? " is-folded" : ""}`}>
     <div ref={body} className="chat-bubble-body"><Markdown skills={skills}>{text}</Markdown></div>
     {(open || clipped) && <div className="chat-bubble-foot">
-      <button type="button" className="chat-bubble-fold" aria-expanded={open} onClick={toggle}>{open ? t("Show less") : t("Show full message")}</button>
+      <Button type="button" className="chat-bubble-fold" aria-expanded={open} onClick={toggle}>{open ? t("Show less") : t("Show full message")}</Button>
     </div>}
   </div>;
 }

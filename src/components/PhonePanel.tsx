@@ -3,7 +3,7 @@ import { RefreshCw } from "lucide-react";
 
 import "./PhonePanel.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button } from "../lib/ui.tsx";
 
 import { copyText } from "../lib/clipboard.ts";
 import type { PhonePlan } from "../lib/phone.ts";

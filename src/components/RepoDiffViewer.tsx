@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Columns2, Copy, CopySlash, FileText, FoldVertical, MessageSquarePlus, Rows3, TriangleAlert, X } from "lucide-react";
+import { Button, Textarea } from "../lib/ui.tsx";
 
 import "./RepoDiffViewer.css";
 import { RenderBoundary } from "./RenderBoundary.tsx";
@@ -55,9 +56,9 @@ function CopyButton({ text, label, doneLabel, icon, onShowText }: { text: string
     if (await copyText(text)) setCopied(true);
     else onShowText(text);
   };
-  return <button type="button" className="icon-button repo-diff-action" aria-label={name} title={name} disabled={text === null} onClick={() => void copy()}>
+  return <Button type="button" className="icon-button repo-diff-action" aria-label={name} title={name} disabled={text === null} onClick={() => void copy()}>
     {copied ? <Check aria-hidden="true" /> : icon}
-  </button>;
+  </Button>;
 }
 
 const DIFF_SKELETON_ROWS = 6;
@@ -169,7 +170,7 @@ export function RepoDiffViewer({ target, onClose, onOpenFile, keyboardActive = t
   const openable = answer !== null && file !== null && file.status !== "deleted";
 
   const body = (() => {
-    if (shown !== null) return <textarea ref={textRef} className="repo-diff-select-source" readOnly value={shown.text} aria-label={shown.kind === "patch" ? t("Patch") : t("Path")} spellCheck={false} />;
+    if (shown !== null) return <Textarea ref={textRef} className="repo-diff-select-source" readOnly value={shown.text} aria-label={shown.kind === "patch" ? t("Patch") : t("Path")} spellCheck={false} />;
     if (load.status === "pending") return <DiffSkeleton label={t("Opening…")} />;
     if (load.status === "failed") {
       const stale = load.error instanceof ApiError && load.error.status === 404 && load.error.code === "not_found";
@@ -212,39 +213,39 @@ export function RepoDiffViewer({ target, onClose, onOpenFile, keyboardActive = t
           </div>
           <div className="repo-diff-actions">
             <div className="segmented repo-diff-styles" role="group" aria-label={t("Diff layout")}>
-              <button type="button" aria-pressed={style === "unified"} onClick={() => update({ diffStyle: "unified" })}><Rows3 aria-hidden="true" /><span className="repo-diff-style-word">{t("Unified")}</span></button>
-              <button type="button" aria-pressed={style === "split"} disabled={narrow} title={narrow ? t("Split view needs a wider screen") : undefined} onClick={() => update({ diffStyle: "split" })}><Columns2 aria-hidden="true" /><span className="repo-diff-style-word">{t("Split")}</span></button>
+              <Button type="button" aria-pressed={style === "unified"} onClick={() => update({ diffStyle: "unified" })}><Rows3 aria-hidden="true" /><span className="repo-diff-style-word">{t("Unified")}</span></Button>
+              <Button type="button" aria-pressed={style === "split"} disabled={narrow} title={narrow ? t("Split view needs a wider screen") : undefined} onClick={() => update({ diffStyle: "split" })}><Columns2 aria-hidden="true" /><span className="repo-diff-style-word">{t("Split")}</span></Button>
             </div>
             <div className="repo-diff-group">
-              <button type="button" className="icon-button repo-diff-action" aria-pressed={folded} aria-label={t("Fold context")} title={folded ? t("Showing one line around each change") : t("Fold context")} disabled={patch === null} onClick={() => setFolded((value) => !value)}><FoldVertical aria-hidden="true" /></button>
-              <button type="button" className="icon-button repo-diff-action" aria-label={t("Open file")} title={t("Open file")} disabled={!openable} onClick={() => answer !== null && onOpenFile(repositoryFilePath(answer.repository.root, path))}><FileText aria-hidden="true" /></button>
+              <Button type="button" className="icon-button repo-diff-action" aria-pressed={folded} aria-label={t("Fold context")} title={folded ? t("Showing one line around each change") : t("Fold context")} disabled={patch === null} onClick={() => setFolded((value) => !value)}><FoldVertical aria-hidden="true" /></Button>
+              <Button type="button" className="icon-button repo-diff-action" aria-label={t("Open file")} title={t("Open file")} disabled={!openable} onClick={() => answer !== null && onOpenFile(repositoryFilePath(answer.repository.root, path))}><FileText aria-hidden="true" /></Button>
               {shown === null && <>
                 <CopyButton text={path} label={t("Copy path")} doneLabel={t("Path copied")} icon={<CopySlash aria-hidden="true" />} onShowText={(text) => setShown({ kind: "path", text })} />
                 {(load.status === "pending" || patch !== null) && <CopyButton text={patch} label={t("Copy patch")} doneLabel={t("Patch copied")} icon={<Copy aria-hidden="true" />} onShowText={(text) => setShown({ kind: "patch", text })} />}
               </>}
             </div>
           </div>
-          <button type="button" className="icon-button repo-diff-action repo-diff-close" aria-label={t("Close diff")} title={t("Close diff")} onClick={onClose}><X aria-hidden="true" /></button>
+          <Button type="button" className="icon-button repo-diff-action repo-diff-close" aria-label={t("Close diff")} title={t("Close diff")} onClick={onClose}><X aria-hidden="true" /></Button>
         </header>
         <div className="repo-diff-body">
           {selected !== null && target.paneId !== null && (commenting
             ? <form className="repo-diff-comment" onSubmit={(event) => { event.preventDefault(); addComment(); }}>
               <label className="visually-hidden" htmlFor="repo-diff-comment-note">{t("Comment on these lines")}</label>
-              <textarea id="repo-diff-comment-note" className="repo-diff-comment-box" value={comment} maxLength={MAX_COMPOSER_CHARS}
+              <Textarea id="repo-diff-comment-note" className="repo-diff-comment-box" value={comment} maxLength={MAX_COMPOSER_CHARS}
                 placeholder={t("What should change here?")} autoFocus
                 onChange={(event) => setComment(event.target.value)} />
               <div className="repo-diff-comment-actions">
-                <button type="button" className="repo-diff-comment-cancel" onClick={() => { setCommenting(false); setComment(""); }}>{t("Cancel")}</button>
-                <button type="submit" className="repo-diff-comment-send" disabled={comment.trim() === ""}>{t("Add to message")}</button>
+                <Button type="button" className="repo-diff-comment-cancel" onClick={() => { setCommenting(false); setComment(""); }}>{t("Cancel")}</Button>
+                <Button type="submit" className="repo-diff-comment-send" disabled={comment.trim() === ""}>{t("Add to message")}</Button>
               </div>
             </form>
             : <div className="repo-diff-selection">
               <span className="repo-diff-selection-range">
                 {t("Lines {start}–{end} selected", { start: selected.selection.start, end: selected.selection.end })}
               </span>
-              <button type="button" className="repo-diff-comment-open" onClick={() => setCommenting(true)}>
+              <Button type="button" className="repo-diff-comment-open" onClick={() => setCommenting(true)}>
                 <MessageSquarePlus aria-hidden="true" />{t("Comment")}
-              </button>
+              </Button>
             </div>)}
           {commentNote !== null && <p className="repo-diff-note repo-diff-comment-said" role="status">{commentNote}</p>}
           {body}

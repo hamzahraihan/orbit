@@ -3,7 +3,7 @@ import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Folder, Fold
 
 import "./RepoChanges.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button, Input } from "../lib/ui.tsx";
 import { Segmented } from "./SettingsControls.tsx";
 import { FileGlyph } from "./FileGlyph.tsx";
 import { Skeleton } from "./Skeleton.tsx";
@@ -95,12 +95,12 @@ export function RepoChanges({ paneId, directory, onOpenDiff }: RepoChangesProps)
     if (entry.kind === "folder") {
       const open = !folded.has(entry.path);
       return <li key={`folder:${entry.path}`}>
-        <button type="button" className="repo-change-folder" style={indent} aria-expanded={open} onClick={() => toggle(entry.path)}>
+        <Button type="button" className="repo-change-folder" style={indent} aria-expanded={open} onClick={() => toggle(entry.path)}>
           <span className="repo-change-caret" aria-hidden="true">{open ? <ChevronDown /> : <ChevronRight />}</span>
           {open ? <FolderOpen className="repo-change-glyph" aria-hidden="true" /> : <Folder className="repo-change-glyph" aria-hidden="true" />}
           <span className="repo-change-folder-name">{entry.name}</span>
           <span className="repo-change-folder-count" aria-hidden="true">{entry.files.toLocaleString(locale)}</span>
-        </button>
+        </Button>
         {open && <ul className="repo-change-children">{rows(entry.entries, files, comparison)}</ul>}
       </li>;
     }
@@ -111,7 +111,7 @@ export function RepoChanges({ paneId, directory, onOpenDiff }: RepoChangesProps)
     // a rename within the folder names only the old file; one from elsewhere says where from
     const sameFolder = file.old_path !== null && file.old_path.slice(0, file.old_path.lastIndexOf("/") + 1) === folder;
     return <li key={file.path}>
-      <button type="button" className="repo-change" style={indent} onClick={() => onOpenDiff(comparison, file)}>
+      <Button type="button" className="repo-change" style={indent} onClick={() => onOpenDiff(comparison, file)}>
         <span className="repo-change-mark" data-status={file.status} aria-hidden="true">{STATUS_MARK[file.status]}</span>
         <span className="visually-hidden">{word}</span>
         <FileGlyph name={file.path} className="repo-change-glyph" />
@@ -124,7 +124,7 @@ export function RepoChanges({ paneId, directory, onOpenDiff }: RepoChangesProps)
             <span className="repo-change-added">+{file.additions.toLocaleString(locale)}</span>
             <span className="repo-change-deleted">−{file.deletions.toLocaleString(locale)}</span>
           </span>}
-      </button>
+      </Button>
     </li>;
   });
 
@@ -137,23 +137,23 @@ export function RepoChanges({ paneId, directory, onOpenDiff }: RepoChangesProps)
           { value: "commit", label: t("Commits") },
         ]} onChange={choose} />
         <div className="repo-changes-tools">
-          <button type="button" className="icon-button" aria-label={allOpen ? t("Collapse all folders") : t("Expand all folders")} title={allOpen ? t("Collapse all folders") : t("Expand all folders")} disabled={folders.length === 0} onClick={() => setFolded(allOpen ? new Set(folders) : new Set())}>
+          <Button type="button" className="icon-button" aria-label={allOpen ? t("Collapse all folders") : t("Expand all folders")} title={allOpen ? t("Collapse all folders") : t("Expand all folders")} disabled={folders.length === 0} onClick={() => setFolded(allOpen ? new Set(folders) : new Set())}>
             {allOpen ? <ChevronsDownUp aria-hidden="true" /> : <ChevronsUpDown aria-hidden="true" />}
-          </button>
-          <button type="button" className="icon-button" aria-label={t("Refresh changes")} title={t("Refresh changes")} disabled={asked === null || load.status === "pending"} onClick={() => asked !== null && read(asked)}>
+          </Button>
+          <Button type="button" className="icon-button" aria-label={t("Refresh changes")} title={t("Refresh changes")} disabled={asked === null || load.status === "pending"} onClick={() => asked !== null && read(asked)}>
             <RefreshCw aria-hidden="true" />
-          </button>
+          </Button>
         </div>
       </div>
       {scope === "commit" && (
         <form className="repo-changes-commits" onSubmit={compare}>
           <label className="field">
             <span className="field-label">{t("From commit")}</span>
-            <input className="input" value={base} onChange={(event) => setBase(event.target.value)} placeholder="HEAD~1" autoComplete="off" spellCheck={false} required />
+            <Input className="input" value={base} onChange={(event) => setBase(event.target.value)} placeholder="HEAD~1" autoComplete="off" spellCheck={false} required />
           </label>
           <label className="field">
             <span className="field-label">{t("To commit")}</span>
-            <input className="input" value={head} onChange={(event) => setHead(event.target.value)} placeholder="HEAD" autoComplete="off" spellCheck={false} />
+            <Input className="input" value={head} onChange={(event) => setHead(event.target.value)} placeholder="HEAD" autoComplete="off" spellCheck={false} />
           </label>
           <Button type="submit" variant="primary" disabled={base.trim() === ""}>{t("Compare")}</Button>
         </form>

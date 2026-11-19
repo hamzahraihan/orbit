@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { ChevronDown, Terminal } from "lucide-react";
+import { Button } from "../lib/ui.tsx";
 
 import type { AgentKind } from "../../shared/protocol.ts";
 import { AgentMark } from "./AgentMark.tsx";
@@ -143,7 +144,7 @@ export const AgentPicker = forwardRef<HTMLButtonElement, AgentPickerProps>(funct
 
   return (
     <div className="agent-picker" ref={rootRef}>
-      <button
+      <Button
         ref={ref}
         type="button"
         className="orbit-select agent-picker-trigger"
@@ -160,7 +161,7 @@ export const AgentPicker = forwardRef<HTMLButtonElement, AgentPickerProps>(funct
         <OptionMark kind={selected.kind} />
         <span className="agent-picker-label">{selected.label}</span>
         <ChevronDown className="agent-picker-chevron" aria-hidden="true" />
-      </button>
+      </Button>
       {open && (
         <div id={listId} className="orbit-menu agent-picker-menu" role="listbox" aria-labelledby={labelledBy} style={place}>
           {options.map((option, index) => (

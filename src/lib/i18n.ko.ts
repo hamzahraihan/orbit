@@ -38,7 +38,6 @@ export const KO: Record<string, string> = {
   "Your browser or operating system may intercept {keys}.": "브라우저나 운영체제가 {keys} 입력을 가로챌 수 있습니다.",
   "Reserved": "예약됨",
   "Already assigned": "이미 지정됨",
-  "Send keys to terminal": "키를 터미널로 전달",
   "Default": "기본값",
   "Password or PIN": "비밀번호 또는 PIN",
   "Enter a single-line password or PIN.": "한 줄의 비밀번호 또는 PIN을 입력하세요.",

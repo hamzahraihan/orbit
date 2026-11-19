@@ -3,7 +3,7 @@ import { Check, ChevronDown, ChevronUp, FileText, Send } from "lucide-react";
 
 import "./PromptCard.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button, Checkbox, CheckboxIndicator, Input } from "../lib/ui.tsx";
 
 import { ApiError } from "../lib/api.ts";
 import { useMachineApi } from "../lib/machineContext.tsx";
@@ -144,9 +144,9 @@ export function PromptCard({ paneId, prompt, onPromptChanged, onAnswered, typedA
           </Button>
         )}
         {/* a typed answer waiting for Confirm keeps the card open, so the fold has nothing to do then */}
-        <button type="button" className="prompt-card-fold" disabled={typedAnswer?.option_index !== undefined} aria-expanded={!folded} aria-label={t(folded ? "Expand question" : "Collapse question")} title={t(folded ? "Expand question" : "Collapse question")} onClick={() => setFoldedByUser(!folded)}>
+        <Button type="button" className="prompt-card-fold" disabled={typedAnswer?.option_index !== undefined} aria-expanded={!folded} aria-label={t(folded ? "Expand question" : "Collapse question")} title={t(folded ? "Expand question" : "Collapse question")} onClick={() => setFoldedByUser(!folded)}>
           {folded ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
-        </button>
+        </Button>
       </header>
       {/* a form of several questions (omo): each one, answered or not, and the one asked now */}
       {prompt.steps && (
@@ -208,15 +208,17 @@ export function PromptCard({ paneId, prompt, onPromptChanged, onAnswered, typedA
               const checked = selected.has(index);
               return (
                 <label className={`prompt-card-option${described}${checked ? " is-checked" : ""}`} key={index}>
-                  <input type="checkbox" checked={checked} disabled={pending} onChange={() => toggle(index)} />
+                  <Checkbox checked={checked} disabled={pending} onCheckedChange={() => toggle(index)}>
+                    <CheckboxIndicator><Check aria-hidden="true" /></CheckboxIndicator>
+                  </Checkbox>
                   {number} {content}
                 </label>
               );
             }
             return (
-              <button key={index} type="button" className={`prompt-card-option${described}${typedAnswer?.option_index === index ? " is-typed" : ""}`} disabled={pending} onClick={(event) => void answer({ option_index: index }, event)}>
+              <Button key={index} type="button" className={`prompt-card-option${described}${typedAnswer?.option_index === index ? " is-typed" : ""}`} disabled={pending} onClick={(event) => void answer({ option_index: index }, event)}>
                 {number} {content}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -230,7 +232,7 @@ export function PromptCard({ paneId, prompt, onPromptChanged, onAnswered, typedA
         <div className="prompt-card-custom">
           {hasChoices && <span className="prompt-card-custom-label" id={customLabelId}>{t("Or type your own answer")}</span>}
           <div className="prompt-card-custom-row">
-            <input className="input" value={custom} disabled={pending} placeholder={prompt.options[prompt.custom_option_index]?.label ?? t("Type an answer")} aria-label={hasChoices ? undefined : t("Custom answer")} aria-labelledby={hasChoices ? customLabelId : undefined} onChange={(event) => setCustom(event.currentTarget.value)} onKeyDown={(event) => {
+            <Input className="input" value={custom} disabled={pending} placeholder={prompt.options[prompt.custom_option_index]?.label ?? t("Type an answer")} aria-label={hasChoices ? undefined : t("Custom answer")} aria-labelledby={hasChoices ? customLabelId : undefined} onChange={(event) => setCustom(event.currentTarget.value)} onKeyDown={(event) => {
               // an IME's Enter commits the candidate; WebKit can send it after compositionend, as key code 229
               if (event.key === "Enter" && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229 && custom.trim().length > 0) void answer({ custom_text: custom.trim() });
             }} />

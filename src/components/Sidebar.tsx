@@ -3,7 +3,7 @@ import { ChevronDown, ChevronRight, Ellipsis, Folder, FolderOpen, GitBranch, Lay
 
 import "./Sidebar.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button, Input } from "../lib/ui.tsx";
 
 import type { AgentStatus, PaneInfo, PlanSummary, SessionSnapshot, WorkspaceInfo } from "../../shared/protocol.ts";
 import { paneTitle } from "../../shared/notify-policy.ts";
@@ -731,7 +731,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
             else who the row is (an agent's mark, a worktree's branch, or the folder's monogram).
             A second cell here cost every name 28px of the width it reads in. */}
         {!nested && children.length > 0 && repoKey !== undefined ? (
-          <button
+          <Button
             type="button"
             className="sidebar-row-action workspace-toggle sidebar-row-face"
             aria-label={collapsed ? t("Expand worktrees of {name}", { name: workspace.label }) : t("Collapse worktrees of {name}", { name: workspace.label })}
@@ -741,7 +741,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
           >
             {face}
             <span className="workspace-toggle-fold" aria-hidden="true">{collapsed ? <Folder /> : <FolderOpen />}</span>
-          </button>
+          </Button>
         ) : (
           rowMark(pane, workspace.worktree?.is_linked_worktree === true, rowStatus, rowTitle)
         )}
@@ -749,7 +749,7 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
         {/* Content */}
         <div className="sidebar-row-content">
           {editingWorkspace ? (
-            <input
+            <Input
               className="workspace-rename-input"
               aria-label={t("Workspace name")}
               autoFocus
@@ -800,9 +800,9 @@ export function Sidebar({ snapshot, online, selectedPaneId, actions }: SidebarPr
         
         {/* Actions */}
         <div className="sidebar-row-actions">
-          <button type="button" className={`sidebar-row-action row-menu-toggle${rowMenuHint ? " is-hinted" : ""}`} aria-label={t("More for {title}", { title: rowTitle })} aria-haspopup="menu" aria-expanded={menuOpen} onClick={(event) => { event.stopPropagation(); toggleMenu(event.currentTarget); }}>
+          <Button type="button" className={`sidebar-row-action row-menu-toggle${rowMenuHint ? " is-hinted" : ""}`} aria-label={t("More for {title}", { title: rowTitle })} aria-haspopup="menu" aria-expanded={menuOpen} onClick={(event) => { event.stopPropagation(); toggleMenu(event.currentTarget); }}>
             <Ellipsis aria-hidden="true" />
-          </button>
+          </Button>
         </div>
       </div>
       {inlineError?.workspaceId === workspace.workspace_id && <p className="sidebar-inline-error" role="alert">{inlineError.message}{inlineError.detail !== null && <><br /><code>{inlineError.detail}</code></>}</p>}

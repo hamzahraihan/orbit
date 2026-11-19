@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from "react";
 import { ArrowLeft, Bell, Check, ChevronRight, Info, Keyboard, MessageSquare, Mic, Monitor, Palette, Plug, Plus, Search, ShieldAlert, Smartphone, SquareTerminal, Star, X, type LucideIcon } from "lucide-react";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button, Input, Select } from "../lib/ui.tsx";
 import "./SettingsDialog.css";
 import type { AppActions } from "../lib/actions.ts";
 import { useInstallPrompt } from "../lib/install.ts";
@@ -11,7 +11,7 @@ import { exactChordRisk, isReservedShortcutKey, parseExactChord } from "../lib/s
 import { WEB_LINK_TARGETS } from "../lib/webPanel.ts";
 import { FILE_OPEN_TARGETS } from "../lib/filePresentation.ts";
 import { CLAUDE_LAUNCH_MODES, CODEX_LAUNCH_MODES, type ClaudeLaunchMode, type CodexLaunchMode } from "../lib/agentLaunchMode.ts";
-import { CHAT_FONT_MAX, CHAT_FONT_MIN, CHAT_WIDTHS, chatFontSize, DEFAULT_SETTINGS, DIFF_STYLES, MARKDOWN_WIDTHS, QUICK_REPLIES_MAX, QUICK_REPLY_MAX_CHARS, TERMINAL_FONT_MAX, TERMINAL_FONT_MIN, TERMINAL_WHEEL_SPEED_MAX, TERMINAL_WHEEL_SPEED_MIN, DICTATION_LANGUAGES, VOICE_BUTTONS, useSettings, forgetPaneViews, uiFontSize, type DictationLanguage, type VoiceButton } from "../lib/settings.ts";
+import { CHAT_FONT_MAX, CHAT_FONT_MIN, CHAT_WIDTHS, chatFontSize, DEFAULT_SETTINGS, DIFF_STYLES, MARKDOWN_WIDTHS, QUICK_REPLIES_MAX, QUICK_REPLY_MAX_CHARS, TERMINAL_FONT_MAX, TERMINAL_FONT_MIN, TERMINAL_WHEEL_SPEED_MAX, TERMINAL_WHEEL_SPEED_MIN, DICTATION_LANGUAGES, VOICE_BUTTONS, useSettings, forgetPaneViews, uiFontSize, type VoiceButton } from "../lib/settings.ts";
 import { pickTheme, rowFor, THEME_IDS, type Mode, type ThemeId } from "../lib/themes.ts";
 import { LANGUAGE_NAMES, LANGUAGE_SETTINGS, useLocale, useT } from "../lib/i18n.ts";
 import { useFocusTrap } from "../lib/useFocusTrap.ts";
@@ -130,7 +130,7 @@ function FontFamilyInput({ value, label, onCommit, fixedWidthFor = null }: { val
   return (
     <div className="settings-font-field">
       <div className="settings-font-line">
-        <input
+        <Input
           className="input settings-font-input"
           name="font-family"
           value={draft}
@@ -159,7 +159,7 @@ function FontFamilyInput({ value, label, onCommit, fixedWidthFor = null }: { val
       {unavailable && <p className="settings-font-note" role="status">{t("Installed fonts could not be listed. Type the name instead.")}</p>}
       {browsing && families !== null && (
         <div className="settings-font-picker">
-          <input
+          <Input
             className="input settings-font-search"
             type="search"
             name="font-search"
@@ -181,9 +181,9 @@ function FontFamilyInput({ value, label, onCommit, fixedWidthFor = null }: { val
           <ul className="settings-font-list" aria-label={t("Installed fonts")}>
             {matches.slice(0, FONT_LIST_LIMIT).map((family) => (
               <li key={family}>
-                <button type="button" className="settings-font-option" style={{ fontFamily: `"${family}", var(--font-ui)` }} onClick={() => pick(family)}>
+                <Button type="button" className="settings-font-option" style={{ fontFamily: `"${family}", var(--font-ui)` }} onClick={() => pick(family)}>
                   {family}
-                </button>
+                </Button>
               </li>
             ))}
             {matches.length === 0 && <li className="settings-font-empty">{t("No fonts found")}</li>}
@@ -286,15 +286,10 @@ function ThemeSelect({ side }: { side: Mode }) {
       <span className="theme-swatch" aria-hidden="true" title={t(THEME_NAMES[selected])}>
         {swatchColors.map((color, index) => <span key={index} className="theme-swatch-chip" style={{ background: color }} />)}
       </span>
-      <input type="search" className="input settings-theme-search" value={query} onChange={(event) => setQuery(event.target.value)}
+      <Input type="search" className="input settings-theme-search" value={query} onChange={(event) => setQuery(event.target.value)}
         placeholder={t("Search themes")} aria-label={side === "dark" ? t("Search dark themes") : t("Search light themes")} spellCheck={false} autoComplete="off" />
-      <select id={`settings-theme-${side}`} className="orbit-select settings-select" value={selected} onChange={(event) => update(pickTheme(settings, side, event.target.value as ThemeId))}>
-        {groups.map(({ kind, ids }) => ids.length === 0 ? null : (
-          <optgroup key={kind} label={kind === "dark" ? t("Dark") : t("Light")}>
-            {ids.map((id) => <option key={id} value={id}>{t(THEME_NAMES[id])}</option>)}
-          </optgroup>
-        ))}
-      </select>
+      <Select id={`settings-theme-${side}`} className="settings-select" value={selected} onChange={(theme) => update(pickTheme(settings, side, theme))}
+        groups={groups.filter(({ ids }) => ids.length > 0).map(({ kind, ids }) => ({ label: kind === "dark" ? t("Dark") : t("Light"), options: ids.map((id) => ({ value: id, label: t(THEME_NAMES[id]) })) }))} />
     </span>
   );
 }
@@ -339,9 +334,8 @@ function AppearancePage() {
 
     <SettingsGroup title={t("Language")} section="language">
       <SettingsRow label={t("Language")} description={t("Follows the browser unless you choose one")} htmlFor="settings-language">
-        <select id="settings-language" className="orbit-select settings-select" value={settings.language} onChange={(event) => update({ language: event.target.value as typeof settings.language })}>
-          {LANGUAGE_SETTINGS.map((language) => <option key={language} value={language}>{language === "system" ? t("System") : LANGUAGE_NAMES[language]}</option>)}
-        </select>
+        <Select id="settings-language" className="settings-select" value={settings.language} onChange={(language) => update({ language })}
+          options={LANGUAGE_SETTINGS.map((language) => ({ value: language, label: language === "system" ? t("System") : LANGUAGE_NAMES[language] }))} />
       </SettingsRow>
     </SettingsGroup>
 
@@ -415,7 +409,7 @@ function ChatPage() {
             {settings.quickReplies.map((reply, index) => {
               const ask = settings.quickReplyConfirm[index] === true;
               return <li key={index}>
-                <input
+                <Input
                   className="input"
                   name="quick-reply"
                   value={reply}
@@ -426,14 +420,14 @@ function ChatPage() {
                   autoCorrect="off"
                   onChange={(event) => update({ quickReplies: settings.quickReplies.map((current, at) => at === index ? event.target.value : current) })}
                 />
-                <button type="button" className="icon-button" aria-pressed={ask}
+                <Button type="button" className="icon-button" aria-pressed={ask}
                   aria-label={t("Ask before sending quick reply {number}", { number: index + 1 })} title={t("Ask before sending")}
                   onClick={() => update({ quickReplyConfirm: settings.quickReplies.map((_, at) => at === index ? !ask : settings.quickReplyConfirm[at] === true) })}>
                   <ShieldAlert aria-hidden="true" />
-                </button>
-                <button type="button" className="icon-button" aria-label={t("Remove quick reply {number}", { number: index + 1 })} onClick={() => update({ quickReplies: settings.quickReplies.filter((_, at) => at !== index), quickReplyConfirm: settings.quickReplyConfirm.filter((_, at) => at !== index) })}>
+                </Button>
+                <Button type="button" className="icon-button" aria-label={t("Remove quick reply {number}", { number: index + 1 })} onClick={() => update({ quickReplies: settings.quickReplies.filter((_, at) => at !== index), quickReplyConfirm: settings.quickReplyConfirm.filter((_, at) => at !== index) })}>
                   <X aria-hidden="true" />
-                </button>
+                </Button>
               </li>;
             })}
           </ol>
@@ -482,9 +476,8 @@ function TerminalPage({ keyBarButtonRef, onEditKeyBar }: { keyBarButtonRef: RefO
       </SettingsRow>
       <SettingsRow label={t("Terminal input mode")} htmlFor="terminal-input-mode">
         {/* "auto", the stored default, types straight into the grid on every device: it reads as Direct typing */}
-        <select id="terminal-input-mode" className="orbit-select settings-select" value={settings.terminalInputMode === "line" ? "line" : "direct"} onChange={(event) => update({ terminalInputMode: event.target.value as "line" | "direct" })}>
-          <option value="direct">{t("Direct typing")}</option><option value="line">{t("Input line")}</option>
-        </select>
+        <Select id="terminal-input-mode" className="settings-select" value={settings.terminalInputMode === "line" ? "line" : "direct"} onChange={(mode) => update({ terminalInputMode: mode as "line" | "direct" })}
+          options={[{ value: "direct", label: t("Direct typing") }, { value: "line", label: t("Input line") }]} />
       </SettingsRow>
       <SettingsRow label={t("Key bar")} description={t("Keys, order and custom combinations for the terminal.")}>
         <Button ref={keyBarButtonRef} variant="secondary" onClick={onEditKeyBar}>{t("Edit key bar")}</Button>
@@ -542,10 +535,8 @@ function DictationLanguageSelect() {
   const auto = languageName(names, dictationLocale("auto", settings.language, resolvedLanguage, navigator.languages));
   const choices = useMemo(() => DICTATION_LANGUAGES.map((tag) => ({ tag, name: languageName(names, tag) })).sort((a, b) => a.name.localeCompare(b.name, locale)), [names, locale]);
   return (
-    <select id="settings-voice-language" className="orbit-select settings-select" value={settings.voiceLanguage} onChange={(event) => update({ voiceLanguage: event.target.value as DictationLanguage })}>
-      <option value="auto">{t("Auto ({language})", { language: auto })}</option>
-      {choices.map(({ tag, name }) => <option key={tag} value={tag}>{name}</option>)}
-    </select>
+    <Select id="settings-voice-language" className="settings-select" value={settings.voiceLanguage} onChange={(voiceLanguage) => update({ voiceLanguage })}
+      options={[{ value: "auto", label: t("Auto ({language})", { language: auto }) }, ...choices.map(({ tag, name }) => ({ value: tag, label: name }))]} />
   );
 }
 
@@ -613,7 +604,7 @@ function VoicePage() {
           )}
           {voice && voice.source !== "env" && (
             <form className="voice-key" onSubmit={(event) => { event.preventDefault(); if (voiceKey.trim()) void changeVoiceKey(voiceKey.trim()); }}>
-              <input
+              <Input
                 className="input voice-key-input"
                 type="password"
                 name="openai-api-key"
@@ -670,14 +661,12 @@ function LaunchModesGroup() {
   return (
     <SettingsGroup title={t("New agents")} section="launch-modes" note={t("Applies to agents started from New workspace, New tab and New worktree. Agent default adds no flag, so the agent's own configuration decides.")}>
       <SettingsRow label="Claude Code" description={t("Permission mode")} htmlFor="settings-claude-launch-mode">
-        <select id="settings-claude-launch-mode" className="orbit-select settings-select" value={settings.claudeLaunchMode} onChange={(event) => update({ claudeLaunchMode: event.target.value as ClaudeLaunchMode })}>
-          {CLAUDE_LAUNCH_MODES.map((mode) => <option key={mode} value={mode}>{claudeModeName(mode, t)}</option>)}
-        </select>
+        <Select id="settings-claude-launch-mode" className="settings-select" value={settings.claudeLaunchMode} onChange={(claudeLaunchMode) => update({ claudeLaunchMode })}
+          options={CLAUDE_LAUNCH_MODES.map((mode) => ({ value: mode, label: claudeModeName(mode, t) }))} />
       </SettingsRow>
       <SettingsRow label="Codex" description={t("Sandbox and approvals")} htmlFor="settings-codex-launch-mode">
-        <select id="settings-codex-launch-mode" className="orbit-select settings-select" value={settings.codexLaunchMode} onChange={(event) => update({ codexLaunchMode: event.target.value as CodexLaunchMode })}>
-          {CODEX_LAUNCH_MODES.map((mode) => <option key={mode} value={mode}>{codexModeName(mode, t)}</option>)}
-        </select>
+        <Select id="settings-codex-launch-mode" className="settings-select" value={settings.codexLaunchMode} onChange={(codexLaunchMode) => update({ codexLaunchMode })}
+          options={CODEX_LAUNCH_MODES.map((mode) => ({ value: mode, label: codexModeName(mode, t) }))} />
       </SettingsRow>
     </SettingsGroup>
   );
@@ -799,7 +788,7 @@ function ShortcutsPage() {
   });
   return (
     <>
-      <input
+      <Input
         type="search"
         className="input settings-shortcut-search"
         name="shortcut-search"
@@ -825,6 +814,17 @@ function ShortcutsPage() {
           // a binding without a default key is off by default: its Default row reads Off, with no second Off
           const unbound = defaultKeys.length === 0;
           const rowText = recording?.id === shortcut.id ? (recording.problem ?? t("Press the new shortcut, or Escape to cancel.")) : confirming ? riskText(confirming.risk, compactKeys(bindingDisplayKeys(confirming.value))) : selectedRisk ? riskText(selectedRisk, compactKeys(displayedKeys)) : undefined;
+          // a recorded chord the list below does not offer (exact modifiers, Home, End, punctuation) is listed as itself
+          const shortcutOptions = [
+            { value: "default", label: `${unbound ? t("Off") : compactKeys(defaultKeys)}${defaultReserved ? ` — ${t("Reserved")}` : ""}`, disabled: shortcutConflict(shortcut.id, shortcutKeys(shortcut.id, {}), settings.shortcutOverrides) },
+            ...(!unbound ? [{ value: "off", label: t("Off") }] : []),
+            ...(override && (exact || !MENU_SHORTCUT_KEYS.includes(override)) ? [{ value: override, label: compactKeys(displayedKeys) }] : []),
+            ...MENU_SHORTCUT_KEYS.map((key) => {
+              const conflict = shortcutConflict(shortcut.id, [key], settings.shortcutOverrides);
+              const reserved = isReservedShortcutKey(key, platformIsMac);
+              return { value: key, label: `${compactKeys(["Mod", "Shift", key])}${reserved ? ` — ${t("Reserved")}` : ""}${conflict ? " — " + t("Already assigned") : ""}`, disabled: conflict };
+            }),
+          ];
           return (
             <SettingsRow key={shortcut.id} label={t(shortcut.label)} wide={shortcut.id !== "voice"} description={rowText === undefined ? undefined : <span role="status">{rowText}</span>}>
               {shortcut.id === "voice" ? <span className="settings-keys">{formatKeys(shortcut.keys).map((key) => <kbd className="kbd" key={key}>{key}</kbd>)}</span> : (
@@ -836,22 +836,12 @@ function ShortcutsPage() {
                     update({ shortcutOverrides: { ...settings.shortcutOverrides, [confirming.id]: confirming.value } });
                   }}>{t("Save anyway")}</Button>
                   <Button type="button" variant="secondary" onClick={() => settlePending(confirming.id)}>{t("Cancel")}</Button>
-                </> : <select className="orbit-select settings-select settings-shortcut-select" name="shortcut-binding" aria-label={t(shortcut.label)} value={Object.hasOwn(settings.shortcutOverrides, shortcut.id) ? settings.shortcutOverrides[shortcut.id] ?? (unbound ? "default" : "off") : "default"} onChange={(event) => {
+                </> : <Select className="settings-select settings-shortcut-select" label={t(shortcut.label)} value={Object.hasOwn(settings.shortcutOverrides, shortcut.id) ? settings.shortcutOverrides[shortcut.id] ?? (unbound ? "default" : "off") : "default"} onChange={(nextValue) => {
                   const next = { ...settings.shortcutOverrides };
-                  if (event.target.value === "default") delete next[shortcut.id];
-                  else next[shortcut.id] = event.target.value === "off" ? null : event.target.value;
+                  if (nextValue === "default") delete next[shortcut.id];
+                  else next[shortcut.id] = nextValue === "off" ? null : nextValue;
                   update({ shortcutOverrides: next });
-                }}>
-                  <option value="default" title={t("Default")} disabled={shortcutConflict(shortcut.id, shortcutKeys(shortcut.id, {}), settings.shortcutOverrides)}>{unbound ? t("Off") : compactKeys(defaultKeys)}{defaultReserved ? ` — ${t("Reserved")}` : ""}</option>
-                  {!unbound && <option value="off" title={t("Send keys to terminal")}>{t("Off")}</option>}
-                  {/* a recorded chord the list below does not offer (exact modifiers, Home, End, punctuation) is listed as itself */}
-                  {override && (exact || !MENU_SHORTCUT_KEYS.includes(override)) && <option value={override}>{compactKeys(displayedKeys)}</option>}
-                  {MENU_SHORTCUT_KEYS.map((key) => {
-                    const conflict = shortcutConflict(shortcut.id, [key], settings.shortcutOverrides);
-                    const reserved = isReservedShortcutKey(key, platformIsMac);
-                    return <option key={key} value={key} disabled={conflict}>{compactKeys(["Mod", "Shift", key])}{reserved ? ` — ${t("Reserved")}` : ""}{conflict ? " — " + t("Already assigned") : ""}</option>;
-                  })}
-                </select>}
+                }} options={shortcutOptions} />}
                 </span>
               )}
             </SettingsRow>
@@ -1001,7 +991,8 @@ function SettingsCrash({ onClose, overPreview }: { onClose: () => void; overPrev
   useSheetSwipe(surface, onClose);
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent): void => {
-      if (event.key !== "Escape" || event.isComposing || event.keyCode === 229) return;
+      // the layer that holds an open popup (a ui-sdk select) takes Escape first
+      if (event.key !== "Escape" || event.isComposing || event.keyCode === 229 || event.defaultPrevented) return;
       event.preventDefault();
       onClose();
     };
@@ -1123,8 +1114,9 @@ function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClo
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent): void => {
-      // an Escape that cancels an IME composition (the editor's Character field) is the IME's
-      if (event.key !== "Escape" || event.isComposing || event.keyCode === 229) return;
+      // an Escape that cancels an IME composition (the editor's Character field) is the IME's;
+      // one the layer holding an open popup took is theirs
+      if (event.key !== "Escape" || event.isComposing || event.keyCode === 229 || event.defaultPrevented) return;
       event.preventDefault();
       // out of the key bar editor or Add PC first; from any page, a phone's included, it closes the dialog
       if (keyBarOpen) setKeyBarOpen(false);
@@ -1168,20 +1160,20 @@ function OpenSettingsDialog({ linkPage = null, linkSection = null, onPage, onClo
       {/* named Settings on every page: the page's own name is the visible title */}
       <section ref={surface} className="modal settings-dialog" role="dialog" aria-modal="true" aria-label={keyBarOpen ? t("Key bar") : t("Settings")} tabIndex={-1}>
         <header className="modal-header settings-header">
-          {(keyBarOpen || addPcOpen || (narrow && page !== null)) && <button type="button" ref={backRef} className="icon-button settings-back" aria-label={t("Back to settings")} onClick={goBack}><ArrowLeft aria-hidden="true" /></button>}
+          {(keyBarOpen || addPcOpen || (narrow && page !== null)) && <Button type="button" ref={backRef} className="icon-button settings-back" aria-label={t("Back to settings")} onClick={goBack}><ArrowLeft aria-hidden="true" /></Button>}
           <h2 className="modal-title settings-title">{keyBarOpen ? t("Key bar") : addPcOpen ? t("Add PC") : page === null ? t("Settings") : label(page)}</h2>
-          <button type="button" className="icon-button settings-close" aria-label={t("Close settings")} onClick={onClose}><X aria-hidden="true" /></button>
+          <Button type="button" className="icon-button settings-close" aria-label={t("Close settings")} onClick={onClose}><X aria-hidden="true" /></Button>
         </header>
         {listShown && (
           <nav className="settings-nav" aria-label={t("Settings")}>
             <p className="settings-nav-title" aria-hidden="true">{t("Settings")}</p>
             <div ref={tabsRef} className="settings-tabs" role="tablist" aria-orientation="vertical">
               {PAGES.map(({ id, icon: Icon }, index) => (
-                <button key={id} type="button" role="tab" className="settings-tab" data-settings-page={id} aria-selected={page === id} aria-controls={page === id ? "settings-panel" : undefined} tabIndex={focusable === id ? 0 : -1} onClick={() => openPage(id)} onKeyDown={(event) => onTabKey(event, index)}>
+                <Button key={id} type="button" role="tab" className="settings-tab" data-settings-page={id} aria-selected={page === id} aria-controls={page === id ? "settings-panel" : undefined} tabIndex={focusable === id ? 0 : -1} onClick={() => openPage(id)} onKeyDown={(event) => onTabKey(event, index)}>
                   <Icon aria-hidden="true" />
                   <span>{label(id)}</span>
                   <ChevronRight className="settings-tab-chevron" aria-hidden="true" />
-                </button>
+                </Button>
               ))}
             </div>
           </nav>

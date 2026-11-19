@@ -81,7 +81,9 @@ export function parseThemeBlocks(css: string): Record<string, ThemeBlock> {
     let close = open + 1;
     let depth = 1;
     for (; depth > 0 && close < text.length; close++) depth += text[close] === "{" ? 1 : text[close] === "}" ? -1 : 0;
-    const selectors = text.slice(at, open).trim();
+    // at-rules without bodies (e.g. `@layer ui-sdk;`) may sit between blocks; skip them
+    const preamble = text.slice(at, open);
+    const selectors = preamble.slice(Math.max(preamble.lastIndexOf(";"), preamble.lastIndexOf("{")) + 1).trim();
     if (depth !== 0) throw new ThemeValueError(selectors, "block", text.slice(open), "unclosed block");
     const body = text.slice(open + 1, close - 1);
     for (const selector of selectors.split(",").map((part) => part.trim())) {

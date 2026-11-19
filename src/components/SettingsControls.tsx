@@ -1,19 +1,4 @@
 import type { ReactNode } from "react";
-import { Minus, Plus } from "lucide-react";
-
-import {
-  NumberFieldDecrementButton,
-  NumberFieldGroup,
-  NumberFieldIncrementButton,
-  NumberFieldInput,
-  NumberFieldRoot,
-  SwitchContent,
-  SwitchControl,
-  SwitchRoot,
-  SwitchThumb,
-  ToggleButtonGroupRoot,
-  ToggleButtonRoot,
-} from "@heroui/react";
 
 import "./SettingsControls.css";
 
@@ -48,48 +33,5 @@ export function SettingsRow({ label, description, htmlFor, wide = false, childre
   );
 }
 
-/** An on/off switch, Hero UI's Switch under the hood. */
-export function Toggle({ checked, label, onChange, disabled }: { checked: boolean; label: string; onChange: (checked: boolean) => void; disabled?: boolean }) {
-  return (
-    <SwitchRoot isSelected={checked} isDisabled={disabled} onChange={(isSelected) => onChange(isSelected)} aria-label={label}>
-      <SwitchContent>
-        {/* the thumb rides inside the track: outside it the track cannot place the knob */}
-        <SwitchControl>
-          <SwitchThumb />
-        </SwitchControl>
-      </SwitchContent>
-    </SwitchRoot>
-  );
-}
-
-export interface SegmentedOption<T extends string> { value: T; label: string }
-
-/** One of a few short choices, all in sight. Five or more go in a select instead. Hero UI's
- *  ToggleButtonGroup under the hood. */
-export function Segmented<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: readonly SegmentedOption<T>[]; onChange: (value: T) => void }) {
-  if (options.length > 4) console.warn(`Segmented "${label}" has ${options.length} options; five or more go in a select instead.`);
-  const selectedKeys = new Set([value]);
-  return (
-    <ToggleButtonGroupRoot selectionMode="single" disallowEmptySelection selectedKeys={selectedKeys} onSelectionChange={(keys) => onChange(Array.from(keys)[0] as T)} aria-label={label} className="settings-segmented">
-      {options.map((option) => (
-        <ToggleButtonRoot key={option.value} id={option.value}>
-          {option.label}
-        </ToggleButtonRoot>
-      ))}
-    </ToggleButtonGroupRoot>
-  );
-}
-
-/** A number moved one step at a time between its limits, shown as `text`. Hero UI's NumberField
- *  under the hood. */
-export function Stepper({ label, value, text, min, max, decreaseLabel, increaseLabel, onChange }: { label: string; value: number; text: string; min: number; max: number; decreaseLabel: string; increaseLabel: string; onChange: (value: number) => void }) {
-  return (
-    <NumberFieldRoot value={value} minValue={min} maxValue={max} onChange={(next) => onChange(next)} aria-label={label} className="settings-stepper">
-      <NumberFieldGroup>
-        <NumberFieldDecrementButton aria-label={decreaseLabel} isDisabled={value <= min}><Minus aria-hidden="true" /></NumberFieldDecrementButton>
-        <NumberFieldInput readOnly />
-        <NumberFieldIncrementButton aria-label={increaseLabel} isDisabled={value >= max}><Plus aria-hidden="true" /></NumberFieldIncrementButton>
-      </NumberFieldGroup>
-    </NumberFieldRoot>
-  );
-}
+export { Segmented, Stepper, Switch as Toggle } from "../lib/ui.tsx";
+export type { SegmentedOption } from "../lib/ui.tsx";

@@ -5,7 +5,7 @@ import { useT } from "../lib/i18n.ts";
 import type { SubmitResult } from "../lib/ws.ts";
 import "./SecretInput.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button, Input } from "../lib/ui.tsx";
 
 /** A DOM-only value: no drafts, queue, React state or retry copy of the secret. */
 export function SecretInput({ prompt, active = true, onSend, onCancel }: {
@@ -47,7 +47,7 @@ export function SecretInput({ prompt, active = true, onSend, onCancel }: {
     });
   }}>
     <label className="secret-input-label"><LockKeyhole size={16} aria-hidden="true" /> {prompt}
-      <input ref={input} className="input" type="password" aria-label={t("Password or PIN")} autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={4096} disabled={pending}
+      <Input ref={input} className="input" type="password" aria-label={t("Password or PIN")} autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} maxLength={4096} disabled={pending}
         onKeyDown={(event) => { if (event.key === "Enter" && (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229)) event.preventDefault(); }} />
     </label>
     <p className="secret-input-note">{t("Sent directly to this terminal. Never saved as a draft or queued.")}</p>

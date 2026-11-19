@@ -509,6 +509,15 @@
   padding-left: var(--space-5);
 }
 
+/* the reset unsets the browser's markers; prose wants them back */
+ul.markdown-list {
+  list-style: disc;
+}
+
+ol.markdown-list {
+  list-style: decimal;
+}
+
 .markdown-list .markdown-list {
   margin: var(--space-1) 0 0;
 }
@@ -676,6 +685,7 @@
   font-family: var(--font-mono);
   font-size: var(--fs-2xs);
   text-align: left;
+  justify-content: flex-start;
   cursor: pointer;
 }
 
@@ -755,6 +765,10 @@
 .work-row-head {
   width: calc(100% + 2 * var(--space-1));
   margin-inline: calc(-1 * var(--space-1));
+  /* a block head is a row across the transcript, not a label in an action's box: the caret and the
+     words stay on the prose edge, and a narrow lane may wrap them */
+  justify-content: flex-start;
+  white-space: normal;
 }
 
 .work-block-head:hover,

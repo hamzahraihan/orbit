@@ -3,7 +3,7 @@ import { ApiError } from "../lib/api.ts";
 import { useT } from "../lib/i18n.ts";
 import { pushSupported, testDevicePush } from "../lib/push.ts";
 import { useSettings } from "../lib/settings.ts";
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button } from "../lib/ui.tsx";
 
 type Result = Awaited<ReturnType<typeof testDevicePush>> | "gone" | "failed" | "sending" | null;
 

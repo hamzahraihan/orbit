@@ -12,6 +12,7 @@ import "./MermaidLightbox.css";
 import { useT } from "../lib/i18n.ts";
 import { usePhoneSheetBack } from "../lib/sheetHistory.ts";
 import { nativeModalOver, useFocusTrap } from "../lib/useFocusTrap.ts";
+import { Button } from "../lib/ui.tsx";
 
 // the view model is shared with ImageLightbox, which zooms a chat picture the same way
 export const MIN_ZOOM = 0.5;
@@ -122,11 +123,11 @@ export function MermaidLightbox({ svg, onClose }: { svg: string; onClose: () => 
     <div className="modal-scrim mermaid-lightbox-scrim">
       <div ref={surface} className="mermaid-lightbox" role="dialog" aria-modal="true" aria-label={t("Diagram")} tabIndex={-1}>
         <div className="mermaid-lightbox-bar">
-          <button type="button" className="icon-button" onClick={() => zoomBy(1 / STEP)} disabled={view.scale <= MIN_ZOOM} aria-label={t("Zoom out")}><Minus aria-hidden="true" /></button>
+          <Button type="button" className="icon-button" onClick={() => zoomBy(1 / STEP)} disabled={view.scale <= MIN_ZOOM} aria-label={t("Zoom out")}><Minus aria-hidden="true" /></Button>
           <span className="mermaid-lightbox-zoom" aria-live="off">{Math.round(view.scale * 100)}%</span>
-          <button type="button" className="icon-button" onClick={() => zoomBy(STEP)} disabled={view.scale >= MAX_ZOOM} aria-label={t("Zoom in")}><Plus aria-hidden="true" /></button>
-          <button type="button" className="icon-button" onClick={() => setView(FIT)} aria-label={t("Fit to screen")} title={t("Fit to screen")}><Scan aria-hidden="true" /></button>
-          <button ref={close} type="button" className="icon-button" onClick={onClose} aria-label={t("Close")}><X aria-hidden="true" /></button>
+          <Button type="button" className="icon-button" onClick={() => zoomBy(STEP)} disabled={view.scale >= MAX_ZOOM} aria-label={t("Zoom in")}><Plus aria-hidden="true" /></Button>
+          <Button type="button" className="icon-button" onClick={() => setView(FIT)} aria-label={t("Fit to screen")} title={t("Fit to screen")}><Scan aria-hidden="true" /></Button>
+          <Button ref={close} type="button" className="icon-button" onClick={onClose} aria-label={t("Close")}><X aria-hidden="true" /></Button>
         </div>
         <div
           ref={stage}

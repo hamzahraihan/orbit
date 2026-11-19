@@ -42,7 +42,6 @@ export const ZH: Record<string, string> = {
   "Your browser or operating system may intercept {keys}.": "浏览器或操作系统可能会拦截 {keys}。",
   "Reserved": "系统保留",
   "Already assigned": "已分配",
-  "Send keys to terminal": "将按键发送到终端",
   "Default": "默认",
   "Password or PIN": "密码或 PIN",
   "Enter a single-line password or PIN.": "请输入不含换行的密码或 PIN。",

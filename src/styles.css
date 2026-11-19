@@ -1538,10 +1538,12 @@
   }
 }
 
-/* ---------- reset + base ---------- */
+/* ---------- base ---------- */
 
-* {
-  box-sizing: border-box;
+/* The UA's hidden rule loses to any author `display`: a folded held list or the composer's file
+   input came back until hidden won, as it did in the preflight this once came from. */
+[hidden]:where(:not([hidden="until-found"])) {
+  display: none !important;
 }
 
 html,
@@ -2387,24 +2389,17 @@ html ::-webkit-scrollbar-thumb {
   }
 }
 
-/* HeroUI controls: HeroUI owns their anatomy and states; these are the two product rules
-   that still apply on top of it. */
+/* ui-sdk controls: ui-sdk owns anatomy and states; these rules are the product's own,
+   applied on top. */
 @media (pointer: coarse) {
   .input,
   .orbit-select,
-  .toggle-button,
-  .number-field__group,
-  .switch {
+  .orbit-switch {
     min-height: var(--touch-target);
-  }
-
-  /* the switch root is a label: centre the track in the finger-sized target */
-  .switch {
-    justify-content: center;
   }
 }
 
-/* iOS zooms a focused field under 16px; HeroUI's text-base is smaller on a phone. */
+/* iOS zooms a focused field under 16px; a smaller interface face would zoom on a phone. */
 .input {
   font-size: var(--fs-input);
 }
@@ -2591,11 +2586,10 @@ html ::-webkit-scrollbar-thumb {
   color: var(--text-strong);
 }
 
-/* The chosen option takes the rose fill a settings toggle takes (--accent-soft in
-   lib/heroui-theme.css) and nothing else: --bg-hover over a --bg-elevated track is a few tonal
-   units apart, so the chosen tab read as one more hover. No ring around it: the track is the
-   frame, and a second one inside it reads as a box in a box. The header's view switch keeps its
-   own quiet plate (above), as the tab strip's open tab does. */
+/* The chosen option takes the rose fill a settings toggle takes and nothing else: --bg-hover
+   over a --bg-elevated track is a few tonal units apart, so the chosen tab read as one more
+   hover. No ring around it: the track is the frame, and a second one inside it reads as a box
+   in a box. The header's view switch keeps its own quiet plate (above), as the tab strip's open tab does. */
 .segmented:not(.view-switch) > button[aria-pressed="true"] {
   background: color-mix(in srgb, var(--accent) 30%, transparent);
 }
@@ -2645,7 +2639,7 @@ html ::-webkit-scrollbar-thumb {
   width: min(100%, 560px);
   max-height: min(100%, 720px);
   background: var(--bg-panel);
-  /* HeroUI's dialog surface: its softest overlay radius, drawn by the overlay shadow */
+  /* overlay surface: its softest radius, drawn by the overlay shadow */
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-pop);
   overflow: hidden;
@@ -2781,18 +2775,6 @@ html ::-webkit-scrollbar-thumb {
   color: var(--text-dim);
 }
 
-/* A native select keeps the OS picker (long theme lists, mobile). It wears the same field
-   surface as HeroUI's Input so the control vocabulary stays one system. */
-.orbit-select {
-  height: 2.25rem;
-  padding: 0 var(--space-3);
-  background: var(--bg-input);
-  border: var(--hairline) solid var(--border);
-  border-radius: var(--radius-lg);
-  color: var(--text-strong);
-  font: inherit;
-  font-size: var(--fs-input);
-}
 
 /* a field's placeholder: the browser's own grey reads 3.8:1 on a dark field, so every placeholder
    takes --text-dim (at least 4.5:1 on every field of every palette) at full opacity, which Firefox
@@ -2802,20 +2784,8 @@ html ::-webkit-scrollbar-thumb {
   opacity: 1;
 }
 
-/* a bordered field shows focus on its own border; the offset ring is for controls without one */
-.orbit-select:focus,
-.orbit-select:focus-visible {
-  border-color: var(--accent-readable);
-  outline: none;
-}
 
-@media (min-width: 641px) {
-  .orbit-select {
-    font-size: var(--fs-sm);
-  }
-}
-
-/* popover menu (palette rows, slash/@ completions), on HeroUI's popover and item geometry:
+/* popover menu (palette rows, slash/@ completions):
    a 24px surface with 4px of padding, and 16px rows 36px tall */
 .orbit-menu {
   display: flex;
@@ -2830,6 +2800,7 @@ html ::-webkit-scrollbar-thumb {
 .orbit-menu-item {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: var(--space-3);
   min-height: 2.25rem;
   padding: 6px var(--space-2);

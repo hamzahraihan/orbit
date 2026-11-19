@@ -110,6 +110,7 @@
 .agent-section-toggle {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: var(--space-2);
   min-height: var(--side-row);
   padding: 0 var(--space-2);
@@ -258,6 +259,7 @@
   min-height: var(--side-row);
   padding: 0 var(--space-2);
   border-radius: var(--sidebar-radius);
+  text-align: start;
   transition: background var(--dur-fast) var(--ease-out);
 }
 
@@ -295,6 +297,7 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  text-align: start;
 }
 
 .agent-main {
@@ -326,9 +329,7 @@
 }
 
 .agent-context {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
+  display: block;
   min-width: 0;
   font-size: var(--fs-2xs);
   font-family: var(--font-mono);
@@ -344,9 +345,8 @@
 }
 
 .agent-tokens {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
+  display: block;
+  min-width: 0;
   font-size: var(--fs-2xs);
   color: var(--text-dim);
   font-family: var(--font-mono);

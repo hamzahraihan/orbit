@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { CornerDownLeft, SendHorizontal } from "lucide-react";
+import { Button, Textarea } from "../lib/ui.tsx";
 
 import "./TerminalInput.css";
 import { readTerminalDraft, writeTerminalDraft, TERMINAL_LINE_LIMIT, subscribeTerminalDraft, terminalDraftSending, setTerminalDraftSending, acknowledgeTerminalDraft } from "../lib/terminalDraft.ts";
@@ -205,7 +206,7 @@ export function TerminalInput({ owner, active = true, connected, onSend, onEnter
   const rows = Math.min(MAX_ROWS, Math.max(wrappedRows, text.split("\n").length));
   return (
     <div className={`terminal-input${dictation.shown ? " has-voice" : ""}`}>
-      <textarea
+      <Textarea
         ref={box}
         className="terminal-input-text"
         rows={rows}
@@ -238,7 +239,7 @@ export function TerminalInput({ owner, active = true, connected, onSend, onEnter
         onFocus={onFocus}
       />
       {dictation.shown && <MicButton dictation={dictation} className="terminal-input-mic" />}
-      <button
+      <Button
         type="button"
         className="terminal-input-send"
         aria-label={t(text.length === 0 ? "Press Enter in the terminal" : "Send to the terminal")}
@@ -249,7 +250,7 @@ export function TerminalInput({ owner, active = true, connected, onSend, onEnter
         onClick={() => send()}
       >
         {text.length === 0 ? <CornerDownLeft aria-hidden="true" /> : <SendHorizontal aria-hidden="true" />}
-      </button>
+      </Button>
       {note !== null && <p className="terminal-input-note" role="alert">{note}</p>}
       {dictation.shown && <VoiceRecordingPill dictation={dictation} align="end" />}
     </div>

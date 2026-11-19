@@ -8,6 +8,7 @@ import { clockOffsetMs, endedSummary, formatElapsed, runGoing, spanMs, taskElaps
 import { formatTokens } from "../lib/compose.ts";
 import { planWaves } from "../lib/plan.ts";
 import { useT } from "../lib/i18n.ts";
+import { Button } from "../lib/ui.tsx";
 import { usePhoneSheetBack } from "../lib/sheetHistory.ts";
 import type { OmoRun, OmoRunNode, OmoTask, PlanStep, PlanSummary } from "../../shared/protocol.ts";
 
@@ -243,11 +244,11 @@ export function BackgroundTasks({ paneId, count, omo, claude = false, plan = nul
   };
   // a phone's status line has one row: there the words give way to the icons and the numbers
   return <span className="bg-tasks" ref={root}>
-    <button type="button" ref={toggle} className={`bg-tasks-toggle${busy ? "" : " is-idle"}`} aria-label={label} title={title} aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
+    <Button type="button" ref={toggle} className={`bg-tasks-toggle${busy ? "" : " is-idle"}`} aria-label={label} title={title} aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
       {plan && <><ListChecks aria-hidden="true" /><span className="bg-tasks-label">{t("Plan")}</span><span className="bg-tasks-plan" aria-hidden="true">{plan.done}/{plan.total}</span></>}
       {plan && tasksShown && count > 0 && <span className="bg-tasks-sep" aria-hidden="true" />}
       {(!plan || count > 0) && tasksShown && <><Layers aria-hidden="true" /><span className={`bg-tasks-label${plan ? " is-secondary" : ""}`}>{tasksLabel}</span>{count > 0 && <span className="bg-tasks-count" aria-hidden="true">{count}</span>}</>}
-    </button>
+    </Button>
     {open && <div id={id} ref={menu} className="orbit-menu bg-tasks-menu" role="dialog" aria-live="off" aria-label={planShown && tasksShown ? t("Plan and background tasks") : planShown ? t("Plan") : t("Background tasks")}>
       {planShown && <>
         <div className="menu-heading">{t("Plan")}{plan && <span className="bg-plan-progress">{t("{done} of {total} done", { done: plan.done, total: plan.total })}</span>}</div>
@@ -267,11 +268,11 @@ export function BackgroundTasks({ paneId, count, omo, claude = false, plan = nul
       {goingRuns.length > 0 && <><div className="menu-heading">{t("Workflows")}</div><ul className="bg-task-list">{goingRuns.map(runView)}</ul></>}
       {running.length > 0 && <><div className="menu-heading">{t("Running")}</div><ul className="bg-task-list">{running.map(row)}</ul></>}
       {summary.ended > 0 && <>
-        <button type="button" className="bg-ended-toggle" aria-expanded={showEnded} aria-controls={endedId} onClick={() => setShowEnded(!showEnded)}>
+        <Button type="button" className="bg-ended-toggle" aria-expanded={showEnded} aria-controls={endedId} onClick={() => setShowEnded(!showEnded)}>
           {showEnded ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
           <span>{t("{n} recently ended", { n: summary.ended })}</span>
           {summary.failed > 0 && <span className="bg-ended-failed">{t("{n} failed", { n: summary.failed })}</span>}
-        </button>
+        </Button>
         <ul id={endedId} className="bg-task-list" hidden={!showEnded}>{endedRuns.map(runView)}{ended.map(row)}</ul>
       </>}
       </>}

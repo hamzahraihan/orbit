@@ -12,7 +12,7 @@ import { GitBranch, X } from "lucide-react";
 
 import "./WorktreeDialog.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button, Input } from "../lib/ui.tsx";
 
 import type { AgentKind, WorkspaceInfo, WorktreeEntry, WorktreeOpened } from "../../shared/protocol.ts";
 import { MAX_LABEL_CHARS } from "../../shared/labels.ts";
@@ -168,9 +168,9 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
       <form ref={surface} className="modal worktree-modal" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} onSubmit={submit} onKeyDown={onKeyDown}>
         <header className="modal-header">
           <h2 className="modal-title" id={`${id}-title`}>{title}</h2>
-          <button type="button" className="icon-button" aria-label={t("Close worktree dialog")} disabled={pending !== null} onClick={onClose}>
+          <Button type="button" className="icon-button" aria-label={t("Close worktree dialog")} disabled={pending !== null} onClick={onClose}>
             <X aria-hidden="true" />
-          </button>
+          </Button>
         </header>
         <div className="modal-body">
           {mode === "create" ? (
@@ -178,17 +178,17 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
               <p className="worktree-lead">{t("A git worktree of this repository, checked out under herdr's worktree folder and opened as a workspace next to this one.")}</p>
               <label className="field">
                 <span className="field-label">{t("Branch")}</span>
-                <input ref={first} className="input" value={branch} disabled={locked} required autoComplete="off" spellCheck={false} onChange={(event) => setBranch(event.target.value)} />
+                <Input ref={first} className="input" value={branch} disabled={locked} required autoComplete="off" spellCheck={false} onChange={(event) => setBranch(event.target.value)} />
                 <span className="field-hint">{t("A new branch, or an existing one to check out")}</span>
               </label>
               <label className="field">
                 <span className="field-label">{t("Start from")}</span>
-                <input className="input" value={base} disabled={locked} autoComplete="off" spellCheck={false} placeholder="HEAD" onChange={(event) => setBase(event.target.value)} />
+                <Input className="input" value={base} disabled={locked} autoComplete="off" spellCheck={false} placeholder="HEAD" onChange={(event) => setBase(event.target.value)} />
                 <span className="field-hint">{t("A branch, tag or commit; HEAD when empty. Ignored when the branch exists.")}</span>
               </label>
               <label className="field">
                 <span className="field-label">{t("Name")}</span>
-                <input className="input" value={label} maxLength={MAX_LABEL_CHARS} disabled={locked} autoComplete="off" onChange={(event) => setTypedLabel(event.target.value)} />
+                <Input className="input" value={label} maxLength={MAX_LABEL_CHARS} disabled={locked} autoComplete="off" onChange={(event) => setTypedLabel(event.target.value)} />
                 <span className="field-hint">{t("Workspace label; follows the branch until you change it")}</span>
               </label>
               <div className="field">
@@ -204,14 +204,14 @@ export function WorktreeDialog({ mode, workspace, onClose, onOpened }: Props) {
             <ul className="worktree-list">
               {others.map((entry) => (
                 <li key={entry.path}>
-                  <button type="button" className="worktree-row" disabled={pending !== null || entry.is_prunable} onClick={() => open(entry)}>
+                  <Button type="button" className="worktree-row" disabled={pending !== null || entry.is_prunable} onClick={() => open(entry)}>
                     <GitBranch aria-hidden="true" />
                     <span className="worktree-copy">
                       <span className="worktree-branch">{entry.branch ?? (entry.is_detached ? t("Detached HEAD") : entry.label)}</span>
                       <span className="worktree-path">{entry.path}</span>
                     </span>
                     {entry.open_workspace_id ? <span className="pill">{t("Already open")}</span> : entry.is_prunable && <span className="pill">{t("Checkout missing")}</span>}
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>

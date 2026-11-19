@@ -4,7 +4,6 @@ import { API_URL, devApi, API_WS_URL_OVERRIDE } from "./scripts/dev-api.ts";
 import { serviceWorkerBuild } from "./scripts/service-worker-build.ts";
 import { defineConfig, normalizePath, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
-import tailwind from "@tailwindcss/vite";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -32,7 +31,7 @@ const buildRevision: Plugin = {
 };
 
 export default defineConfig({
-  plugins: [react(), tailwind(), thirdPartyNotices, buildRevision, compressedAssets(), serviceWorkerBuild(), devApi()],
+  plugins: [react(), thirdPartyNotices, buildRevision, compressedAssets(), serviceWorkerBuild(), devApi()],
   define: {
     __APP_REVISION__: JSON.stringify(revision),
     __APP_VERSION__: JSON.stringify((JSON.parse(readFileSync("package.json", "utf8")) as { version: string }).version),

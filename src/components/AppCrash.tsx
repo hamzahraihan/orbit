@@ -4,7 +4,7 @@ import { crashProbe, type CrashRegion } from "../lib/crashProbe.ts";
 import { t, useT } from "../lib/i18n.ts";
 import "./AppCrash.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button } from "../lib/ui.tsx";
 
 /** The error as text a bug report can carry: its message, its stack, where and on what it ran. */
 export function crashDetails(error: unknown): string {

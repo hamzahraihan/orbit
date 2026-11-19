@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "../lib/ui.tsx";
 
 import "./TerminalQuickReplies.css";
 
@@ -81,7 +82,7 @@ export function TerminalQuickReplies({ owner, connected, onSend, onRevealInput }
             ? t("Put “{reply}” in the input line", { reply: reply.text })
             : isArmed ? t("Tap again to send “{reply}”", { reply: reply.text }) : t("Send “{reply}”", { reply: reply.text });
           return (
-            <button
+            <Button
               key={index}
               type="button"
               className={`terminal-quick-reply${isArmed ? " is-armed" : ""}`}
@@ -91,7 +92,7 @@ export function TerminalQuickReplies({ owner, connected, onSend, onRevealInput }
               onClick={() => useReply(reply, index)}
             >
               {reply.text}
-            </button>
+            </Button>
           );
         })}
       </div>

@@ -11,6 +11,7 @@ import { nativeModalOver, useFocusTrap } from "../lib/useFocusTrap.ts";
 import { useSheetSwipe } from "../lib/sheets.ts";
 import { usePhoneSheetBack } from "../lib/sheetHistory.ts";
 import { useMediaQuery } from "../lib/useMediaQuery.ts";
+import { Button } from "../lib/ui.tsx";
 
 export interface FilesDialogProps {
   /** the folder to open at: the pane's own */
@@ -72,11 +73,11 @@ export function FilesDialog({ start, paneId, tab, onTab, viewing, onOpenFile, on
   const folder = useRef<{ pane: string; path: string } | null>(null);
   const browseFolders = (): void => onBrowseFolders(folder.current?.pane === paneId ? folder.current.path : (start || "~"));
   const tabs = <div className="segmented files-dialog-tabs" role="group" aria-label={t("Show")}>
-    <button type="button" aria-pressed={tab === "browse"} onClick={() => show("browse")}>{t("Browse")}</button>
-    <button type="button" aria-pressed={tab === "changes"} onClick={() => show("changes")}>{t("Changes")}</button>
+    <Button type="button" aria-pressed={tab === "browse"} onClick={() => show("browse")}>{t("Browse")}</Button>
+    <Button type="button" aria-pressed={tab === "changes"} onClick={() => show("changes")}>{t("Changes")}</Button>
   </div>;
-  const foldersButton = <button type="button" className="icon-button" aria-label={t("Browse folders in the palette")} title={t("Browse folders in the palette")} onClick={browseFolders}><FolderSearch aria-hidden="true" /></button>;
-  const closeButton = <button type="button" className="icon-button" aria-label={t("Close files")} title={t("Close files")} onClick={onClose}><X aria-hidden="true" /></button>;
+  const foldersButton = <Button type="button" className="icon-button" aria-label={t("Browse folders in the palette")} title={t("Browse folders in the palette")} onClick={browseFolders}><FolderSearch aria-hidden="true" /></Button>;
+  const closeButton = <Button type="button" className="icon-button" aria-label={t("Close files")} title={t("Close files")} onClick={onClose}><X aria-hidden="true" /></Button>;
   // a pane switch (Next pane) keeps the dialog open: the browser starts over on the new pane's
   // folder, as Changes reads the new pane, instead of listing the pane it was opened on
   const body = <>

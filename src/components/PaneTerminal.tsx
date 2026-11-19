@@ -6,7 +6,7 @@ import { ArrowUp, ChevronRight, ClipboardCheck, Clock, Eye, Quote, SendHorizonta
 import "@xterm/xterm/css/xterm.css";
 import "./PaneTerminal.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button, Textarea } from "../lib/ui.tsx";
 
 import { HerdrSocket, type SubmitDelivery, type SubmitResult } from "../lib/ws.ts";
 import { MachineSession } from "../lib/machineSession.ts";
@@ -2604,7 +2604,7 @@ export function PaneTerminal({
     if (held) noticeItems.push({
       id: `${owner}:held`, priority: "urgent", revision: takeOver ? "open-here" : "", warning: true, mark: <Unplug />,
       text: t("Another app has this pane open. It connects here as soon as that app lets go."),
-      actions: takeOver && <button type="button" className="composer-notice-action" title={t("Take this pane from another web app or terminal attach. That connection will close.")} onClick={() => { socketRef.current?.takeOver(paneId); }}>{t("Open here")}</button>,
+      actions: takeOver && <Button type="button" className="composer-notice-action" title={t("Take this pane from another web app or terminal attach. That connection will close.")} onClick={() => { socketRef.current?.takeOver(paneId); }}>{t("Open here")}</Button>,
     });
     if (outputError) noticeItems.push({
       id: `${owner}:output`, priority: "urgent", revision: outputError, warning: true, mark: <TriangleAlert />, text: outputError,
@@ -2621,8 +2621,8 @@ export function PaneTerminal({
       </>,
       actions: <>
         {/* the composer's send glyph (an up arrow) on the row's plain icon button, beside its Discard */}
-        <button type="button" className="icon-button" aria-label={t("Send held input")} title={t("Send held input")} disabled={draft.text.length === 0 || observing || secretActive || held} onClick={sendDraft}><ArrowUp aria-hidden="true" /></button>
-        <button type="button" className="icon-button" aria-label={t("Discard held input")} title={t("Discard held input")} onClick={discardDraft}><Trash2 aria-hidden="true" /></button>
+        <Button type="button" className="icon-button" aria-label={t("Send held input")} title={t("Send held input")} disabled={draft.text.length === 0 || observing || secretActive || held} onClick={sendDraft}><ArrowUp aria-hidden="true" /></Button>
+        <Button type="button" className="icon-button" aria-label={t("Discard held input")} title={t("Discard held input")} onClick={discardDraft}><Trash2 aria-hidden="true" /></Button>
       </>,
     });
     if (clipboardNote) noticeItems.push({ id: `${owner}:clipboard`, priority: "notice", revision: clipboardNote, warning: false, mark: <ClipboardCheck />, text: clipboardNote });
@@ -2880,12 +2880,12 @@ export function PaneTerminal({
             <span className="visually-hidden">{t("Input held:")}</span>
             {draft.text.length > 0 && <code className="draft-text" title={draft.text}>{draft.text}</code>}
             <span className="draft-actions">
-              <button type="button" className="icon-button draft-send" aria-label={t("Send held input")} title={t("Send held input")} disabled={draft.text.length === 0 || observing || secretActive || held} onClick={sendDraft}>
+              <Button type="button" className="icon-button draft-send" aria-label={t("Send held input")} title={t("Send held input")} disabled={draft.text.length === 0 || observing || secretActive || held} onClick={sendDraft}>
                 <SendHorizontal aria-hidden="true" />
-              </button>
-              <button type="button" className="icon-button draft-discard" aria-label={t("Discard held input")} title={t("Discard held input")} onClick={discardDraft}>
+              </Button>
+              <Button type="button" className="icon-button draft-discard" aria-label={t("Discard held input")} title={t("Discard held input")} onClick={discardDraft}>
                 <Trash2 aria-hidden="true" />
-              </button>
+              </Button>
             </span>
             {/* said only when it applies, on a line under the row. The preview shows the start of the
                 text: without this, a draft that lost its end looks whole */}
@@ -2901,7 +2901,7 @@ export function PaneTerminal({
           </div>
         )}
         {paneId !== null && !chatView && selectionQuote?.pane === paneId && (
-          <button type="button" className="terminal-banner terminal-banner-action terminal-quote"
+          <Button type="button" className="terminal-banner terminal-banner-action terminal-quote"
             onMouseDown={(event) => { event.preventDefault(); }}
             onClick={() => {
               const block = formatTerminalQuote({ label: title?.trim() || paneId, range: selectionQuote.range, text: selectionQuote.text });
@@ -2914,7 +2914,7 @@ export function PaneTerminal({
               noteClipboard(t("Added to the message draft"));
             }}>
             <Quote aria-hidden="true" />{t("Quote in message")}
-          </button>
+          </Button>
         )}
         {clipboardNote && !noticesDocked && (
           <div className="terminal-banner" role="status">
@@ -2999,11 +2999,11 @@ export function PaneTerminal({
               {/* the count stays for assistive tech, beside the button and not in its name */}
               <strong className="visually-hidden">{t("Queued messages ({n})", { n: queued.length })}</strong>
               {heldToggle
-                ? <button type="button" className="composer-queue-toggle" ref={setHeldToggle} aria-expanded={!heldHidden} aria-controls={`queued-list-${queueOwner}`}
+                ? <Button type="button" className="composer-queue-toggle" ref={setHeldToggle} aria-expanded={!heldHidden} aria-controls={`queued-list-${queueOwner}`}
                     onClick={() => { setHeldOpened(heldHidden); }}>
                     {caption}
                     <span className="composer-queue-toggle-caret" aria-hidden="true"><ChevronRight /></span>
-                  </button>
+                  </Button>
                 : caption}
             </div>;
           })()}
@@ -3012,7 +3012,7 @@ export function PaneTerminal({
             onFocus={() => { setHeldOpened((opened) => heldOpenOnFocus(heldFold, opened)); }}>
           {queued.map((message, index) => <li className="composer-queue-item" key={message.id}>
             <label className="visually-hidden" htmlFor={`queued-${message.id}`}>{t("Message {n}", { n: index + 1 })}</label>
-            <textarea
+            <Textarea
               id={`queued-${message.id}`}
               className="composer-queue-text"
               value={message.text}
@@ -3024,7 +3024,7 @@ export function PaneTerminal({
               onChange={(event) => { queueStore.edit(queueOwner, message.id, event.target.value); }}
             />
             <div className="composer-queue-actions">
-              <button type="button" className="composer-queue-send"
+              <Button type="button" className="composer-queue-send"
                 disabled={!connected || held || secretActive || queueSending !== null || queued.some((item) => queueStore.isSending(item.id)) || heldByOpenQueue || message.text.trim().length === 0}
                 title={heldByOpenQueue ? t("Codex has a question open in the terminal: answer it above first") : undefined}
                 onClick={() => {
@@ -3039,12 +3039,12 @@ export function PaneTerminal({
                     })
                     .catch(() => setQueueError({ owner, id: message.id, text: t("Not confirmed. Check the terminal before sending again.") }))
                     .finally(() => { queueStore.endSend(owner, message.id); sendingRef.current = false; setQueueSending(null); });
-                }}>{t("Send now")}</button>
-              <button type="button" className="composer-queue-discard" disabled={queueStore.isSending(message.id)}
+                }}>{t("Send now")}</Button>
+              <Button type="button" className="composer-queue-discard" disabled={queueStore.isSending(message.id)}
                 onClick={() => { queueStore.remove(queueOwner, message.id); }}>
                 {/* a phone draws the X; the word stays the button's name */}
                 <span className="composer-queue-discard-text">{t("Discard")}</span><X aria-hidden="true" />
-              </button>
+              </Button>
             </div>
             {queueError?.owner === queueOwner && queueError.id === message.id && <p className="composer-queue-error" role="status">{queueError.text}</p>}
           </li>)}

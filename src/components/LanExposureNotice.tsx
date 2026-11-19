@@ -2,7 +2,7 @@ import { useT } from "../lib/i18n.ts";
 
 import "./LanExposureNotice.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button } from "../lib/ui.tsx";
 
 /**
  * The server is answering on an address beyond this PC with no access token set and no device

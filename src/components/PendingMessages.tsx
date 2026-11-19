@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { ArrowUp, Copy, X } from "lucide-react";
+import { Button } from "../lib/ui.tsx";
 import type { PendingMessageView } from "../lib/pendingMessages.ts";
 import { copyText } from "../lib/clipboard.ts";
 import { submitNote } from "../lib/compose.ts";
@@ -39,7 +40,7 @@ export function PendingMessages({ messages, active = true, connected, agent, blo
   activeRef.current = active;
   const rootRef = useRef<HTMLOListElement | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
-  const restoreFocus = (keyboard: boolean, target: HTMLButtonElement, stack: Element | null, owner: string | null): void => {
+  const restoreFocus = (keyboard: boolean, target: HTMLElement, stack: Element | null, owner: string | null): void => {
     const root = rootRef.current;
     if (!activeRef.current || !keyboard || target.isConnected || !stack?.isConnected || stack.getAttribute("data-pane-owner") !== owner) return;
     const next = root?.querySelector<HTMLButtonElement>("button:not(:disabled)")
@@ -56,23 +57,23 @@ export function PendingMessages({ messages, active = true, connected, agent, blo
         <div className="pending-message-bubble" aria-busy={busy || undefined}>{message.text}</div>
         <div className="pending-message-meta">
           <span className="pending-message-note" role="status">{status}</span>
-          {!uncertain && <button type="button" className="icon-button pending-message-action pending-message-send"
+          {!uncertain && <Button type="button" className="icon-button pending-message-action pending-message-send"
             aria-label={`${t("Send now")}: ${message.text}`} aria-busy={busy || undefined} title={t("Send now")}
             disabled={!connected || blocked || busy} onClick={(event) => {
               const target = event.currentTarget, keyboard = event.detail === 0, stack = target.closest(".terminal-stack"), owner = stack?.getAttribute("data-pane-owner") ?? null;
               void onSendNow(message.id).finally(() => restoreFocus(keyboard, target, stack, owner));
-            }}><ArrowUp aria-hidden="true" /><span>{t("Send now")}</span></button>}
-          {uncertain && <button type="button" className="icon-button pending-message-action" aria-label={copied === message.id ? t("Copied") : t("Copy message")}
+            }}><ArrowUp aria-hidden="true" /><span>{t("Send now")}</span></Button>}
+          {uncertain && <Button type="button" className="icon-button pending-message-action" aria-label={copied === message.id ? t("Copied") : t("Copy message")}
             title={t("Copy message")} onClick={(event) => {
               const text = event.currentTarget.closest(".pending-message")?.querySelector<HTMLElement>(".pending-message-bubble");
               void copyText(message.text, text).then((ok) => { if (ok) setCopied(message.id); });
-            }}><Copy aria-hidden="true" /></button>}
-          <button type="button" className="icon-button pending-message-action" aria-label={uncertain ? t("Discard saved copy") : t("Discard")}
+            }}><Copy aria-hidden="true" /></Button>}
+          <Button type="button" className="icon-button pending-message-action" aria-label={uncertain ? t("Discard saved copy") : t("Discard")}
             title={uncertain ? t("Discard saved copy") : t("Discard")} disabled={busy || message.serverOwned && !connected}
             onClick={(event) => {
               const target = event.currentTarget, keyboard = event.detail === 0, stack = target.closest(".terminal-stack"), owner = stack?.getAttribute("data-pane-owner") ?? null;
               void onDiscard(message.id).finally(() => restoreFocus(keyboard, target, stack, owner));
-            }}><X aria-hidden="true" /></button>
+            }}><X aria-hidden="true" /></Button>
         </div>
         {message.error && !uncertain && <p className="pending-message-note" role="status">{(message.error.code === "input_draft" || message.error.code === "held_input" || message.error.code === "not_transmitted") ? submitNote(message.error.code, message.error.message, agent) : t("Not sent: {message}", { message: message.error.message })}</p>}
       </li>;

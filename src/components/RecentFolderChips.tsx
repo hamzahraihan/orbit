@@ -9,7 +9,7 @@ import { FolderOpen } from "lucide-react";
 import { useT } from "../lib/i18n.ts";
 import { useMediaQuery } from "../lib/useMediaQuery.ts";
 import { RowMenu } from "./RowMenu.tsx";
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button } from "../lib/ui.tsx";
 
 const SWIPE_QUERY = "(max-width: 640px), (pointer: coarse)";
 

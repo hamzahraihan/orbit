@@ -4,7 +4,7 @@ import { runningHerdrVersion } from "../lib/runningVersion.ts";
 import { lazyChunkFailed, onLazyChunkFailure } from "../lib/lazyChunk.ts";
 import "./UpdateControls.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button } from "../lib/ui.tsx";
 import { useT } from "../lib/i18n.ts";
 
 /**

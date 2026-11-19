@@ -8,7 +8,7 @@ import { useAnnouncedText } from "../lib/useAnnouncedText.ts";
 import { BridgeUpdateProgress } from "./MachineSidebar.tsx";
 import "./Machines.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button, Input } from "../lib/ui.tsx";
 import { useT } from "../lib/i18n.ts";
 
 /**
@@ -29,7 +29,7 @@ export function MachineDialog({ machine, updateRemote = false, onClose, onConnec
     element?.querySelector<HTMLInputElement>(".machine-destination")?.focus();
   }, []);
   return <dialog ref={dialog} className="modal machine-dialog" aria-labelledby={titleId} onCancel={(event) => { event.preventDefault(); onClose(); }}>
-    <header className="modal-header"><h2 id={titleId} className="modal-title"><Monitor size={18} /> {title}</h2><button type="button" className="icon-button" aria-label={t("Close PC setup")} onClick={onClose}><X /></button></header>
+    <header className="modal-header"><h2 id={titleId} className="modal-title"><Monitor size={18} /> {title}</h2><Button type="button" className="icon-button" aria-label={t("Close PC setup")} onClick={onClose}><X /></Button></header>
     <MachineSetup machine={machine} updateRemote={updateRemote} onClose={onClose} onConnected={onConnected} />
   </dialog>;
 }
@@ -112,12 +112,12 @@ export function MachineSetup({ machine, updateRemote = false, embedded = false, 
     <div className={embedded ? "machine-setup-body" : "modal-body"}>
       {(!job || finished && job.phase !== "connected") && <form id={formId} onSubmit={(e) => { e.preventDefault(); void begin(); }}>
         {machine?.herdr_profile_id ? <p className="field-hint">{machine.name} — {destination} / {session}</p> : <>
-        <label className="field"><span className="field-label">{t("SSH alias or user@address")}</span><input ref={destinationField} className="input machine-destination" required autoComplete="off" value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="devbox or user@192.168.1.20" /></label>
-        <label className="field"><span className="field-label">{t("PC name")}</span><input className="input" maxLength={100} value={name} placeholder={destination || t("Filled from the SSH address")} onChange={(e) => setName(e.target.value)} /></label>
+        <label className="field"><span className="field-label">{t("SSH alias or user@address")}</span><Input ref={destinationField} className="input machine-destination" required autoComplete="off" value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="devbox or user@192.168.1.20" /></label>
+        <label className="field"><span className="field-label">{t("PC name")}</span><Input className="input" maxLength={100} value={name} placeholder={destination || t("Filled from the SSH address")} onChange={(e) => setName(e.target.value)} /></label>
         <details><summary>{t("Advanced settings")}</summary><div className="machine-advanced">
-          <label className="field"><span className="field-label">{t("SSH port")}</span><input className="input" type="number" min="1" max="65535" placeholder={t("From SSH config (default 22)")} value={port} onChange={(e) => setPort(e.target.value)} /></label>
-          <label className="field"><span className="field-label">{t("Private key path on this web server")}</span><input className="input" value={key} placeholder="~/.ssh/id_ed25519" onChange={(e) => setKey(e.target.value)} /></label>
-          <label className="field"><span className="field-label">{t("herdr session name")}</span><input className="input" value={session} placeholder={t("Default session")} onChange={(e) => setSession(e.target.value)} /></label>
+          <label className="field"><span className="field-label">{t("SSH port")}</span><Input className="input" type="number" min="1" max="65535" placeholder={t("From SSH config (default 22)")} value={port} onChange={(e) => setPort(e.target.value)} /></label>
+          <label className="field"><span className="field-label">{t("Private key path on this web server")}</span><Input className="input" value={key} placeholder="~/.ssh/id_ed25519" onChange={(e) => setKey(e.target.value)} /></label>
+          <label className="field"><span className="field-label">{t("herdr session name")}</span><Input className="input" value={session} placeholder={t("Default session")} onChange={(e) => setSession(e.target.value)} /></label>
         </div></details>
         <p className="field-hint">{t("Uses the web server account’s SSH config and ssh-agent. Agent CLI tools and logins use the environment on the target PC.")}</p>
         </>}
@@ -127,7 +127,7 @@ export function MachineSetup({ machine, updateRemote = false, embedded = false, 
       {running && <p className="field-hint">{t("You can close this; the install keeps going and the sidebar shows it.")}</p>}
       {job?.phase === "approval" && <><ul className="machine-install-list">{job.installations.map((item) => <li key={item}>{item}</li>)}</ul><p className="field-hint">{t("Installs into your home directory. Existing herdr sessions keep running.")}</p></>}
       {job?.challenge && <div className="machine-challenge">{job.challenge.kind === "host_key" ? <HostKeyQuestion prompt={job.challenge.prompt} host={job.target.destination} sshOutput={job.ssh_output} /> : <><pre>{job.challenge.prompt}</pre><form onSubmit={(e) => { e.preventDefault(); void act({ action: "answer", challenge_id: job.challenge!.id, answer: secret }); }}>
-        <label className="field"><span className="field-label">{t("Password or key passphrase")}</span><input autoFocus className="input" type="password" autoComplete="off" value={secret} disabled={!secretAllowed || pending} onChange={(e) => setSecret(e.target.value)} /></label>
+        <label className="field"><span className="field-label">{t("Password or key passphrase")}</span><Input autoFocus className="input" type="password" autoComplete="off" value={secret} disabled={!secretAllowed || pending} onChange={(e) => setSecret(e.target.value)} /></label>
         {!secretAllowed && <p className="field-hint">{t("Open this app over HTTPS or localhost to enter a password.")}</p>}
         <Button type="submit" variant="primary" disabled={!secretAllowed || pending || !secret}>{t("Continue")}</Button>
       </form></>}</div>}

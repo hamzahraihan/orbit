@@ -1,0 +1,5 @@
+/*
+ * Cascade order, declared before any stylesheet fills a layer: the element defaults in
+ * src/reset.css sit below ui-sdk's anatomy, and Orbit's own rules are unlayered and win.
+ */
+@layer reset, ui-sdk;

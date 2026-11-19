@@ -18,6 +18,7 @@ import { copyText } from "../lib/clipboard.ts";
 import { lazyChunk } from "../lib/lazyChunk.ts";
 import type { SkillMatcher } from "../lib/skillMentions.ts";
 import { previewChunks } from "../lib/textPreview.ts";
+import { Button } from "../lib/ui.tsx";
 
 /** The pane's skill names: a name in an answer's plain text, in its trigger form, reads as a chip. */
 const SkillMatcherContext = createContext<SkillMatcher | null>(null);
@@ -99,9 +100,9 @@ function MermaidDiagram({ value }: { value: string }) {
   return (
     <div className="markdown-mermaid-frame">
       <div className="markdown-mermaid" onClick={() => setZoomed(true)} dangerouslySetInnerHTML={{ __html: svg }} />
-      <button type="button" className="icon-button markdown-mermaid-zoom" onClick={() => setZoomed(true)} aria-label={t("Enlarge diagram")} title={t("Enlarge diagram")}>
+      <Button type="button" className="icon-button markdown-mermaid-zoom" onClick={() => setZoomed(true)} aria-label={t("Enlarge diagram")} title={t("Enlarge diagram")}>
         <Maximize2 aria-hidden="true" />
-      </button>
+      </Button>
       {zoomed && <MermaidLightbox svg={svg} onClose={() => setZoomed(false)} />}
     </div>
   );
@@ -215,7 +216,7 @@ function Inline({ nodes, interactive = true, standalone = false }: { nodes: Inli
       case "file": {
         const label = <Inline nodes={node.children} interactive={false} />;
         return open !== null
-          ? <button key={key} type="button" className="markdown-file" title={t("Open {path}", { path: node.path })} onClick={() => open(node.path)}>{label}</button>
+          ? <Button key={key} type="button" className="markdown-file" title={t("Open {path}", { path: node.path })} onClick={() => open(node.path)}>{label}</Button>
           : <span key={key}>{label} (<code>{node.path}</code>)</span>;
       }
     }
@@ -283,17 +284,17 @@ function CodeBlock({ language, value }: { language: string; value: string }) {
     <div className="markdown-code" ref={block} data-language={language}>
       <div className="markdown-code-header">
         <span>{language || "text"}</span>
-        <button type="button" className="icon-button markdown-code-copy" onClick={() => void copy()} aria-label={t(copied ? "Code copied" : "Copy code")}>
+        <Button type="button" className="icon-button markdown-code-copy" onClick={() => void copy()} aria-label={t(copied ? "Code copied" : "Copy code")}>
           {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
-        </button>
+        </Button>
       </div>
       {copyFailed && <p className="markdown-code-error" role="alert">{t("Couldn't copy. Select the text and copy it manually.")}</p>}
       {/* a block in no language is output (a log, a command's answer): the files it names open */}
       <HighlightedCode code={fold !== null && !expanded ? fold.head : value} language={grammar} limit={CHAT_HIGHLIGHT_LIMIT} open={plain ? open : null} />
       {fold !== null && (
-        <button type="button" className="markdown-code-more" aria-expanded={expanded} onClick={toggle}>
+        <Button type="button" className="markdown-code-more" aria-expanded={expanded} onClick={toggle}>
           {expanded ? t("Show less") : t("Show all {n} lines", { n: fold.lines })}
-        </button>
+        </Button>
       )}
     </div>
   );

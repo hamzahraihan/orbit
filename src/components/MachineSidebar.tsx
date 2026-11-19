@@ -14,7 +14,7 @@ import { SidebarActivityProvider, useSidebarActivityState } from "../lib/sidebar
 import { RailFlyout, useFlyoutDwell } from "./RailFlyout.tsx";
 import "./Machines.css";
 
-import { Button, Input } from "../lib/heroui/orbit-components.tsx";
+import { Button, Input } from "../lib/ui.tsx";
 import { useT } from "../lib/i18n.ts";
 import { useAnnouncedText } from "../lib/useAnnouncedText.ts";
 import { saysHerdrAway } from "../lib/userError.ts";
@@ -133,12 +133,12 @@ function MachineGroup({ machine, ...props }: Props & { machine: Machine }) {
         {machine.kind === "local" && <span className="machine-kind" role="img" aria-label={t("The computer this app runs on")}>{t("Host")}</span>}
         <span className={`machine-dot is-${machine.action_required === "setup" ? "setup" : machine.state}`} role="img" aria-label={machine.action_required === "setup" ? t("Setup needed") : t(STATE_WORD[machine.state])} />
       </div>
-      {machine.kind === "ssh" && <button className="sidebar-row-action machine-manage" aria-label={t("Manage {name}", { name: machine.name })} aria-expanded={editing} onClick={() => { setEditing(!editing); setConfirmDelete(false); }}><SlidersHorizontal aria-hidden="true" /></button>}
+      {machine.kind === "ssh" && <Button type="button" className="sidebar-row-action machine-manage" aria-label={t("Manage {name}", { name: machine.name })} aria-expanded={editing} onClick={() => { setEditing(!editing); setConfirmDelete(false); }}><SlidersHorizontal aria-hidden="true" /></Button>}
       {/* the fold over this PC's workspaces sits beside its create: a folder with a plus reads as
           "new workspace" at a glance, where the tab strip's + is a bare Plus for a shell tab
           (TabStrip.tsx). The words live in the accessible name, so the PC's own name keeps the row's width. */}
-      <button className="sidebar-row-action machine-toggle" aria-expanded={!collapsed} aria-label={collapsed ? t("Expand {name}", { name: machine.name }) : t("Collapse {name}", { name: machine.name })} onClick={toggle}>{collapsed ? <ChevronRight aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}</button>
-      <button className="sidebar-row-action machine-new" disabled={!online} aria-label={t("New workspace on {name}", { name: machine.name })} onClick={() => props.onNew(machine.id)}><FolderPlus aria-hidden="true" /></button>
+      <Button type="button" className="sidebar-row-action machine-toggle" aria-expanded={!collapsed} aria-label={collapsed ? t("Expand {name}", { name: machine.name }) : t("Collapse {name}", { name: machine.name })} onClick={toggle}>{collapsed ? <ChevronRight aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}</Button>
+      <Button type="button" className="sidebar-row-action machine-new" disabled={!online} aria-label={t("New workspace on {name}", { name: machine.name })} onClick={() => props.onNew(machine.id)}><FolderPlus aria-hidden="true" /></Button>
       <RailFlyout
         anchor={flyoutAnchor}
         open={flyoutAnchor !== null}
@@ -270,6 +270,6 @@ export function MachineActionBanner({ machines, onSetup }: { machines: Machine[]
   return <div className="update-notice" role="status">
     <span>{t(conflict ? "{name} has a bridge connection conflict{others}." : update ? "{name} needs a bridge update to reconnect{others}." : "{name} needs web access setup{others}.", { name: first.name, others })}</span>
     <Button type="button" variant="secondary" onClick={() => update ? void machineRequest(`/${encodeURIComponent(first.id)}/update-bridge`, "POST").catch(() => onSetup(first, true)) : onSetup(first, false)}>{t(conflict ? "Reconnect" : update ? "Update bridge" : "Set up web access")}</Button>
-    <button type="button" className="icon-button update-notice-dismiss" aria-label={t("Dismiss")} onClick={() => { const next = [...dismissed, ...waiting.map(noticeKey)]; setDismissed(next); writeDismissed(next); }}><X /></button>
+    <Button type="button" className="icon-button update-notice-dismiss" aria-label={t("Dismiss")} onClick={() => { const next = [...dismissed, ...waiting.map(noticeKey)]; setDismissed(next); writeDismissed(next); }}><X /></Button>
   </div>;
 }

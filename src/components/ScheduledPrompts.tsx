@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Clock, X } from "lucide-react";
+import { Button } from "../lib/ui.tsx";
 import { cancelScheduled, failureNote, loadScheduled, scheduledWhen, type ScheduledPrompt } from "../lib/scheduled.ts";
 import { useT, useLocale } from "../lib/i18n.ts";
 import "./ScheduledPrompts.css";
@@ -73,11 +74,11 @@ export function ScheduledPrompts({ machineId, paneId, refreshKey, connected, onU
         <Clock className="scheduled-prompt-mark" aria-hidden="true" />
         <span className="scheduled-prompt-when" title={when.full}>{failure ?? when.label}</span>
         <span className="scheduled-prompt-text" title={prompt.text}>{held ?? prompt.text}</span>
-        <button type="button" className="scheduled-prompt-cancel" disabled={!connected || cancelling === prompt.id}
+        <Button type="button" className="scheduled-prompt-cancel" disabled={!connected || cancelling === prompt.id}
           aria-label={`${t("Cancel scheduled message")}: ${prompt.text}`} title={t("Cancel scheduled message")}
           onClick={() => { void cancel(prompt.id); }}>
           <X aria-hidden="true" />
-        </button>
+        </Button>
       </li>;
     })}
   </ol>;

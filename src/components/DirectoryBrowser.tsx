@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUp, FolderPlus, House } from "lucide-react";
+import { ArrowUp, Check, FolderPlus, House } from "lucide-react";
 
 import "./DirectoryBrowser.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button, Checkbox, CheckboxIndicator, Input } from "../lib/ui.tsx";
 import { FileGlyph } from "./FileGlyph.tsx";
 
 import type { DirectoryListing } from "../../shared/protocol.ts";
@@ -141,24 +141,24 @@ export function DirectoryBrowser({ start, onPick, onOpenFile, onFolder }: Direct
   return (
     <div className="dir-browser" role="group" aria-label={t("Choose a folder")} aria-busy={loading}>
       <div className="dir-browser-bar">
-        <button type="button" className="icon-button" aria-label={t("Parent folder")} title={t("Parent folder")} disabled={!listing?.parent || loading} onClick={() => listing?.parent && void open(listing.parent, hidden, false)}>
+        <Button type="button" className="icon-button" aria-label={t("Parent folder")} title={t("Parent folder")} disabled={!listing?.parent || loading} onClick={() => listing?.parent && void open(listing.parent, hidden, false)}>
           <ArrowUp aria-hidden="true" />
-        </button>
-        <button type="button" className="icon-button" aria-label={t("Home folder")} title={t("Home folder")} disabled={loading || (listing !== null && listing.path === listing.home)} onClick={() => void open("", hidden, false)}>
+        </Button>
+        <Button type="button" className="icon-button" aria-label={t("Home folder")} title={t("Home folder")} disabled={loading || (listing !== null && listing.path === listing.home)} onClick={() => void open("", hidden, false)}>
           <House aria-hidden="true" />
-        </button>
+        </Button>
         <span className="dir-browser-path" title={path}><span dir="ltr">{shown}</span></span>
         {onPick !== undefined && (
-          <button type="button" className="icon-button" aria-label={t("New folder")} title={t("New folder")} aria-expanded={naming !== null} disabled={listing === null || loading || error !== null} onClick={() => setNaming((current) => current ?? "")}>
+          <Button type="button" className="icon-button" aria-label={t("New folder")} title={t("New folder")} aria-expanded={naming !== null} disabled={listing === null || loading || error !== null} onClick={() => setNaming((current) => current ?? "")}>
             <FolderPlus aria-hidden="true" />
-          </button>
+          </Button>
         )}
       </div>
       {naming !== null && (
         <div className="dir-browser-new">
           {/* inside New workspace's form: Enter makes the folder rather than starting the workspace,
               Escape closes this field rather than the dialog, and an IME keeps its own keys */}
-          <input className="input" aria-label={t("New folder name")} placeholder={t("New folder name")} autoFocus value={naming} readOnly={creating}
+          <Input className="input" aria-label={t("New folder name")} placeholder={t("New folder name")} autoFocus value={naming} readOnly={creating}
             autoComplete="off" autoCapitalize="off" spellCheck={false} aria-invalid={namingError !== null}
             onChange={(event) => { setNaming(event.target.value); setNamingError(null); }}
             onBlur={() => { if (naming.trim() === "") setNaming(null); }}
@@ -186,7 +186,7 @@ export function DirectoryBrowser({ start, onPick, onOpenFile, onFolder }: Direct
           <span className="field-label">{t("Filter folders")}</span>
           {/* a touch screen would raise its keyboard over the list just opened; Escape clears the
               filter before it reaches the dialog's own Escape, which closes the dialog */}
-          <input type="search" className="input" value={query} autoFocus={window.matchMedia?.("(pointer: coarse)").matches !== true}
+          <Input type="search" className="input" value={query} autoFocus={window.matchMedia?.("(pointer: coarse)").matches !== true}
             autoComplete="off" spellCheck={false}
             onChange={(event) => { setQuery(event.target.value); listRef.current?.scrollTo({ top: 0 }); }}
             onKeyDown={(event) => {
@@ -209,19 +209,19 @@ export function DirectoryBrowser({ start, onPick, onOpenFile, onFolder }: Direct
           {listing === null && <li className="dir-browser-note" role="status">{t("Loading…")}</li>}
           {directories?.map((name) => (
             <li key={name}>
-              <button type="button" className="dir-browser-item" disabled={loading} onClick={() => void open(childPath(path, name), hidden, false)}>
+              <Button type="button" className="dir-browser-item" disabled={loading} onClick={() => void open(childPath(path, name), hidden, false)}>
                 <FileGlyph name={name} kind="directory" />
                 <span>{name}</span>
-              </button>
+              </Button>
             </li>
           ))}
           {onOpenFile !== undefined && listing?.files?.map((file) => (
             <li key={`file:${file.name}`}>
-              <button type="button" className="dir-browser-item is-file" disabled={loading} onClick={() => onOpenFile(childPath(path, file.name))}>
+              <Button type="button" className="dir-browser-item is-file" disabled={loading} onClick={() => onOpenFile(childPath(path, file.name))}>
                 <FileGlyph name={file.name} />
                 <span>{file.name}</span>
                 <span className="dir-browser-size">{formatBytes(file.size)}</span>
-              </button>
+              </Button>
             </li>
           ))}
           {listing !== null && onPick !== undefined && normalizedQuery !== "" && directories?.length === 0 && <li className="dir-browser-note" role="status">{t("No matching folders")}</li>}
@@ -232,7 +232,9 @@ export function DirectoryBrowser({ start, onPick, onOpenFile, onFolder }: Direct
       )}
       <div className="dir-browser-footer">
         <label className="dir-browser-hidden">
-          <input type="checkbox" checked={hidden} disabled={loading && listing === null} onChange={(event) => { setHidden(event.target.checked); if (listing) void open(listing.path, event.target.checked, false); }} />
+          <Checkbox checked={hidden} disabled={loading && listing === null} onCheckedChange={(next) => { setHidden(next === true); if (listing) void open(listing.path, next === true, false); }}>
+            <CheckboxIndicator><Check aria-hidden="true" /></CheckboxIndicator>
+          </Checkbox>
           {t("Show hidden")}
         </label>
         {onPick && <Button type="button" variant="primary" disabled={listing === null || loading} onClick={() => listing && onPick(homeRelative(listing.path, listing.home))}>

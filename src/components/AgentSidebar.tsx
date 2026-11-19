@@ -15,7 +15,7 @@ import { activityOrder, groupAgentRows } from "../lib/sidebarOrder.ts";
 import { currentSidebarPins, pruneSidebarPins, setSidebarPins, sidebarPinKey, splitPinnedRows, subscribeSidebarPins, toggleSidebarPin } from "../lib/sidebarPins.ts";
 import { PANE_DRAG_TYPE, paneDragData } from "../lib/split.ts";
 import { AgentMark, hasAgentMark } from "./AgentMark.tsx";
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button } from "../lib/ui.tsx";
 import { RowMenu } from "./RowMenu.tsx";
 import { RailFlyout, useFlyoutDwell } from "./RailFlyout.tsx";
 import { BackgroundBadge, displayPaneTitle, onRowContextMenu, PlanBadge, StatusBadge } from "./Sidebar.tsx";
@@ -185,7 +185,7 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
     return <li className={`agent-item${selected ? " is-selected" : ""}${online ? "" : " is-offline"}`} key={paneStorageId(machine.id, pane.pane_id)} data-machine={machine.id} data-pane={pane.pane_id} data-pin-key={pinKey}
       onMouseDownCapture={(event) => { if (event.button === 2 || (event.button === 0 && event.ctrlKey)) event.preventDefault(); }}
       onContextMenu={(event) => onRowContextMenu(event, toggleMenu)}>
-      <button
+      <Button
         type="button"
         className="agent-select agent-row"
         disabled={!online}
@@ -218,11 +218,11 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
         }}>
         {/* a saved roster's state is not news: a PC that is away says nothing about its agents */}
         <AgentRowBody mark={mark} markKind={markKind} title={title} name={name} context={context} tokens={tokens} backgroundTasks={online ? pane.background_tasks : 0} plan={online ? pane.plan : undefined} status={online ? activity.status(machine.id, pane) : undefined} />
-      </button>
+      </Button>
       <div className="agent-actions">
-        <button type="button" className="sidebar-row-action row-menu-toggle" aria-label={t("More for {title}", { title })} aria-haspopup="menu" aria-expanded={menuOpen} onClick={(event) => toggleMenu(event.currentTarget)}>
+        <Button type="button" className="sidebar-row-action row-menu-toggle" aria-label={t("More for {title}", { title })} aria-haspopup="menu" aria-expanded={menuOpen} onClick={(event) => toggleMenu(event.currentTarget)}>
           <Ellipsis aria-hidden="true" />
-        </button>
+        </Button>
       </div>
     </li>;
   };
@@ -245,18 +245,18 @@ export function AgentSidebar({ machines, selectedMachineId, selectedPaneId, stat
   const oneLine = settings.sidebarRows === "one";
   return <section ref={sectionRef} className={`agents-sidebar${collapsed ? " is-collapsed" : ""}${rows.length === 0 ? " is-empty" : ""}${oneLine ? " is-one-line" : ""}`} aria-label={t("Agents")}>
     <div className="agent-section-head">
-      <button type="button" className="agent-section-toggle sidebar-section-label" aria-expanded={!collapsed} aria-controls={listId} onClick={() => setCollapsed(!collapsed)}>
+      <Button type="button" className="agent-section-toggle sidebar-section-label" aria-expanded={!collapsed} aria-controls={listId} onClick={() => setCollapsed(!collapsed)}>
         <span>{t("Agents")}</span>
         {/* the count stands in for the label where the sidebar is the rail, and beside a folded head */}
         <span className="agent-section-count" aria-hidden="true">{rows.length}</span>
         {collapsed ? <ChevronRight className="agent-section-caret" aria-hidden="true" /> : <ChevronDown className="agent-section-caret" aria-hidden="true" />}
-      </button>
+      </Button>
       {/* The order within Active and Idle, without a trip to Settings → Agents order: the same
           setting, so the two controls never disagree. Pressed is priority — the agent that needs
           you first inside its group. */}
-      <button type="button" className="agent-section-order" aria-label={t("Agents order")} aria-pressed={byActivity} onClick={() => update({ agentOrder: byActivity ? "workspace" : "activity" })}>
+      <Button type="button" className="agent-section-order" aria-label={t("Agents order")} aria-pressed={byActivity} onClick={() => update({ agentOrder: byActivity ? "workspace" : "activity" })}>
         <ArrowUpDown aria-hidden="true" />
-      </button>
+      </Button>
     </div>
     <div className="agent-list-contents" id={listId} hidden={collapsed}>
       <p className={shownEmpty === null ? "visually-hidden" : "agent-empty"} role="status">{shownEmpty}</p>

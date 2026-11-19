@@ -20,7 +20,7 @@ import { RowMenu, type RowMenuItem } from "./RowMenu.tsx";
 import { ConfirmDialog } from "./ConfirmDialog.tsx";
 import "./PaneCanvas.css";
 
-import { Button, Input } from "../lib/heroui/orbit-components.tsx";
+import { Button, Input } from "../lib/ui.tsx";
 
 type PaneLayoutSplit = PaneLayoutSnapshot["splits"][number];
 
@@ -304,8 +304,8 @@ export function PaneCanvas({ snapshot, pane, selectedPaneId, onSelect, onChanged
             event.dataTransfer.setData(PANE_DRAG_TYPE, paneDragData({ machineId, paneId: item.pane_id }));
           }}>
           <span className="pane-frame-title">{displayPaneTitle(item)}</span>
-          <button type="button" className="icon-button pane-frame-menu" aria-label={t("Pane actions for {name}", { name: displayPaneTitle(item) })}
-            onClick={(event) => showMenu(item, event.currentTarget)}><Ellipsis aria-hidden="true" /></button>
+          <Button type="button" className="icon-button pane-frame-menu" aria-label={t("Pane actions for {name}", { name: displayPaneTitle(item) })}
+            onClick={(event) => showMenu(item, event.currentTarget)}><Ellipsis aria-hidden="true" /></Button>
         </div>
         <div className="pane-frame-body"><PaneCachedContext.Provider value={cell.cached && !cell.retained}><PanePresentedContext.Provider value={!offTab}><PaneShownContext.Provider value={!hidden}>{renderPane(item, active, alone === null && cells.length > 1)}</PaneShownContext.Provider></PanePresentedContext.Provider></PaneCachedContext.Provider></div>
       </section>;
@@ -331,7 +331,7 @@ export function PaneCanvas({ snapshot, pane, selectedPaneId, onSelect, onChanged
           run(() => api.setSplitRatio(layout.tab_id, path, Math.max(0.1, Math.min(0.9, item.ratio + step))));
         }} />;
     })}
-    {error && <div className="pane-canvas-error" role="alert">{error.message}{error.detail !== null && <><br /><code>{error.detail}</code></>}<button className="icon-button" aria-label={t("Dismiss")} onClick={() => setError(null)}><X /></button></div>}
+    {error && <div className="pane-canvas-error" role="alert">{error.message}{error.detail !== null && <><br /><code>{error.detail}</code></>}<Button type="button" className="icon-button" aria-label={t("Dismiss")} onClick={() => setError(null)}><X /></Button></div>}
     {menu && target && <RowMenu anchor={menu.anchor} point={menu.point} restoreFocusTo={menu.previousFocus} title={t("Pane actions for {name}", { name: displayPaneTitle(target) })} items={items} onClose={closeMenu} />}
     {renaming && <PaneRename pane={renaming} onClose={() => setRenaming(null)} onSave={async (label) => { await api.renamePane(renaming.pane_id, label); onChanged(); }} />}
     {closing && <ConfirmDialog title={t("Close pane {name}?", { name: displayPaneTitle(closing) })}

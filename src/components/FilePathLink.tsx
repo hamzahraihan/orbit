@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { splitFilePaths } from "../lib/filePaths.ts";
 import { useT } from "../lib/i18n.ts";
+import { Button } from "../lib/ui.tsx";
 
 /**
  * Text past this many characters stays plain: a whole tool output can be megabytes, and every
@@ -20,7 +21,7 @@ export function linksFilePaths(text: string): boolean {
 export function FilePathLink({ path, code, open }: { path: string; code: boolean; open: (path: string) => void }) {
   const t = useT();
   const label = code ? <code>{path}</code> : path;
-  return <button type="button" className={`markdown-file${code ? " is-code" : ""}`} title={t("Open {path}", { path })} onClick={() => open(path)}>{label}</button>;
+  return <Button type="button" className={`markdown-file${code ? " is-code" : ""}`} title={t("Open {path}", { path })} onClick={() => open(path)}>{label}</Button>;
 }
 
 /**

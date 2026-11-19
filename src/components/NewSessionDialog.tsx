@@ -3,7 +3,7 @@ import { FolderOpen, X } from "lucide-react";
 
 import "./NewSessionDialog.css";
 
-import { Button, Input } from "../lib/heroui/orbit-components.tsx";
+import { Button, Input } from "../lib/ui.tsx";
 
 import type { AgentKind } from "../../shared/protocol.ts";
 import { MAX_LABEL_CHARS } from "../../shared/labels.ts";
@@ -193,9 +193,9 @@ export function NewSessionDialog({ open, defaultCwd, tab = null, onClose, onCrea
       <form ref={surface} className="modal new-session-modal" role="dialog" aria-modal="true" aria-labelledby="new-session-title" tabIndex={-1} onSubmit={(event) => { event.preventDefault(); void startWorkspace(cwd); }}>
         <header className="modal-header">
           <h2 className="modal-title" id="new-session-title">{tab ? `${t("New tab")} · ${tab.workspaceLabel}` : `${t("New workspace")} · ${machineName ?? machineId}`}</h2>
-          <button type="button" className="icon-button" aria-label={t("Close dialog")} disabled={pending} onClick={onClose}>
+          <Button type="button" className="icon-button" aria-label={t("Close dialog")} disabled={pending} onClick={onClose}>
             <X aria-hidden="true" />
-          </button>
+          </Button>
         </header>
         <div className="modal-body">
           <div className="field">

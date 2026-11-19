@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 
 import "./KeyBarSettings.css";
 
-import { Button } from "../lib/heroui/orbit-components.tsx";
+import { Button, Input, Select } from "../lib/ui.tsx";
 
 import { DEFAULT_KEY_BAR_ITEMS, KEY_BAR_ITEMS_MAX, KEY_BAR_KEYS, keyBarInputSequence, keyBarItemId, keyBarItemLabel, type KeyBarItem } from "../lib/keyBar.ts";
 import { NO_STICKY_MODIFIERS, type StickyModifiers } from "../lib/keys.ts";
@@ -62,9 +62,9 @@ export function KeyBarSettings() {
               <span className="key-bar-settings-cap" title={name}>{name}</span>
               <span className="key-bar-settings-kind">{item.type === "modifier" ? t("Held modifier") : item.modifiers ? t("Saved combination") : null}</span>
               <span className="key-bar-settings-actions">
-                <button type="button" className="icon-button" disabled={index === 0} aria-label={t("Move {name} up", { name })} title={t("Move {name} up", { name })} onClick={() => move(index, -1)}><ChevronUp aria-hidden="true" /></button>
-                <button type="button" className="icon-button" disabled={index === items.length - 1} aria-label={t("Move {name} down", { name })} title={t("Move {name} down", { name })} onClick={() => move(index, 1)}><ChevronDown aria-hidden="true" /></button>
-                <button type="button" className="icon-button" aria-label={t("Remove {name}", { name })} title={t("Remove {name}", { name })} onClick={() => remove(index)}><X aria-hidden="true" /></button>
+                <Button type="button" className="icon-button" disabled={index === 0} aria-label={t("Move {name} up", { name })} title={t("Move {name} up", { name })} onClick={() => move(index, -1)}><ChevronUp aria-hidden="true" /></Button>
+                <Button type="button" className="icon-button" disabled={index === items.length - 1} aria-label={t("Move {name} down", { name })} title={t("Move {name} down", { name })} onClick={() => move(index, 1)}><ChevronDown aria-hidden="true" /></Button>
+                <Button type="button" className="icon-button" aria-label={t("Remove {name}", { name })} title={t("Remove {name}", { name })} onClick={() => remove(index)}><X aria-hidden="true" /></Button>
               </span>
             </li>
           );
@@ -74,10 +74,8 @@ export function KeyBarSettings() {
       <div className="key-bar-settings-add">
         <label className="key-bar-settings-field">
           <span className="settings-label">{t("Add key")}</span>
-          <select className="orbit-select" value={chosenKey} disabled={full || available.length === 0} onChange={(event) => setChosenKey(event.target.value)}>
-            {available.length === 0 && <option value="">{t("All keys added")}</option>}
-            {available.map((key) => <option value={key} key={key}>{keyBarItemLabel({ type: "key", key })}</option>)}
-          </select>
+          <Select value={chosenKey} disabled={full || available.length === 0} onChange={setChosenKey}
+            options={[...(available.length === 0 ? [{ value: "", label: t("All keys added") }] : []), ...available.map((key) => ({ value: key, label: keyBarItemLabel({ type: "key", key }) }))]} />
         </label>
         <Button type="button" variant="secondary" disabled={full || chosenKey === ""} onClick={() => add({ type: "key", key: chosenKey })}><Plus aria-hidden="true" />{t("Add key")}</Button>
       </div>
@@ -86,7 +84,7 @@ export function KeyBarSettings() {
         {MODIFIERS.map((modifier) => {
           const item: KeyBarItem = { type: "modifier", modifier };
           const present = ids.has(keyBarItemId(item));
-          return <button type="button" className="key-bar-settings-modifier" key={modifier} aria-pressed={present} disabled={full && !present} onClick={() => present ? update({ keyBarItems: items.filter((current) => keyBarItemId(current) !== keyBarItemId(item)) }) : add(item)}>{MODIFIER_CAPS[modifier]}</button>;
+          return <Button type="button" className="key-bar-settings-modifier" key={modifier} aria-pressed={present} disabled={full && !present} onClick={() => present ? update({ keyBarItems: items.filter((current) => keyBarItemId(current) !== keyBarItemId(item)) }) : add(item)}>{MODIFIER_CAPS[modifier]}</Button>;
         })}
       </div>
       <div className="key-bar-settings-combo">
@@ -95,18 +93,16 @@ export function KeyBarSettings() {
         <div className="key-bar-settings-combo-key">
           <label className="key-bar-settings-field">
             <span className="settings-label">{t("Base key")}</span>
-            <select className="orbit-select" value={comboKey} onChange={(event) => setComboKey(event.target.value)}>
-              {comboKeys.map((key) => <option value={key} key={key}>{keyBarItemLabel({ type: "key", key })}</option>)}
-              <option value={CHARACTER_KEY}>{t("Single character")}</option>
-            </select>
+            <Select value={comboKey} onChange={setComboKey}
+              options={[...comboKeys.map((key) => ({ value: key, label: keyBarItemLabel({ type: "key", key }) })), { value: CHARACTER_KEY, label: t("Single character") }]} />
           </label>
           {comboKey === CHARACTER_KEY && <label className="key-bar-settings-field">
             <span className="settings-label">{t("Character")}</span>
-            <input className="input" value={character} maxLength={2} autoCapitalize="off" autoCorrect="off" spellCheck={false} onChange={(event) => setCharacter(event.target.value)} />
+            <Input className="input" value={character} maxLength={2} autoCapitalize="off" autoCorrect="off" spellCheck={false} onChange={(event) => setCharacter(event.target.value)} />
           </label>}
         </div>
         <div className="key-bar-settings-modifiers" role="group" aria-label={t("Combination modifiers")}>
-          {MODIFIERS.map((modifier) => <button type="button" className="key-bar-settings-modifier" key={modifier} aria-pressed={comboModifiers[modifier]} onClick={() => setComboModifiers((current) => ({ ...current, [modifier]: !current[modifier] }))}>{MODIFIER_CAPS[modifier]}</button>)}
+          {MODIFIERS.map((modifier) => <Button type="button" className="key-bar-settings-modifier" key={modifier} aria-pressed={comboModifiers[modifier]} onClick={() => setComboModifiers((current) => ({ ...current, [modifier]: !current[modifier] }))}>{MODIFIER_CAPS[modifier]}</Button>)}
         </div>
         <div className="key-bar-settings-combo-actions">
           <span className="key-bar-settings-preview" aria-live="polite">{characterValid ? keyBarItemLabel(combo) : t("Enter one character.")}</span>

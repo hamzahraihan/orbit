@@ -7,6 +7,7 @@ import type { KeyBarKey, StickyModifiers } from "../lib/keys.ts";
 import { keyBarItemId, keyBarItemLabel, type KeyBarItem, type KeyBarKeyItem } from "../lib/keyBar.ts";
 import { createKeyRepeat, isRepeatableKeyBarItem, type KeyRepeat } from "../lib/keyRepeat.ts";
 import { useT } from "../lib/i18n.ts";
+import { Button } from "../lib/ui.tsx";
 
 export type { KeyBarKey };
 
@@ -86,7 +87,7 @@ function Key({ dataKey, label, pressed, onPress, children, disabled, repeatable,
     if (pointerRef.current.id === event.pointerId) cancelHold();
   };
   return (
-    <button
+    <Button
       type="button"
       disabled={disabled}
       className={`key${pressed ? " is-armed" : ""}`}
@@ -133,7 +134,7 @@ function Key({ dataKey, label, pressed, onPress, children, disabled, repeatable,
       }}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 

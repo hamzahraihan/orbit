@@ -21,6 +21,7 @@ import { actualSizeFactor, arrowAction, wrapIndex, zoomPercent, type GalleryImag
 import { usePhoneSheetBack } from "../lib/sheetHistory.ts";
 import { useSheetSwipe } from "../lib/sheets.ts";
 import { nativeModalOver, useFocusTrap } from "../lib/useFocusTrap.ts";
+import { Button } from "../lib/ui.tsx";
 import { FIT, MAX_ZOOM, MIN_ZOOM, PAN_STEP, STEP, zoomAt, type View } from "./MermaidLightbox.tsx";
 
 export function ImageLightbox({ images, index, onClose }: { images: GalleryImage[]; index: number; onClose: () => void }) {
@@ -160,15 +161,15 @@ export function ImageLightbox({ images, index, onClose }: { images: GalleryImage
     <div className="modal-scrim image-lightbox-scrim">
       <div ref={surface} className="image-lightbox" role="dialog" aria-modal="true" aria-label={t("Image viewer")} tabIndex={-1}>
         <div className="image-lightbox-bar">
-          <button type="button" className="icon-button" onClick={() => zoomBy(1 / STEP)} disabled={view.scale <= MIN_ZOOM} aria-label={t("Zoom out")} title={t("Zoom out")}><Minus aria-hidden="true" /></button>
+          <Button type="button" className="icon-button" onClick={() => zoomBy(1 / STEP)} disabled={view.scale <= MIN_ZOOM} aria-label={t("Zoom out")} title={t("Zoom out")}><Minus aria-hidden="true" /></Button>
           <span className="image-lightbox-zoom" aria-live="off">{zoomPercent(view.scale, fit)}%</span>
-          <button type="button" className="icon-button" onClick={() => zoomBy(STEP)} disabled={view.scale >= MAX_ZOOM} aria-label={t("Zoom in")} title={t("Zoom in")}><Plus aria-hidden="true" /></button>
-          <button type="button" className="icon-button" onClick={() => setView(FIT)} aria-label={t("Fit to screen")} title={t("Fit to screen")}><Scan aria-hidden="true" /></button>
-          {copyable && <button type="button" className={`icon-button${copied === "done" ? " is-copied" : ""}`} onClick={() => void copy()} disabled={unavailable} aria-label={copied === "done" ? t("Copied") : t("Copy image")} title={copied === "done" ? t("Copied") : t("Copy image")}>
+          <Button type="button" className="icon-button" onClick={() => zoomBy(STEP)} disabled={view.scale >= MAX_ZOOM} aria-label={t("Zoom in")} title={t("Zoom in")}><Plus aria-hidden="true" /></Button>
+          <Button type="button" className="icon-button" onClick={() => setView(FIT)} aria-label={t("Fit to screen")} title={t("Fit to screen")}><Scan aria-hidden="true" /></Button>
+          {copyable && <Button type="button" className={`icon-button${copied === "done" ? " is-copied" : ""}`} onClick={() => void copy()} disabled={unavailable} aria-label={copied === "done" ? t("Copied") : t("Copy image")} title={copied === "done" ? t("Copied") : t("Copy image")}>
             {copied === "done" ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
-          </button>}
+          </Button>}
           <a className="icon-button" href={image.src} download={image.file} aria-label={t("Download")} title={t("Download")}><Download aria-hidden="true" /></a>
-          <button ref={close} type="button" className="icon-button" onClick={onClose} aria-label={t("Close")} title={t("Close")}><X aria-hidden="true" /></button>
+          <Button ref={close} type="button" className="icon-button" onClick={onClose} aria-label={t("Close")} title={t("Close")}><X aria-hidden="true" /></Button>
         </div>
         <div
           ref={stage}
@@ -194,12 +195,12 @@ export function ImageLightbox({ images, index, onClose }: { images: GalleryImage
         </div>
         <div className="image-lightbox-foot">
           <div className="image-lightbox-foot-row">
-            {many && <button type="button" className="icon-button" onClick={() => step(-1)} aria-label={t("Previous image")} title={t("Previous image")}><ChevronLeft aria-hidden="true" /></button>}
+            {many && <Button type="button" className="icon-button" onClick={() => step(-1)} aria-label={t("Previous image")} title={t("Previous image")}><ChevronLeft aria-hidden="true" /></Button>}
             <p className="image-lightbox-caption" aria-live="polite">
               <span className="image-lightbox-name">{image.name}</span>
               {many && <span className="image-lightbox-count">{t("{n} of {count}", { n: current + 1, count })}</span>}
             </p>
-            {many && <button type="button" className="icon-button" onClick={() => step(1)} aria-label={t("Next image")} title={t("Next image")}><ChevronRight aria-hidden="true" /></button>}
+            {many && <Button type="button" className="icon-button" onClick={() => step(1)} aria-label={t("Next image")} title={t("Next image")}><ChevronRight aria-hidden="true" /></Button>}
           </div>
           {copied === "failed" && <p className="image-lightbox-note" role="alert">{t("Couldn't copy the image. Download it instead.")}</p>}
         </div>

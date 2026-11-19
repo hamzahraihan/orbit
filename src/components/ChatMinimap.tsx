@@ -3,6 +3,7 @@ import { MessageSquare } from "lucide-react";
 
 import { minimapCurrent, minimapFits, minimapSlots, minimapSlotTarget, minimapStep, minimapTop, minimapTurnSlot, MINIMAP_MIN_TURNS, type MinimapTurn } from "../lib/chatMinimap.ts";
 import { useT } from "../lib/i18n.ts";
+import { Button } from "../lib/ui.tsx";
 import "./ChatMinimap.css";
 
 export interface ChatMinimapProps {
@@ -111,7 +112,7 @@ export function ChatMinimap({ turns, rowKeys, scroller, onJump }: ChatMinimapPro
       {Array.from({ length: slots }, (_, index) => {
         const turnIndex = minimapSlotTarget(index, slots, count);
         const turn = turns[turnIndex]!;
-        return <button
+        return <Button
           key={turn.row}
           ref={(element) => { ticks.current[index] = element; }}
           type="button"

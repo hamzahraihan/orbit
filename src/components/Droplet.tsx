@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProp
 import { X } from "lucide-react";
 import { flickVelocity, onDroplet, type PressSample, type QueuedDroplet } from "../lib/droplet.ts";
 import { useT } from "../lib/i18n.ts";
+import { Button } from "../lib/ui.tsx";
 import { AgentMark } from "./AgentMark.tsx";
 import "./Droplet.css";
 
@@ -174,7 +175,7 @@ export function Droplet({ onOpen }: { onOpen: (machineId: string, paneId: string
       <div className="droplet-goo" aria-hidden="true">
         <span className="droplet-blob" />
       </div>
-      <button
+      <Button
         type="button"
         ref={card}
         className="droplet-card"
@@ -199,10 +200,10 @@ export function Droplet({ onOpen }: { onOpen: (machineId: string, paneId: string
           <span className="droplet-detail">{detail}</span>
         </span>
         <span className="droplet-dot" aria-hidden="true" />
-      </button>
-      <button type="button" className="droplet-close" aria-label={t("Dismiss")} title={t("Dismiss")} onClick={leave}>
+      </Button>
+      <Button type="button" className="droplet-close" aria-label={t("Dismiss")} title={t("Dismiss")} onClick={leave}>
         <X size={16} aria-hidden="true" />
-      </button>
+      </Button>
     </div>
   );
 }
